@@ -5,13 +5,14 @@
 
 ## Phạm vi đã thi công
 
-- Frontend React/Vite theo 5 khu vực chính.
+- Frontend React/Vite theo 5 khu vực chính. Hoàn thành **Phase 1** phân tách Component và Routing bằng `react-router-dom`.
 - Giao diện mobile-first, desktop sidebar, bottom navigation mobile.
 - Trang chủ cá nhân hóa, công việc/báo cáo, kho tri thức, chuyên đề/quiz, trợ lý AI, đổi mới sáng tạo, cá nhân và dashboard quản trị.
 - Luồng demo có tương tác: lọc danh sách, nộp tệp, nộp lại, quiz, chat AI có nguồn, gửi bài toán bằng bottom sheet.
 - PWA manifest, service worker và cấu hình Vercel.
 - Supabase schema, RLS nền tảng, Storage buckets, RPC và Edge Functions chính.
-- Tài liệu kiến trúc, kiểm thử, triển khai, quyết định và working log.
+- Setup test `pgTAP` chứng minh RLS an toàn (cách ly tổ chức và role).
+- Tài liệu kiến trúc, kiểm thử, triển khai, quyết định và working log (`docs/phase-1-implementation-report.md`).
 
 ## Bằng chứng kiểm tra
 
