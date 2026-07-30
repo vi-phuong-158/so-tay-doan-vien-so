@@ -1,6 +1,6 @@
 begin;
 
-select plan(21);
+select plan(24);
 
 -- 1. Setup role helper
 create or replace function set_auth_user(p_uid uuid) returns void language plpgsql as $$
@@ -24,7 +24,7 @@ select results_eq(
 -- 2. Không thể cấp trùng cùng role và scope
 select throws_ok(
   $$ insert into public.user_roles (user_id, role_code, scope_organization_id) values ('cccccccc-cccc-cccc-cccc-cccccccccccc'::uuid, 'BRANCH_OFFICER', '22222222-2222-2222-2222-222222222222'::uuid) $$,
-  'duplicate key value violates unique constraint "idx_user_roles_unique"',
+  'duplicate key value violates unique constraint "user_roles_scope_unique"',
   'Cannot grant duplicate role in same scope'
 );
 
@@ -133,12 +133,12 @@ update public.profiles set account_status = 'ACTIVE' where id = 'eeeeeeee-eeee-e
 -- Create ORGANIZATION_ONLY doc created by Officer A (Org A)
 insert into public.documents (id, title, status, visibility_level, created_by) values ('88888888-8888-8888-8888-888888888888', 'Org Doc', 'PUBLISHED', 'ORGANIZATION_ONLY', 'cccccccc-cccc-cccc-cccc-cccccccccccc');
 insert into public.document_chunks (id, document_id, chunk_index, content, content_hash, embedding, review_status) 
-values ('77777777-7777-7777-7777-777777777777', '88888888-8888-8888-8888-888888888888', 1, 'Chunk', 'hash', '[0.1]', 'APPROVED');
+values ('77777777-7777-7777-7777-777777777777', '88888888-8888-8888-8888-888888888888', 1, 'Chunk', 'hash', array_fill(0, ARRAY[768])::real[]::vector(768), 'APPROVED');
 
 -- Create RESTRICTED doc created by Officer A (Org A)
 insert into public.documents (id, title, status, visibility_level, created_by) values ('99999999-9999-9999-9999-999999999999', 'Restricted Doc', 'PUBLISHED', 'RESTRICTED', 'cccccccc-cccc-cccc-cccc-cccccccccccc');
 insert into public.document_chunks (id, document_id, chunk_index, content, content_hash, embedding, review_status) 
-values ('66666666-6666-6666-6666-666666666666', '99999999-9999-9999-9999-999999999999', 1, 'Restricted Chunk', 'hash2', '[0.1]', 'APPROVED');
+values ('66666666-6666-6666-6666-666666666666', '99999999-9999-9999-9999-999999999999', 1, 'Restricted Chunk', 'hash2', array_fill(0, ARRAY[768])::real[]::vector(768), 'APPROVED');
 
 -- 14. Officer A (Org A) can see ORGANIZATION_ONLY doc
 select set_auth_user('cccccccc-cccc-cccc-cccc-cccccccccccc'::uuid);
@@ -157,7 +157,7 @@ select results_eq(
 
 -- 16. RESTRICTED document is not returned by match_document_chunks for normal user
 select results_eq(
-  $$ select count(*)::integer from public.match_document_chunks('[0.1]'::vector, 1) where document_id = '99999999-9999-9999-9999-999999999999'::uuid $$,
+  $$ select count(*)::integer from public.match_document_chunks(array_fill(0, ARRAY[768])::real[]::vector(768), 1) where document_id = '99999999-9999-9999-9999-999999999999'::uuid $$,
   ARRAY[0],
   'RESTRICTED chunk is not matched for normal user'
 );
@@ -172,14 +172,14 @@ select results_eq(
 
 -- 18. Officer B (Org B) cannot find chunks of Officer A's ORGANIZATION_ONLY document via vector search
 select results_eq(
-  $$ select count(*)::integer from public.match_document_chunks('[0.1]'::vector, 1) where document_id = '88888888-8888-8888-8888-888888888888'::uuid $$,
+  $$ select count(*)::integer from public.match_document_chunks(array_fill(0, ARRAY[768])::real[]::vector(768), 1) where document_id = '88888888-8888-8888-8888-888888888888'::uuid $$,
   ARRAY[0],
   'User outside org cannot match chunks via RAG'
 );
 
 -- Run tests as anon
-perform set_config('role', 'anon', true);
-perform set_config('request.jwt.claims', '{}', true);
+select set_config('role', 'anon', true);
+select set_config('request.jwt.claims', '{}', true);
 
 -- 19. Anon cannot see users
 select results_eq(
@@ -201,6 +201,30 @@ select results_eq(
   'select public from storage.buckets where id = ''documents-private''',
   ARRAY[false],
   'documents-private bucket is not public (fail-closed)'
+);
+
+-- Negative tests for YOUTH_ADMIN scope limitation
+select set_auth_user('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'::uuid); -- Youth Admin (Org A)
+
+-- 22. YOUTH_ADMIN Org A cannot update profile of User B (Org B)
+select throws_ok(
+  $$ update public.profiles set full_name = 'Hacked' where id = 'dddddddd-dddd-dddd-dddd-dddddddddddd'::uuid $$,
+  'new row violates row-level security policy for table "profiles"',
+  'YOUTH_ADMIN Org A cannot modify profile in Org B'
+);
+
+-- 23. YOUTH_ADMIN Org A cannot read report_assignments for Org B
+select results_eq(
+  'select count(*)::integer from public.report_assignments where organization_id = ''22222222-2222-2222-2222-222222222222''::uuid',
+  ARRAY[0],
+  'YOUTH_ADMIN Org A cannot read report_assignments of Org B'
+);
+
+-- 24. YOUTH_ADMIN Org A cannot insert role for User B (Org B) in scope Org B
+select throws_ok(
+  $$ insert into public.user_roles (user_id, role_code, scope_organization_id) values ('dddddddd-dddd-dddd-dddd-dddddddddddd'::uuid, 'MEMBER', '22222222-2222-2222-2222-222222222222'::uuid) $$,
+  'new row violates row-level security policy for table "user_roles"',
+  'YOUTH_ADMIN Org A cannot grant roles for scope Org B'
 );
 
 select * from finish();

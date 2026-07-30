@@ -2,13 +2,25 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 export const AuthGuard = ({ children }) => {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, profileError, loading, logout } = useAuth();
   const location = useLocation();
 
   if (loading) return <div className="page"><div className="loading-skeleton">Đang kiểm tra phiên làm việc...</div></div>;
 
   if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  if (profileError) {
+    return (
+      <div className="page">
+        <div className="unauthorized-state">
+          <h2>Lỗi tải hồ sơ</h2>
+          <p>{profileError}</p>
+          <button className="btn btn-primary" onClick={logout}>Đăng xuất</button>
+        </div>
+      </div>
+    );
   }
 
   if (!profile) {
@@ -21,6 +33,7 @@ export const AuthGuard = ({ children }) => {
         <div className="unauthorized-state">
           <h2>Tài khoản không hợp lệ</h2>
           <p>Tài khoản của bạn đang ở trạng thái {profile.account_status}. Vui lòng liên hệ quản trị viên.</p>
+          <button className="btn btn-primary" onClick={logout}>Đăng xuất</button>
         </div>
       </div>
     );

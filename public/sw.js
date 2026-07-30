@@ -1,5 +1,5 @@
 const CACHE = 'so-tay-doan-vien-v1';
-const SHELL = ['/', '/preview.html', '/src/index.css', '/brand/app-icon.svg', '/manifest.webmanifest'];
+const SHELL = ['/', '/brand/app-icon.svg', '/manifest.webmanifest'];
 self.addEventListener('install', event => event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL))));
 self.addEventListener('activate', event => event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))));
 self.addEventListener('fetch', event => {

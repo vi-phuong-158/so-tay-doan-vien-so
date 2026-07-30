@@ -39,7 +39,7 @@ create table if not exists public.user_roles (
   scope_organization_id uuid references public.organizations(id),
   granted_by uuid references public.profiles(id),
   granted_at timestamptz not null default now(),
-  unique nulls not distinct (user_id, role_code, scope_organization_id)
+  constraint user_roles_scope_unique unique nulls not distinct (user_id, role_code, scope_organization_id)
 );
 
 create or replace function public.current_org_id() returns uuid
@@ -313,37 +313,37 @@ DO $$ declare r record; begin
 end $$;
 
 create policy "active users read organizations" on public.organizations for select using (public.is_active_user());
-create policy "users read own profile" on public.profiles for select using (id = auth.uid() or public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN'));
+create policy "users read own profile" on public.profiles for select using (id = auth.uid() or public.has_role_in_scope('YOUTH_ADMIN', organization_id) or public.has_role('SYSTEM_ADMIN'));
 create policy "users update safe own profile" on public.profiles for update using (id = auth.uid()) with check (id = auth.uid() and organization_id = public.current_org_id());
 create policy "admins manage profiles" on public.profiles for all using (public.has_role('SYSTEM_ADMIN')) with check (public.has_role('SYSTEM_ADMIN'));
-create policy "users read own roles" on public.user_roles for select using (user_id = auth.uid() or public.has_role('SYSTEM_ADMIN'));
+create policy "users read own roles" on public.user_roles for select using (user_id = auth.uid() or public.has_role_in_scope('YOUTH_ADMIN', scope_organization_id) or public.has_role('SYSTEM_ADMIN'));
 create policy "system admins manage roles" on public.user_roles for all using (public.has_role('SYSTEM_ADMIN')) with check (public.has_role('SYSTEM_ADMIN'));
 
 create policy "active users read published announcements" on public.announcements for select using (public.is_active_user() and status = 'PUBLISHED' and (publish_at is null or publish_at <= now()) and (expire_at is null or expire_at > now()));
-create policy "content admins manage announcements" on public.announcements for all using (public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN')) with check (public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN'));
+create policy "content admins manage announcements" on public.announcements for all using (public.has_role_in_scope('YOUTH_ADMIN', (select organization_id from public.profiles where id = created_by)) or public.has_role('SYSTEM_ADMIN')) with check (public.has_role_in_scope('YOUTH_ADMIN', (select organization_id from public.profiles where id = created_by)) or public.has_role('SYSTEM_ADMIN'));
 create policy "users manage own announcement reads" on public.announcement_reads for all using (user_id = auth.uid()) with check (user_id = auth.uid());
 
 create policy "active users read published report campaigns" on public.report_campaigns for select using (public.is_active_user() and status in ('PUBLISHED','CLOSED'));
-create policy "admins manage report campaigns" on public.report_campaigns for all using (public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN')) with check (public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN'));
-create policy "organization reads own assignments" on public.report_assignments for select using (organization_id = public.current_org_id() or public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN'));
-create policy "admins manage assignments" on public.report_assignments for all using (public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN')) with check (public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN'));
-create policy "organization reads own submissions" on public.report_submissions for select using (exists(select 1 from public.report_assignments a where a.id = assignment_id and (a.organization_id = public.current_org_id() or public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN'))));
+create policy "admins manage report campaigns" on public.report_campaigns for all using (public.has_role_in_scope('YOUTH_ADMIN', (select organization_id from public.profiles where id = created_by)) or public.has_role('SYSTEM_ADMIN')) with check (public.has_role_in_scope('YOUTH_ADMIN', (select organization_id from public.profiles where id = created_by)) or public.has_role('SYSTEM_ADMIN'));
+create policy "organization reads own assignments" on public.report_assignments for select using (organization_id = public.current_org_id() or public.has_role_in_scope('YOUTH_ADMIN', organization_id) or public.has_role('SYSTEM_ADMIN'));
+create policy "admins manage assignments" on public.report_assignments for all using (public.has_role_in_scope('YOUTH_ADMIN', organization_id) or public.has_role('SYSTEM_ADMIN')) with check (public.has_role_in_scope('YOUTH_ADMIN', organization_id) or public.has_role('SYSTEM_ADMIN'));
+create policy "organization reads own submissions" on public.report_submissions for select using (exists(select 1 from public.report_assignments a where a.id = assignment_id and (a.organization_id = public.current_org_id() or public.has_role_in_scope('YOUTH_ADMIN', a.organization_id) or public.has_role('SYSTEM_ADMIN'))));
 create policy "branch officers insert own submissions" on public.report_submissions for insert with check (submitted_by = auth.uid() and public.has_role('BRANCH_OFFICER') and exists(select 1 from public.report_assignments a where a.id = assignment_id and a.organization_id = public.current_org_id()));
-create policy "authorized read submission files" on public.report_submission_files for select using (exists(select 1 from public.report_submissions s join public.report_assignments a on a.id=s.assignment_id where s.id=submission_id and (a.organization_id=public.current_org_id() or public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN'))));
+create policy "authorized read submission files" on public.report_submission_files for select using (exists(select 1 from public.report_submissions s join public.report_assignments a on a.id=s.assignment_id where s.id=submission_id and (a.organization_id=public.current_org_id() or public.has_role_in_scope('YOUTH_ADMIN', a.organization_id) or public.has_role('SYSTEM_ADMIN'))));
 
 create policy "active users read published documents" on public.documents for select using (public.can_access_document(id, auth.uid()));
-create policy "content admins manage documents" on public.documents for all using (public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN')) with check (public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN'));
-create policy "content admins read chunks" on public.document_chunks for select using (public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN'));
-create policy "content admins manage chunks" on public.document_chunks for all using (public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN')) with check (public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN'));
+create policy "content admins manage documents" on public.documents for all using (public.has_role_in_scope('YOUTH_ADMIN', (select organization_id from public.profiles where id = created_by)) or public.has_role('SYSTEM_ADMIN')) with check (public.has_role_in_scope('YOUTH_ADMIN', (select organization_id from public.profiles where id = created_by)) or public.has_role('SYSTEM_ADMIN'));
+create policy "content admins read chunks" on public.document_chunks for select using (exists(select 1 from public.documents d where d.id = document_id and (public.has_role_in_scope('YOUTH_ADMIN', (select organization_id from public.profiles p where p.id = d.created_by)) or public.has_role('SYSTEM_ADMIN'))));
+create policy "content admins manage chunks" on public.document_chunks for all using (exists(select 1 from public.documents d where d.id = document_id and (public.has_role_in_scope('YOUTH_ADMIN', (select organization_id from public.profiles p where p.id = d.created_by)) or public.has_role('SYSTEM_ADMIN')))) with check (exists(select 1 from public.documents d where d.id = document_id and (public.has_role_in_scope('YOUTH_ADMIN', (select organization_id from public.profiles p where p.id = d.created_by)) or public.has_role('SYSTEM_ADMIN'))));
 
 create policy "active users read published topics" on public.learning_topics for select using (public.is_active_user() and status='PUBLISHED');
 create policy "active users read resources" on public.learning_resources for select using (public.is_active_user() and exists(select 1 from public.learning_topics t where t.id=topic_id and t.status='PUBLISHED'));
 create policy "active users read published quizzes" on public.quizzes for select using (public.is_active_user() and status='PUBLISHED');
 create policy "active users read quiz questions" on public.quiz_questions for select using (public.is_active_user() and exists(select 1 from public.quizzes q where q.id=quiz_id and q.status='PUBLISHED'));
 -- quiz_options deliberately has no frontend SELECT policy because is_correct must not leak.
-create policy "users read own attempts" on public.quiz_attempts for select using (user_id=auth.uid() or public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN'));
+create policy "users read own attempts" on public.quiz_attempts for select using (user_id=auth.uid() or public.has_role_in_scope('YOUTH_ADMIN', (select organization_id from public.profiles where id = user_id)) or public.has_role('SYSTEM_ADMIN'));
 create policy "users insert own attempts" on public.quiz_attempts for insert with check (user_id=auth.uid());
-create policy "users read own answers" on public.quiz_answers for select using (exists(select 1 from public.quiz_attempts a where a.id=attempt_id and (a.user_id=auth.uid() or public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN'))));
+create policy "users read own answers" on public.quiz_answers for select using (exists(select 1 from public.quiz_attempts a where a.id=attempt_id and (a.user_id=auth.uid() or public.has_role_in_scope('YOUTH_ADMIN', (select organization_id from public.profiles p where p.id = a.user_id)) or public.has_role('SYSTEM_ADMIN'))));
 
 create policy "users manage own ai conversations" on public.ai_conversations for all using (user_id=auth.uid()) with check (user_id=auth.uid());
 create policy "users read own ai messages" on public.ai_messages for select using (exists(select 1 from public.ai_conversations c where c.id=conversation_id and c.user_id=auth.uid()));
@@ -351,11 +351,11 @@ create policy "users read own ai sources" on public.ai_message_sources for selec
 create policy "users manage own ai feedback" on public.ai_feedback for all using (user_id=auth.uid()) with check (user_id=auth.uid());
 
 create policy "active users read published projects" on public.innovation_projects for select using (public.is_active_user() and publish_status='PUBLISHED');
-create policy "innovation admins manage projects" on public.innovation_projects for all using (public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN')) with check (public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN'));
-create policy "users read own or assigned problems" on public.innovation_problems for select using (submitted_by=auth.uid() or exists(select 1 from public.innovation_problem_assignments a where a.problem_id=id and a.assigned_user_id=auth.uid()) or public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN'));
+create policy "innovation admins manage projects" on public.innovation_projects for all using (public.has_role_in_scope('YOUTH_ADMIN', (select organization_id from public.profiles where id = created_by)) or public.has_role('SYSTEM_ADMIN')) with check (public.has_role_in_scope('YOUTH_ADMIN', (select organization_id from public.profiles where id = created_by)) or public.has_role('SYSTEM_ADMIN'));
+create policy "users read own or assigned problems" on public.innovation_problems for select using (submitted_by=auth.uid() or exists(select 1 from public.innovation_problem_assignments a where a.problem_id=id and a.assigned_user_id=auth.uid()) or public.has_role_in_scope('YOUTH_ADMIN', organization_id) or public.has_role('SYSTEM_ADMIN'));
 create policy "users submit problems for own org" on public.innovation_problems for insert with check (submitted_by=auth.uid() and organization_id=public.current_org_id());
-create policy "admins manage problems" on public.innovation_problems for update using (public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN')) with check (public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN'));
-create policy "problem participants read public updates" on public.innovation_problem_updates for select using (exists(select 1 from public.innovation_problems p where p.id=problem_id and (p.submitted_by=auth.uid() or exists(select 1 from public.innovation_problem_assignments a where a.problem_id=p.id and a.assigned_user_id=auth.uid()) or public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN'))) and (internal_content is null or public.has_role('INNOVATION_MEMBER') or public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN')));
+create policy "admins manage problems" on public.innovation_problems for update using (public.has_role_in_scope('YOUTH_ADMIN', organization_id) or public.has_role('SYSTEM_ADMIN')) with check (public.has_role_in_scope('YOUTH_ADMIN', organization_id) or public.has_role('SYSTEM_ADMIN'));
+create policy "problem participants read public updates" on public.innovation_problem_updates for select using (exists(select 1 from public.innovation_problems p where p.id=problem_id and (p.submitted_by=auth.uid() or exists(select 1 from public.innovation_problem_assignments a where a.problem_id=p.id and a.assigned_user_id=auth.uid()) or public.has_role_in_scope('YOUTH_ADMIN', p.organization_id) or public.has_role('SYSTEM_ADMIN'))) and (internal_content is null or public.has_role_in_scope('INNOVATION_MEMBER', p.organization_id) or public.has_role_in_scope('YOUTH_ADMIN', p.organization_id) or public.has_role('SYSTEM_ADMIN')));
 
 create policy "users read own notifications" on public.notifications for select using (user_id=auth.uid());
 create policy "users mark own notifications read" on public.notifications for update using (user_id=auth.uid()) with check (user_id=auth.uid());

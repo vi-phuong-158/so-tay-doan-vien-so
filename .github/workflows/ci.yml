@@ -2,9 +2,10 @@ name: CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "fix/phase-1-security-remediation" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "fix/phase-1-security-remediation" ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -26,9 +27,6 @@ jobs:
       
     - name: Build frontend
       run: npm run build
-      
-    # Note: We omit "npm run test" here unless Vitest is actually configured with test cases.
-    # We will just run the build step to ensure code compiles.
 
   test-db:
     runs-on: ubuntu-latest
@@ -40,10 +38,7 @@ jobs:
       with:
         version: latest
         
-    - name: Verify Supabase configuration
-      run: supabase status || echo "Supabase not started yet"
-      
-    # - name: Run DB Tests
-    #   run: supabase test db
-    # Commented out for now since it requires Docker and a local supabase start which can be heavy for simple CI. 
-    # Can be enabled when fully ready for production.
+    - name: Start Supabase and Run DB Tests
+      run: |
+        supabase start
+        supabase test db
