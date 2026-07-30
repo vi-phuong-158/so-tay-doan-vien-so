@@ -1,0 +1,4 @@
+import { clients, requireUser } from '../_shared/auth.ts';
+import { corsHeaders,errorResponse,json,readJson } from '../_shared/http.ts';
+import { assertUuid,safeText } from '../_shared/validation.ts';
+Deno.serve(async request=>{if(request.method==='OPTIONS')return new Response('ok',{headers:corsHeaders});try{const{userClient}=clients(request);await requireUser(userClient);const body=await readJson<Record<string,unknown>>(request);const{data,error}=await userClient.rpc('transition_problem_status',{p_problem_id:assertUuid(body.problem_id),p_new_status:String(body.new_status||''),p_public_content:safeText(body.public_content,6000),p_internal_content:safeText(body.internal_content,6000)});if(error)throw error;return json({success:true,problem:data});}catch(error){return errorResponse(error,String(error).includes('UNAUTHENTICATED')?401:String(error).includes('FORBIDDEN')?403:400)}});

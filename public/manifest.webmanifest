@@ -1,0 +1,12 @@
+{
+  "name": "Sổ tay Đoàn viên số",
+  "short_name": "Sổ tay Đoàn",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F5F8FC",
+  "theme_color": "#0D47A1",
+  "lang": "vi",
+  "icons": [
+    {"src":"/brand/app-icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
+  ]
+}

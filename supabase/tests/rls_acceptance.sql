@@ -1,0 +1,10 @@
+-- Run with Supabase CLI/pgtap after creating fixture users for org A and B.
+-- Required assertions:
+-- 1. Org A cannot SELECT report_assignments/submissions/files of org B.
+-- 2. User A cannot SELECT innovation_problems submitted by user B unless assigned/admin.
+-- 3. A normal member cannot SELECT internal_content from innovation_problem_updates.
+-- 4. authenticated/anon cannot SELECT email_queue, email_logs, audit_logs or quiz_options.
+-- 5. A suspended profile makes is_active_user() false and published content becomes inaccessible.
+-- 6. A user cannot update profiles.organization_id/account_status through PostgREST.
+-- 7. A guessed private storage path cannot be read directly.
+-- These cases are intentionally listed as acceptance gates, not claimed as executed without a rehearsal project.
