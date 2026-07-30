@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ "main", "fix/phase-1-security-remediation" ]
+    branches: [ "master", "fix/phase-1-security-remediation" ]
   pull_request:
-    branches: [ "main", "fix/phase-1-security-remediation" ]
+    branches: [ "master" ]
   workflow_dispatch:
 
 jobs:
@@ -25,6 +25,9 @@ jobs:
     - name: Run lint
       run: npm run lint
       
+    - name: Run frontend tests
+      run: npm test
+      
     - name: Build frontend
       run: npm run build
 
@@ -41,4 +44,5 @@ jobs:
     - name: Start Supabase and Run DB Tests
       run: |
         supabase start
+        supabase db reset
         supabase test db

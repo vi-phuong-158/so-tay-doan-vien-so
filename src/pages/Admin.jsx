@@ -1,11 +1,46 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PageHeader, Button } from '../components/common';
 import { useAuth } from '../contexts/AuthContext';
 import { Icon } from '../components/Icon';
+import { supabase } from '../services/supabaseClient';
 
 export function AdminDashboard() {
   const { profile } = useAuth();
   const [tab, setTab] = useState('users');
+  const [users, setUsers] = useState([]);
+  const [orgs, setOrgs] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (tab === 'users') fetchUsers();
+    if (tab === 'orgs') fetchOrgs();
+  }, [tab]);
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    const { data } = await supabase.from('profiles').select('*, organizations(name)');
+    if (data) setUsers(data);
+    setLoading(false);
+  };
+
+  const fetchOrgs = async () => {
+    setLoading(true);
+    const { data } = await supabase.from('organizations').select('*');
+    if (data) setOrgs(data);
+    setLoading(false);
+  };
+
+  const toggleUserStatus = async (user) => {
+    const newStatus = user.account_status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
+    const { data, error } = await supabase.functions.invoke('admin-users', {
+      body: { action: 'update_status', target_user_id: user.id, status: newStatus }
+    });
+    if (!error) {
+      setUsers(users.map(u => u.id === user.id ? { ...u, account_status: newStatus } : u));
+    } else {
+      alert(error.message || 'Có lỗi xảy ra');
+    }
+  };
 
   return (
     <div className="page">
@@ -24,45 +59,37 @@ export function AdminDashboard() {
               <h3>Danh sách người dùng</h3>
               <Button><Icon name="plus" size={16} /> Mời thành viên</Button>
             </div>
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-              <input type="text" placeholder="Tìm kiếm..." style={{ padding: '8px', borderRadius: '4px', border: '1px solid var(--border)', flex: 1 }} />
-              <select style={{ padding: '8px', borderRadius: '4px', border: '1px solid var(--border)' }}>
-                <option value="">Tất cả trạng thái</option>
-                <option value="ACTIVE">Hoạt động</option>
-                <option value="SUSPENDED">Đã khóa</option>
-              </select>
-            </div>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
-              <thead>
-                <tr style={{ borderBottom: '2px solid var(--border)', textAlign: 'left' }}>
-                  <th style={{ padding: '8px' }}>Họ tên</th>
-                  <th style={{ padding: '8px' }}>Đơn vị</th>
-                  <th style={{ padding: '8px' }}>Trạng thái</th>
-                  <th style={{ padding: '8px' }}>Thao tác</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                  <td style={{ padding: '8px' }}>Nguyễn Văn A</td>
-                  <td style={{ padding: '8px' }}>Chi đoàn Mẫu</td>
-                  <td style={{ padding: '8px' }}><span style={{ color: 'var(--success)' }}>ACTIVE</span></td>
-                  <td style={{ padding: '8px' }}>
-                    <button className="icon-button" title="Khóa"><Icon name="lock" size={16} /></button>
-                    <button className="icon-button" title="Phân quyền"><Icon name="shield" size={16} /></button>
-                  </td>
-                </tr>
-                <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                  <td style={{ padding: '8px' }}>Trần Thị B</td>
-                  <td style={{ padding: '8px' }}>Chi đoàn Mẫu</td>
-                  <td style={{ padding: '8px' }}><span style={{ color: 'var(--error)' }}>SUSPENDED</span></td>
-                  <td style={{ padding: '8px' }}>
-                    <button className="icon-button" title="Mở khóa"><Icon name="unlock" size={16} /></button>
-                    <button className="icon-button" title="Phân quyền"><Icon name="shield" size={16} /></button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '16px' }}>(Dữ liệu minh họa)</p>
+            
+            {loading ? <p>Đang tải...</p> : (
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid var(--border)', textAlign: 'left' }}>
+                    <th style={{ padding: '8px' }}>Họ tên</th>
+                    <th style={{ padding: '8px' }}>Đơn vị</th>
+                    <th style={{ padding: '8px' }}>Trạng thái</th>
+                    <th style={{ padding: '8px' }}>Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.map(user => (
+                    <tr key={user.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                      <td style={{ padding: '8px' }}>{user.full_name}</td>
+                      <td style={{ padding: '8px' }}>{user.organizations?.name || '---'}</td>
+                      <td style={{ padding: '8px' }}>
+                        <span style={{ color: user.account_status === 'ACTIVE' ? 'var(--success)' : 'var(--error)' }}>
+                          {user.account_status}
+                        </span>
+                      </td>
+                      <td style={{ padding: '8px' }}>
+                        <button className="icon-button" title={user.account_status === 'ACTIVE' ? "Khóa" : "Mở khóa"} onClick={() => toggleUserStatus(user)}>
+                          <Icon name={user.account_status === 'ACTIVE' ? "lock" : "unlock"} size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         )}
 
@@ -72,28 +99,24 @@ export function AdminDashboard() {
               <h3>Đơn vị trực thuộc</h3>
               <Button><Icon name="plus" size={16} /> Thêm đơn vị</Button>
             </div>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
-              <thead>
-                <tr style={{ borderBottom: '2px solid var(--border)', textAlign: 'left' }}>
-                  <th style={{ padding: '8px' }}>Tên đơn vị</th>
-                  <th style={{ padding: '8px' }}>Loại</th>
-                  <th style={{ padding: '8px' }}>Số thành viên</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                  <td style={{ padding: '8px' }}>Chi đoàn Mẫu 1</td>
-                  <td style={{ padding: '8px' }}>Cơ sở</td>
-                  <td style={{ padding: '8px' }}>45</td>
-                </tr>
-                <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                  <td style={{ padding: '8px' }}>Chi đoàn Mẫu 2</td>
-                  <td style={{ padding: '8px' }}>Cơ sở</td>
-                  <td style={{ padding: '8px' }}>32</td>
-                </tr>
-              </tbody>
-            </table>
-            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '16px' }}>(Dữ liệu minh họa)</p>
+            {loading ? <p>Đang tải...</p> : (
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid var(--border)', textAlign: 'left' }}>
+                    <th style={{ padding: '8px' }}>Tên đơn vị</th>
+                    <th style={{ padding: '8px' }}>Loại</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orgs.map(org => (
+                    <tr key={org.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                      <td style={{ padding: '8px' }}>{org.name}</td>
+                      <td style={{ padding: '8px' }}>{org.organization_type}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         )}
       </div>
