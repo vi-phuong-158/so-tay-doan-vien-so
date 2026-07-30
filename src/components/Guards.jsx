@@ -11,12 +11,16 @@ export const AuthGuard = ({ children }) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (profile && profile.account_status === 'SUSPENDED') {
+  if (!profile) {
+    return <div className="page"><div className="loading-skeleton">Đang tải hồ sơ...</div></div>;
+  }
+
+  if (profile.account_status !== 'ACTIVE') {
     return (
       <div className="page">
         <div className="unauthorized-state">
-          <h2>Tài khoản bị khóa</h2>
-          <p>Tài khoản của bạn đã bị tạm khóa. Vui lòng liên hệ quản trị viên.</p>
+          <h2>Tài khoản không hợp lệ</h2>
+          <p>Tài khoản của bạn đang ở trạng thái {profile.account_status}. Vui lòng liên hệ quản trị viên.</p>
         </div>
       </div>
     );

@@ -44,9 +44,17 @@ export default function App() {
             <Route path="doi-moi-sang-tao" element={<Innovation />} />
             <Route path="ca-nhan" element={<Profile />} />
 
+            {/* Profile Routes */}
+            <Route path="ca-nhan/thong-bao" element={
+              <div className="page"><div style={{padding: '16px'}}><h2>Thông báo</h2><p>Tính năng đang phát triển.</p></div></div>
+            } />
+            <Route path="ca-nhan/doi-mat-khau" element={
+              <div className="page"><div style={{padding: '16px'}}><h2>Đổi mật khẩu</h2><p>Tính năng đang phát triển.</p></div></div>
+            } />
+
             {/* Admin Routes */}
             <Route path="admin" element={
-              <RoleGuard allowedRoles={['YOUTH_ADMIN', 'BRANCH_OFFICER']}>
+              <RoleGuard allowedRoles={['YOUTH_ADMIN']}>
                 <AdminDashboard />
               </RoleGuard>
             } />

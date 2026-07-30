@@ -12,16 +12,20 @@ export const AuthProvider = ({ children }) => {
 
   async function fetchProfileAndRoles(userId) {
     try {
-      const { data: profileData } = await supabase.from('profiles').select('*, organization:organizations(*)').eq('id', userId).single();
+      const { data: profileData, error: profileError } = await supabase.from('profiles').select('*, organization:organizations(*)').eq('id', userId).single();
+      if (profileError) throw profileError;
       if (profileData) {
         setProfile(profileData);
       }
-      const { data: roleData } = await supabase.from('user_roles').select('*').eq('user_id', userId);
+      const { data: roleData, error: roleError } = await supabase.from('user_roles').select('*').eq('user_id', userId);
+      if (roleError) throw roleError;
       if (roleData) {
         setRoles(roleData.map(r => r.role_code));
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
+      setProfile(null);
+      setRoles([]);
     } finally {
       setLoading(false);
     }
@@ -62,7 +66,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const hasRole = (role) => {
-    return roles.includes(role) || roles.includes('SYSTEM_ADMIN');
+    return profile?.account_status === 'ACTIVE' && (roles.includes(role) || roles.includes('SYSTEM_ADMIN'));
   };
 
   return (

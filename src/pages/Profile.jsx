@@ -26,10 +26,10 @@ export function Profile() {
         </div>
         
         <div className="list menu-list" style={{ marginTop: '24px' }}>
-          <div className="list-item"><Icon name="user" /><span>Thông tin cá nhân</span><Icon name="chevron" className="ms-auto text-muted" /></div>
-          <div className="list-item"><Icon name="shield" /><span>Đổi mật khẩu</span><Icon name="chevron" className="ms-auto text-muted" /></div>
-          <div className="list-item"><Icon name="bell" /><span>Cài đặt thông báo</span><Icon name="chevron" className="ms-auto text-muted" /></div>
-          <div className="list-item"><Icon name="chart" /><span>Thống kê hoạt động</span><Icon name="chevron" className="ms-auto text-muted" /></div>
+          <div className="list-item" onClick={() => navigate('/ca-nhan')}><Icon name="user" /><span>Thông tin cá nhân</span><Icon name="chevron" className="ms-auto text-muted" /></div>
+          <div className="list-item" onClick={() => navigate('/ca-nhan/doi-mat-khau')}><Icon name="shield" /><span>Đổi mật khẩu</span><Icon name="chevron" className="ms-auto text-muted" /></div>
+          <div className="list-item" onClick={() => navigate('/ca-nhan/thong-bao')}><Icon name="bell" /><span>Cài đặt thông báo</span><Icon name="chevron" className="ms-auto text-muted" /></div>
+          <div className="list-item" onClick={() => navigate('/ca-nhan')}><Icon name="chart" /><span>Thống kê hoạt động</span><Icon name="chevron" className="ms-auto text-muted" /></div>
           <div className="list-item text-danger" onClick={handleLogout} style={{ cursor: 'pointer' }}><Icon name="logout" /><span>Đăng xuất</span></div>
         </div>
       </div>

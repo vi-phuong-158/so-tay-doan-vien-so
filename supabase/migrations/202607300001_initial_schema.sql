@@ -33,12 +33,13 @@ create table if not exists public.profiles (
 );
 
 create table if not exists public.user_roles (
+  id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.profiles(id) on delete cascade,
   role_code text not null check (role_code in ('MEMBER','BRANCH_OFFICER','INNOVATION_MEMBER','YOUTH_ADMIN','SYSTEM_ADMIN')),
   scope_organization_id uuid references public.organizations(id),
   granted_by uuid references public.profiles(id),
   granted_at timestamptz not null default now(),
-  primary key (user_id, role_code, scope_organization_id)
+  unique nulls not distinct (user_id, role_code, scope_organization_id)
 );
 
 create or replace function public.current_org_id() returns uuid
@@ -47,7 +48,42 @@ as $$ select organization_id from public.profiles where id = auth.uid() and acco
 
 create or replace function public.has_role(required_role text) returns boolean
 language sql stable security definer set search_path = public
-as $$ select exists(select 1 from public.user_roles where user_id = auth.uid() and role_code = required_role) $$;
+as $$ select public.is_active_user() and exists(select 1 from public.user_roles where user_id = auth.uid() and role_code = required_role) $$;
+
+create or replace function public.has_role_in_scope(required_role text, target_org_id uuid) returns boolean
+language sql stable security definer set search_path = public
+as $$ 
+  select public.is_active_user() and exists(
+    select 1 from public.user_roles 
+    where user_id = auth.uid() 
+      and (role_code = 'SYSTEM_ADMIN' or (role_code = required_role and (scope_organization_id is null or scope_organization_id = target_org_id)))
+  ) 
+$$;
+
+create or replace function public.can_access_document(doc_id uuid, target_user_id uuid) returns boolean
+language sql stable security definer set search_path = public
+as $$
+declare
+  doc record;
+  doc_owner_org uuid;
+  user_org uuid;
+begin
+  if not public.is_active_user() then return false; end if;
+  select * into doc from public.documents where id = doc_id;
+  if not found or doc.status != 'PUBLISHED' then return false; end if;
+  
+  if public.has_role('SYSTEM_ADMIN') or public.has_role('YOUTH_ADMIN') then return true; end if;
+  if doc.visibility_level = 'PUBLIC' then return true; end if;
+  if doc.visibility_level = 'INTERNAL_YOUTH' then return true; end if;
+  
+  if doc.visibility_level = 'ORGANIZATION_ONLY' then
+    select organization_id into doc_owner_org from public.profiles where id = doc.created_by;
+    select organization_id into user_org from public.profiles where id = target_user_id;
+    if doc_owner_org = user_org then return true; end if;
+  end if;
+  
+  return false;
+end $$;
 
 create or replace function public.is_active_user() returns boolean
 language sql stable security definer set search_path = public
@@ -295,7 +331,7 @@ create policy "organization reads own submissions" on public.report_submissions 
 create policy "branch officers insert own submissions" on public.report_submissions for insert with check (submitted_by = auth.uid() and public.has_role('BRANCH_OFFICER') and exists(select 1 from public.report_assignments a where a.id = assignment_id and a.organization_id = public.current_org_id()));
 create policy "authorized read submission files" on public.report_submission_files for select using (exists(select 1 from public.report_submissions s join public.report_assignments a on a.id=s.assignment_id where s.id=submission_id and (a.organization_id=public.current_org_id() or public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN'))));
 
-create policy "active users read published documents" on public.documents for select using (public.is_active_user() and status = 'PUBLISHED');
+create policy "active users read published documents" on public.documents for select using (public.can_access_document(id, auth.uid()));
 create policy "content admins manage documents" on public.documents for all using (public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN')) with check (public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN'));
 create policy "content admins read chunks" on public.document_chunks for select using (public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN'));
 create policy "content admins manage chunks" on public.document_chunks for all using (public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN')) with check (public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN'));
@@ -330,8 +366,8 @@ returns table(chunk_id uuid, document_id uuid, content text, section_path text, 
 language sql stable security definer set search_path=public
 as $$
   select c.id, c.document_id, c.content, c.section_path, c.page_from, c.page_to, 1-(c.embedding <=> query_embedding) as similarity
-  from public.document_chunks c join public.documents d on d.id=c.document_id
-  where c.review_status='APPROVED' and d.status='PUBLISHED' and public.is_active_user()
+  from public.document_chunks c
+  where c.review_status='APPROVED' and public.can_access_document(c.document_id, auth.uid())
   order by c.embedding <=> query_embedding limit greatest(1,least(match_count,20));
 $$;
 revoke all on function public.match_document_chunks(vector,integer) from public;

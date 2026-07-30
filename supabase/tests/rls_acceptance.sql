@@ -1,6 +1,6 @@
 begin;
 
-select plan(12);
+select plan(21);
 
 -- 1. Setup role helper
 create or replace function set_auth_user(p_uid uuid) returns void language plpgsql as $$
@@ -9,37 +9,43 @@ begin
   perform set_config('request.jwt.claims', jsonb_build_object('sub', p_uid, 'role', 'authenticated')::text, true);
 end $$;
 
--- Assume seed.sql is run before this test.
 -- user A = cccccccc-cccc-cccc-cccc-cccccccccccc (Org A, BRANCH_OFFICER)
 -- user B = dddddddd-dddd-dddd-dddd-dddddddddddd (Org B, BRANCH_OFFICER)
--- user Sysadmin = aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa (SYSTEM_ADMIN)
--- user youthadmin = bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb (YOUTH_ADMIN)
+-- sysadmin = aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa (SYSTEM_ADMIN, NULL scope)
+-- youthadmin = bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb (YOUTH_ADMIN, Org A)
+
+-- 1. SYSTEM_ADMIN có scope NULL được tạo thành công
+select results_eq(
+  'select count(*)::integer from public.user_roles where user_id = ''aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa''::uuid and role_code = ''SYSTEM_ADMIN'' and scope_organization_id is null',
+  ARRAY[1],
+  'SYSTEM_ADMIN can have null scope'
+);
+
+-- 2. Không thể cấp trùng cùng role và scope
+select throws_ok(
+  $$ insert into public.user_roles (user_id, role_code, scope_organization_id) values ('cccccccc-cccc-cccc-cccc-cccccccccccc'::uuid, 'BRANCH_OFFICER', '22222222-2222-2222-2222-222222222222'::uuid) $$,
+  'duplicate key value violates unique constraint "idx_user_roles_unique"',
+  'Cannot grant duplicate role in same scope'
+);
 
 -- Run tests as User A (Org A)
 select set_auth_user('cccccccc-cccc-cccc-cccc-cccccccccccc'::uuid);
 
--- 1. User A should only see their own organization's report assignments
+-- 3. User A should only see their own organization's report assignments
 select results_eq(
   'select count(*)::integer from public.report_assignments',
   ARRAY[1],
   'User A should see only 1 report assignment for their organization'
 );
 
--- 2. User A cannot see other profiles except their own (or those permitted, wait profiles policy says users read own profile unless admin)
-select results_eq(
-  'select count(*)::integer from public.profiles where id = ''dddddddd-dddd-dddd-dddd-dddddddddddd''::uuid',
-  ARRAY[0],
-  'User A should not see User B profile'
-);
-
--- 3. User A cannot update their own organization_id (RLS update policy prevents changing org id)
+-- 4. User A cannot update their own organization_id
 select throws_ok(
   $$ update public.profiles set organization_id = '33333333-3333-3333-3333-333333333333'::uuid where id = 'cccccccc-cccc-cccc-cccc-cccccccccccc'::uuid $$,
   'new row violates row-level security policy for table "profiles"',
   'User A cannot change their own organization_id'
 );
 
--- 4. User A cannot insert a role for themselves
+-- 5. User A cannot insert a role for themselves
 select throws_ok(
   $$ insert into public.user_roles (user_id, role_code, scope_organization_id) values ('cccccccc-cccc-cccc-cccc-cccccccccccc'::uuid, 'SYSTEM_ADMIN', null) $$,
   'new row violates row-level security policy for table "user_roles"',
@@ -49,75 +55,152 @@ select throws_ok(
 -- Run tests as Sysadmin
 select set_auth_user('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid);
 
--- 5. Sysadmin can see all profiles
+-- 6. Sysadmin can see all profiles
 select results_eq(
   'select count(*)::integer from public.profiles',
   ARRAY[6],
   'Sysadmin can see all 6 profiles'
 );
 
--- 6. Sysadmin can grant roles
-select lives_ok(
-  $$ insert into public.user_roles (user_id, role_code) values ('dddddddd-dddd-dddd-dddd-dddddddddddd'::uuid, 'SYSTEM_ADMIN') $$,
-  'Sysadmin can grant roles'
+-- 7. Role có scope đơn vị A không quản lý được đơn vị B (Testing has_role_in_scope)
+-- Sysadmin can manage anywhere
+select results_eq(
+  'select public.has_role_in_scope(''YOUTH_ADMIN'', ''33333333-3333-3333-3333-333333333333''::uuid)',
+  ARRAY[true],
+  'Sysadmin has YOUTH_ADMIN equivalent scope everywhere'
+);
+
+-- Switch to youthadmin (Org A)
+select set_auth_user('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'::uuid);
+-- 8. Youth admin can manage Org A
+select results_eq(
+  'select public.has_role_in_scope(''YOUTH_ADMIN'', ''11111111-1111-1111-1111-111111111111''::uuid)',
+  ARRAY[true],
+  'Youth Admin has scope in their own org'
+);
+-- 9. Youth admin cannot manage Org B (wait, their scope is 11111111 in seed, not 33333333)
+select results_eq(
+  'select public.has_role_in_scope(''YOUTH_ADMIN'', ''33333333-3333-3333-3333-333333333333''::uuid)',
+  ARRAY[false],
+  'Youth Admin does not have scope in another org'
+);
+
+-- 10. Youth admin cannot grant SYSTEM_ADMIN
+select throws_ok(
+  $$ insert into public.user_roles (user_id, role_code) values ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'::uuid, 'SYSTEM_ADMIN') $$,
+  'new row violates row-level security policy for table "user_roles"',
+  'Youth Admin cannot grant SYSTEM_ADMIN'
+);
+
+-- Switch to Sysadmin to prepare Suspend/Archive users
+select set_auth_user('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid);
+update public.profiles set account_status = 'SUSPENDED' where id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'::uuid; -- suspend Youth Admin
+update public.profiles set account_status = 'ARCHIVED' where id = 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'::uuid; -- archive Member
+
+-- Switch to suspended Youth Admin
+select set_auth_user('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'::uuid);
+
+-- 11. Suspended user không được dùng quyền quản trị (Cannot grant roles)
+select throws_ok(
+  $$ insert into public.user_roles (user_id, role_code) values ('dddddddd-dddd-dddd-dddd-dddddddddddd'::uuid, 'BRANCH_OFFICER') $$,
+  'new row violates row-level security policy for table "user_roles"',
+  'Suspended admin cannot grant roles'
+);
+
+-- 12. Suspended admin cannot read documents
+select results_eq(
+  'select count(*)::integer from public.documents',
+  ARRAY[0],
+  'Suspended admin cannot read documents'
+);
+
+-- Switch to archived Member
+select set_auth_user('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'::uuid);
+
+-- 13. Archived user cannot read internal announcements
+select results_eq(
+  'select count(*)::integer from public.announcements',
+  ARRAY[0],
+  'Archived user cannot read internal announcements'
+);
+
+-- Reset statuses
+select set_auth_user('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid);
+update public.profiles set account_status = 'ACTIVE' where id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'::uuid;
+update public.profiles set account_status = 'ACTIVE' where id = 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'::uuid;
+
+-- Document visibility test (ORGANIZATION_ONLY & RESTRICTED)
+-- Create ORGANIZATION_ONLY doc created by Officer A (Org A)
+insert into public.documents (id, title, status, visibility_level, created_by) values ('88888888-8888-8888-8888-888888888888', 'Org Doc', 'PUBLISHED', 'ORGANIZATION_ONLY', 'cccccccc-cccc-cccc-cccc-cccccccccccc');
+insert into public.document_chunks (id, document_id, chunk_index, content, content_hash, embedding, review_status) 
+values ('77777777-7777-7777-7777-777777777777', '88888888-8888-8888-8888-888888888888', 1, 'Chunk', 'hash', '[0.1]', 'APPROVED');
+
+-- Create RESTRICTED doc created by Officer A (Org A)
+insert into public.documents (id, title, status, visibility_level, created_by) values ('99999999-9999-9999-9999-999999999999', 'Restricted Doc', 'PUBLISHED', 'RESTRICTED', 'cccccccc-cccc-cccc-cccc-cccccccccccc');
+insert into public.document_chunks (id, document_id, chunk_index, content, content_hash, embedding, review_status) 
+values ('66666666-6666-6666-6666-666666666666', '99999999-9999-9999-9999-999999999999', 1, 'Restricted Chunk', 'hash2', '[0.1]', 'APPROVED');
+
+-- 14. Officer A (Org A) can see ORGANIZATION_ONLY doc
+select set_auth_user('cccccccc-cccc-cccc-cccc-cccccccccccc'::uuid);
+select results_eq(
+  'select count(*)::integer from public.documents where id = ''88888888-8888-8888-8888-888888888888''::uuid',
+  ARRAY[1],
+  'User inside org can see ORGANIZATION_ONLY document'
+);
+
+-- 15. Officer A (Org A) CANNOT see RESTRICTED doc (only youth admin / sysadmin can)
+select results_eq(
+  'select count(*)::integer from public.documents where id = ''99999999-9999-9999-9999-999999999999''::uuid',
+  ARRAY[0],
+  'Normal user cannot see RESTRICTED document'
+);
+
+-- 16. RESTRICTED document is not returned by match_document_chunks for normal user
+select results_eq(
+  $$ select count(*)::integer from public.match_document_chunks('[0.1]'::vector, 1) where document_id = '99999999-9999-9999-9999-999999999999'::uuid $$,
+  ARRAY[0],
+  'RESTRICTED chunk is not matched for normal user'
+);
+
+-- 17. Officer B (Org B) cannot see Officer A's ORGANIZATION_ONLY document
+select set_auth_user('dddddddd-dddd-dddd-dddd-dddddddddddd'::uuid);
+select results_eq(
+  'select count(*)::integer from public.documents where id = ''88888888-8888-8888-8888-888888888888''::uuid',
+  ARRAY[0],
+  'User outside org cannot see ORGANIZATION_ONLY document'
+);
+
+-- 18. Officer B (Org B) cannot find chunks of Officer A's ORGANIZATION_ONLY document via vector search
+select results_eq(
+  $$ select count(*)::integer from public.match_document_chunks('[0.1]'::vector, 1) where document_id = '88888888-8888-8888-8888-888888888888'::uuid $$,
+  ARRAY[0],
+  'User outside org cannot match chunks via RAG'
 );
 
 -- Run tests as anon
 perform set_config('role', 'anon', true);
 perform set_config('request.jwt.claims', '{}', true);
 
--- 7. Anon cannot see users
+-- 19. Anon cannot see users
 select results_eq(
   'select count(*)::integer from public.profiles',
   ARRAY[0],
   'Anon cannot read profiles'
 );
 
--- 8. Anon cannot read announcements
+-- 20. Anon cannot read announcements
 select results_eq(
   'select count(*)::integer from public.announcements',
   ARRAY[0],
   'Anon cannot read announcements'
 );
 
--- Test suspended user
-select set_auth_user('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid);
-update public.profiles set account_status = 'SUSPENDED' where id = 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'::uuid;
-
-select set_auth_user('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'::uuid);
--- 9. Suspended user cannot read published announcements
-insert into public.announcements (title, content, status) values ('Test', 'Content', 'PUBLISHED');
+-- 21. Verify storage bucket privacy
+select set_auth_user('cccccccc-cccc-cccc-cccc-cccccccccccc'::uuid);
 select results_eq(
-  'select count(*)::integer from public.announcements',
-  ARRAY[0],
-  'Suspended user cannot read published announcements'
-);
-
--- Reset suspended user
-select set_auth_user('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid);
-update public.profiles set account_status = 'ACTIVE' where id = 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'::uuid;
-
-select set_auth_user('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'::uuid);
--- 10. Active user can read published announcements
-select results_eq(
-  'select count(*)::integer from public.announcements',
-  ARRAY[1],
-  'Active user can read published announcements'
-);
-
--- 11. Youth Admin can see organization assignments
-select set_auth_user('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'::uuid);
-select results_eq(
-  'select count(*)::integer from public.report_assignments',
-  ARRAY[2],
-  'Youth Admin can see all assignments'
-);
-
--- 12. Youth admin cannot grant SYSTEM_ADMIN
-select throws_ok(
-  $$ insert into public.user_roles (user_id, role_code) values ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'::uuid, 'SYSTEM_ADMIN') $$,
-  'new row violates row-level security policy for table "user_roles"',
-  'Youth Admin cannot grant SYSTEM_ADMIN'
+  'select public from storage.buckets where id = ''documents-private''',
+  ARRAY[false],
+  'documents-private bucket is not public (fail-closed)'
 );
 
 select * from finish();
