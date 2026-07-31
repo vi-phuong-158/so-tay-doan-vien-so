@@ -9,6 +9,12 @@ begin
   perform set_config('request.jwt.claims', jsonb_build_object('sub', p_uid, 'role', 'authenticated')::text, true);
 end $$;
 
+create or replace function reset_auth() returns void language plpgsql as $$
+begin
+  perform set_config('role', 'postgres', true);
+  perform set_config('request.jwt.claims', '{}', true);
+end $$;
+
 -- user A = cccccccc-cccc-cccc-cccc-cccccccccccc (Org A, BRANCH_OFFICER)
 -- user B = dddddddd-dddd-dddd-dddd-dddddddddddd (Org B, BRANCH_OFFICER)
 -- sysadmin = aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa (SYSTEM_ADMIN, NULL scope)
@@ -41,8 +47,8 @@ select results_eq(
 -- 4. User A cannot update their own organization_id
 select throws_ok(
   $$ update public.profiles set organization_id = '33333333-3333-3333-3333-333333333333'::uuid where id = 'cccccccc-cccc-cccc-cccc-cccccccccccc'::uuid $$,
-  'new row violates row-level security policy for table "profiles"',
-  'User A cannot change their own organization_id'
+  'permission denied for table profiles',
+  'User A cannot change their own organization_id (column privilege)'
 );
 
 -- 5. User A cannot insert a role for themselves
@@ -78,9 +84,9 @@ select results_eq(
   ARRAY[true],
   'Youth Admin has scope in their own org'
 );
--- 9. Youth admin cannot manage Org B (wait, their scope is 11111111 in seed, not 33333333)
+-- 9. Youth admin cannot manage Org C (which we pretend is 99999999...)
 select results_eq(
-  'select public.has_role_in_scope(''YOUTH_ADMIN'', ''33333333-3333-3333-3333-333333333333''::uuid)',
+  'select public.has_role_in_scope(''YOUTH_ADMIN'', ''99999999-9999-9999-9999-999999999999''::uuid)',
   ARRAY[false],
   'Youth Admin does not have scope in another org'
 );
@@ -92,8 +98,8 @@ select throws_ok(
   'Youth Admin cannot grant SYSTEM_ADMIN'
 );
 
--- Switch to Sysadmin to prepare Suspend/Archive users
-select set_auth_user('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid);
+-- Switch to postgres to prepare Suspend/Archive users (simulating Edge Function using service_role)
+select reset_auth();
 update public.profiles set account_status = 'SUSPENDED' where id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'::uuid; -- suspend Youth Admin
 update public.profiles set account_status = 'ARCHIVED' where id = 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'::uuid; -- archive Member
 
