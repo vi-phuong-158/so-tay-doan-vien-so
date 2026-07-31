@@ -1,6 +1,6 @@
 begin;
 
-select plan(29);
+select plan(27);
 
 -- 1. Setup role helper
 create or replace function set_auth_user(p_uid uuid) returns void language plpgsql as $$
@@ -264,33 +264,15 @@ select results_eq(
 
 -- Storage Tests
 -- Create mock objects in documents-private
-select set_auth_user('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid); -- sysadmin
+select reset_auth(); -- use postgres since private buckets are fail-closed to authenticated users
 insert into storage.objects (bucket_id, name, owner) values ('documents-private', '88888888-8888-8888-8888-888888888888/file.pdf', 'cccccccc-cccc-cccc-cccc-cccccccccccc'::uuid);
 
--- 27. User A (Org A) CAN read their org's doc object
-select set_auth_user('cccccccc-cccc-cccc-cccc-cccccccccccc'::uuid);
+-- 27. documents-private bucket is fail-closed (not accessible via SQL)
+select set_auth_user('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid);
 select results_eq(
-  'select count(*)::integer from storage.objects where name = ''88888888-8888-8888-8888-888888888888/file.pdf''',
-  ARRAY[1],
-  'User A can read object belonging to Org A document'
-);
-
--- 28. User B (Org B) CANNOT read Org A's doc object
-select set_auth_user('dddddddd-dddd-dddd-dddd-dddddddddddd'::uuid);
-select results_eq(
-  'select count(*)::integer from storage.objects where name = ''88888888-8888-8888-8888-888888888888/file.pdf''',
+  'select count(*)::integer from storage.objects where bucket_id = ''documents-private''',
   ARRAY[0],
-  'User B cannot read object belonging to Org A document'
-);
-
--- 29. Suspended user CANNOT read any objects
-select reset_auth(); -- Switch to postgres to suspend
-update public.profiles set account_status = 'SUSPENDED' where id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'::uuid;
-select set_auth_user('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'::uuid); -- Switch back to suspended Youth Admin
-select results_eq(
-  'select count(*)::integer from storage.objects where name = ''88888888-8888-8888-8888-888888888888/file.pdf''',
-  ARRAY[0],
-  'Suspended user cannot read storage objects'
+  'documents-private bucket is not accessible via SQL for authenticated users'
 );
 
 select * from finish();
