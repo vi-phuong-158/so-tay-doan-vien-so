@@ -58,8 +58,8 @@ select set_auth_user('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid);
 -- 6. Sysadmin can see all profiles
 select results_eq(
   'select count(*)::integer from public.profiles',
-  ARRAY[6],
-  'Sysadmin can see all 6 profiles'
+  ARRAY[7],
+  'Sysadmin can see all 7 profiles'
 );
 
 -- 7. Role có scope đơn vị A không quản lý được đơn vị B (Testing has_role_in_scope)
@@ -131,12 +131,13 @@ update public.profiles set account_status = 'ACTIVE' where id = 'eeeeeeee-eeee-e
 
 -- Document visibility test (ORGANIZATION_ONLY & RESTRICTED)
 -- Create ORGANIZATION_ONLY doc created by Officer A (Org A)
-insert into public.documents (id, title, status, visibility_level, created_by) values ('88888888-8888-8888-8888-888888888888', 'Org Doc', 'PUBLISHED', 'ORGANIZATION_ONLY', 'cccccccc-cccc-cccc-cccc-cccccccccccc');
+select set_auth_user('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid); -- Use privileged setup
+insert into public.documents (id, title, status, visibility_level, created_by, owner_organization_id) values ('88888888-8888-8888-8888-888888888888', 'Org Doc', 'PUBLISHED', 'ORGANIZATION_ONLY', 'cccccccc-cccc-cccc-cccc-cccccccccccc', '22222222-2222-2222-2222-222222222222');
 insert into public.document_chunks (id, document_id, chunk_index, content, content_hash, embedding, review_status) 
 values ('77777777-7777-7777-7777-777777777777', '88888888-8888-8888-8888-888888888888', 1, 'Chunk', 'hash', array_fill(0, ARRAY[768])::real[]::vector(768), 'APPROVED');
 
 -- Create RESTRICTED doc created by Officer A (Org A)
-insert into public.documents (id, title, status, visibility_level, created_by) values ('99999999-9999-9999-9999-999999999999', 'Restricted Doc', 'PUBLISHED', 'RESTRICTED', 'cccccccc-cccc-cccc-cccc-cccccccccccc');
+insert into public.documents (id, title, status, visibility_level, created_by, owner_organization_id) values ('99999999-9999-9999-9999-999999999999', 'Restricted Doc', 'PUBLISHED', 'RESTRICTED', 'cccccccc-cccc-cccc-cccc-cccccccccccc', '22222222-2222-2222-2222-222222222222');
 insert into public.document_chunks (id, document_id, chunk_index, content, content_hash, embedding, review_status) 
 values ('66666666-6666-6666-6666-666666666666', '99999999-9999-9999-9999-999999999999', 1, 'Restricted Chunk', 'hash2', array_fill(0, ARRAY[768])::real[]::vector(768), 'APPROVED');
 
@@ -213,14 +214,20 @@ select results_eq(
 );
 
 -- Negative tests for YOUTH_ADMIN scope limitation
-select set_auth_user('gggggggg-gggg-gggg-gggg-gggggggggggg'::uuid); -- Youth Admin A (Org A)
+select set_auth_user('11112222-3333-4444-5555-666677778888'::uuid); -- Youth Admin A (Org A)
 
 -- 23. YOUTH_ADMIN Org A cannot update profile of User B (Org B)
-select throws_ok(
-  $$ update public.profiles set full_name = 'Hacked' where id = 'dddddddd-dddd-dddd-dddd-dddddddddddd'::uuid $$,
-  'new row violates row-level security policy for table "profiles"',
+-- We check that the profile is NOT changed because RLS returns 0 rows updated
+update public.profiles set full_name = 'Hacked' where id = 'dddddddd-dddd-dddd-dddd-dddddddddddd'::uuid;
+
+select set_auth_user('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid); -- switch to sysadmin to check
+select results_eq(
+  'select full_name from public.profiles where id = ''dddddddd-dddd-dddd-dddd-dddddddddddd''::uuid',
+  ARRAY['Officer B'::text],
   'YOUTH_ADMIN Org A cannot modify profile in Org B'
 );
+
+select set_auth_user('11112222-3333-4444-5555-666677778888'::uuid); -- back to Youth Admin A
 
 -- 24. YOUTH_ADMIN Org A cannot read report_assignments for Org B
 select results_eq(
@@ -237,12 +244,12 @@ select throws_ok(
 );
 
 -- 26. YOUTH_ADMIN Org A CANNOT read ORGANIZATION_ONLY doc of Org B
--- First, User B creates a doc
-select set_auth_user('dddddddd-dddd-dddd-dddd-dddddddddddd'::uuid);
+-- First, Sysadmin creates a doc for Org B
+select set_auth_user('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid);
 insert into public.documents (id, title, status, visibility_level, created_by, owner_organization_id) values ('55555555-5555-5555-5555-555555555555', 'Org B Doc', 'PUBLISHED', 'ORGANIZATION_ONLY', 'dddddddd-dddd-dddd-dddd-dddddddddddd', '33333333-3333-3333-3333-333333333333');
 
 -- Youth Admin A tries to read it
-select set_auth_user('gggggggg-gggg-gggg-gggg-gggggggggggg'::uuid);
+select set_auth_user('11112222-3333-4444-5555-666677778888'::uuid);
 select results_eq(
   'select count(*)::integer from public.documents where id = ''55555555-5555-5555-5555-555555555555''::uuid',
   ARRAY[0],

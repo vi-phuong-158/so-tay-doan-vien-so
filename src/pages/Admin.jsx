@@ -12,33 +12,64 @@ export function AdminDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const fetchUsers = async () => {
+      setLoading(true);
+      const { data, error } = await supabase.from('profiles').select('*, organizations(name)');
+      if (error) alert('Lỗi tải danh sách người dùng');
+      if (data) setUsers(data);
+      setLoading(false);
+    };
+
+    const fetchOrgs = async () => {
+      setLoading(true);
+      const { data, error } = await supabase.from('organizations').select('*');
+      if (error) alert('Lỗi tải danh sách đơn vị');
+      if (data) setOrgs(data);
+      setLoading(false);
+    };
+
     if (tab === 'users') fetchUsers();
     if (tab === 'orgs') fetchOrgs();
   }, [tab]);
 
-  const fetchUsers = async () => {
-    setLoading(true);
-    const { data } = await supabase.from('profiles').select('*, organizations(name)');
-    if (data) setUsers(data);
-    setLoading(false);
-  };
-
-  const fetchOrgs = async () => {
-    setLoading(true);
-    const { data } = await supabase.from('organizations').select('*');
-    if (data) setOrgs(data);
-    setLoading(false);
-  };
-
   const toggleUserStatus = async (user) => {
+    if (user.id === profile.id) {
+      alert('Bạn không thể tự khóa tài khoản của chính mình.');
+      return;
+    }
     const newStatus = user.account_status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
-    const { data, error } = await supabase.functions.invoke('admin-users', {
+    if (!window.confirm(`Bạn có chắc muốn ${newStatus === 'ACTIVE' ? 'Mở khóa' : 'Khóa'} người dùng ${user.full_name}?`)) return;
+    
+    const { error } = await supabase.functions.invoke('admin-users', {
       body: { action: 'update_status', target_user_id: user.id, status: newStatus }
     });
     if (!error) {
       setUsers(users.map(u => u.id === user.id ? { ...u, account_status: newStatus } : u));
     } else {
       alert(error.message || 'Có lỗi xảy ra');
+    }
+  };
+
+  const inviteMember = async () => {
+    const email = window.prompt("Nhập email người dùng mới:");
+    if (!email) return;
+    const fullName = window.prompt("Nhập họ tên:");
+    if (!fullName) return;
+    const roleCode = window.prompt("Nhập chức vụ (MEMBER, BRANCH_OFFICER, YOUTH_ADMIN):", "MEMBER");
+    if (!roleCode) return;
+    
+    // Simplification for UI demo: we assign them to the current user's org.
+    // In reality, there would be a full dropdown form.
+    const { error } = await supabase.functions.invoke('admin-users', {
+      body: { action: 'invite', email, full_name: fullName, role_code: roleCode, organization_id: profile.organization_id }
+    });
+    
+    if (error) {
+      alert(error.message || 'Lỗi gửi lời mời');
+    } else {
+      alert('Đã gửi lời mời thành công!');
+      // reload users
+      setTab('users');
     }
   };
 
@@ -57,7 +88,7 @@ export function AdminDashboard() {
           <div style={{ background: 'var(--surface)', padding: '24px', borderRadius: '8px', border: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
               <h3>Danh sách người dùng</h3>
-              <Button><Icon name="plus" size={16} /> Mời thành viên</Button>
+              <Button onClick={inviteMember}><Icon name="plus" size={16} /> Mời thành viên</Button>
             </div>
             
             {loading ? <p>Đang tải...</p> : (
@@ -97,7 +128,7 @@ export function AdminDashboard() {
           <div style={{ background: 'var(--surface)', padding: '24px', borderRadius: '8px', border: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
               <h3>Đơn vị trực thuộc</h3>
-              <Button><Icon name="plus" size={16} /> Thêm đơn vị</Button>
+              <Button onClick={() => alert('Chức năng đang phát triển')}><Icon name="plus" size={16} /> Thêm đơn vị</Button>
             </div>
             {loading ? <p>Đang tải...</p> : (
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>

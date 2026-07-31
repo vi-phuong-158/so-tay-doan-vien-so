@@ -42,6 +42,10 @@ create table if not exists public.user_roles (
   constraint user_roles_scope_unique unique nulls not distinct (user_id, role_code, scope_organization_id)
 );
 
+create or replace function public.is_active_user() returns boolean
+language sql stable security definer set search_path = public
+as $$ select exists(select 1 from public.profiles where id = auth.uid() and account_status = 'ACTIVE') $$;
+
 create or replace function public.current_org_id() returns uuid
 language sql stable security definer set search_path = public
 as $$ select organization_id from public.profiles where id = auth.uid() and account_status = 'ACTIVE' $$;
@@ -84,10 +88,6 @@ begin
   
   return false;
 end $$;
-
-create or replace function public.is_active_user() returns boolean
-language sql stable security definer set search_path = public
-as $$ select exists(select 1 from public.profiles where id = auth.uid() and account_status = 'ACTIVE') $$;
 
 create table if not exists public.announcements (
   id uuid primary key default gen_random_uuid(), title text not null, summary text, content text not null,
