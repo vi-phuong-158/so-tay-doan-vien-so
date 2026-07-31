@@ -65,7 +65,7 @@ as $$
 $$;
 
 create or replace function public.can_access_document(doc_id uuid, target_user_id uuid) returns boolean
-language sql stable security definer set search_path = public
+language plpgsql stable security definer set search_path = public
 as $$
 declare
   doc record;
