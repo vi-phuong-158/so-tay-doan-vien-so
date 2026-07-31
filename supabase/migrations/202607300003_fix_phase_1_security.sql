@@ -29,11 +29,15 @@ alter table public.documents add column if not exists owner_organization_id uuid
 update public.documents d set owner_organization_id = (select organization_id from public.profiles where id = d.created_by) where owner_organization_id is null;
 
 -- 4. Rewrite can_access_document
+drop policy if exists "active users read published documents" on public.documents;
+drop policy if exists "content admins manage documents" on public.documents;
+drop policy if exists "content admins read chunks" on public.document_chunks;
+drop policy if exists "content admins manage chunks" on public.document_chunks;
 drop function if exists public.match_document_chunks(vector, integer);
 drop function if exists public.can_access_document(uuid, uuid);
 
 create or replace function public.can_access_document(doc_id uuid) returns boolean
-language sql stable security definer set search_path = public
+language plpgsql stable security definer set search_path = public
 as $$
 declare
   doc record;
@@ -63,16 +67,12 @@ begin
 end $$;
 
 -- Update RLS policies that depended on old can_access_document signature
-drop policy if exists "active users read published documents" on public.documents;
 create policy "active users read published documents" on public.documents for select using (public.can_access_document(id));
 
-drop policy if exists "content admins manage documents" on public.documents;
 create policy "content admins manage documents" on public.documents for all using (public.has_role_in_scope('YOUTH_ADMIN', owner_organization_id) or public.has_role('SYSTEM_ADMIN')) with check (public.has_role_in_scope('YOUTH_ADMIN', owner_organization_id) or public.has_role('SYSTEM_ADMIN'));
 
-drop policy if exists "content admins read chunks" on public.document_chunks;
 create policy "content admins read chunks" on public.document_chunks for select using (exists(select 1 from public.documents d where d.id = document_id and (public.has_role_in_scope('YOUTH_ADMIN', d.owner_organization_id) or public.has_role('SYSTEM_ADMIN'))));
 
-drop policy if exists "content admins manage chunks" on public.document_chunks;
 create policy "content admins manage chunks" on public.document_chunks for all using (exists(select 1 from public.documents d where d.id = document_id and (public.has_role_in_scope('YOUTH_ADMIN', d.owner_organization_id) or public.has_role('SYSTEM_ADMIN')))) with check (exists(select 1 from public.documents d where d.id = document_id and (public.has_role_in_scope('YOUTH_ADMIN', d.owner_organization_id) or public.has_role('SYSTEM_ADMIN'))));
 
 create or replace function public.match_document_chunks(query_embedding vector(768), match_count integer default 8)
