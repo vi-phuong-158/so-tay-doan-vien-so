@@ -131,7 +131,7 @@ select results_eq(
 );
 
 -- Reset statuses
-select set_auth_user('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid);
+select reset_auth();
 update public.profiles set account_status = 'ACTIVE' where id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'::uuid;
 update public.profiles set account_status = 'ACTIVE' where id = 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'::uuid;
 
@@ -284,8 +284,9 @@ select results_eq(
 );
 
 -- 29. Suspended user CANNOT read any objects
-select set_auth_user('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'::uuid); -- Suspend Youth Admin
+select reset_auth(); -- Switch to postgres to suspend
 update public.profiles set account_status = 'SUSPENDED' where id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'::uuid;
+select set_auth_user('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'::uuid); -- Switch back to suspended Youth Admin
 select results_eq(
   'select count(*)::integer from storage.objects where name = ''88888888-8888-8888-8888-888888888888/file.pdf''',
   ARRAY[0],
