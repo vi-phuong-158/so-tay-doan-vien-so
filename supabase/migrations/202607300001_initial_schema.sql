@@ -372,3 +372,8 @@ as $$
 $$;
 revoke all on function public.match_document_chunks(vector,integer) from public;
 grant execute on function public.match_document_chunks(vector,integer) to authenticated;
+
+grant usage on schema public to anon, authenticated, service_role;
+grant all privileges on all tables in schema public to anon, authenticated, service_role;
+grant all privileges on all routines in schema public to anon, authenticated, service_role;
+grant all privileges on all sequences in schema public to anon, authenticated, service_role;
