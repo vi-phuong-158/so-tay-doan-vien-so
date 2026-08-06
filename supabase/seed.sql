@@ -13,7 +13,8 @@ insert into auth.users (id, aud, role, email, encrypted_password, email_confirme
 ('dddddddd-dddd-dddd-dddd-dddddddddddd', 'authenticated', 'authenticated', 'officerb@test.local', crypt('password123', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}'),
 ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'authenticated', 'authenticated', 'member@test.local', crypt('password123', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}'),
 ('ffffffff-ffff-ffff-ffff-ffffffffffff', 'authenticated', 'authenticated', 'innovation@test.local', crypt('password123', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}'),
-('11112222-3333-4444-5555-666677778888', 'authenticated', 'authenticated', 'youthadmina@test.local', crypt('password123', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}')
+('11112222-3333-4444-5555-666677778888', 'authenticated', 'authenticated', 'youthadmina@test.local', crypt('password123', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}'),
+('99999999-9999-9999-9999-999999999999', 'authenticated', 'authenticated', 'suspended@test.local', crypt('password123', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}')
 on conflict (id) do nothing;
 
 -- Create profiles
@@ -24,7 +25,8 @@ insert into public.profiles (id, full_name, organization_id, account_status) val
 ('dddddddd-dddd-dddd-dddd-dddddddddddd', 'Officer B', '33333333-3333-3333-3333-333333333333', 'ACTIVE'),
 ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'Member', '22222222-2222-2222-2222-222222222222', 'ACTIVE'),
 ('ffffffff-ffff-ffff-ffff-ffffffffffff', 'Innovation Member', '11111111-1111-1111-1111-111111111111', 'ACTIVE'),
-('11112222-3333-4444-5555-666677778888', 'Youth Admin A', '22222222-2222-2222-2222-222222222222', 'ACTIVE')
+('11112222-3333-4444-5555-666677778888', 'Youth Admin A', '22222222-2222-2222-2222-222222222222', 'ACTIVE'),
+('99999999-9999-9999-9999-999999999999', 'Suspended Member', '22222222-2222-2222-2222-222222222222', 'SUSPENDED')
 on conflict (id) do nothing;
 
 -- Create user roles

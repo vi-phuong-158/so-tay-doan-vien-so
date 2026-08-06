@@ -374,6 +374,49 @@ revoke all on function public.match_document_chunks(vector,integer) from public;
 grant execute on function public.match_document_chunks(vector,integer) to authenticated;
 
 grant usage on schema public to anon, authenticated, service_role;
-grant all privileges on all tables in schema public to anon, authenticated, service_role;
-grant all privileges on all routines in schema public to anon, authenticated, service_role;
-grant all privileges on all sequences in schema public to anon, authenticated, service_role;
+
+-- Grant specific privileges to authenticated and anon
+grant select on table public.organizations to anon, authenticated;
+grant select on table public.profiles to authenticated;
+grant insert, update, delete on table public.profiles to authenticated;
+grant select on table public.user_roles to authenticated;
+grant insert, delete on table public.user_roles to authenticated;
+grant select on table public.documents to anon, authenticated;
+grant insert, update, delete on table public.documents to authenticated;
+grant select, insert, update, delete on table public.document_chunks to authenticated;
+grant select on table public.report_campaigns to authenticated;
+grant insert, update, delete on table public.report_campaigns to authenticated;
+grant select, update on table public.report_assignments to authenticated;
+grant select, insert, update on table public.report_submissions to authenticated;
+grant select, insert on table public.report_status_history to authenticated;
+grant select on table public.innovation_problems to anon, authenticated;
+grant insert, update, delete on table public.innovation_problems to authenticated;
+grant select, insert, update, delete on table public.innovation_ideas to authenticated;
+grant select, insert, update, delete on table public.innovation_votes to authenticated;
+grant select on table public.notifications to authenticated;
+grant update on table public.notifications to authenticated;
+
+grant usage, select on all sequences in schema public to anon, authenticated;
+
+-- Grant all to service_role
+grant all privileges on all tables in schema public to service_role;
+grant all privileges on all sequences in schema public to service_role;
+grant all privileges on all routines in schema public to service_role;
+
+-- Revoke execute from public for all routines
+alter default privileges in schema public revoke execute on functions from public;
+
+-- Revoke for existing functions
+revoke all on function public.set_updated_at() from public;
+revoke all on function public.is_active_user() from public;
+revoke all on function public.current_org_id() from public;
+revoke all on function public.has_role(text) from public;
+revoke all on function public.has_role_in_scope(text, uuid) from public;
+revoke all on function public.can_access_document(uuid, uuid) from public;
+
+-- Grant necessary executes to authenticated
+grant execute on function public.is_active_user() to authenticated;
+grant execute on function public.current_org_id() to authenticated;
+grant execute on function public.has_role(text) to authenticated;
+grant execute on function public.has_role_in_scope(text, uuid) to authenticated;
+grant execute on function public.can_access_document(uuid, uuid) to authenticated;

@@ -1,7 +1,7 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { clients, requireScopedRole, requireUser, requireGlobalRole } from '../_shared/auth.ts';
 
-serve(async (req) => {
+export const handler = async (req: Request) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -17,7 +17,7 @@ serve(async (req) => {
     const { action } = payload;
 
     const logAudit = async (actionName: string, targetId: string, orgId: string, details: any) => {
-      await adminClient.from('audit_logs').insert({
+      const { error } = await adminClient.from('audit_logs').insert({
         actor_user_id: user.id,
         action: actionName,
         entity_type: 'USER',
@@ -25,6 +25,7 @@ serve(async (req) => {
         organization_id: orgId,
         after_data: details
       });
+      if (error) throw new Error('AUDIT_LOG_FAILED: ' + error.message);
     };
 
     if (action === 'invite') {
@@ -42,7 +43,11 @@ serve(async (req) => {
         organization_id,
         account_status: 'INVITED'
       });
-      if (profileError) throw profileError;
+      
+      if (profileError) {
+        await adminClient.auth.admin.deleteUser(newUserId);
+        throw profileError;
+      }
 
       if (role_code) {
         const { error: roleError } = await adminClient.from('user_roles').insert({
@@ -156,4 +161,8 @@ serve(async (req) => {
       headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' } 
     });
   }
-});
+};
+
+if (import.meta.main) {
+  serve(handler);
+}

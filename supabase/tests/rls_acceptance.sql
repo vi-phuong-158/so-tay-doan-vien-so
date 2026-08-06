@@ -1,6 +1,6 @@
 begin;
 
-select plan(26);
+select plan(33);
 
 -- 1. Setup role helper
 create or replace function set_auth_user(p_uid uuid) returns void language plpgsql as $$
@@ -260,6 +260,67 @@ select results_eq(
   'select count(*)::integer from public.documents where id = ''55555555-5555-5555-5555-555555555555''::uuid',
   ARRAY[0],
   'YOUTH_ADMIN Org A cannot read ORGANIZATION_ONLY document of Org B'
+);
+
+-- Storage Tests
+-- Create mock objects in documents-private for a public document
+select reset_auth(); -- use postgres to insert mock objects
+insert into public.documents (id, title, status, visibility_level, created_by, owner_organization_id) values ('88888888-8888-8888-8888-888888888888', 'Public Doc A', 'PUBLISHED', 'PUBLIC', 'cccccccc-cccc-cccc-cccc-cccccccccccc', '22222222-2222-2222-2222-222222222222');
+insert into storage.objects (bucket_id, name, owner) values ('documents-private', '88888888-8888-8888-8888-888888888888/file.pdf', 'cccccccc-cccc-cccc-cccc-cccccccccccc'::uuid);
+
+-- 27. User in scope CAN read the object
+select set_auth_user('cccccccc-cccc-cccc-cccc-cccccccccccc'::uuid);
+select results_eq(
+  'select count(*)::integer from storage.objects where name = ''88888888-8888-8888-8888-888888888888/file.pdf''',
+  ARRAY[1],
+  'User can read object belonging to accessible document'
+);
+
+-- 28. User out of scope CANNOT read the object (using a DIFFERENT document that is ORGANIZATION_ONLY for Org B)
+select reset_auth();
+insert into storage.objects (bucket_id, name, owner) values ('documents-private', '55555555-5555-5555-5555-555555555555/secret.pdf', 'dddddddd-dddd-dddd-dddd-dddddddddddd'::uuid);
+select set_auth_user('cccccccc-cccc-cccc-cccc-cccccccccccc'::uuid); -- User A
+select results_eq(
+  'select count(*)::integer from storage.objects where name = ''55555555-5555-5555-5555-555555555555/secret.pdf''',
+  ARRAY[0],
+  'User cannot read object belonging to inaccessible document'
+);
+
+-- 29. Suspended user CANNOT read the public object
+select reset_auth(); -- Switch to postgres to suspend
+update public.profiles set account_status = 'SUSPENDED' where id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'::uuid;
+select set_auth_user('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'::uuid); -- Switch to suspended Youth Admin
+select results_eq(
+  'select count(*)::integer from storage.objects where name = ''88888888-8888-8888-8888-888888888888/file.pdf''',
+  ARRAY[0],
+  'Suspended user cannot read storage objects even if document is public'
+);
+
+-- Privilege Tests
+select reset_auth();
+
+-- 30. anon should not have SELECT on audit_logs
+select table_privs_are(
+  'public', 'audit_logs', 'anon', ARRAY[]::text[],
+  'anon should have NO privileges on audit_logs'
+);
+
+-- 31. authenticated should not have SELECT on audit_logs
+select table_privs_are(
+  'public', 'audit_logs', 'authenticated', ARRAY[]::text[],
+  'authenticated should have NO privileges on audit_logs'
+);
+
+-- 32. anon should not have EXECUTE on can_access_document
+select function_privs_are(
+  'public', 'can_access_document', ARRAY['uuid'], 'anon', ARRAY[]::text[],
+  'anon should not have EXECUTE on can_access_document'
+);
+
+-- 33. authenticated should have EXECUTE on can_access_document
+select function_privs_are(
+  'public', 'can_access_document', ARRAY['uuid'], 'authenticated', ARRAY['EXECUTE'],
+  'authenticated should have EXECUTE on can_access_document'
 );
 
 select * from finish();

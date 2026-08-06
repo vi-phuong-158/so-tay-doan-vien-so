@@ -10,7 +10,10 @@ export function AdminDashboard() {
   const [users, setUsers] = useState([]);
   const [orgs, setOrgs] = useState([]);
   const [loading, setLoading] = useState(true);
-
+  const [showInvite, setShowInvite] = useState(false);
+  const [inviteForm, setInviteForm] = useState({ email: '', fullName: '', roleCode: 'MEMBER' });
+  const [managingRoleUserId, setManagingRoleUserId] = useState(null);
+  const [roleForm, setRoleForm] = useState({ roleCode: 'MEMBER' });
   useEffect(() => {
     const fetchUsers = async () => {
       setLoading(true);
@@ -50,16 +53,12 @@ export function AdminDashboard() {
     }
   };
 
-  const inviteMember = async () => {
-    const email = window.prompt("Nhập email người dùng mới:");
-    if (!email) return;
-    const fullName = window.prompt("Nhập họ tên:");
-    if (!fullName) return;
-    const roleCode = window.prompt("Nhập chức vụ (MEMBER, BRANCH_OFFICER, YOUTH_ADMIN):", "MEMBER");
-    if (!roleCode) return;
+  const handleInviteSubmit = async (e) => {
+    e.preventDefault();
+    const { email, fullName, roleCode } = inviteForm;
+    if (!email || !fullName) return;
     
     // Simplification for UI demo: we assign them to the current user's org.
-    // In reality, there would be a full dropdown form.
     const { error } = await supabase.functions.invoke('admin-users', {
       body: { action: 'invite', email, full_name: fullName, role_code: roleCode, organization_id: profile.organization_id }
     });
@@ -68,9 +67,26 @@ export function AdminDashboard() {
       alert(error.message || 'Lỗi gửi lời mời');
     } else {
       alert('Đã gửi lời mời thành công!');
-      // reload users
+      setShowInvite(false);
+      setInviteForm({ email: '', fullName: '', roleCode: 'MEMBER' });
       setTab('users');
     }
+  };
+
+  const handleAssignRole = async (user) => {
+    const { error } = await supabase.functions.invoke('admin-users', {
+      body: { action: 'assign_role', target_user_id: user.id, role_code: roleForm.roleCode, scope_organization_id: user.organization_id }
+    });
+    if (error) alert('Lỗi cấp quyền: ' + error.message);
+    else { alert('Thành công!'); setManagingRoleUserId(null); }
+  };
+
+  const handleRevokeRole = async (user) => {
+    const { error } = await supabase.functions.invoke('admin-users', {
+      body: { action: 'revoke_role', target_user_id: user.id, role_code: roleForm.roleCode, scope_organization_id: user.organization_id }
+    });
+    if (error) alert('Lỗi thu hồi quyền: ' + error.message);
+    else { alert('Thành công!'); setManagingRoleUserId(null); }
   };
 
   return (
@@ -88,8 +104,25 @@ export function AdminDashboard() {
           <div style={{ background: 'var(--surface)', padding: '24px', borderRadius: '8px', border: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
               <h3>Danh sách người dùng</h3>
-              <Button onClick={inviteMember}><Icon name="plus" size={16} /> Mời thành viên</Button>
+              <Button onClick={() => setShowInvite(!showInvite)}><Icon name="plus" size={16} /> Mời thành viên</Button>
             </div>
+            
+            {showInvite && (
+              <form onSubmit={handleInviteSubmit} style={{ padding: '16px', background: 'var(--background)', marginBottom: '16px', borderRadius: '4px' }}>
+                <h4 style={{ marginBottom: '12px' }}>Gửi lời mời thành viên mới</h4>
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                  <input required placeholder="Email" type="email" value={inviteForm.email} onChange={e => setInviteForm({...inviteForm, email: e.target.value})} style={{ flex: 1, padding: '8px' }} />
+                  <input required placeholder="Họ và tên" value={inviteForm.fullName} onChange={e => setInviteForm({...inviteForm, fullName: e.target.value})} style={{ flex: 1, padding: '8px' }} />
+                  <select value={inviteForm.roleCode} onChange={e => setInviteForm({...inviteForm, roleCode: e.target.value})} style={{ padding: '8px' }}>
+                    <option value="MEMBER">Đoàn viên</option>
+                    <option value="BRANCH_OFFICER">Cán bộ chi đoàn</option>
+                    <option value="YOUTH_ADMIN">Quản trị cấp bộ Đoàn</option>
+                  </select>
+                </div>
+                <Button type="submit" variant="primary">Gửi lời mời</Button>
+                <Button type="button" variant="outline" onClick={() => setShowInvite(false)} style={{ marginLeft: '8px' }}>Hủy</Button>
+              </form>
+            )}
             
             {loading ? <p>Đang tải...</p> : (
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
@@ -115,6 +148,20 @@ export function AdminDashboard() {
                         <button className="icon-button" title={user.account_status === 'ACTIVE' ? "Khóa" : "Mở khóa"} onClick={() => toggleUserStatus(user)}>
                           <Icon name={user.account_status === 'ACTIVE' ? "lock" : "unlock"} size={16} />
                         </button>
+                        <button className="icon-button" title="Phân quyền" onClick={() => setManagingRoleUserId(managingRoleUserId === user.id ? null : user.id)}>
+                          <Icon name="key" size={16} />
+                        </button>
+                        {managingRoleUserId === user.id && (
+                          <div style={{ marginTop: '8px', display: 'flex', gap: '4px' }}>
+                            <select value={roleForm.roleCode} onChange={e => setRoleForm({ roleCode: e.target.value })}>
+                              <option value="MEMBER">Đoàn viên</option>
+                              <option value="BRANCH_OFFICER">Cán bộ chi đoàn</option>
+                              <option value="YOUTH_ADMIN">Quản trị cấp bộ Đoàn</option>
+                            </select>
+                            <button onClick={() => handleAssignRole(user)}>Cấp</button>
+                            <button onClick={() => handleRevokeRole(user)}>Thu hồi</button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -128,7 +175,7 @@ export function AdminDashboard() {
           <div style={{ background: 'var(--surface)', padding: '24px', borderRadius: '8px', border: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
               <h3>Đơn vị trực thuộc</h3>
-              <Button onClick={() => alert('Chức năng đang phát triển')}><Icon name="plus" size={16} /> Thêm đơn vị</Button>
+              <Button disabled title="Chức năng đang phát triển"><Icon name="plus" size={16} /> Thêm đơn vị</Button>
             </div>
             {loading ? <p>Đang tải...</p> : (
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>

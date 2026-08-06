@@ -1,17 +1,24 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
+export const getAuthGuardAction = ({ loading, user, profileError, profile }) => {
+  if (loading) return 'LOADING_SESSION';
+  if (!user) return 'NAVIGATE_LOGIN';
+  if (profileError) return 'ERROR_PROFILE';
+  if (!profile) return 'LOADING_PROFILE';
+  if (profile.account_status !== 'ACTIVE') return 'ERROR_INACTIVE';
+  return 'RENDER_CHILDREN';
+};
+
 export const AuthGuard = ({ children }) => {
   const { user, profile, profileError, loading, logout } = useAuth();
   const location = useLocation();
 
-  if (loading) return <div className="page"><div className="loading-skeleton">Đang kiểm tra phiên làm việc...</div></div>;
+  const action = getAuthGuardAction({ loading, user, profileError, profile });
 
-  if (!user) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
-  if (profileError) {
+  if (action === 'LOADING_SESSION') return <div className="page"><div className="loading-skeleton">Đang kiểm tra phiên làm việc...</div></div>;
+  if (action === 'NAVIGATE_LOGIN') return <Navigate to="/login" state={{ from: location }} replace />;
+  if (action === 'ERROR_PROFILE') {
     return (
       <div className="page">
         <div className="unauthorized-state">
@@ -22,12 +29,8 @@ export const AuthGuard = ({ children }) => {
       </div>
     );
   }
-
-  if (!profile) {
-    return <div className="page"><div className="loading-skeleton">Đang tải hồ sơ...</div></div>;
-  }
-
-  if (profile.account_status !== 'ACTIVE') {
+  if (action === 'LOADING_PROFILE') return <div className="page"><div className="loading-skeleton">Đang tải hồ sơ...</div></div>;
+  if (action === 'ERROR_INACTIVE') {
     return (
       <div className="page">
         <div className="unauthorized-state">

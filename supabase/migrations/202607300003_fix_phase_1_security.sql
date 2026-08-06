@@ -65,6 +65,8 @@ begin
   
   return false;
 end $$;
+revoke all on function public.can_access_document(uuid) from public;
+grant execute on function public.can_access_document(uuid) to authenticated;
 
 -- Update RLS policies that depended on old can_access_document signature
 create policy "active users read published documents" on public.documents for select using (public.can_access_document(id));
