@@ -46,12 +46,23 @@ export const handler = async (req: Request) => {
       const { target_user_id, status } = payload;
       if (!['ACTIVE', 'SUSPENDED', 'ARCHIVED'].includes(status)) throw new Error('BAD_REQUEST: Invalid status');
       if (target_user_id === user.id) throw new Error('FORBIDDEN: Cannot modify own status');
-      if (target_user_id === 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa') throw new Error('FORBIDDEN: Cannot modify SYSTEM_ADMIN');
 
       const { data: targetProfile } = await adminClient.from('profiles').select('organization_id').eq('id', target_user_id).single();
       if (!targetProfile) throw new Error('NOT_FOUND: User not found');
-      
-      await requireScopedRole(adminClient, user.id, ['YOUTH_ADMIN'], targetProfile.organization_id);
+
+      const { data: targetRoles, error: targetRolesError } = await adminClient
+        .from('user_roles')
+        .select('role_code')
+        .eq('user_id', target_user_id);
+      if (targetRolesError) throw targetRolesError;
+
+      const targetIsSystemAdmin = targetRoles?.some((role) => role.role_code === 'SYSTEM_ADMIN');
+
+      if (targetIsSystemAdmin) {
+        await requireGlobalRole(adminClient, user.id, ['SYSTEM_ADMIN']);
+      } else {
+        await requireScopedRole(adminClient, user.id, ['YOUTH_ADMIN'], targetProfile.organization_id);
+      }
 
       const { error } = await adminClient.rpc('admin_update_user_status', {
         p_actor_id: user.id,

@@ -80,12 +80,14 @@ begin
   values (p_actor_id, 'INVITE_USER', 'USER', p_new_user_id, p_org_id, jsonb_build_object('role_code', p_role_code, 'email', p_email));
 end $$;
 
--- Secure these RPCs
-revoke all on function public.admin_update_user_status(uuid, uuid, text, uuid) from public;
-revoke all on function public.admin_assign_role(uuid, uuid, text, uuid, uuid) from public;
-revoke all on function public.admin_revoke_role(uuid, uuid, text, uuid, uuid) from public;
-revoke all on function public.admin_invite_user_db_setup(uuid, uuid, text, uuid, text, text) from public;
+-- Secure these RPCs: revoke public access and grant explicitly to service_role only.
+-- These are trusted internal transaction RPCs used exclusively by Edge Functions.
+revoke all on function public.admin_update_user_status(uuid, uuid, text, uuid) from public, anon, authenticated;
+revoke all on function public.admin_assign_role(uuid, uuid, text, uuid, uuid) from public, anon, authenticated;
+revoke all on function public.admin_revoke_role(uuid, uuid, text, uuid, uuid) from public, anon, authenticated;
+revoke all on function public.admin_invite_user_db_setup(uuid, uuid, text, uuid, text, text) from public, anon, authenticated;
 
--- We don't grant EXECUTE to authenticated here because these should ONLY be called by service_role from the Edge Function.
--- (The Edge Function connects with serviceRoleKey and has bypass RLS privileges anyway).
--- Wait, service_role has ALL PRIVILEGES on routines by default, so it can execute them.
+grant execute on function public.admin_update_user_status(uuid, uuid, text, uuid) to service_role;
+grant execute on function public.admin_assign_role(uuid, uuid, text, uuid, uuid) to service_role;
+grant execute on function public.admin_revoke_role(uuid, uuid, text, uuid, uuid) to service_role;
+grant execute on function public.admin_invite_user_db_setup(uuid, uuid, text, uuid, text, text) to service_role;

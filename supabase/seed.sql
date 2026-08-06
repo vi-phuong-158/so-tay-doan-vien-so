@@ -8,6 +8,7 @@ on conflict (id) do update set parent_id = excluded.parent_id;
 -- Create auth users
 insert into auth.users (id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data) values 
 ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'authenticated', 'authenticated', 'sysadmin@test.local', crypt('password123', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}'),
+('a2a2a2a2-a2a2-a2a2-a2a2-a2a2a2a2a2a2', 'authenticated', 'authenticated', 'sysadmin2@test.local', crypt('password123', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}'),
 ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'authenticated', 'authenticated', 'youthadmin@test.local', crypt('password123', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}'),
 ('cccccccc-cccc-cccc-cccc-cccccccccccc', 'authenticated', 'authenticated', 'officera@test.local', crypt('password123', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}'),
 ('dddddddd-dddd-dddd-dddd-dddddddddddd', 'authenticated', 'authenticated', 'officerb@test.local', crypt('password123', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}'),
@@ -20,6 +21,7 @@ on conflict (id) do nothing;
 -- Create profiles
 insert into public.profiles (id, full_name, organization_id, account_status) values
 ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'System Admin', '11111111-1111-1111-1111-111111111111', 'ACTIVE'),
+('a2a2a2a2-a2a2-a2a2-a2a2-a2a2a2a2a2a2', 'System Admin 2', '22222222-2222-2222-2222-222222222222', 'ACTIVE'),
 ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'Youth Admin', '11111111-1111-1111-1111-111111111111', 'ACTIVE'),
 ('cccccccc-cccc-cccc-cccc-cccccccccccc', 'Officer A', '22222222-2222-2222-2222-222222222222', 'ACTIVE'),
 ('dddddddd-dddd-dddd-dddd-dddddddddddd', 'Officer B', '33333333-3333-3333-3333-333333333333', 'ACTIVE'),
@@ -32,6 +34,7 @@ on conflict (id) do nothing;
 -- Create user roles
 insert into public.user_roles (user_id, role_code, scope_organization_id) values
 ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'SYSTEM_ADMIN', null),
+('a2a2a2a2-a2a2-a2a2-a2a2-a2a2a2a2a2a2', 'SYSTEM_ADMIN', null),
 ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'YOUTH_ADMIN', '11111111-1111-1111-1111-111111111111'),
 ('cccccccc-cccc-cccc-cccc-cccccccccccc', 'BRANCH_OFFICER', '22222222-2222-2222-2222-222222222222'),
 ('dddddddd-dddd-dddd-dddd-dddddddddddd', 'BRANCH_OFFICER', '33333333-3333-3333-3333-333333333333'),

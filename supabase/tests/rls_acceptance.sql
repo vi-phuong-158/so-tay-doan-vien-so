@@ -1,6 +1,6 @@
 begin;
 
-select plan(36);
+select plan(48);
 
 -- 1. Setup role helper
 create or replace function set_auth_user(p_uid uuid) returns void language plpgsql as $$
@@ -339,6 +339,62 @@ select column_privs_are(
 select column_privs_are(
   'public', 'profiles', 'full_name', 'authenticated', ARRAY['SELECT', 'UPDATE'],
   'authenticated should have SELECT and UPDATE on full_name'
+);
+
+-- 37-39. admin_update_user_status privileges
+select function_privs_are(
+  'public', 'admin_update_user_status', ARRAY['uuid', 'uuid', 'text', 'uuid'], 'anon', ARRAY[]::text[],
+  'anon should not have EXECUTE on admin_update_user_status'
+);
+select function_privs_are(
+  'public', 'admin_update_user_status', ARRAY['uuid', 'uuid', 'text', 'uuid'], 'authenticated', ARRAY[]::text[],
+  'authenticated should not have EXECUTE on admin_update_user_status'
+);
+select function_privs_are(
+  'public', 'admin_update_user_status', ARRAY['uuid', 'uuid', 'text', 'uuid'], 'service_role', ARRAY['EXECUTE'],
+  'service_role should have EXECUTE on admin_update_user_status'
+);
+
+-- 40-42. admin_assign_role privileges
+select function_privs_are(
+  'public', 'admin_assign_role', ARRAY['uuid', 'uuid', 'text', 'uuid', 'uuid'], 'anon', ARRAY[]::text[],
+  'anon should not have EXECUTE on admin_assign_role'
+);
+select function_privs_are(
+  'public', 'admin_assign_role', ARRAY['uuid', 'uuid', 'text', 'uuid', 'uuid'], 'authenticated', ARRAY[]::text[],
+  'authenticated should not have EXECUTE on admin_assign_role'
+);
+select function_privs_are(
+  'public', 'admin_assign_role', ARRAY['uuid', 'uuid', 'text', 'uuid', 'uuid'], 'service_role', ARRAY['EXECUTE'],
+  'service_role should have EXECUTE on admin_assign_role'
+);
+
+-- 43-45. admin_revoke_role privileges
+select function_privs_are(
+  'public', 'admin_revoke_role', ARRAY['uuid', 'uuid', 'text', 'uuid', 'uuid'], 'anon', ARRAY[]::text[],
+  'anon should not have EXECUTE on admin_revoke_role'
+);
+select function_privs_are(
+  'public', 'admin_revoke_role', ARRAY['uuid', 'uuid', 'text', 'uuid', 'uuid'], 'authenticated', ARRAY[]::text[],
+  'authenticated should not have EXECUTE on admin_revoke_role'
+);
+select function_privs_are(
+  'public', 'admin_revoke_role', ARRAY['uuid', 'uuid', 'text', 'uuid', 'uuid'], 'service_role', ARRAY['EXECUTE'],
+  'service_role should have EXECUTE on admin_revoke_role'
+);
+
+-- 46-48. admin_invite_user_db_setup privileges
+select function_privs_are(
+  'public', 'admin_invite_user_db_setup', ARRAY['uuid', 'uuid', 'text', 'uuid', 'text', 'text'], 'anon', ARRAY[]::text[],
+  'anon should not have EXECUTE on admin_invite_user_db_setup'
+);
+select function_privs_are(
+  'public', 'admin_invite_user_db_setup', ARRAY['uuid', 'uuid', 'text', 'uuid', 'text', 'text'], 'authenticated', ARRAY[]::text[],
+  'authenticated should not have EXECUTE on admin_invite_user_db_setup'
+);
+select function_privs_are(
+  'public', 'admin_invite_user_db_setup', ARRAY['uuid', 'uuid', 'text', 'uuid', 'text', 'text'], 'service_role', ARRAY['EXECUTE'],
+  'service_role should have EXECUTE on admin_invite_user_db_setup'
 );
 
 select * from finish();

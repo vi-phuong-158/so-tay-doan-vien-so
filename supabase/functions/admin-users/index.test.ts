@@ -65,17 +65,24 @@ Deno.test('admin-users: Cannot self-suspend', async () => {
   assertEquals(res.status, 403);
 });
 
-Deno.test('admin-users: Cannot modify SYSTEM_ADMIN', async () => {
+Deno.test('admin-users: Cannot modify any SYSTEM_ADMIN', async () => {
   const token = await signIn('youthadmin@test.local');
   
-  const res = await fetch(FUNCTION_URL, {
+  // Trying to suspend default sysadmin
+  const res1 = await fetch(FUNCTION_URL, {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-    // Trying to suspend sysadmin
     body: JSON.stringify({ action: 'update_status', target_user_id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', status: 'SUSPENDED' })
   });
-  
-  assertEquals(res.status, 403);
+  assertEquals(res1.status, 403);
+
+  // Trying to suspend second sysadmin (sysadmin2@test.local with a non-standard UUID in Org CĐA)
+  const res2 = await fetch(FUNCTION_URL, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'update_status', target_user_id: 'a2a2a2a2-a2a2-a2a2-a2a2-a2a2a2a2a2a2', status: 'SUSPENDED' })
+  });
+  assertEquals(res2.status, 403);
 });
 
 Deno.test('admin-users: assign/revoke role within scope works', async () => {
