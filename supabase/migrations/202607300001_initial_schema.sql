@@ -391,8 +391,12 @@ grant select, insert, update on table public.report_submissions to authenticated
 grant select, insert on table public.report_status_history to authenticated;
 grant select on table public.innovation_problems to anon, authenticated;
 grant insert, update, delete on table public.innovation_problems to authenticated;
-grant select, insert, update, delete on table public.innovation_ideas to authenticated;
-grant select, insert, update, delete on table public.innovation_votes to authenticated;
+grant select, insert, update, delete on table public.innovation_projects to authenticated;
+grant select, insert, update, delete on table public.innovation_project_media to authenticated;
+grant select, insert, update, delete on table public.innovation_problem_files to authenticated;
+grant select, insert, update, delete on table public.innovation_problem_assignments to authenticated;
+grant select, insert, update, delete on table public.innovation_problem_updates to authenticated;
+grant select, insert, update, delete on table public.innovation_solution_artifacts to authenticated;
 grant select on table public.notifications to authenticated;
 grant update on table public.notifications to authenticated;
 
