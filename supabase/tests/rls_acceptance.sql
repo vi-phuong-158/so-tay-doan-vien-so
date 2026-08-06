@@ -1,6 +1,6 @@
 begin;
 
-select plan(33);
+select plan(36);
 
 -- 1. Setup role helper
 create or replace function set_auth_user(p_uid uuid) returns void language plpgsql as $$
@@ -265,13 +265,13 @@ select results_eq(
 -- Storage Tests
 -- Create mock objects in documents-private for a public document
 select reset_auth(); -- use postgres to insert mock objects
-insert into public.documents (id, title, status, visibility_level, created_by, owner_organization_id) values ('88888888-8888-8888-8888-888888888888', 'Public Doc A', 'PUBLISHED', 'PUBLIC', 'cccccccc-cccc-cccc-cccc-cccccccccccc', '22222222-2222-2222-2222-222222222222');
-insert into storage.objects (bucket_id, name, owner) values ('documents-private', '88888888-8888-8888-8888-888888888888/file.pdf', 'cccccccc-cccc-cccc-cccc-cccccccccccc'::uuid);
+insert into public.documents (id, title, status, visibility_level, created_by, owner_organization_id) values ('88888888-8888-8888-8888-888888888889', 'Public Doc A', 'PUBLISHED', 'PUBLIC', 'cccccccc-cccc-cccc-cccc-cccccccccccc', '22222222-2222-2222-2222-222222222222');
+insert into storage.objects (bucket_id, name, owner) values ('documents-private', '88888888-8888-8888-8888-888888888889/file.pdf', 'cccccccc-cccc-cccc-cccc-cccccccccccc'::uuid);
 
 -- 27. User in scope CAN read the object
 select set_auth_user('cccccccc-cccc-cccc-cccc-cccccccccccc'::uuid);
 select results_eq(
-  'select count(*)::integer from storage.objects where name = ''88888888-8888-8888-8888-888888888888/file.pdf''',
+  'select count(*)::integer from storage.objects where name = ''88888888-8888-8888-8888-888888888889/file.pdf''',
   ARRAY[1],
   'User can read object belonging to accessible document'
 );
@@ -291,7 +291,7 @@ select reset_auth(); -- Switch to postgres to suspend
 update public.profiles set account_status = 'SUSPENDED' where id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'::uuid;
 select set_auth_user('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'::uuid); -- Switch to suspended Youth Admin
 select results_eq(
-  'select count(*)::integer from storage.objects where name = ''88888888-8888-8888-8888-888888888888/file.pdf''',
+  'select count(*)::integer from storage.objects where name = ''88888888-8888-8888-8888-888888888889/file.pdf''',
   ARRAY[0],
   'Suspended user cannot read storage objects even if document is public'
 );
@@ -321,6 +321,24 @@ select function_privs_are(
 select function_privs_are(
   'public', 'can_access_document', ARRAY['uuid'], 'authenticated', ARRAY['EXECUTE'],
   'authenticated should have EXECUTE on can_access_document'
+);
+
+-- 34. authenticated should NOT have UPDATE on account_status in profiles
+select column_privs_are(
+  'public', 'profiles', 'account_status', 'authenticated', ARRAY['SELECT'],
+  'authenticated should only have SELECT on account_status'
+);
+
+-- 35. authenticated should NOT have UPDATE on organization_id in profiles
+select column_privs_are(
+  'public', 'profiles', 'organization_id', 'authenticated', ARRAY['SELECT'],
+  'authenticated should only have SELECT on organization_id'
+);
+
+-- 36. authenticated should have UPDATE on full_name in profiles
+select column_privs_are(
+  'public', 'profiles', 'full_name', 'authenticated', ARRAY['SELECT', 'UPDATE'],
+  'authenticated should have SELECT and UPDATE on full_name'
 );
 
 select * from finish();
