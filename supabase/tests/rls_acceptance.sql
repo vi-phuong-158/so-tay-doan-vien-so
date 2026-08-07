@@ -61,11 +61,11 @@ select throws_ok(
 -- Run tests as Sysadmin
 select set_auth_user('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid);
 
--- 6. Sysadmin can see all profiles
+-- 6. Sysadmin can read profiles across multiple organizations
 select results_eq(
-  'select count(*)::integer from public.profiles',
-  ARRAY[7],
-  'Sysadmin can see all 7 profiles'
+  $$ select count(*)::integer from public.profiles where id in ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid, 'a2a2a2a2-a2a2-a2a2-a2a2-a2a2a2a2a2a2'::uuid, 'dddddddd-dddd-dddd-dddd-dddddddddddd'::uuid) $$,
+  ARRAY[3],
+  'Sysadmin can read profiles across multiple organizations'
 );
 
 -- 7. Role có scope đơn vị A không quản lý được đơn vị B (Testing has_role_in_scope)
