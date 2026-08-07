@@ -72,6 +72,7 @@ Deno.test('admin-users: Youth Admin out of scope is blocked', async () => {
   });
   
   assertEquals(res.status, 403);
+  await res.text();
 });
 
 Deno.test('admin-users: Cannot self-suspend', async () => {
@@ -84,6 +85,7 @@ Deno.test('admin-users: Cannot self-suspend', async () => {
   });
   
   assertEquals(res.status, 403);
+  await res.text();
 });
 
 Deno.test('admin-users: Cannot modify any SYSTEM_ADMIN', async () => {
@@ -96,6 +98,7 @@ Deno.test('admin-users: Cannot modify any SYSTEM_ADMIN', async () => {
     body: JSON.stringify({ action: 'update_status', target_user_id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', status: 'SUSPENDED' })
   });
   assertEquals(res1.status, 403);
+  await res1.text();
 
   // Trying to suspend second sysadmin (sysadmin2@test.local with a non-standard UUID in Org CĐA)
   const res2 = await fetch(FUNCTION_URL, {
@@ -104,6 +107,7 @@ Deno.test('admin-users: Cannot modify any SYSTEM_ADMIN', async () => {
     body: JSON.stringify({ action: 'update_status', target_user_id: 'a2a2a2a2-a2a2-a2a2-a2a2-a2a2a2a2a2a2', status: 'SUSPENDED' })
   });
   assertEquals(res2.status, 403);
+  await res2.text();
 });
 
 Deno.test('admin-users: assign/revoke role within scope works', async () => {
@@ -117,6 +121,7 @@ Deno.test('admin-users: assign/revoke role within scope works', async () => {
   });
   
   assertEquals(resAssign.status, 200);
+  await resAssign.text();
 
   // Revoke role
   const resRevoke = await fetch(FUNCTION_URL, {
@@ -126,5 +131,6 @@ Deno.test('admin-users: assign/revoke role within scope works', async () => {
   });
 
   assertEquals(resRevoke.status, 200);
+  await resRevoke.text();
 });
 
