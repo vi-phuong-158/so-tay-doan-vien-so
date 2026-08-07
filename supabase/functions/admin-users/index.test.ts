@@ -1,26 +1,43 @@
 import { assertEquals } from 'https://deno.land/std@0.177.0/testing/asserts.ts';
 
+import { createClient } from 'npm:@supabase/supabase-js@2.49.1';
+
 const FUNCTION_URL = 'http://127.0.0.1:54321/functions/v1/admin-users';
+
+const USER_IDS: Record<string, string> = {
+  'suspended@test.local': '99999999-9999-9999-9999-999999999999',
+  'youthadmina@test.local': '11112222-3333-4444-5555-666677778888',
+  'youthadmin@test.local': 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+  'sysadmin@test.local': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+};
 
 async function signIn(email: string): Promise<string> {
   const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? 'http://127.0.0.1:54321';
   const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+  const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || SUPABASE_ANON_KEY;
 
-  const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
-    method: 'POST',
-    headers: {
-      'apikey': SUPABASE_ANON_KEY,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ email, password: 'password123' })
+  const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+  const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false }
   });
 
-  const data = await res.json();
-  if (!res.ok || !data.access_token) {
-    throw new Error(`GoTrue password login failed for ${email}: ` + JSON.stringify(data));
+  const userId = USER_IDS[email];
+  if (userId) {
+    await adminClient.auth.admin.updateUserById(userId, { password: 'password123', email_confirm: true });
   }
 
-  return data.access_token;
+  const { data, error } = await userClient.auth.signInWithPassword({
+    email,
+    password: 'password123'
+  });
+
+  if (error || !data?.session?.access_token) {
+    throw new Error(`GoTrue signInWithPassword failed for ${email}: ` + JSON.stringify(error));
+  }
+
+  return data.session.access_token;
 }
 
 Deno.test('admin-users: malformed JWT is rejected (401)', async () => {
