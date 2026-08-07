@@ -14,51 +14,10 @@ const USER_IDS: Record<string, string> = {
 async function signIn(email: string): Promise<string> {
   const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? 'http://127.0.0.1:54321';
   const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
-  const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
-  const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false }
-  });
   const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: { persistSession: false, autoRefreshToken: false }
   });
-
-  // Ensure user exists in GoTrue natively
-  const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
-    email,
-    password: 'password123',
-    email_confirm: true
-  });
-
-  let userId = newUser?.user?.id;
-
-  if (createError && !userId) {
-    const { data: listData } = await adminClient.auth.admin.listUsers();
-    const existing = listData?.users?.find(u => u.email === email);
-    if (existing) {
-      userId = existing.id;
-      await adminClient.auth.admin.updateUserById(userId, { password: 'password123', email_confirm: true });
-    }
-  }
-
-  if (userId) {
-    const orgId = email.includes('youthadmina') ? '22222222-2222-2222-2222-222222222222' : '11111111-1111-1111-1111-111111111111';
-    const status = email.includes('suspended') ? 'SUSPENDED' : 'ACTIVE';
-    const roleCode = email.includes('sysadmin') ? 'SYSTEM_ADMIN' : 'YOUTH_ADMIN';
-
-    await adminClient.from('profiles').upsert({
-      id: userId,
-      full_name: email,
-      organization_id: orgId,
-      account_status: status
-    });
-
-    await adminClient.from('user_roles').upsert({
-      user_id: userId,
-      role_code: roleCode,
-      scope_organization_id: roleCode === 'SYSTEM_ADMIN' ? null : orgId
-    });
-  }
 
   const { data, error } = await userClient.auth.signInWithPassword({
     email,
