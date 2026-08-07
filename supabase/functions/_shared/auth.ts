@@ -13,7 +13,9 @@ export function clients(request: Request): { userClient: SupabaseClient; adminCl
 }
 
 export async function requireUser(userClient: SupabaseClient): Promise<User> {
-  const { data, error } = await userClient.auth.getUser();
+  const authHeader = (userClient as any).rest?.headers?.Authorization || (userClient as any).headers?.Authorization || '';
+  const token = authHeader.replace(/^Bearer\s+/i, '');
+  const { data, error } = await userClient.auth.getUser(token || undefined);
   if (error || !data?.user) {
     throw new Error('UNAUTHENTICATED');
   }
