@@ -13,28 +13,21 @@ const USER_IDS: Record<string, string> = {
 
 async function signIn(email: string): Promise<string> {
   const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? 'http://127.0.0.1:54321';
-  const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
-  const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || SUPABASE_ANON_KEY;
+  const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+
+  const userId = USER_IDS[email];
+  if (!userId) throw new Error(`Unknown test email: ${email}`);
 
   const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false }
   });
-  const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false }
-  });
 
-  const userId = USER_IDS[email];
-  if (userId) {
-    await adminClient.auth.admin.updateUserById(userId, { password: 'password123', email_confirm: true });
-  }
-
-  const { data, error } = await userClient.auth.signInWithPassword({
-    email,
-    password: 'password123'
+  const { data, error } = await adminClient.auth.admin.createSession({
+    user_id: userId
   });
 
   if (error || !data?.session?.access_token) {
-    throw new Error(`GoTrue signInWithPassword failed for ${email}: ` + JSON.stringify(error));
+    throw new Error(`admin.createSession failed for ${email} (${userId}): ` + JSON.stringify(error));
   }
 
   return data.session.access_token;
