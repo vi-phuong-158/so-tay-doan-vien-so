@@ -61,4 +61,5 @@ jobs:
         export SUPABASE_URL="http://127.0.0.1:54321"
         export SUPABASE_ANON_KEY=$(supabase status -o json | jq -r .ANON_KEY)
         export SUPABASE_SERVICE_ROLE_KEY=$(supabase status -o json | jq -r .SERVICE_ROLE_KEY)
+        export SUPABASE_JWT_SECRET="super-secret-jwt-token-with-at-least-32-characters-long"
         deno test --allow-all
