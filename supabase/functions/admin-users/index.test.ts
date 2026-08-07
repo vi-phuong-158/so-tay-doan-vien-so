@@ -23,21 +23,41 @@ async function signIn(email: string): Promise<string> {
     auth: { persistSession: false, autoRefreshToken: false }
   });
 
-  const userId = USER_IDS[email];
+  // Ensure user exists in GoTrue natively
+  const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
+    email,
+    password: 'password123',
+    email_confirm: true
+  });
+
+  let userId = newUser?.user?.id;
+
+  if (createError && !userId) {
+    const { data: listData } = await adminClient.auth.admin.listUsers();
+    const existing = listData?.users?.find(u => u.email === email);
+    if (existing) {
+      userId = existing.id;
+      await adminClient.auth.admin.updateUserById(userId, { password: 'password123', email_confirm: true });
+    }
+  }
 
   if (userId) {
-    const { error: updateError } = await adminClient.auth.admin.updateUserById(userId, {
-      password: 'password123',
-      email_confirm: true
+    const orgId = email.includes('youthadmina') ? '22222222-2222-2222-2222-222222222222' : '11111111-1111-1111-1111-111111111111';
+    const status = email.includes('suspended') ? 'SUSPENDED' : 'ACTIVE';
+    const roleCode = email.includes('sysadmin') ? 'SYSTEM_ADMIN' : 'YOUTH_ADMIN';
+
+    await adminClient.from('profiles').upsert({
+      id: userId,
+      full_name: email,
+      organization_id: orgId,
+      account_status: status
     });
-    if (updateError) {
-      await adminClient.auth.admin.createUser({
-        id: userId,
-        email,
-        password: 'password123',
-        email_confirm: true
-      });
-    }
+
+    await adminClient.from('user_roles').upsert({
+      user_id: userId,
+      role_code: roleCode,
+      scope_organization_id: roleCode === 'SYSTEM_ADMIN' ? null : orgId
+    });
   }
 
   const { data, error } = await userClient.auth.signInWithPassword({
