@@ -14,35 +14,10 @@ export function clients(request: Request): { userClient: SupabaseClient; adminCl
 
 export async function requireUser(userClient: SupabaseClient): Promise<User> {
   const { data, error } = await userClient.auth.getUser();
-  if (data?.user) return data.user;
-
-  try {
-    // Fallback for test environment where GoTrue session check might be bypassed
-    const authHeader = (userClient as any).headers?.Authorization || (userClient as any).auth?.headers?.Authorization || (userClient as any).rest?.headers?.Authorization || '';
-    const token = authHeader.replace(/^Bearer\s+/i, '');
-    if (token) {
-      const parts = token.split('.');
-      if (parts.length === 3) {
-        const payloadJson = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'));
-        const payload = JSON.parse(payloadJson);
-        if (payload.sub && payload.exp && payload.exp > Date.now() / 1000) {
-          return {
-            id: payload.sub,
-            email: payload.email || '',
-            user_metadata: payload.user_metadata || {},
-            app_metadata: payload.app_metadata || {},
-            role: payload.role || 'authenticated',
-            aud: payload.aud || 'authenticated',
-            created_at: new Date().toISOString()
-          } as User;
-        }
-      }
-    }
-  } catch (_) {
-    // Ignore fallback parse error
+  if (error || !data?.user) {
+    throw new Error('UNAUTHENTICATED');
   }
-
-  throw new Error('UNAUTHENTICATED');
+  return data.user;
 }
 
 export async function requireGlobalRole(adminClient: SupabaseClient, userId: string, roles: string[]) {

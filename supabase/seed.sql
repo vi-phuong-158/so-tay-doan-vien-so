@@ -19,15 +19,15 @@ insert into auth.users (id, aud, role, email, encrypted_password, email_confirme
 on conflict (id) do nothing;
 
 insert into auth.identities (id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at) values
-('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '{"sub":"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa","email":"sysadmin@test.local"}', 'email', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', now(), now(), now()),
-('a2a2a2a2-a2a2-a2a2-a2a2-a2a2a2a2a2a2', 'a2a2a2a2-a2a2-a2a2-a2a2-a2a2a2a2a2a2', '{"sub":"a2a2a2a2-a2a2-a2a2-a2a2-a2a2a2a2a2a2","email":"sysadmin2@test.local"}', 'email', 'a2a2a2a2-a2a2-a2a2-a2a2-a2a2a2a2a2a2', now(), now(), now()),
-('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', '{"sub":"bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb","email":"youthadmin@test.local"}', 'email', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', now(), now(), now()),
-('cccccccc-cccc-cccc-cccc-cccccccccccc', 'cccccccc-cccc-cccc-cccc-cccccccccccc', '{"sub":"cccccccc-cccc-cccc-cccc-cccccccccccc","email":"officera@test.local"}', 'email', 'cccccccc-cccc-cccc-cccc-cccccccccccc', now(), now(), now()),
-('dddddddd-dddd-dddd-dddd-dddddddddddd', 'dddddddd-dddd-dddd-dddd-dddddddddddd', '{"sub":"dddddddd-dddd-dddd-dddd-dddddddddddd","email":"officerb@test.local"}', 'email', 'dddddddd-dddd-dddd-dddd-dddddddddddd', now(), now(), now()),
-('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', '{"sub":"eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee","email":"member@test.local"}', 'email', 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', now(), now(), now()),
-('ffffffff-ffff-ffff-ffff-ffffffffffff', 'ffffffff-ffff-ffff-ffff-ffffffffffff', '{"sub":"ffffffff-ffff-ffff-ffff-ffffffffffff","email":"innovation@test.local"}', 'email', 'ffffffff-ffff-ffff-ffff-ffffffffffff', now(), now(), now()),
-('11112222-3333-4444-5555-666677778888', '11112222-3333-4444-5555-666677778888', '{"sub":"11112222-3333-4444-5555-666677778888","email":"youthadmina@test.local"}', 'email', '11112222-3333-4444-5555-666677778888', now(), now(), now()),
-('99999999-9999-9999-9999-999999999999', '99999999-9999-9999-9999-999999999999', '{"sub":"99999999-9999-9999-9999-999999999999","email":"suspended@test.local"}', 'email', '99999999-9999-9999-9999-999999999999', now(), now(), now())
+('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '{"sub":"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa","email":"sysadmin@test.local"}', 'email', 'sysadmin@test.local', now(), now(), now()),
+('a2a2a2a2-a2a2-a2a2-a2a2-a2a2a2a2a2a2', 'a2a2a2a2-a2a2-a2a2-a2a2-a2a2a2a2a2a2', '{"sub":"a2a2a2a2-a2a2-a2a2-a2a2-a2a2a2a2a2a2","email":"sysadmin2@test.local"}', 'email', 'sysadmin2@test.local', now(), now(), now()),
+('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', '{"sub":"bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb","email":"youthadmin@test.local"}', 'email', 'youthadmin@test.local', now(), now(), now()),
+('cccccccc-cccc-cccc-cccc-cccccccccccc', 'cccccccc-cccc-cccc-cccc-cccccccccccc', '{"sub":"cccccccc-cccc-cccc-cccc-cccccccccccc","email":"officera@test.local"}', 'email', 'officera@test.local', now(), now(), now()),
+('dddddddd-dddd-dddd-dddd-dddddddddddd', 'dddddddd-dddd-dddd-dddd-dddddddddddd', '{"sub":"dddddddd-dddd-dddd-dddd-dddddddddddd","email":"officerb@test.local"}', 'email', 'officerb@test.local', now(), now(), now()),
+('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', '{"sub":"eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee","email":"member@test.local"}', 'email', 'member@test.local', now(), now(), now()),
+('ffffffff-ffff-ffff-ffff-ffffffffffff', 'ffffffff-ffff-ffff-ffff-ffffffffffff', '{"sub":"ffffffff-ffff-ffff-ffff-ffffffffffff","email":"innovation@test.local"}', 'email', 'innovation@test.local', now(), now(), now()),
+('11112222-3333-4444-5555-666677778888', '11112222-3333-4444-5555-666677778888', '{"sub":"11112222-3333-4444-5555-666677778888","email":"youthadmina@test.local"}', 'email', 'youthadmina@test.local', now(), now(), now()),
+('99999999-9999-9999-9999-999999999999', '99999999-9999-9999-9999-999999999999', '{"sub":"99999999-9999-9999-9999-999999999999","email":"suspended@test.local"}', 'email', 'suspended@test.local', now(), now(), now())
 on conflict (id) do nothing;
 
 -- Create profiles
