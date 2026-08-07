@@ -13,7 +13,10 @@ async function signIn(email: string): Promise<string> {
   const userId = USER_IDS[email];
   if (!userId) throw new Error(`Unknown test email: ${email}`);
 
-  const jwtSecret = Deno.env.get('SUPABASE_JWT_SECRET') ?? 'super-secret-jwt-token-with-at-least-32-characters-long';
+  let jwtSecret = Deno.env.get('SUPABASE_JWT_SECRET');
+  if (!jwtSecret || jwtSecret === 'null' || jwtSecret === 'undefined') {
+    jwtSecret = 'super-secret-jwt-token-with-at-least-32-characters-long';
+  }
   const header = { alg: 'HS256', typ: 'JWT' };
   const payload = {
     aud: 'authenticated',
