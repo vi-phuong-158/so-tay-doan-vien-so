@@ -426,6 +426,8 @@ grant select, insert, update, delete on table public.innovation_solution_artifac
 grant select on table public.notifications to authenticated;
 grant update on table public.notifications to authenticated;
 
+revoke all on table public.audit_logs from public, anon, authenticated;
+
 grant usage, select on all sequences in schema public to anon, authenticated;
 
 -- Grant all to service_role

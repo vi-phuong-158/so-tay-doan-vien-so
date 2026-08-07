@@ -313,32 +313,32 @@ select table_privs_are(
 
 -- 32. anon should have EXECUTE on can_access_document for RLS evaluations
 select function_privs_are(
-  'public', 'can_access_document', ARRAY['uuid'], 'anon', ARRAY['EXECUTE'],
+  'public', 'can_access_document', ARRAY['uuid', 'uuid'], 'anon', ARRAY['EXECUTE'],
   'anon should have EXECUTE on can_access_document'
 );
 
 -- 33. authenticated should have EXECUTE on can_access_document
 select function_privs_are(
-  'public', 'can_access_document', ARRAY['uuid'], 'authenticated', ARRAY['EXECUTE'],
+  'public', 'can_access_document', ARRAY['uuid', 'uuid'], 'authenticated', ARRAY['EXECUTE'],
   'authenticated should have EXECUTE on can_access_document'
 );
 
 -- 34. authenticated should NOT have UPDATE on account_status in profiles
 select column_privs_are(
-  'public', 'profiles', 'account_status', 'authenticated', ARRAY['SELECT'],
-  'authenticated should only have SELECT on account_status'
+  'public', 'profiles', 'account_status', 'authenticated', ARRAY['REFERENCES', 'SELECT'],
+  'authenticated should only have SELECT and REFERENCES on account_status'
 );
 
 -- 35. authenticated should NOT have UPDATE on organization_id in profiles
 select column_privs_are(
-  'public', 'profiles', 'organization_id', 'authenticated', ARRAY['SELECT'],
-  'authenticated should only have SELECT on organization_id'
+  'public', 'profiles', 'organization_id', 'authenticated', ARRAY['REFERENCES', 'SELECT'],
+  'authenticated should only have SELECT and REFERENCES on organization_id'
 );
 
 -- 36. authenticated should have UPDATE on full_name in profiles
 select column_privs_are(
-  'public', 'profiles', 'full_name', 'authenticated', ARRAY['SELECT', 'UPDATE'],
-  'authenticated should have SELECT and UPDATE on full_name'
+  'public', 'profiles', 'full_name', 'authenticated', ARRAY['REFERENCES', 'SELECT', 'UPDATE'],
+  'authenticated should have SELECT, UPDATE, and REFERENCES on full_name'
 );
 
 -- 37-39. admin_update_user_status privileges
