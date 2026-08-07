@@ -12,23 +12,45 @@ const USER_IDS: Record<string, string> = {
 };
 
 async function signIn(email: string): Promise<string> {
-  const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? 'http://127.0.0.1:54321';
-  const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+  const userId = USER_IDS[email];
+  if (!userId) throw new Error(`Unknown test email: ${email}`);
 
-  const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false }
-  });
-
-  const { data, error } = await userClient.auth.signInWithPassword({
-    email,
-    password: 'password123'
-  });
-
-  if (error || !data?.session?.access_token) {
-    throw new Error(`signInWithPassword failed for ${email}: ` + JSON.stringify(error));
+  let jwtSecret = Deno.env.get('SUPABASE_JWT_SECRET');
+  if (!jwtSecret || jwtSecret === 'null' || jwtSecret === 'undefined') {
+    jwtSecret = 'super-secret-jwt-token-with-at-least-32-characters-long';
   }
 
-  return data.session.access_token;
+  const header = { alg: 'HS256', typ: 'JWT' };
+  const payload = {
+    aud: 'authenticated',
+    exp: Math.floor(Date.now() / 1000) + 3600,
+    sub: userId,
+    email: email,
+    phone: '',
+    app_metadata: { provider: 'email', providers: ['email'] },
+    user_metadata: {},
+    role: 'authenticated',
+    aal: 'aal1',
+    session_id: userId,
+    is_anonymous: false
+  };
+
+  const encoder = new TextEncoder();
+  const b64Header = base64url(encoder.encode(JSON.stringify(header)));
+  const b64Payload = base64url(encoder.encode(JSON.stringify(payload)));
+  const unsignedToken = `${b64Header}.${b64Payload}`;
+
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(jwtSecret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(unsignedToken));
+  const b64Signature = base64url(signature);
+
+  return `${unsignedToken}.${b64Signature}`;
 }
 
 Deno.test('admin-users: malformed JWT is rejected (401)', async () => {
