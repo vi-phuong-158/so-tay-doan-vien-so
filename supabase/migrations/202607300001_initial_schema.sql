@@ -377,9 +377,9 @@ grant usage on schema public to anon, authenticated, service_role;
 
 -- Grant specific privileges to authenticated and anon
 grant select on table public.organizations to anon, authenticated;
-grant select on table public.profiles to authenticated;
+grant select on table public.profiles to anon, authenticated;
 grant update (full_name, job_title, phone, last_seen_at) on public.profiles to authenticated;
-grant select on table public.user_roles to authenticated;
+grant select on table public.user_roles to anon, authenticated;
 grant insert, delete on table public.user_roles to authenticated;
 
 grant select on table public.announcements to anon, authenticated;
