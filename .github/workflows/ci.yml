@@ -60,4 +60,5 @@ jobs:
         # and has SUPABASE_URL, SUPABASE_ANON_KEY in its config, but we need them in env for Deno tests.
         export SUPABASE_URL="http://127.0.0.1:54321"
         export SUPABASE_ANON_KEY=$(supabase status -o json | jq -r .ANON_KEY)
+        export SUPABASE_SERVICE_ROLE_KEY=$(supabase status -o json | jq -r .SERVICE_ROLE_KEY)
         deno test --allow-all
