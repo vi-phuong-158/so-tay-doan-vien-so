@@ -313,13 +313,13 @@ select table_privs_are(
 
 -- 32. anon should have EXECUTE on can_access_document for RLS evaluations
 select function_privs_are(
-  'public', 'can_access_document', ARRAY['uuid', 'uuid'], 'anon', ARRAY['EXECUTE'],
+  'public', 'can_access_document', ARRAY['uuid'], 'anon', ARRAY['EXECUTE'],
   'anon should have EXECUTE on can_access_document'
 );
 
 -- 33. authenticated should have EXECUTE on can_access_document
 select function_privs_are(
-  'public', 'can_access_document', ARRAY['uuid', 'uuid'], 'authenticated', ARRAY['EXECUTE'],
+  'public', 'can_access_document', ARRAY['uuid'], 'authenticated', ARRAY['EXECUTE'],
   'authenticated should have EXECUTE on can_access_document'
 );
 
