@@ -1,4 +1,5 @@
 import { assertEquals } from 'https://deno.land/std@0.177.0/testing/asserts.ts';
+import { createClient } from 'npm:@supabase/supabase-js@2.49.1';
 
 const FUNCTION_URL = 'http://127.0.0.1:54321/functions/v1/admin-users';
 
