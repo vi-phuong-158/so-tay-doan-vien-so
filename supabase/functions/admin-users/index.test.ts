@@ -1,5 +1,6 @@
 import { assertEquals } from 'https://deno.land/std@0.177.0/testing/asserts.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2.49.1';
+import { encodeUrl as base64url } from 'https://deno.land/std@0.177.0/encoding/base64url.ts';
 
 const FUNCTION_URL = 'http://127.0.0.1:54321/functions/v1/admin-users';
 
@@ -33,8 +34,8 @@ async function signIn(email: string): Promise<string> {
   };
 
   const encoder = new TextEncoder();
-  const b64Header = btoa(JSON.stringify(header)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-  const b64Payload = btoa(JSON.stringify(payload)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+  const b64Header = base64url(encoder.encode(JSON.stringify(header)));
+  const b64Payload = base64url(encoder.encode(JSON.stringify(payload)));
   const unsignedToken = `${b64Header}.${b64Payload}`;
 
   const key = await crypto.subtle.importKey(
@@ -45,8 +46,7 @@ async function signIn(email: string): Promise<string> {
     ['sign']
   );
   const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(unsignedToken));
-  const b64Signature = btoa(String.fromCharCode(...new Uint8Array(signature)))
-    .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+  const b64Signature = base64url(signature);
 
   return `${unsignedToken}.${b64Signature}`;
 }
