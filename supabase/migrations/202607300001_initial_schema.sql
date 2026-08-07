@@ -381,14 +381,39 @@ grant select on table public.profiles to authenticated;
 grant update (full_name, job_title, phone, last_seen_at) on public.profiles to authenticated;
 grant select on table public.user_roles to authenticated;
 grant insert, delete on table public.user_roles to authenticated;
-grant select on table public.documents to anon, authenticated;
-grant insert, update, delete on table public.documents to authenticated;
-grant select, insert, update, delete on table public.document_chunks to authenticated;
+
+grant select on table public.announcements to anon, authenticated;
+grant insert, update, delete on table public.announcements to authenticated;
+grant select, insert, update, delete on table public.announcement_targets to authenticated;
+grant select, insert, update, delete on table public.announcement_reads to authenticated;
+
 grant select on table public.report_campaigns to authenticated;
 grant insert, update, delete on table public.report_campaigns to authenticated;
+grant select, insert, update, delete on table public.report_campaign_templates to authenticated;
 grant select, update on table public.report_assignments to authenticated;
 grant select, insert, update on table public.report_submissions to authenticated;
+grant select, insert, update, delete on table public.report_submission_files to authenticated;
 grant select, insert on table public.report_status_history to authenticated;
+
+grant select on table public.documents to anon, authenticated;
+grant insert, update, delete on table public.documents to authenticated;
+grant select, insert, update, delete on table public.document_relations to authenticated;
+grant select, insert, update, delete on table public.document_chunks to authenticated;
+
+grant select on table public.learning_topics to anon, authenticated;
+grant select on table public.learning_resources to anon, authenticated;
+
+grant select on table public.quizzes to anon, authenticated;
+grant select on table public.quiz_questions to anon, authenticated;
+grant select on table public.quiz_options to anon, authenticated;
+grant select, insert, update on table public.quiz_attempts to authenticated;
+grant select, insert, update on table public.quiz_answers to authenticated;
+
+grant select, insert, update, delete on table public.ai_conversations to authenticated;
+grant select, insert, update, delete on table public.ai_messages to authenticated;
+grant select, insert, update, delete on table public.ai_message_sources to authenticated;
+grant select, insert, update, delete on table public.ai_feedback to authenticated;
+
 grant select on table public.innovation_problems to anon, authenticated;
 grant insert, update, delete on table public.innovation_problems to authenticated;
 grant select, insert, update, delete on table public.innovation_projects to authenticated;
@@ -397,6 +422,7 @@ grant select, insert, update, delete on table public.innovation_problem_files to
 grant select, insert, update, delete on table public.innovation_problem_assignments to authenticated;
 grant select, insert, update, delete on table public.innovation_problem_updates to authenticated;
 grant select, insert, update, delete on table public.innovation_solution_artifacts to authenticated;
+
 grant select on table public.notifications to authenticated;
 grant update on table public.notifications to authenticated;
 
