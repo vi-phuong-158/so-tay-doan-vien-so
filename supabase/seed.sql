@@ -6,16 +6,16 @@ insert into public.organizations (id, code, name, short_name, organization_type,
 on conflict (id) do update set parent_id = excluded.parent_id;
 
 -- Create auth users
-insert into auth.users (id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data) values 
-('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'authenticated', 'authenticated', 'sysadmin@test.local', crypt('password123', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}'),
-('a2a2a2a2-a2a2-a2a2-a2a2-a2a2a2a2a2a2', 'authenticated', 'authenticated', 'sysadmin2@test.local', crypt('password123', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}'),
-('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'authenticated', 'authenticated', 'youthadmin@test.local', crypt('password123', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}'),
-('cccccccc-cccc-cccc-cccc-cccccccccccc', 'authenticated', 'authenticated', 'officera@test.local', crypt('password123', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}'),
-('dddddddd-dddd-dddd-dddd-dddddddddddd', 'authenticated', 'authenticated', 'officerb@test.local', crypt('password123', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}'),
-('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'authenticated', 'authenticated', 'member@test.local', crypt('password123', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}'),
-('ffffffff-ffff-ffff-ffff-ffffffffffff', 'authenticated', 'authenticated', 'innovation@test.local', crypt('password123', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}'),
-('11112222-3333-4444-5555-666677778888', 'authenticated', 'authenticated', 'youthadmina@test.local', crypt('password123', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}'),
-('99999999-9999-9999-9999-999999999999', 'authenticated', 'authenticated', 'suspended@test.local', crypt('password123', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}')
+insert into auth.users (id, aud, role, email, encrypted_password, email_confirmed_at, confirmed_at, raw_app_meta_data, raw_user_meta_data) values 
+('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'authenticated', 'authenticated', 'sysadmin@test.local', crypt('password123', gen_salt('bf')), now(), now(), '{"provider":"email","providers":["email"]}', '{}'),
+('a2a2a2a2-a2a2-a2a2-a2a2-a2a2a2a2a2a2', 'authenticated', 'authenticated', 'sysadmin2@test.local', crypt('password123', gen_salt('bf')), now(), now(), '{"provider":"email","providers":["email"]}', '{}'),
+('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'authenticated', 'authenticated', 'youthadmin@test.local', crypt('password123', gen_salt('bf')), now(), now(), '{"provider":"email","providers":["email"]}', '{}'),
+('cccccccc-cccc-cccc-cccc-cccccccccccc', 'authenticated', 'authenticated', 'officera@test.local', crypt('password123', gen_salt('bf')), now(), now(), '{"provider":"email","providers":["email"]}', '{}'),
+('dddddddd-dddd-dddd-dddd-dddddddddddd', 'authenticated', 'authenticated', 'officerb@test.local', crypt('password123', gen_salt('bf')), now(), now(), '{"provider":"email","providers":["email"]}', '{}'),
+('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'authenticated', 'authenticated', 'member@test.local', crypt('password123', gen_salt('bf')), now(), now(), '{"provider":"email","providers":["email"]}', '{}'),
+('ffffffff-ffff-ffff-ffff-ffffffffffff', 'authenticated', 'authenticated', 'innovation@test.local', crypt('password123', gen_salt('bf')), now(), now(), '{"provider":"email","providers":["email"]}', '{}'),
+('11112222-3333-4444-5555-666677778888', 'authenticated', 'authenticated', 'youthadmina@test.local', crypt('password123', gen_salt('bf')), now(), now(), '{"provider":"email","providers":["email"]}', '{}'),
+('99999999-9999-9999-9999-999999999999', 'authenticated', 'authenticated', 'suspended@test.local', crypt('password123', gen_salt('bf')), now(), now(), '{"provider":"email","providers":["email"]}', '{}')
 on conflict (id) do nothing;
 
 insert into auth.identities (id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at) values
