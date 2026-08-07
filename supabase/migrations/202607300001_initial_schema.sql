@@ -444,9 +444,8 @@ revoke all on function public.has_role(text) from public;
 revoke all on function public.has_role_in_scope(text, uuid) from public;
 revoke all on function public.can_access_document(uuid, uuid) from public;
 
--- Grant necessary executes to authenticated
-grant execute on function public.is_active_user() to authenticated;
-grant execute on function public.current_org_id() to authenticated;
-grant execute on function public.has_role(text) to authenticated;
-grant execute on function public.has_role_in_scope(text, uuid) to authenticated;
-grant execute on function public.can_access_document(uuid, uuid) to authenticated;
+grant execute on function public.is_active_user() to anon, authenticated;
+grant execute on function public.current_org_id() to anon, authenticated;
+grant execute on function public.has_role(text) to anon, authenticated;
+grant execute on function public.has_role_in_scope(text, uuid) to anon, authenticated;
+grant execute on function public.can_access_document(uuid, uuid) to anon, authenticated;
