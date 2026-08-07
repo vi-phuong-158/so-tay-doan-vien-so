@@ -1,48 +1,40 @@
 import { assertEquals, assertStringIncludes } from 'https://deno.land/std@0.177.0/testing/asserts.ts';
+import { createClient } from 'npm:@supabase/supabase-js@2.49.1';
 
 const FUNCTION_URL = 'http://127.0.0.1:54321/functions/v1/admin-users';
 
-const USER_IDS: Record<string, string> = {
-  'suspended@test.local': '99999999-9999-9999-9999-999999999999',
-  'youthadmina@test.local': '11112222-3333-4444-5555-666677778888',
-  'youthadmin@test.local': 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
-  'sysadmin@test.local': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
-};
-
 async function signIn(email: string): Promise<string> {
-  const userId = USER_IDS[email];
-  if (!userId) throw new Error(`Unknown test email: ${email}`);
+  const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? 'http://127.0.0.1:54321';
+  const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+  const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
-  const jwtSecret = Deno.env.get('SUPABASE_JWT_SECRET') ?? 'super-secret-jwt-token-with-at-least-32-characters-long';
-  const header = { alg: 'HS256', typ: 'JWT' };
-  const payload = {
-    aud: 'authenticated',
-    exp: Math.floor(Date.now() / 1000) + 3600,
-    sub: userId,
-    email: email,
-    role: 'authenticated',
-    iss: 'supabase',
-    app_metadata: { provider: 'email', providers: ['email'] },
-    user_metadata: {}
-  };
-  
-  const encoder = new TextEncoder();
-  const b64Header = btoa(JSON.stringify(header)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-  const b64Payload = btoa(JSON.stringify(payload)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-  const unsignedToken = `${b64Header}.${b64Payload}`;
-  
-  const key = await crypto.subtle.importKey(
-    'raw',
-    encoder.encode(jwtSecret),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign']
-  );
-  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(unsignedToken));
-  const b64Signature = btoa(String.fromCharCode(...new Uint8Array(signature)))
-    .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-    
-  return `${unsignedToken}.${b64Signature}`;
+  const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+  const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+
+  const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
+    type: 'magiclink',
+    email
+  });
+
+  if (linkError || !linkData?.properties?.hashed_token) {
+    throw new Error(`Failed to generate magiclink for ${email}: ` + JSON.stringify(linkError));
+  }
+
+  const { data: sessionData, error: otpError } = await userClient.auth.verifyOtp({
+    email,
+    token: linkData.properties.hashed_token,
+    type: 'magiclink'
+  });
+
+  if (otpError || !sessionData?.session?.access_token) {
+    throw new Error(`Failed to verify OTP for ${email}: ` + JSON.stringify(otpError));
+  }
+
+  return sessionData.session.access_token;
 }
 
 Deno.test('admin-users: inactive accounts are blocked', async () => {
