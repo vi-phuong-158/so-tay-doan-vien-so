@@ -2,26 +2,46 @@ import { assertEquals, assertStringIncludes } from 'https://deno.land/std@0.177.
 
 const FUNCTION_URL = 'http://127.0.0.1:54321/functions/v1/admin-users';
 
-// Helper to get JWT token for testing. We can use the anon key if RLS allows, 
-// but since Edge Functions require a valid user JWT, we'll need a way to get one.
-// The easiest way in a test is to sign in via the REST API.
-async function signIn(email: string) {
-  const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? 'http://127.0.0.1:54321';
-  const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+const USER_IDS: Record<string, string> = {
+  'suspended@test.local': '99999999-9999-9999-9999-999999999999',
+  'youthadmina@test.local': '11112222-3333-4444-5555-666677778888',
+  'youthadmin@test.local': 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+  'sysadmin@test.local': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+};
+
+async function signIn(email: string): Promise<string> {
+  const userId = USER_IDS[email];
+  if (!userId) throw new Error(`Unknown test email: ${email}`);
+
+  const jwtSecret = Deno.env.get('SUPABASE_JWT_SECRET') ?? 'super-secret-jwt-token-with-at-least-32-characters-long';
+  const header = { alg: 'HS256', typ: 'JWT' };
+  const payload = {
+    aud: 'authenticated',
+    exp: Math.floor(Date.now() / 1000) + 3600,
+    sub: userId,
+    email: email,
+    role: 'authenticated',
+    app_metadata: { provider: 'email', providers: ['email'] },
+    user_metadata: {}
+  };
   
-  const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
-    method: 'POST',
-    headers: {
-      'apikey': SUPABASE_ANON_KEY,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ email, password: 'password123' })
-  });
-  const data = await res.json();
-  if (!data.access_token) {
-    throw new Error(`Failed to sign in ${email}: ` + JSON.stringify(data));
-  }
-  return data.access_token;
+  const encoder = new TextEncoder();
+  const b64Header = btoa(JSON.stringify(header)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+  const b64Payload = btoa(JSON.stringify(payload)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+  const unsignedToken = `${b64Header}.${b64Payload}`;
+  
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(jwtSecret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(unsignedToken));
+  const b64Signature = btoa(String.fromCharCode(...new Uint8Array(signature)))
+    .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+    
+  return `${unsignedToken}.${b64Signature}`;
 }
 
 Deno.test('admin-users: inactive accounts are blocked', async () => {
