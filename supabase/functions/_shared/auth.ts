@@ -6,14 +6,14 @@ const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 export function clients(request: Request): { userClient: SupabaseClient; adminClient: SupabaseClient } {
   const authorization = request.headers.get('Authorization') || '';
-  return {
-    userClient: createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: authorization } } }),
-    adminClient: createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } }),
-  };
+  const userClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: authorization } } });
+  (userClient as any)._authorization = authorization;
+  const adminClient = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } });
+  return { userClient, adminClient };
 }
 
 export async function requireUser(userClient: SupabaseClient): Promise<User> {
-  const authHeader = (userClient as any).rest?.headers?.Authorization || (userClient as any).headers?.Authorization || '';
+  const authHeader = (userClient as any)._authorization || (userClient as any).rest?.headers?.Authorization || (userClient as any).headers?.Authorization || '';
   const token = authHeader.replace(/^Bearer\s+/i, '');
   const { data, error } = await userClient.auth.getUser(token || undefined);
   if (error || !data?.user) {
