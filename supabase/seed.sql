@@ -30,6 +30,18 @@ insert into auth.identities (id, user_id, identity_data, provider, provider_id, 
 ('99999999-9999-9999-9999-999999999999', '99999999-9999-9999-9999-999999999999', '{"sub":"99999999-9999-9999-9999-999999999999","email":"suspended@test.local"}', 'email', 'suspended@test.local', now(), now(), now())
 on conflict (id) do nothing;
 
+insert into auth.sessions (id, user_id, created_at, updated_at) values
+('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', now(), now()),
+('a2a2a2a2-a2a2-a2a2-a2a2-a2a2a2a2a2a2', 'a2a2a2a2-a2a2-a2a2-a2a2-a2a2a2a2a2a2', now(), now()),
+('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', now(), now()),
+('cccccccc-cccc-cccc-cccc-cccccccccccc', 'cccccccc-cccc-cccc-cccc-cccccccccccc', now(), now()),
+('dddddddd-dddd-dddd-dddd-dddddddddddd', 'dddddddd-dddd-dddd-dddd-dddddddddddd', now(), now()),
+('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', now(), now()),
+('ffffffff-ffff-ffff-ffff-ffffffffffff', 'ffffffff-ffff-ffff-ffff-ffffffffffff', now(), now()),
+('11112222-3333-4444-5555-666677778888', '11112222-3333-4444-5555-666677778888', now(), now()),
+('99999999-9999-9999-9999-999999999999', '99999999-9999-9999-9999-999999999999', now(), now())
+on conflict (id) do nothing;
+
 -- Create profiles
 insert into public.profiles (id, full_name, organization_id, account_status) values
 ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'System Admin', '11111111-1111-1111-1111-111111111111', 'ACTIVE'),
