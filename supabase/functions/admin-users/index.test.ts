@@ -21,6 +21,7 @@ async function signIn(email: string): Promise<string> {
     sub: userId,
     email: email,
     role: 'authenticated',
+    iss: 'supabase',
     app_metadata: { provider: 'email', providers: ['email'] },
     user_metadata: {}
   };
