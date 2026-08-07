@@ -41,6 +41,8 @@ export async function requireGlobalRole(adminClient: SupabaseClient, userId: str
   if (!userRoles || userRoles.length === 0) throw new Error('FORBIDDEN');
 }
 
+export const requireAnyRole = requireGlobalRole;
+
 export async function requireScopedRole(adminClient: SupabaseClient, userId: string, roles: string[], targetOrgId: string) {
   if (!targetOrgId) throw new Error('BAD_REQUEST');
 
