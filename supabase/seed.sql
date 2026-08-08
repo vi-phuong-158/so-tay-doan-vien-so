@@ -18,6 +18,18 @@ insert into auth.users (instance_id, id, aud, role, email, encrypted_password, e
 ('00000000-0000-0000-0000-000000000000', '99999999-9999-9999-9999-999999999999', 'authenticated', 'authenticated', 'suspended@test.local', crypt('password123', gen_salt('bf', 10)), now(), jsonb_build_object('provider', 'email', 'providers', jsonb_build_array('email')), '{}'::jsonb, false, false)
 on conflict (id) do nothing;
 
+insert into auth.identities (id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at) values
+('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', jsonb_build_object('sub', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'email', 'sysadmin@test.local'), 'email', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', now(), now(), now()),
+('a2a2a2a2-a2a2-a2a2-a2a2-a2a2a2a2a2a2', 'a2a2a2a2-a2a2-a2a2-a2a2-a2a2a2a2a2a2', jsonb_build_object('sub', 'a2a2a2a2-a2a2-a2a2-a2a2-a2a2a2a2a2a2', 'email', 'sysadmin2@test.local'), 'email', 'a2a2a2a2-a2a2-a2a2-a2a2-a2a2a2a2a2a2', now(), now(), now()),
+('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', jsonb_build_object('sub', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'email', 'youthadmin@test.local'), 'email', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', now(), now(), now()),
+('cccccccc-cccc-cccc-cccc-cccccccccccc', 'cccccccc-cccc-cccc-cccc-cccccccccccc', jsonb_build_object('sub', 'cccccccc-cccc-cccc-cccc-cccccccccccc', 'email', 'officera@test.local'), 'email', 'cccccccc-cccc-cccc-cccc-cccccccccccc', now(), now(), now()),
+('dddddddd-dddd-dddd-dddd-dddddddddddd', 'dddddddd-dddd-dddd-dddd-dddddddddddd', jsonb_build_object('sub', 'dddddddd-dddd-dddd-dddd-dddddddddddd', 'email', 'officerb@test.local'), 'email', 'dddddddd-dddd-dddd-dddd-dddddddddddd', now(), now(), now()),
+('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', jsonb_build_object('sub', 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'email', 'member@test.local'), 'email', 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', now(), now(), now()),
+('ffffffff-ffff-ffff-ffff-ffffffffffff', 'ffffffff-ffff-ffff-ffff-ffffffffffff', jsonb_build_object('sub', 'ffffffff-ffff-ffff-ffff-ffffffffffff', 'email', 'innovation@test.local'), 'email', 'ffffffff-ffff-ffff-ffff-ffffffffffff', now(), now(), now()),
+('11112222-3333-4444-5555-666677778888', '11112222-3333-4444-5555-666677778888', jsonb_build_object('sub', '11112222-3333-4444-5555-666677778888', 'email', 'youthadmina@test.local'), 'email', '11112222-3333-4444-5555-666677778888', now(), now(), now()),
+('99999999-9999-9999-9999-999999999999', '99999999-9999-9999-9999-999999999999', jsonb_build_object('sub', '99999999-9999-9999-9999-999999999999', 'email', 'suspended@test.local'), 'email', '99999999-9999-9999-9999-999999999999', now(), now(), now())
+on conflict (id) do nothing;
+
 insert into auth.sessions (id, user_id, aal, not_after, created_at, updated_at) values
 ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'aal1', now() + interval '10 years', now(), now()),
 ('a2a2a2a2-a2a2-a2a2-a2a2-a2a2a2a2a2a2', 'a2a2a2a2-a2a2-a2a2-a2a2-a2a2a2a2a2a2', 'aal1', now() + interval '10 years', now(), now()),
