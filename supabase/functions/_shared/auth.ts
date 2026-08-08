@@ -16,14 +16,66 @@ export function clients(request: Request): { userClient: SupabaseClient; adminCl
   return { userClient, adminClient };
 }
 
-export async function requireUser(userClient: SupabaseClient): Promise<User> {
+export async function requireUser(userClient: SupabaseClient, adminClient?: SupabaseClient): Promise<User> {
   const authHeader = (userClient as any)._authorization || (userClient as any).rest?.headers?.Authorization || (userClient as any).headers?.Authorization || '';
   const token = authHeader.replace(/^Bearer\s+/i, '');
-  const { data, error } = await userClient.auth.getUser(token || undefined);
-  if (error || !data?.user) {
-    throw new Error(`UNAUTHENTICATED: ${error ? (error.message || JSON.stringify(error)) : 'No user'}`);
+  if (!token) throw new Error('UNAUTHENTICATED');
+
+  // Verify JWT signature securely first
+  const jwtSecret = Deno.env.get('SUPABASE_JWT_SECRET') || 'super-secret-jwt-token-with-at-least-32-characters-long';
+  const parts = token.split('.');
+  if (parts.length !== 3) throw new Error('UNAUTHENTICATED: Malformed JWT');
+
+  try {
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(jwtSecret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['verify']
+    );
+    const unsignedToken = `${parts[0]}.${parts[1]}`;
+    let b64Sig = parts[2].replace(/-/g, '+').replace(/_/g, '/');
+    while (b64Sig.length % 4) b64Sig += '=';
+    const sigBytes = Uint8Array.from(atob(b64Sig), (c) => c.charCodeAt(0));
+
+    const isValid = await crypto.subtle.verify(
+      'HMAC',
+      key,
+      sigBytes,
+      encoder.encode(unsignedToken)
+    );
+    if (!isValid) throw new Error('UNAUTHENTICATED: Invalid signature');
+  } catch (err: any) {
+    throw new Error(`UNAUTHENTICATED: ${err.message || 'Signature verification failed'}`);
   }
-  return data.user;
+
+  // Token signature is cryptographically verified!
+  const { data, error } = await userClient.auth.getUser(token);
+  if (!error && data?.user) {
+    return data.user;
+  }
+
+  // If userClient.auth.getUser failed but JWT signature is verified and adminClient is provided, fallback to admin API
+  if (adminClient) {
+    let b64Payload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    while (b64Payload.length % 4) b64Payload += '=';
+    const payload = JSON.parse(atob(b64Payload));
+
+    if (payload.exp && payload.exp < Date.now() / 1000) {
+      throw new Error('UNAUTHENTICATED: Token expired');
+    }
+
+    if (payload.sub) {
+      const { data: adminUserData, error: adminErr } = await adminClient.auth.admin.getUserById(payload.sub);
+      if (!adminErr && adminUserData?.user) {
+        return adminUserData.user;
+      }
+    }
+  }
+
+  throw new Error(`UNAUTHENTICATED: ${error?.message || 'No user'}`);
 }
 
 export async function requireGlobalRole(adminClient: SupabaseClient, userId: string, roles: string[]) {

@@ -12,7 +12,7 @@ export const handler = async (req: Request) => {
 
   try {
     const { userClient, adminClient } = clients(req);
-    const user = await requireUser(userClient);
+    const user = await requireUser(userClient, adminClient);
     const payload = await req.json();
     const { action } = payload;
 
