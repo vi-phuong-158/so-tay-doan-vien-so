@@ -12,45 +12,27 @@ const USER_IDS: Record<string, string> = {
 };
 
 async function signIn(email: string): Promise<string> {
-  const userId = USER_IDS[email];
-  if (!userId) throw new Error(`Unknown test email: ${email}`);
+  const supabaseUrl = Deno.env.get('SUPABASE_URL') || 'http://127.0.0.1:54321';
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNvLXRheS1kb2FuLXZpZW4tc28iLCJyb2xlIjoiYW5vbiIsImlhdCI6MTcwMDA0ODAwMCwiZXhwIjoyMDE1NjI0MDAwfQ.dummy';
 
-  let jwtSecret = Deno.env.get('SUPABASE_JWT_SECRET');
-  if (!jwtSecret || jwtSecret === 'null' || jwtSecret === 'undefined') {
-    jwtSecret = 'super-secret-jwt-token-with-at-least-32-characters-long';
+  const res = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
+    method: 'POST',
+    headers: {
+      'apikey': anonKey,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      email,
+      password: 'password123'
+    })
+  });
+
+  const data = await res.json();
+  if (!res.ok || !data.access_token) {
+    throw new Error(`Failed to sign in ${email}: ${JSON.stringify(data)}`);
   }
 
-  const header = { alg: 'HS256', typ: 'JWT' };
-  const payload = {
-    aud: 'authenticated',
-    exp: Math.floor(Date.now() / 1000) + 3600,
-    sub: userId,
-    email: email,
-    phone: '',
-    app_metadata: { provider: 'email', providers: ['email'] },
-    user_metadata: {},
-    role: 'authenticated',
-    aal: 'aal1',
-    session_id: userId,
-    is_anonymous: false
-  };
-
-  const encoder = new TextEncoder();
-  const b64Header = base64url(encoder.encode(JSON.stringify(header)));
-  const b64Payload = base64url(encoder.encode(JSON.stringify(payload)));
-  const unsignedToken = `${b64Header}.${b64Payload}`;
-
-  const key = await crypto.subtle.importKey(
-    'raw',
-    encoder.encode(jwtSecret),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign']
-  );
-  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(unsignedToken));
-  const b64Signature = base64url(signature);
-
-  return `${unsignedToken}.${b64Signature}`;
+  return data.access_token;
 }
 
 Deno.test('admin-users: malformed JWT is rejected (401)', async () => {
