@@ -23,7 +23,7 @@ export async function requireUser(userClient: SupabaseClient): Promise<User> {
   const { data, error } = await (token ? userClient.auth.getUser(token) : userClient.auth.getUser());
 
   if (error || !data?.user) {
-    throw new Error(`UNAUTHENTICATED: ${error?.message || 'No user'}`);
+    throw new Error('UNAUTHENTICATED');
   }
 
   return data.user;
