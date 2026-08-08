@@ -32,7 +32,6 @@ async function signIn(email: string): Promise<string> {
     user_metadata: {},
     role: 'authenticated',
     aal: 'aal1',
-    session_id: userId,
     is_anonymous: false
   };
 
