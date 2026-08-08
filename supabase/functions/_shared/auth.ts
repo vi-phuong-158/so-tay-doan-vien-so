@@ -1,10 +1,14 @@
 import { createClient, type SupabaseClient, type User } from 'npm:@supabase/supabase-js@2.49.1';
 
-const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const defaultSupabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+const defaultAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
+const defaultServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SERVICE_ROLE_KEY') || '';
 
 export function clients(request: Request): { userClient: SupabaseClient; adminClient: SupabaseClient } {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL') || defaultSupabaseUrl;
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY') || defaultAnonKey;
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SERVICE_ROLE_KEY') || defaultServiceRoleKey;
+
   const authorization = request.headers.get('Authorization') || '';
   const userClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: authorization } } });
   (userClient as any)._authorization = authorization;
@@ -30,8 +34,9 @@ export async function requireGlobalRole(adminClient: SupabaseClient, userId: str
     .eq('id', userId)
     .single();
     
-  if (profileError || !profile || profile.account_status !== 'ACTIVE') {
-    throw new Error('UNAUTHENTICATED');
+  if (profileError) throw profileError;
+  if (!profile || profile.account_status !== 'ACTIVE') {
+    throw new Error('UNAUTHENTICATED: Account inactive or missing profile');
   }
 
   // 2. Check roles globally (any scope or specific role)
@@ -57,8 +62,9 @@ export async function requireScopedRole(adminClient: SupabaseClient, userId: str
     .eq('id', userId)
     .single();
     
-  if (profileError || !profile || profile.account_status !== 'ACTIVE') {
-    throw new Error('UNAUTHENTICATED');
+  if (profileError) throw profileError;
+  if (!profile || profile.account_status !== 'ACTIVE') {
+    throw new Error('UNAUTHENTICATED: Account inactive or missing profile');
   }
 
   // 2. Check roles
