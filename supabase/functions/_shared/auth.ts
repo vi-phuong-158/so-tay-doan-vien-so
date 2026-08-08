@@ -1,8 +1,8 @@
 import { createClient, type SupabaseClient, type User } from 'npm:@supabase/supabase-js@2.49.1';
 
-const defaultSupabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-const defaultAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
-const defaultServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SERVICE_ROLE_KEY') || '';
+const defaultSupabaseUrl = Deno.env.get('SUPABASE_URL') || 'http://127.0.0.1:54321';
+const defaultAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNvLXRheS1kb2FuLXZpZW4tc28iLCJyb2xlIjoiYW5vbiIsImlhdCI6MTcwMDA0ODAwMCwiZXhwIjoyMDE1NjI0MDAwfQ.dummy';
+const defaultServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SERVICE_ROLE_KEY') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNvLXRheS1kb2FuLXZpZW4tc28iLCJyb2xlIjoic2VydmljZV9yb2xlIiwiaWF0IjoxNzAwMDQ4MDAwLCJleHAiOjIwMTU2MjQwMDB9.dummy';
 
 export function clients(request: Request): { userClient: SupabaseClient; adminClient: SupabaseClient } {
   const supabaseUrl = Deno.env.get('SUPABASE_URL') || defaultSupabaseUrl;
