@@ -30,16 +30,16 @@ insert into auth.identities (id, user_id, identity_data, provider, provider_id, 
 ('99999999-9999-9999-9999-999999999999', '99999999-9999-9999-9999-999999999999', jsonb_build_object('sub', '99999999-9999-9999-9999-999999999999', 'email', 'suspended@test.local', 'email_verified', true), 'email', 'suspended@test.local', now(), now(), now())
 on conflict (id) do nothing;
 
-insert into auth.sessions (id, user_id, aal, created_at, updated_at) values
-('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'aal1', now(), now()),
-('a2a2a2a2-a2a2-a2a2-a2a2-a2a2a2a2a2a2', 'a2a2a2a2-a2a2-a2a2-a2a2-a2a2a2a2a2a2', 'aal1', now(), now()),
-('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'aal1', now(), now()),
-('cccccccc-cccc-cccc-cccc-cccccccccccc', 'cccccccc-cccc-cccc-cccc-cccccccccccc', 'aal1', now(), now()),
-('dddddddd-dddd-dddd-dddd-dddddddddddd', 'dddddddd-dddd-dddd-dddd-dddddddddddd', 'aal1', now(), now()),
-('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'aal1', now(), now()),
-('ffffffff-ffff-ffff-ffff-ffffffffffff', 'ffffffff-ffff-ffff-ffff-ffffffffffff', 'aal1', now(), now()),
-('11112222-3333-4444-5555-666677778888', '11112222-3333-4444-5555-666677778888', 'aal1', now(), now()),
-('99999999-9999-9999-9999-999999999999', '99999999-9999-9999-9999-999999999999', 'aal1', now(), now())
+insert into auth.sessions (id, user_id, aal, not_after, created_at, updated_at) values
+('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'aal1', now() + interval '10 years', now(), now()),
+('a2a2a2a2-a2a2-a2a2-a2a2-a2a2a2a2a2a2', 'a2a2a2a2-a2a2-a2a2-a2a2-a2a2a2a2a2a2', 'aal1', now() + interval '10 years', now(), now()),
+('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'aal1', now() + interval '10 years', now(), now()),
+('cccccccc-cccc-cccc-cccc-cccccccccccc', 'cccccccc-cccc-cccc-cccc-cccccccccccc', 'aal1', now() + interval '10 years', now(), now()),
+('dddddddd-dddd-dddd-dddd-dddddddddddd', 'dddddddd-dddd-dddd-dddd-dddddddddddd', 'aal1', now() + interval '10 years', now(), now()),
+('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'aal1', now() + interval '10 years', now(), now()),
+('ffffffff-ffff-ffff-ffff-ffffffffffff', 'ffffffff-ffff-ffff-ffff-ffffffffffff', 'aal1', now() + interval '10 years', now(), now()),
+('11112222-3333-4444-5555-666677778888', '11112222-3333-4444-5555-666677778888', 'aal1', now() + interval '10 years', now(), now()),
+('99999999-9999-9999-9999-999999999999', '99999999-9999-9999-9999-999999999999', 'aal1', now() + interval '10 years', now(), now())
 on conflict (id) do nothing;
 
 -- Create profiles
