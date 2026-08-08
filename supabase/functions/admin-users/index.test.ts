@@ -12,33 +12,46 @@ const USER_IDS: Record<string, string> = {
 };
 
 async function signIn(email: string): Promise<string> {
-  const supabaseUrl = Deno.env.get('SUPABASE_URL') || 'http://127.0.0.1:54321';
-  const anonKey = Deno.env.get('SUPABASE_ANON_KEY') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNvLXRheS1kb2FuLXZpZW4tc28iLCJyb2xlIjoiYW5vbiIsImlhdCI6MTcwMDA0ODAwMCwiZXhwIjoyMDE1NjI0MDAwfQ.dummy';
-  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SERVICE_ROLE_KEY') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNvLXRheS1kb2FuLXZpZW4tc28iLCJyb2xlIjoic2VydmljZV9yb2xlIiwiaWF0IjoxNzAwMDQ4MDAwLCJleHAiOjIwMTU2MjQwMDB9.dummy';
+  const userId = USER_IDS[email];
+  if (!userId) throw new Error(`Unknown test email: ${email}`);
 
-  const adminClient = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } });
-  const userClient = createClient(supabaseUrl, anonKey, { auth: { persistSession: false, autoRefreshToken: false } });
-
-  const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
-    type: 'magiclink',
-    email
-  });
-
-  if (linkError || !linkData?.properties?.email_otp) {
-    throw new Error(`Failed to generate link for ${email}: ${JSON.stringify(linkError)}`);
+  let jwtSecret = Deno.env.get('SUPABASE_JWT_SECRET');
+  if (!jwtSecret || jwtSecret === 'null' || jwtSecret === 'undefined') {
+    jwtSecret = 'super-secret-jwt-token-with-at-least-32-characters-long';
   }
 
-  const { data: otpData, error: otpError } = await userClient.auth.verifyOtp({
-    email,
-    token: linkData.properties.email_otp,
-    type: 'magiclink'
-  });
+  const header = { alg: 'HS256', typ: 'JWT' };
+  const payload = {
+    iss: 'supabase',
+    aud: 'authenticated',
+    exp: Math.floor(Date.now() / 1000) + 3600,
+    sub: userId,
+    email: email,
+    phone: '',
+    app_metadata: { provider: 'email', providers: ['email'] },
+    user_metadata: {},
+    role: 'authenticated',
+    aal: 'aal1',
+    session_id: userId,
+    is_anonymous: false
+  };
 
-  if (otpError || !otpData?.session?.access_token) {
-    throw new Error(`Failed to verify OTP for ${email}: ${JSON.stringify(otpError)}`);
-  }
+  const encoder = new TextEncoder();
+  const b64Header = base64url(encoder.encode(JSON.stringify(header)));
+  const b64Payload = base64url(encoder.encode(JSON.stringify(payload)));
+  const unsignedToken = `${b64Header}.${b64Payload}`;
 
-  return otpData.session.access_token;
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(jwtSecret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(unsignedToken));
+  const b64Signature = base64url(signature);
+
+  return `${unsignedToken}.${b64Signature}`;
 }
 
 Deno.test('admin-users: malformed JWT is rejected (401)', async () => {
