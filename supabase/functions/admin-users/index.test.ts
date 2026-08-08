@@ -14,25 +14,31 @@ const USER_IDS: Record<string, string> = {
 async function signIn(email: string): Promise<string> {
   const supabaseUrl = Deno.env.get('SUPABASE_URL') || 'http://127.0.0.1:54321';
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNvLXRheS1kb2FuLXZpZW4tc28iLCJyb2xlIjoiYW5vbiIsImlhdCI6MTcwMDA0ODAwMCwiZXhwIjoyMDE1NjI0MDAwfQ.dummy';
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SERVICE_ROLE_KEY') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNvLXRheS1kb2FuLXZpZW4tc28iLCJyb2xlIjoic2VydmljZV9yb2xlIiwiaWF0IjoxNzAwMDQ4MDAwLCJleHAiOjIwMTU2MjQwMDB9.dummy';
 
-  const res = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
-    method: 'POST',
-    headers: {
-      'apikey': anonKey,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      email,
-      password: 'password123'
-    })
+  const adminClient = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } });
+  const userClient = createClient(supabaseUrl, anonKey, { auth: { persistSession: false, autoRefreshToken: false } });
+
+  const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
+    type: 'magiclink',
+    email
   });
 
-  const data = await res.json();
-  if (!res.ok || !data.access_token) {
-    throw new Error(`Failed to sign in ${email}: ${JSON.stringify(data)}`);
+  if (linkError || !linkData?.properties?.email_otp) {
+    throw new Error(`Failed to generate link for ${email}: ${JSON.stringify(linkError)}`);
   }
 
-  return data.access_token;
+  const { data: otpData, error: otpError } = await userClient.auth.verifyOtp({
+    email,
+    token: linkData.properties.email_otp,
+    type: 'magiclink'
+  });
+
+  if (otpError || !otpData?.session?.access_token) {
+    throw new Error(`Failed to verify OTP for ${email}: ${JSON.stringify(otpError)}`);
+  }
+
+  return otpData.session.access_token;
 }
 
 Deno.test('admin-users: malformed JWT is rejected (401)', async () => {
