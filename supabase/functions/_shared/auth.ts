@@ -21,7 +21,7 @@ export async function requireUser(userClient: SupabaseClient): Promise<User> {
   const token = authHeader.replace(/^Bearer\s+/i, '');
   const { data, error } = await userClient.auth.getUser(token || undefined);
   if (error || !data?.user) {
-    throw new Error('UNAUTHENTICATED');
+    throw new Error(`UNAUTHENTICATED: ${error ? (error.message || JSON.stringify(error)) : 'No user'}`);
   }
   return data.user;
 }
