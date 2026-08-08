@@ -22,6 +22,7 @@ async function signIn(email: string): Promise<string> {
 
   const header = { alg: 'HS256', typ: 'JWT' };
   const payload = {
+    iss: 'supabase',
     aud: 'authenticated',
     exp: Math.floor(Date.now() / 1000) + 3600,
     sub: userId,
