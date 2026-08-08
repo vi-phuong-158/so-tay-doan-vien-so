@@ -11,11 +11,16 @@ export function clients(request: Request): { userClient: SupabaseClient; adminCl
 
   const authorization = request.headers.get('Authorization') || '';
   const userClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: authorization } } });
+  (userClient as any)._authorization = authorization;
   const adminClient = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } });
   return { userClient, adminClient };
 }
+
 export async function requireUser(userClient: SupabaseClient): Promise<User> {
-  const { data, error } = await userClient.auth.getUser();
+  const authHeader = (userClient as any)._authorization || '';
+  const token = authHeader.replace(/^Bearer\s+/i, '');
+
+  const { data, error } = await (token ? userClient.auth.getUser(token) : userClient.auth.getUser());
 
   if (error || !data?.user) {
     throw new Error('UNAUTHENTICATED');
