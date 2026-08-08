@@ -1,13 +1,18 @@
 import { createClient, type SupabaseClient, type User } from 'npm:@supabase/supabase-js@2.49.1';
 
-const defaultSupabaseUrl = Deno.env.get('SUPABASE_URL') || 'http://127.0.0.1:54321';
-const defaultAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNvLXRheS1kb2FuLXZpZW4tc28iLCJyb2xlIjoiYW5vbiIsImlhdCI6MTcwMDA0ODAwMCwiZXhwIjoyMDE1NjI0MDAwfQ.dummy';
-const defaultServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SERVICE_ROLE_KEY') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNvLXRheS1kb2FuLXZpZW4tc28iLCJyb2xlIjoic2VydmljZV9yb2xlIiwiaWF0IjoxNzAwMDQ4MDAwLCJleHAiOjIwMTU2MjQwMDB9.dummy';
+function getRequiredEnv(key: string, fallbackKey?: string): string {
+  const val = Deno.env.get(key) || (fallbackKey ? Deno.env.get(fallbackKey) : undefined);
+  if (!val) {
+    const missing = fallbackKey ? `${key} or ${fallbackKey}` : key;
+    throw new Error(`CONFIGURATION_ERROR: Missing required environment variable: ${missing}`);
+  }
+  return val;
+}
 
 export function clients(request: Request): { userClient: SupabaseClient; adminClient: SupabaseClient } {
-  const supabaseUrl = Deno.env.get('SUPABASE_URL') || defaultSupabaseUrl;
-  const anonKey = Deno.env.get('SUPABASE_ANON_KEY') || defaultAnonKey;
-  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SERVICE_ROLE_KEY') || defaultServiceRoleKey;
+  const supabaseUrl = getRequiredEnv('SUPABASE_URL');
+  const anonKey = getRequiredEnv('SUPABASE_ANON_KEY');
+  const serviceRoleKey = getRequiredEnv('SUPABASE_SERVICE_ROLE_KEY', 'SERVICE_ROLE_KEY');
 
   const authorization = request.headers.get('Authorization') || '';
   const userClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: authorization } } });
