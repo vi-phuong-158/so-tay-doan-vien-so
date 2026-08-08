@@ -109,8 +109,8 @@ Deno.test('admin-users: Youth Admin out of scope is blocked', async () => {
     body: JSON.stringify({ action: 'invite', email: 'test2@test.local', full_name: 'Test 2', organization_id: '33333333-3333-3333-3333-333333333333' })
   });
 
-  assertEquals(res.status, 403);
-  await res.text();
+  const body = await res.text();
+  assertEquals(res.status, 403, `Expected 403, got ${res.status}: ${body}`);
 });
 
 Deno.test('admin-users: Cannot self-suspend', async () => {
@@ -122,8 +122,8 @@ Deno.test('admin-users: Cannot self-suspend', async () => {
     body: JSON.stringify({ action: 'update_status', target_user_id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', status: 'SUSPENDED' })
   });
 
-  assertEquals(res.status, 403);
-  await res.text();
+  const body = await res.text();
+  assertEquals(res.status, 403, `Expected 403, got ${res.status}: ${body}`);
 });
 
 Deno.test('admin-users: Cannot modify any SYSTEM_ADMIN', async () => {
@@ -135,8 +135,8 @@ Deno.test('admin-users: Cannot modify any SYSTEM_ADMIN', async () => {
     headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'update_status', target_user_id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', status: 'SUSPENDED' })
   });
-  assertEquals(res1.status, 403);
-  await res1.text();
+  const body1 = await res1.text();
+  assertEquals(res1.status, 403, `Expected 403, got ${res1.status}: ${body1}`);
 
   // Trying to suspend second sysadmin (sysadmin2@test.local with a non-standard UUID in Org CĐA)
   const res2 = await fetch(FUNCTION_URL, {
@@ -144,8 +144,8 @@ Deno.test('admin-users: Cannot modify any SYSTEM_ADMIN', async () => {
     headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'update_status', target_user_id: 'a2a2a2a2-a2a2-a2a2-a2a2-a2a2a2a2a2a2', status: 'SUSPENDED' })
   });
-  assertEquals(res2.status, 403);
-  await res2.text();
+  const body2 = await res2.text();
+  assertEquals(res2.status, 403, `Expected 403, got ${res2.status}: ${body2}`);
 });
 
 Deno.test('admin-users: assign/revoke role within scope works', async () => {
@@ -158,8 +158,8 @@ Deno.test('admin-users: assign/revoke role within scope works', async () => {
     body: JSON.stringify({ action: 'assign_role', target_user_id: 'cccccccc-cccc-cccc-cccc-cccccccccccc', role_code: 'YOUTH_ADMIN', scope_organization_id: '22222222-2222-2222-2222-222222222222' })
   });
 
-  assertEquals(resAssign.status, 200);
-  await resAssign.text();
+  const bodyAssign = await resAssign.text();
+  assertEquals(resAssign.status, 200, `Expected 200, got ${resAssign.status}: ${bodyAssign}`);
 
   // Revoke role
   const resRevoke = await fetch(FUNCTION_URL, {
@@ -168,6 +168,6 @@ Deno.test('admin-users: assign/revoke role within scope works', async () => {
     body: JSON.stringify({ action: 'revoke_role', target_user_id: 'cccccccc-cccc-cccc-cccc-cccccccccccc', role_code: 'YOUTH_ADMIN', scope_organization_id: '22222222-2222-2222-2222-222222222222' })
   });
 
-  assertEquals(resRevoke.status, 200);
-  await resRevoke.text();
+  const bodyRevoke = await resRevoke.text();
+  assertEquals(resRevoke.status, 200, `Expected 200, got ${resRevoke.status}: ${bodyRevoke}`);
 });
