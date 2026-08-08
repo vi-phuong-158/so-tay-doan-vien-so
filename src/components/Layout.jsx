@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 function Sidebar() {
   const navigate = useNavigate();
-  const { profile } = useAuth();
+  const { profile, hasRole } = useAuth();
   
   const items = [
     ['/', 'home', 'Trang chủ'], 
@@ -25,10 +25,12 @@ function Sidebar() {
           </NavLink>
         ))}
       </nav>
-      <div className="sidebar-admin">
-        <span>Quản trị nội dung</span>
-        <button onClick={() => navigate('/admin')}><Icon name="shield" />Bảng điều hành</button>
-      </div>
+      {(hasRole('YOUTH_ADMIN') || hasRole('SYSTEM_ADMIN')) && (
+        <div className="sidebar-admin">
+          <span>Quản trị nội dung</span>
+          <button onClick={() => navigate('/admin')}><Icon name="shield" />Bảng điều hành</button>
+        </div>
+      )}
       {profile && (
         <div className="sidebar-user">
           <div className="avatar">{profile.full_name.substring(0,2).toUpperCase()}</div>

@@ -11,7 +11,8 @@ export function Home() {
 
   return (
     <div className="page home-page">
-      <div className="hero">
+      <div className="hero" style={{position: 'relative'}}>
+        <div style={{position: 'absolute', top: 8, right: 8, background: 'var(--warning)', color: '#000', fontSize: 10, padding: '2px 6px', borderRadius: 4, fontWeight: 'bold'}}>Dữ liệu minh họa</div>
         <div className="hero-content">
           <h1>Chào {userName},</h1>
           <p>Chúc bạn một ngày làm việc hiệu quả!</p>

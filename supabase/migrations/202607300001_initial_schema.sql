@@ -33,13 +33,18 @@ create table if not exists public.profiles (
 );
 
 create table if not exists public.user_roles (
+  id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.profiles(id) on delete cascade,
   role_code text not null check (role_code in ('MEMBER','BRANCH_OFFICER','INNOVATION_MEMBER','YOUTH_ADMIN','SYSTEM_ADMIN')),
   scope_organization_id uuid references public.organizations(id),
   granted_by uuid references public.profiles(id),
   granted_at timestamptz not null default now(),
-  primary key (user_id, role_code, scope_organization_id)
+  constraint user_roles_scope_unique unique nulls not distinct (user_id, role_code, scope_organization_id)
 );
+
+create or replace function public.is_active_user() returns boolean
+language sql stable security definer set search_path = public
+as $$ select exists(select 1 from public.profiles where id = auth.uid() and account_status = 'ACTIVE') $$;
 
 create or replace function public.current_org_id() returns uuid
 language sql stable security definer set search_path = public
@@ -47,11 +52,42 @@ as $$ select organization_id from public.profiles where id = auth.uid() and acco
 
 create or replace function public.has_role(required_role text) returns boolean
 language sql stable security definer set search_path = public
-as $$ select exists(select 1 from public.user_roles where user_id = auth.uid() and role_code = required_role) $$;
+as $$ select public.is_active_user() and exists(select 1 from public.user_roles where user_id = auth.uid() and role_code = required_role) $$;
 
-create or replace function public.is_active_user() returns boolean
+create or replace function public.has_role_in_scope(required_role text, target_org_id uuid) returns boolean
 language sql stable security definer set search_path = public
-as $$ select exists(select 1 from public.profiles where id = auth.uid() and account_status = 'ACTIVE') $$;
+as $$ 
+  select public.is_active_user() and exists(
+    select 1 from public.user_roles 
+    where user_id = auth.uid() 
+      and (role_code = 'SYSTEM_ADMIN' or (role_code = required_role and (scope_organization_id is null or scope_organization_id = target_org_id)))
+  ) 
+$$;
+
+create or replace function public.can_access_document(doc_id uuid, target_user_id uuid) returns boolean
+language plpgsql stable security definer set search_path = public
+as $$
+declare
+  doc record;
+  doc_owner_org uuid;
+  user_org uuid;
+begin
+  if not public.is_active_user() then return false; end if;
+  select * into doc from public.documents where id = doc_id;
+  if not found or doc.status != 'PUBLISHED' then return false; end if;
+  
+  if public.has_role('SYSTEM_ADMIN') or public.has_role('YOUTH_ADMIN') then return true; end if;
+  if doc.visibility_level = 'PUBLIC' then return true; end if;
+  if doc.visibility_level = 'INTERNAL_YOUTH' then return true; end if;
+  
+  if doc.visibility_level = 'ORGANIZATION_ONLY' then
+    select organization_id into doc_owner_org from public.profiles where id = doc.created_by;
+    select organization_id into user_org from public.profiles where id = target_user_id;
+    if doc_owner_org = user_org then return true; end if;
+  end if;
+  
+  return false;
+end $$;
 
 create table if not exists public.announcements (
   id uuid primary key default gen_random_uuid(), title text not null, summary text, content text not null,
@@ -277,37 +313,37 @@ DO $$ declare r record; begin
 end $$;
 
 create policy "active users read organizations" on public.organizations for select using (public.is_active_user());
-create policy "users read own profile" on public.profiles for select using (id = auth.uid() or public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN'));
+create policy "users read own profile" on public.profiles for select using (id = auth.uid() or public.has_role_in_scope('YOUTH_ADMIN', organization_id) or public.has_role('SYSTEM_ADMIN'));
 create policy "users update safe own profile" on public.profiles for update using (id = auth.uid()) with check (id = auth.uid() and organization_id = public.current_org_id());
 create policy "admins manage profiles" on public.profiles for all using (public.has_role('SYSTEM_ADMIN')) with check (public.has_role('SYSTEM_ADMIN'));
-create policy "users read own roles" on public.user_roles for select using (user_id = auth.uid() or public.has_role('SYSTEM_ADMIN'));
+create policy "users read own roles" on public.user_roles for select using (user_id = auth.uid() or public.has_role_in_scope('YOUTH_ADMIN', scope_organization_id) or public.has_role('SYSTEM_ADMIN'));
 create policy "system admins manage roles" on public.user_roles for all using (public.has_role('SYSTEM_ADMIN')) with check (public.has_role('SYSTEM_ADMIN'));
 
 create policy "active users read published announcements" on public.announcements for select using (public.is_active_user() and status = 'PUBLISHED' and (publish_at is null or publish_at <= now()) and (expire_at is null or expire_at > now()));
-create policy "content admins manage announcements" on public.announcements for all using (public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN')) with check (public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN'));
+create policy "content admins manage announcements" on public.announcements for all using (public.has_role_in_scope('YOUTH_ADMIN', (select organization_id from public.profiles where id = created_by)) or public.has_role('SYSTEM_ADMIN')) with check (public.has_role_in_scope('YOUTH_ADMIN', (select organization_id from public.profiles where id = created_by)) or public.has_role('SYSTEM_ADMIN'));
 create policy "users manage own announcement reads" on public.announcement_reads for all using (user_id = auth.uid()) with check (user_id = auth.uid());
 
 create policy "active users read published report campaigns" on public.report_campaigns for select using (public.is_active_user() and status in ('PUBLISHED','CLOSED'));
-create policy "admins manage report campaigns" on public.report_campaigns for all using (public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN')) with check (public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN'));
-create policy "organization reads own assignments" on public.report_assignments for select using (organization_id = public.current_org_id() or public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN'));
-create policy "admins manage assignments" on public.report_assignments for all using (public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN')) with check (public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN'));
-create policy "organization reads own submissions" on public.report_submissions for select using (exists(select 1 from public.report_assignments a where a.id = assignment_id and (a.organization_id = public.current_org_id() or public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN'))));
+create policy "admins manage report campaigns" on public.report_campaigns for all using (public.has_role_in_scope('YOUTH_ADMIN', (select organization_id from public.profiles where id = created_by)) or public.has_role('SYSTEM_ADMIN')) with check (public.has_role_in_scope('YOUTH_ADMIN', (select organization_id from public.profiles where id = created_by)) or public.has_role('SYSTEM_ADMIN'));
+create policy "organization reads own assignments" on public.report_assignments for select using (organization_id = public.current_org_id() or public.has_role_in_scope('YOUTH_ADMIN', organization_id) or public.has_role('SYSTEM_ADMIN'));
+create policy "admins manage assignments" on public.report_assignments for all using (public.has_role_in_scope('YOUTH_ADMIN', organization_id) or public.has_role('SYSTEM_ADMIN')) with check (public.has_role_in_scope('YOUTH_ADMIN', organization_id) or public.has_role('SYSTEM_ADMIN'));
+create policy "organization reads own submissions" on public.report_submissions for select using (exists(select 1 from public.report_assignments a where a.id = assignment_id and (a.organization_id = public.current_org_id() or public.has_role_in_scope('YOUTH_ADMIN', a.organization_id) or public.has_role('SYSTEM_ADMIN'))));
 create policy "branch officers insert own submissions" on public.report_submissions for insert with check (submitted_by = auth.uid() and public.has_role('BRANCH_OFFICER') and exists(select 1 from public.report_assignments a where a.id = assignment_id and a.organization_id = public.current_org_id()));
-create policy "authorized read submission files" on public.report_submission_files for select using (exists(select 1 from public.report_submissions s join public.report_assignments a on a.id=s.assignment_id where s.id=submission_id and (a.organization_id=public.current_org_id() or public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN'))));
+create policy "authorized read submission files" on public.report_submission_files for select using (exists(select 1 from public.report_submissions s join public.report_assignments a on a.id=s.assignment_id where s.id=submission_id and (a.organization_id=public.current_org_id() or public.has_role_in_scope('YOUTH_ADMIN', a.organization_id) or public.has_role('SYSTEM_ADMIN'))));
 
-create policy "active users read published documents" on public.documents for select using (public.is_active_user() and status = 'PUBLISHED');
-create policy "content admins manage documents" on public.documents for all using (public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN')) with check (public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN'));
-create policy "content admins read chunks" on public.document_chunks for select using (public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN'));
-create policy "content admins manage chunks" on public.document_chunks for all using (public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN')) with check (public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN'));
+create policy "active users read published documents" on public.documents for select using (public.can_access_document(id, auth.uid()));
+create policy "content admins manage documents" on public.documents for all using (public.has_role_in_scope('YOUTH_ADMIN', (select organization_id from public.profiles where id = created_by)) or public.has_role('SYSTEM_ADMIN')) with check (public.has_role_in_scope('YOUTH_ADMIN', (select organization_id from public.profiles where id = created_by)) or public.has_role('SYSTEM_ADMIN'));
+create policy "content admins read chunks" on public.document_chunks for select using (exists(select 1 from public.documents d where d.id = document_id and (public.has_role_in_scope('YOUTH_ADMIN', (select organization_id from public.profiles p where p.id = d.created_by)) or public.has_role('SYSTEM_ADMIN'))));
+create policy "content admins manage chunks" on public.document_chunks for all using (exists(select 1 from public.documents d where d.id = document_id and (public.has_role_in_scope('YOUTH_ADMIN', (select organization_id from public.profiles p where p.id = d.created_by)) or public.has_role('SYSTEM_ADMIN')))) with check (exists(select 1 from public.documents d where d.id = document_id and (public.has_role_in_scope('YOUTH_ADMIN', (select organization_id from public.profiles p where p.id = d.created_by)) or public.has_role('SYSTEM_ADMIN'))));
 
 create policy "active users read published topics" on public.learning_topics for select using (public.is_active_user() and status='PUBLISHED');
 create policy "active users read resources" on public.learning_resources for select using (public.is_active_user() and exists(select 1 from public.learning_topics t where t.id=topic_id and t.status='PUBLISHED'));
 create policy "active users read published quizzes" on public.quizzes for select using (public.is_active_user() and status='PUBLISHED');
 create policy "active users read quiz questions" on public.quiz_questions for select using (public.is_active_user() and exists(select 1 from public.quizzes q where q.id=quiz_id and q.status='PUBLISHED'));
 -- quiz_options deliberately has no frontend SELECT policy because is_correct must not leak.
-create policy "users read own attempts" on public.quiz_attempts for select using (user_id=auth.uid() or public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN'));
+create policy "users read own attempts" on public.quiz_attempts for select using (user_id=auth.uid() or public.has_role_in_scope('YOUTH_ADMIN', (select organization_id from public.profiles where id = user_id)) or public.has_role('SYSTEM_ADMIN'));
 create policy "users insert own attempts" on public.quiz_attempts for insert with check (user_id=auth.uid());
-create policy "users read own answers" on public.quiz_answers for select using (exists(select 1 from public.quiz_attempts a where a.id=attempt_id and (a.user_id=auth.uid() or public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN'))));
+create policy "users read own answers" on public.quiz_answers for select using (exists(select 1 from public.quiz_attempts a where a.id=attempt_id and (a.user_id=auth.uid() or public.has_role_in_scope('YOUTH_ADMIN', (select organization_id from public.profiles p where p.id = a.user_id)) or public.has_role('SYSTEM_ADMIN'))));
 
 create policy "users manage own ai conversations" on public.ai_conversations for all using (user_id=auth.uid()) with check (user_id=auth.uid());
 create policy "users read own ai messages" on public.ai_messages for select using (exists(select 1 from public.ai_conversations c where c.id=conversation_id and c.user_id=auth.uid()));
@@ -315,11 +351,11 @@ create policy "users read own ai sources" on public.ai_message_sources for selec
 create policy "users manage own ai feedback" on public.ai_feedback for all using (user_id=auth.uid()) with check (user_id=auth.uid());
 
 create policy "active users read published projects" on public.innovation_projects for select using (public.is_active_user() and publish_status='PUBLISHED');
-create policy "innovation admins manage projects" on public.innovation_projects for all using (public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN')) with check (public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN'));
-create policy "users read own or assigned problems" on public.innovation_problems for select using (submitted_by=auth.uid() or exists(select 1 from public.innovation_problem_assignments a where a.problem_id=id and a.assigned_user_id=auth.uid()) or public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN'));
+create policy "innovation admins manage projects" on public.innovation_projects for all using (public.has_role_in_scope('YOUTH_ADMIN', (select organization_id from public.profiles where id = created_by)) or public.has_role('SYSTEM_ADMIN')) with check (public.has_role_in_scope('YOUTH_ADMIN', (select organization_id from public.profiles where id = created_by)) or public.has_role('SYSTEM_ADMIN'));
+create policy "users read own or assigned problems" on public.innovation_problems for select using (submitted_by=auth.uid() or exists(select 1 from public.innovation_problem_assignments a where a.problem_id=id and a.assigned_user_id=auth.uid()) or public.has_role_in_scope('YOUTH_ADMIN', organization_id) or public.has_role('SYSTEM_ADMIN'));
 create policy "users submit problems for own org" on public.innovation_problems for insert with check (submitted_by=auth.uid() and organization_id=public.current_org_id());
-create policy "admins manage problems" on public.innovation_problems for update using (public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN')) with check (public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN'));
-create policy "problem participants read public updates" on public.innovation_problem_updates for select using (exists(select 1 from public.innovation_problems p where p.id=problem_id and (p.submitted_by=auth.uid() or exists(select 1 from public.innovation_problem_assignments a where a.problem_id=p.id and a.assigned_user_id=auth.uid()) or public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN'))) and (internal_content is null or public.has_role('INNOVATION_MEMBER') or public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN')));
+create policy "admins manage problems" on public.innovation_problems for update using (public.has_role_in_scope('YOUTH_ADMIN', organization_id) or public.has_role('SYSTEM_ADMIN')) with check (public.has_role_in_scope('YOUTH_ADMIN', organization_id) or public.has_role('SYSTEM_ADMIN'));
+create policy "problem participants read public updates" on public.innovation_problem_updates for select using (exists(select 1 from public.innovation_problems p where p.id=problem_id and (p.submitted_by=auth.uid() or exists(select 1 from public.innovation_problem_assignments a where a.problem_id=p.id and a.assigned_user_id=auth.uid()) or public.has_role_in_scope('YOUTH_ADMIN', p.organization_id) or public.has_role('SYSTEM_ADMIN')) and (internal_content is null or public.has_role_in_scope('INNOVATION_MEMBER', p.organization_id) or public.has_role_in_scope('YOUTH_ADMIN', p.organization_id) or public.has_role('SYSTEM_ADMIN'))));
 
 create policy "users read own notifications" on public.notifications for select using (user_id=auth.uid());
 create policy "users mark own notifications read" on public.notifications for update using (user_id=auth.uid()) with check (user_id=auth.uid());
@@ -330,9 +366,88 @@ returns table(chunk_id uuid, document_id uuid, content text, section_path text, 
 language sql stable security definer set search_path=public
 as $$
   select c.id, c.document_id, c.content, c.section_path, c.page_from, c.page_to, 1-(c.embedding <=> query_embedding) as similarity
-  from public.document_chunks c join public.documents d on d.id=c.document_id
-  where c.review_status='APPROVED' and d.status='PUBLISHED' and public.is_active_user()
+  from public.document_chunks c
+  where c.review_status='APPROVED' and public.can_access_document(c.document_id, auth.uid())
   order by c.embedding <=> query_embedding limit greatest(1,least(match_count,20));
 $$;
 revoke all on function public.match_document_chunks(vector,integer) from public;
 grant execute on function public.match_document_chunks(vector,integer) to authenticated;
+
+grant usage on schema public to anon, authenticated, service_role;
+
+-- Grant specific privileges to authenticated and anon
+grant select on table public.organizations to anon, authenticated;
+grant select on table public.profiles to anon, authenticated;
+grant update (full_name, job_title, phone, last_seen_at) on public.profiles to authenticated;
+grant select on table public.user_roles to anon, authenticated;
+grant insert, delete on table public.user_roles to authenticated;
+
+grant select on table public.announcements to anon, authenticated;
+grant insert, update, delete on table public.announcements to authenticated;
+grant select, insert, update, delete on table public.announcement_targets to authenticated;
+grant select, insert, update, delete on table public.announcement_reads to authenticated;
+
+grant select on table public.report_campaigns to authenticated;
+grant insert, update, delete on table public.report_campaigns to authenticated;
+grant select, insert, update, delete on table public.report_campaign_templates to authenticated;
+grant select, update on table public.report_assignments to authenticated;
+grant select, insert, update on table public.report_submissions to authenticated;
+grant select, insert, update, delete on table public.report_submission_files to authenticated;
+grant select, insert on table public.report_status_history to authenticated;
+
+grant select on table public.documents to anon, authenticated;
+grant insert, update, delete on table public.documents to authenticated;
+grant select, insert, update, delete on table public.document_relations to authenticated;
+grant select, insert, update, delete on table public.document_chunks to authenticated;
+
+grant select on table public.learning_topics to anon, authenticated;
+grant select on table public.learning_resources to anon, authenticated;
+
+grant select on table public.quizzes to anon, authenticated;
+grant select on table public.quiz_questions to anon, authenticated;
+grant select on table public.quiz_options to anon, authenticated;
+grant select, insert, update on table public.quiz_attempts to authenticated;
+grant select, insert, update on table public.quiz_answers to authenticated;
+
+grant select, insert, update, delete on table public.ai_conversations to authenticated;
+grant select, insert, update, delete on table public.ai_messages to authenticated;
+grant select, insert, update, delete on table public.ai_message_sources to authenticated;
+grant select, insert, update, delete on table public.ai_feedback to authenticated;
+
+grant select on table public.innovation_problems to anon, authenticated;
+grant insert, update, delete on table public.innovation_problems to authenticated;
+grant select, insert, update, delete on table public.innovation_projects to authenticated;
+grant select, insert, update, delete on table public.innovation_project_media to authenticated;
+grant select, insert, update, delete on table public.innovation_problem_files to authenticated;
+grant select, insert, update, delete on table public.innovation_problem_assignments to authenticated;
+grant select, insert, update, delete on table public.innovation_problem_updates to authenticated;
+grant select, insert, update, delete on table public.innovation_solution_artifacts to authenticated;
+
+grant select on table public.notifications to authenticated;
+grant update on table public.notifications to authenticated;
+
+revoke all on table public.audit_logs from public, anon, authenticated;
+
+grant usage, select on all sequences in schema public to anon, authenticated;
+
+-- Grant all to service_role
+grant all privileges on all tables in schema public to service_role;
+grant all privileges on all sequences in schema public to service_role;
+grant all privileges on all routines in schema public to service_role;
+
+-- Revoke execute from public for all routines
+alter default privileges in schema public revoke execute on functions from public;
+
+-- Revoke for existing functions
+revoke all on function public.set_updated_at() from public;
+revoke all on function public.is_active_user() from public;
+revoke all on function public.current_org_id() from public;
+revoke all on function public.has_role(text) from public;
+revoke all on function public.has_role_in_scope(text, uuid) from public;
+revoke all on function public.can_access_document(uuid, uuid) from public;
+
+grant execute on function public.is_active_user() to anon, authenticated;
+grant execute on function public.current_org_id() to anon, authenticated;
+grant execute on function public.has_role(text) to anon, authenticated;
+grant execute on function public.has_role_in_scope(text, uuid) to anon, authenticated;
+grant execute on function public.can_access_document(uuid, uuid) to anon, authenticated;

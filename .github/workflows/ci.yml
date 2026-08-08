@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [ "master", "fix/phase-1-security-remediation" ]
+  pull_request:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run lint
+      run: npm run lint
+      
+    - name: Run frontend tests
+      run: npm test
+      
+    - name: Build frontend
+      run: npm run build
+
+  test-db:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Supabase CLI
+      uses: supabase/setup-cli@v1
+      with:
+        version: latest
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Setup Deno
+      uses: denoland/setup-deno@v1
+      with:
+        deno-version: v1.x
+        
+    - name: Start Supabase and Run DB Tests
+      run: |
+        supabase start
+        supabase db reset
+        supabase test db
+        
+    - name: Run Edge Function Tests
+      run: |
+        cd supabase/functions
+        deno check **/*.ts
+        # Supabase local environment runs on 127.0.0.1:54321
+        # and has SUPABASE_URL, SUPABASE_ANON_KEY in its config, but we need them in env for Deno tests.
+        export SUPABASE_URL="http://127.0.0.1:54321"
+        export SUPABASE_ANON_KEY=$(supabase status -o json | jq -r .ANON_KEY)
+        export SUPABASE_SERVICE_ROLE_KEY=$(supabase status -o json | jq -r .SERVICE_ROLE_KEY)
+        export SUPABASE_JWT_SECRET="super-secret-jwt-token-with-at-least-32-characters-long"
+        deno test --allow-all

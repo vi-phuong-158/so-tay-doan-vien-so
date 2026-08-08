@@ -90,8 +90,10 @@ begin
 end $$;
 revoke all on function public.mark_overdue_assignments() from public;
 
--- Storage access is fail-closed. Private files are issued through Edge Functions/signed URLs.
+-- Storage access via JWT + RLS
 create policy "public innovation media read" on storage.objects for select using (bucket_id='innovation-public-media');
 create policy "admins manage public innovation media" on storage.objects for all
 using (bucket_id='innovation-public-media' and (public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN')))
 with check (bucket_id='innovation-public-media' and (public.has_role('YOUTH_ADMIN') or public.has_role('SYSTEM_ADMIN')));
+
+

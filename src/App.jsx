@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { AuthGuard, RoleGuard } from './components/Guards';
 import { AppShell } from './components/Layout';
@@ -6,6 +6,7 @@ import { AppShell } from './components/Layout';
 import { Login } from './pages/auth/Login';
 import { ForgotPassword } from './pages/auth/ForgotPassword';
 import { ResetPassword } from './pages/auth/ResetPassword';
+import { ChangePassword } from './pages/auth/ChangePassword';
 
 import { Home } from './pages/Home';
 import { Work } from './pages/Work';
@@ -44,9 +45,15 @@ export default function App() {
             <Route path="doi-moi-sang-tao" element={<Innovation />} />
             <Route path="ca-nhan" element={<Profile />} />
 
+            {/* Profile Routes */}
+            <Route path="ca-nhan/thong-bao" element={
+              <div className="page"><div style={{padding: '16px'}}><h2>Thông báo</h2><p>Tính năng đang phát triển.</p></div></div>
+            } />
+            <Route path="ca-nhan/doi-mat-khau" element={<ChangePassword />} />
+
             {/* Admin Routes */}
             <Route path="admin" element={
-              <RoleGuard allowedRoles={['YOUTH_ADMIN', 'BRANCH_OFFICER']}>
+              <RoleGuard allowedRoles={['YOUTH_ADMIN']}>
                 <AdminDashboard />
               </RoleGuard>
             } />

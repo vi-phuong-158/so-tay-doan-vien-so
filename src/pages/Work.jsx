@@ -24,6 +24,9 @@ export function Work() {
   return (
     <div className="page">
       <PageHeader title="Công việc & Báo cáo" action={<Button icon="filter" variant="secondary">Bộ lọc</Button>} />
+      <div style={{background: 'var(--warning)', color: '#000', fontSize: 12, padding: '4px 16px', textAlign: 'center', fontWeight: 'bold'}}>
+        Giao diện hiển thị dữ liệu minh họa
+      </div>
       <div className="tabs">
         <button className="tab active">Đang diễn ra (2)</button>
         <button className="tab">Đã hoàn thành</button>
