@@ -6,7 +6,7 @@ export const REPORT_STATUS_GROUPS = {
 export function canSubmitAssignment(assignment) {
   const status = assignment?.status;
   if (status === 'PENDING' || status === 'OVERDUE' || status === 'NEEDS_SUPPLEMENT') return true;
-  return (status === 'SUBMITTED' || status === 'RESUBMITTED') && assignment?.campaign?.allowResubmission === true;
+  return (status === 'SUBMITTED' || status === 'RESUBMITTED' || status === 'LATE_SUBMITTED') && assignment?.campaign?.allowResubmission === true;
 }
 
 const REVIEWABLE_SUBMISSION_STATUSES = ['SUBMITTED', 'RESUBMITTED', 'LATE_SUBMITTED'];

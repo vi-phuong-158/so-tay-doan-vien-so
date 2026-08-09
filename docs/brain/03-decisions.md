@@ -99,6 +99,13 @@
 - **Đánh đổi:** Notification exemption fan-out tới các BRANCH_OFFICER ACTIVE trong organization; chưa xây history UI đầy đủ hoặc dashboard review.
 - **Người quyết định:** Codex, theo P2-10 handoff security/atomicity.
 
+## [2026-08-09] Submission history dùng expected-version và namespace vN
+
+- **Quyết định:** Giữ upload staging của P2-09, nhưng submit-report tính version kế tiếp từ dữ liệu server, move object sang `{campaign}/{org}/{assignment}/vN/`, rồi gọi RPC overload có `p_expected_version`. RPC khóa assignment, từ chối expected version cũ, lưu metadata/history/audit/notification cùng transaction; resubmit sau NEEDS_SUPPLEMENT vẫn được phép dù `allow_resubmission=false`.
+- **Lý do:** Bảo đảm không duplicate/skip version khi double-click hoặc retry, không ghi đè file cũ, và giữ dữ liệu version cũ read-only trong khi tái sử dụng trusted submit path P2-09.
+- **Đánh đổi:** Storage move và database transaction không phải một distributed transaction; Edge Function rollback move về staging khi RPC fail, còn RPC atomic hóa toàn bộ metadata nghiệp vụ. Signed URL chỉ tạo lazy từ path versioned đã được RLS kiểm soát.
+- **Người quyết định:** Codex, theo P2-11 handoff versioning/concurrency.
+
 ---
 
 ## Template cho entry mới
