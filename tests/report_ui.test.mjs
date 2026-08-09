@@ -4,6 +4,7 @@ import test from 'node:test';
 import {
   formatFileSize,
   canSubmitAssignment,
+  getReviewActions,
   getEffectiveDueAt,
   REPORT_STATUS_GROUPS,
   sortAssignments,
@@ -51,6 +52,14 @@ test('submit form presentation follows server status without mutating it locally
   assert.equal(canSubmitAssignment({ status: 'ACCEPTED', campaign: { allowResubmission: true } }), false);
 });
 
+test('review actions are derived from the server status and terminal states are fail-closed', () => {
+  assert.deepEqual(getReviewActions({ status: 'SUBMITTED' }), ['ACCEPTED', 'NEEDS_SUPPLEMENT']);
+  assert.deepEqual(getReviewActions({ status: 'RESUBMITTED' }), ['ACCEPTED', 'NEEDS_SUPPLEMENT']);
+  assert.deepEqual(getReviewActions({ status: 'PENDING' }), ['EXEMPTED']);
+  assert.deepEqual(getReviewActions({ status: 'ACCEPTED' }), []);
+  assert.deepEqual(getReviewActions({ status: 'CLOSED' }), []);
+});
+
 test('Work production path uses reportService, real tabs, loading/error/empty states, and accessible assignment links', () => {
   assert.doesNotMatch(workSource, /data\/mock|campaigns/);
   assert.match(workSource, /getMyAssignments/);
@@ -61,15 +70,21 @@ test('Work production path uses reportService, real tabs, loading/error/empty st
   assert.doesNotMatch(workSource, /Còn 4 ngày|submitted\/total|Giao diện hiển thị dữ liệu minh họa/);
 });
 
-test('detail production path reads assignment/templates, signs downloads on demand, and wires P2-09 actions', () => {
+test('detail production path reads assignment/submission, signs downloads, and wires P2-09/P2-10 actions', () => {
   assert.match(detailSource, /getAssignment/);
   assert.match(detailSource, /getCampaignTemplates/);
+  assert.match(detailSource, /getSubmissionHistory/);
   assert.match(detailSource, /getSignedFileUrl/);
   assert.match(detailSource, /REPORT_TEMPLATES_BUCKET/);
   assert.match(detailSource, /uploadReportFile/);
   assert.match(detailSource, /removeStagedReportFile/);
   assert.match(detailSource, /submitReport/);
-  assert.doesNotMatch(detailSource, /getSubmissionHistory/);
+  assert.match(detailSource, /reviewReport/);
+  assert.match(detailSource, /Xác nhận hoàn thành/);
+  assert.match(detailSource, /Yêu cầu bổ sung/);
+  assert.match(detailSource, /Miễn nộp/);
+  assert.match(detailSource, /role="dialog"/);
+  assert.match(detailSource, /reviewReason\.trim\(\)/);
   assert.match(detailSource, /Xác nhận gửi/);
   assert.match(detailSource, /selectedFiles\.every\(\(\{ status \}\) => status === 'uploaded'\)/);
   assert.match(detailSource, /removeStagedReportFile/);

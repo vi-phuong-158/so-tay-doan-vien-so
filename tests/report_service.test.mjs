@@ -232,6 +232,27 @@ test('submitReport preserves backend business errors and normalizes unauthentica
   );
 });
 
+test('reviewReport uses the review-report Edge Function and requires reasons where needed', async () => {
+  const { client, calls } = createClient({ invokeResponse: { data: { success: true, status: 'NEEDS_SUPPLEMENT' }, error: null } });
+  const result = await createReportService(client).reviewReport({
+    assignmentId: ids.assignment,
+    action: 'NEEDS_SUPPLEMENT',
+    reason: 'Bổ sung số liệu'
+  });
+
+  assert.deepEqual(result, { success: true, status: 'NEEDS_SUPPLEMENT' });
+  assert.deepEqual(calls.at(-1), [
+    'invoke',
+    'review-report',
+    { body: { assignment_id: ids.assignment, action: 'NEEDS_SUPPLEMENT', reason: 'Bổ sung số liệu' } }
+  ]);
+
+  await assert.rejects(
+    createReportService(client).reviewReport({ assignmentId: ids.assignment, action: 'EXEMPTED', reason: '  ' }),
+    (error) => error.code === 'REASON_REQUIRED'
+  );
+});
+
 test('removeStagedReportFile requests exact-path Storage deletion and rejects non-staging paths locally', async () => {
   const { client, calls } = createClient();
   const path = `${ids.campaign}/${ids.organization}/${ids.assignment}/staging/${ids.object}-Bao-cao.pdf`;

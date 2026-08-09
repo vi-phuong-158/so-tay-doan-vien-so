@@ -9,6 +9,22 @@ export function canSubmitAssignment(assignment) {
   return (status === 'SUBMITTED' || status === 'RESUBMITTED') && assignment?.campaign?.allowResubmission === true;
 }
 
+const REVIEWABLE_SUBMISSION_STATUSES = ['SUBMITTED', 'RESUBMITTED', 'LATE_SUBMITTED'];
+
+export function getReviewActions(assignment) {
+  if (REVIEWABLE_SUBMISSION_STATUSES.includes(assignment?.status)) {
+    return ['ACCEPTED', 'NEEDS_SUPPLEMENT'];
+  }
+  if (assignment?.status === 'PENDING' || assignment?.status === 'OVERDUE') {
+    return ['EXEMPTED'];
+  }
+  return [];
+}
+
+export function canReviewAssignment(assignment) {
+  return getReviewActions(assignment).length > 0;
+}
+
 const ATTENTION_ORDER = {
   NEEDS_SUPPLEMENT: 0,
   OVERDUE: 1,

@@ -10,6 +10,10 @@ const BUSINESS_ERROR_CODES = new Set([
   'LATE_SUBMISSION_NOT_ALLOWED',
   'RESUBMISSION_NOT_ALLOWED',
   'INVALID_REPORT_TRANSITION',
+  'INVALID_ACTION',
+  'REASON_REQUIRED',
+  'ACCOUNT_NOT_ACTIVE',
+  'ASSIGNMENT_NOT_FOUND',
   'ASSIGNMENT_SCOPE_DENIED',
   'REPORT_ALREADY_ACCEPTED',
   'REPORT_EXEMPTED',
@@ -320,6 +324,25 @@ export function createReportService(client, { createObjectId = () => globalThis.
           ...(summary ? { summary } : {}),
           ...(submitNote ? { submit_note: submitNote } : {}),
           files: payloadFiles
+        }
+      }));
+    },
+
+    async reviewReport({ assignmentId, action, reason }) {
+      assertUuid(assignmentId, 'assignmentId');
+      if (!['ACCEPTED', 'NEEDS_SUPPLEMENT', 'EXEMPTED'].includes(action)) {
+        throw new ReportServiceError('INVALID_ACTION', 'A valid review action is required.', undefined);
+      }
+      const normalizedReason = typeof reason === 'string' ? reason.trim() : '';
+      if ((action === 'NEEDS_SUPPLEMENT' || action === 'EXEMPTED') && !normalizedReason) {
+        throw new ReportServiceError('REASON_REQUIRED', 'A reason is required for this review action.', undefined);
+      }
+
+      return unwrap(client.functions.invoke('review-report', {
+        body: {
+          assignment_id: assignmentId,
+          action,
+          ...(normalizedReason ? { reason: normalizedReason } : {})
         }
       }));
     },

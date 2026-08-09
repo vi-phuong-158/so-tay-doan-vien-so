@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Icon } from '../components/Icon';
 import { EmptyState, PageHeader, StatusBadge } from '../components/common';
 import Skeleton from '../components/Skeleton';
+import { useAuth } from '../contexts/AuthContext';
 import {
   createReportService,
   REPORT_TEMPLATES_BUCKET
@@ -12,6 +13,7 @@ import {
   formatFileSize,
   formatReportDate,
   canSubmitAssignment,
+  getReviewActions,
   getEffectiveDueAt,
   getReportFileAccept,
   validateReportFileSelection
@@ -32,6 +34,10 @@ const ERROR_MESSAGES = {
   RESUBMISSION_NOT_ALLOWED: 'Báo cáo hiện không được phép nộp lại.',
   REPORT_ALREADY_ACCEPTED: 'Báo cáo đã được xác nhận hoàn thành.',
   REPORT_EXEMPTED: 'Đơn vị đã được miễn nộp báo cáo này.',
+  INVALID_REPORT_TRANSITION: 'Trạng thái báo cáo đã thay đổi. Vui lòng tải lại trang.',
+  REASON_REQUIRED: 'Vui lòng nhập lý do cho thao tác này.',
+  ACCOUNT_NOT_ACTIVE: 'Tài khoản không còn hoạt động.',
+  ASSIGNMENT_SCOPE_DENIED: 'Bạn không có quyền review nhiệm vụ này.',
   AUTHENTICATION_REQUIRED: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.'
 };
 
@@ -63,8 +69,11 @@ function statusLabel(status) {
 export function ReportAssignmentDetail() {
   const navigate = useNavigate();
   const { assignmentId } = useParams();
+  const { hasRole } = useAuth();
+  const isReviewer = hasRole('YOUTH_ADMIN') || hasRole('SYSTEM_ADMIN');
   const [assignment, setAssignment] = useState(null);
   const [templates, setTemplates] = useState([]);
+  const [latestSubmission, setLatestSubmission] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [templateError, setTemplateError] = useState(null);
@@ -79,6 +88,13 @@ export function ReportAssignmentDetail() {
   const [submitResult, setSubmitResult] = useState(null);
   const [summary, setSummary] = useState('');
   const [submitNote, setSubmitNote] = useState('');
+  const [reviewAction, setReviewAction] = useState(null);
+  const [reviewReason, setReviewReason] = useState('');
+  const [reviewConfirming, setReviewConfirming] = useState(false);
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewError, setReviewError] = useState(null);
+  const [reviewResult, setReviewResult] = useState(null);
+  const [downloadingSubmissionFile, setDownloadingSubmissionFile] = useState(null);
 
   const loadDetail = useCallback(() => {
     let mounted = true;
@@ -89,12 +105,14 @@ export function ReportAssignmentDetail() {
     reportService.getAssignment(assignmentId)
       .then((loadedAssignment) => Promise.all([
         loadedAssignment,
-        reportService.getCampaignTemplates(loadedAssignment.campaign?.id)
+        reportService.getCampaignTemplates(loadedAssignment.campaign?.id),
+        reportService.getSubmissionHistory(assignmentId)
       ]))
-      .then(([loadedAssignment, loadedTemplates]) => {
+      .then(([loadedAssignment, loadedTemplates, submissions]) => {
         if (!mounted) return;
         setAssignment(loadedAssignment);
         setTemplates(loadedTemplates);
+        setLatestSubmission(submissions[0] || null);
       })
       .catch((requestError) => {
         if (mounted) setError(requestError);
@@ -121,8 +139,12 @@ export function ReportAssignmentDetail() {
 
   async function refreshAssignment() {
     try {
-      const refreshed = await reportService.getAssignment(assignmentId);
+      const [refreshed, submissions] = await Promise.all([
+        reportService.getAssignment(assignmentId),
+        reportService.getSubmissionHistory(assignmentId)
+      ]);
       setAssignment(refreshed);
+      setLatestSubmission(submissions[0] || null);
     } catch {
       // Keep the original operation result visible; the next explicit retry reloads the page.
     }
@@ -263,11 +285,66 @@ export function ReportAssignmentDetail() {
     }
   }
 
+  function requestReview(action) {
+    setReviewAction(action);
+    setReviewReason('');
+    setReviewError(null);
+    setReviewConfirming(true);
+  }
+
+  async function submitReview() {
+    const reason = reviewReason.trim();
+    if (!reviewAction || reviewSubmitting) return;
+    if ((reviewAction === 'NEEDS_SUPPLEMENT' || reviewAction === 'EXEMPTED') && !reason) {
+      setReviewError({ code: 'REASON_REQUIRED' });
+      return;
+    }
+
+    setReviewSubmitting(true);
+    setReviewError(null);
+    try {
+      const result = await reportService.reviewReport({
+        assignmentId: assignment.id,
+        action: reviewAction,
+        reason: reason || undefined
+      });
+      setReviewResult(result);
+      setReviewConfirming(false);
+      setReviewAction(null);
+      setReviewReason('');
+      await refreshAssignment();
+    } catch (requestError) {
+      setReviewError(requestError);
+      setReviewConfirming(false);
+      await refreshAssignment();
+    } finally {
+      setReviewSubmitting(false);
+    }
+  }
+
+  async function downloadSubmissionFile(file) {
+    setDownloadingSubmissionFile(file.id);
+    setReviewError(null);
+    try {
+      const signedUrl = await reportService.getSignedFileUrl(file.storagePath, { expiresIn: 60 });
+      window.open(signedUrl, '_blank', 'noopener,noreferrer');
+    } catch (requestError) {
+      setReviewError(requestError);
+    } finally {
+      setDownloadingSubmissionFile(null);
+    }
+  }
+
   const campaign = assignment?.campaign;
   const canSubmit = canSubmitAssignment(assignment);
   const allFilesUploaded = selectedFiles.length > 0 && selectedFiles.every(({ status }) => status === 'uploaded');
   const acceptedExtensions = getReportFileAccept(campaign?.allowedExtensions);
   const formTitle = assignment?.status === 'NEEDS_SUPPLEMENT' ? 'Nộp bổ sung' : 'Nộp báo cáo';
+  const reviewActions = isReviewer ? getReviewActions(assignment) : [];
+  const reviewNeedsReason = reviewAction === 'NEEDS_SUPPLEMENT' || reviewAction === 'EXEMPTED';
+  const reviewActionLabel = reviewAction === 'ACCEPTED'
+    ? 'Xác nhận hoàn thành'
+    : reviewAction === 'NEEDS_SUPPLEMENT' ? 'Yêu cầu bổ sung' : 'Miễn nộp';
 
   return (
     <div className="page">
@@ -310,6 +387,70 @@ export function ReportAssignmentDetail() {
               <div><span>Số tệp tối đa</span><strong>{campaign.maxFiles || 'Theo quy định của đợt báo cáo'}</strong></div>
             </div>
           </section>
+
+          <section className="content-card">
+            <h3>Bản nộp hiện hành</h3>
+            {!latestSubmission && <p>Chưa có bản nộp.</p>}
+            {latestSubmission && (
+              <>
+                <div className="info-grid">
+                  <div><span>Phiên bản</span><strong>v{latestSubmission.versionNumber}</strong></div>
+                  <div><span>Thời điểm nộp</span><strong>{formatReportDate(latestSubmission.submittedAt)}</strong></div>
+                  <div><span>Trạng thái review</span><strong>{latestSubmission.reviewStatus}</strong></div>
+                </div>
+                {latestSubmission.summary && <p><strong>Tóm tắt:</strong> {latestSubmission.summary}</p>}
+                {latestSubmission.submitNote && <p><strong>Ghi chú nộp:</strong> {latestSubmission.submitNote}</p>}
+                {latestSubmission.reviewNote && <p><strong>Ghi chú review:</strong> {latestSubmission.reviewNote}</p>}
+                <div className="list card-list">
+                  {latestSubmission.files.map((file) => (
+                    <button
+                      type="button"
+                      className="file-row"
+                      key={file.id}
+                      onClick={() => downloadSubmissionFile(file)}
+                      disabled={downloadingSubmissionFile === file.id}
+                    >
+                      <span><Icon name="file" size={20} /></span>
+                      <div><strong>{file.originalName}</strong><small>{formatFileSize(file.sizeBytes)}</small></div>
+                      <Icon name="download" size={18} />
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </section>
+
+          {isReviewer && reviewActions.length > 0 && (
+            <section className="content-card" aria-labelledby="report-review-title">
+              <h3 id="report-review-title">Review báo cáo</h3>
+              <p>Thao tác sẽ được kiểm tra lại trên máy chủ và cập nhật assignment, bản nộp, history, audit và notification trong cùng transaction.</p>
+              {reviewError && <p role="alert">{getReportErrorMessage(reviewError, 'Không thể review báo cáo. Trạng thái có thể đã thay đổi.')}</p>}
+              {reviewResult && <p role="status">Review đã được ghi nhận. Trạng thái hiện tại sẽ được tải lại từ máy chủ.</p>}
+              <div style={{ display: 'flex', gap: 9, flexWrap: 'wrap' }}>
+                {reviewActions.includes('ACCEPTED') && <button type="button" className="button button-primary" onClick={() => requestReview('ACCEPTED')} disabled={reviewSubmitting}>Xác nhận hoàn thành</button>}
+                {reviewActions.includes('NEEDS_SUPPLEMENT') && <button type="button" className="button button-secondary" onClick={() => requestReview('NEEDS_SUPPLEMENT')} disabled={reviewSubmitting}>Yêu cầu bổ sung</button>}
+                {reviewActions.includes('EXEMPTED') && <button type="button" className="button button-secondary" onClick={() => requestReview('EXEMPTED')} disabled={reviewSubmitting}>Miễn nộp</button>}
+              </div>
+
+              {reviewConfirming && (
+                <div className="security-box" role="dialog" aria-labelledby="review-confirm-title">
+                  <div>
+                    <strong id="review-confirm-title">Xác nhận: {reviewActionLabel}</strong>
+                    {reviewNeedsReason && (
+                      <div className="form-field">
+                        <label htmlFor="review-reason">Lý do bắt buộc</label>
+                        <textarea id="review-reason" maxLength={2000} value={reviewReason} onChange={(event) => setReviewReason(event.target.value)} disabled={reviewSubmitting} />
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', gap: 9, marginTop: 10 }}>
+                      <button type="button" className="button button-primary" onClick={submitReview} disabled={reviewSubmitting || (reviewNeedsReason && !reviewReason.trim())}>{reviewSubmitting ? 'Đang xử lý...' : 'Xác nhận'}</button>
+                      <button type="button" className="button button-secondary" onClick={() => setReviewConfirming(false)} disabled={reviewSubmitting}>Hủy</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </section>
+          )}
 
           <section className="content-card">
             <h3>Biểu mẫu đính kèm</h3>
