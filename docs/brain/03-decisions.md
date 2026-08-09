@@ -64,6 +64,20 @@
 - **Người quyết định:** user + triển khai (PR #1, branch `fix/phase-1-security-remediation`).
 - **Tham chiếu:** `docs/phase-1-implementation-report.md`.
 
+## [2026-08-09] Core RPC nộp báo cáo là nội bộ
+
+- **Quyết định:** Thu hồi `EXECUTE` của `authenticated` trên `create_report_submission(uuid,text,text)`; chỉ `create_report_submission_with_files` là RPC có thể gọi bởi người dùng đã xác thực.
+- **Lý do:** RPC lõi không buộc contract file nên cho phép bypass đường production đã xác minh Storage; wrapper gọi lõi trong transaction với `SECURITY DEFINER`.
+- **Đánh đổi:** pgTAP lifecycle phải đi qua wrapper với fixture file; mọi caller tương lai phải dùng Edge Function `submit-report` hoặc wrapper đã kiểm soát.
+- **Người quyết định:** Codex, theo P2-06 handoff security gate.
+
+## [2026-08-09] Storage policy dùng helper khi phải tra bảng protected
+
+- **Quyết định:** Policy `storage.objects` kiểm template gọi `can_read_report_template(uuid)` thay vì truy vấn trực tiếp `report_assignments`.
+- **Lý do:** PostgreSQL không bảo đảm thứ tự đánh giá nhánh policy; một truy vấn anon vào bucket khác có thể chạy nhánh tra bảng và raise `permission denied` thay vì RLS deny.
+- **Đánh đổi:** Thêm helper `SECURITY DEFINER` boolean với `search_path` cố định; helper không trả dữ liệu, chỉ xét account active, assignment cùng org hoặc role admin.
+- **Người quyết định:** Codex, theo CI P2-06.
+
 ---
 
 ## Template cho entry mới
