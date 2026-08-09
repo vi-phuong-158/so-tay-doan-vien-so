@@ -10,6 +10,7 @@ import { ChangePassword } from './pages/auth/ChangePassword';
 
 import { Home } from './pages/Home';
 import { Work } from './pages/Work';
+import { ReportAssignmentDetail } from './pages/ReportAssignmentDetail';
 import { Knowledge } from './pages/Knowledge';
 import { Innovation } from './pages/Innovation';
 import { Profile } from './pages/Profile';
@@ -41,6 +42,7 @@ export default function App() {
           <Route path="/" element={<AuthGuard><AppShell /></AuthGuard>}>
             <Route index element={<Home />} />
             <Route path="cong-viec" element={<Work />} />
+            <Route path="cong-viec/bao-cao/:assignmentId" element={<ReportAssignmentDetail />} />
             <Route path="tri-thuc" element={<Knowledge />} />
             <Route path="doi-moi-sang-tao" element={<Innovation />} />
             <Route path="ca-nhan" element={<Profile />} />
