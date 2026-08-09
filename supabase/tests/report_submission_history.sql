@@ -27,7 +27,10 @@ values
   ('9c000003-0000-0000-0000-000000000003', 'HIST-LATE', 'T', now()-interval '2 day', now()-interval '1 day', now()+interval '1 day', true, true, 'PUBLISHED'),
   ('9c000004-0000-0000-0000-000000000004', 'HIST-CLOSED', 'T', now()-interval '3 day', now()-interval '2 hour', now()-interval '1 hour', true, true, 'PUBLISHED'),
   ('9c000005-0000-0000-0000-000000000005', 'HIST-DISABLED', 'T', now()-interval '1 day', now()+interval '1 day', null, false, false, 'PUBLISHED'),
-  ('9c000006-0000-0000-0000-000000000006', 'HIST-LATE-DENY', 'T', now()-interval '2 day', now()-interval '1 day', now()+interval '1 day', false, true, 'PUBLISHED')
+  ('9c000006-0000-0000-0000-000000000006', 'HIST-LATE-DENY', 'T', now()-interval '2 day', now()-interval '1 day', now()+interval '1 day', false, true, 'PUBLISHED'),
+  ('9c000007-0000-0000-0000-000000000007', 'HIST-ACCEPTED', 'T', now()-interval '1 day', now()+interval '1 day', null, false, true, 'PUBLISHED'),
+  ('9c000008-0000-0000-0000-000000000008', 'HIST-EXEMPTED', 'T', now()-interval '1 day', now()+interval '1 day', null, false, true, 'PUBLISHED'),
+  ('9c000009-0000-0000-0000-000000000009', 'HIST-EXTRA', 'T', now()-interval '1 day', now()+interval '1 day', null, false, true, 'PUBLISHED')
 on conflict (id) do nothing;
 
 insert into public.report_assignments (id, campaign_id, organization_id, status)
@@ -38,9 +41,9 @@ values
   ('9a000004-0000-0000-0000-000000000004', '9c000004-0000-0000-0000-000000000004', '22222222-2222-2222-2222-222222222222', 'PENDING'),
   ('9a000005-0000-0000-0000-000000000005', '9c000005-0000-0000-0000-000000000005', '22222222-2222-2222-2222-222222222222', 'SUBMITTED'),
   ('9a000006-0000-0000-0000-000000000006', '9c000001-0000-0000-0000-000000000001', '33333333-3333-3333-3333-333333333333', 'SUBMITTED'),
-  ('9a000007-0000-0000-0000-000000000007', '9c000001-0000-0000-0000-000000000001', '22222222-2222-2222-2222-222222222222', 'ACCEPTED'),
+  ('9a000007-0000-0000-0000-000000000007', '9c000007-0000-0000-0000-000000000007', '22222222-2222-2222-2222-222222222222', 'ACCEPTED'),
   ('9a000008-0000-0000-0000-000000000008', '9c000006-0000-0000-0000-000000000006', '22222222-2222-2222-2222-222222222222', 'PENDING'),
-  ('9a000009-0000-0000-0000-000000000009', '9c000001-0000-0000-0000-000000000001', '22222222-2222-2222-2222-222222222222', 'EXEMPTED')
+  ('9a000009-0000-0000-0000-000000000009', '9c000008-0000-0000-0000-000000000008', '22222222-2222-2222-2222-222222222222', 'EXEMPTED')
 on conflict (id) do nothing;
 
 insert into public.report_submissions (assignment_id, version_number, submitted_by, summary, submit_note, review_status, review_note)
@@ -136,12 +139,12 @@ select throws_ok(
 select throws_ok(
   $$ select public.create_report_submission_with_files(
     '9a000007-0000-0000-0000-000000000007', null, null,
-    '[{"storage_path":"9c000001-0000-0000-0000-000000000001/22222222-2222-2222-2222-222222222222/9a000007-0000-0000-0000-000000000007/v1/accepted.pdf","original_name":"accepted.pdf","size_bytes":10}]'::jsonb, 1) $$,
+    '[{"storage_path":"9c000007-0000-0000-0000-000000000007/22222222-2222-2222-2222-222222222222/9a000007-0000-0000-0000-000000000007/v1/accepted.pdf","original_name":"accepted.pdf","size_bytes":10}]'::jsonb, 1) $$,
   'REPORT_ALREADY_ACCEPTED', 'H12 ACCEPTED assignment cannot resubmit');
 select throws_ok(
   $$ select public.create_report_submission_with_files(
     '9a000009-0000-0000-0000-000000000009', null, null,
-    '[{"storage_path":"9c000001-0000-0000-0000-000000000001/22222222-2222-2222-2222-222222222222/9a000009-0000-0000-0000-000000000009/v1/exempted.pdf","original_name":"exempted.pdf","size_bytes":10}]'::jsonb, 1) $$,
+    '[{"storage_path":"9c000008-0000-0000-0000-000000000008/22222222-2222-2222-2222-222222222222/9a000009-0000-0000-0000-000000000009/v1/exempted.pdf","original_name":"exempted.pdf","size_bytes":10}]'::jsonb, 1) $$,
   'REPORT_EXEMPTED', 'H13 EXEMPTED assignment cannot resubmit');
 
 -- H16/H19/H22/H24: stale expected version and malformed/non-version paths fail without mutations.
