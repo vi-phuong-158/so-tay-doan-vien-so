@@ -76,7 +76,7 @@ supabase/
 | `functions/_shared/auth.ts` | `clients()`→{userClient, adminClient}; `requireUser`, `requireGlobalRole`, `requireScopedRole` | **mọi** Edge Function | `@supabase/supabase-js`, env `SUPABASE_*` |
 | `functions/_shared/http.ts` | `corsHeaders`, `json`, `errorResponse`, `readJson` | mọi Edge Function | — |
 | `functions/_shared/validation.ts` | `assertUuid`, `fileExtension`, `safeText` | các function nhận input | — |
-| `functions/submit-report` | Kiểm tra assignment/quyền/tệp → RPC `create_report_submission` → insert file + notification | client (khi đã nối) | `_shared/*`, RPC, bảng report_* |
+| `functions/submit-report` | Xác minh object Storage thật + quyền/tệp → RPC `create_report_submission_with_files` (atomic) → notification | client (khi đã nối) | `_shared/*`, Storage, RPC, bảng report_* |
 | `functions/review-report` | Chuyển trạng thái accepted/needs-supplement/exempted | client admin | `_shared/*`, requireRole |
 | `functions/ask-ai` | RAG: scope tài liệu → Gemini → chuẩn hóa nguồn → lưu lịch sử | client | `_shared/*`, `match_document_chunks` |
 | `functions/process-document` | Trích xuất → chunk → embedding → chờ duyệt | admin | `_shared/*`, Gemini |
@@ -92,9 +92,10 @@ main.jsx → App(BrowserRouter) → AuthProvider(getSession + onAuthStateChange
 
 # Nộp báo cáo (đích, khi frontend hết mock)
 Page nộp → invoke Edge Function submit-report
-         → clients()/requireUser → validate assignment+file
-         → RPC create_report_submission (versioned) → insert report_submission_files
-         → insert notifications → trả submission mới
+         → clients()/requireUser → validate assignment+Storage object thật
+         → RPC create_report_submission_with_files (atomic, versioned)
+         → create_report_submission (internal core, không cấp execute cho user)
+         → notification best-effort → trả submission mới
 
 # RAG hỏi AI
 Page trợ lý AI → invoke ask-ai → requireUser + quota → xác định scope tài liệu

@@ -18,6 +18,16 @@
 
 ---
 
+## [2026-08-09] P2-06 security test gate
+
+- **Agent:** Codex
+- **Thay đổi:** Đóng quyền gọi trực tiếp RPC lõi nộp báo cáo bằng migration forward-only, chuyển pgTAP lifecycle sang wrapper có file và thêm test âm cho bypass quyền RPC; lập báo cáo nghiệm thu Phase 2A.
+- **File đã sửa:** `supabase/migrations/202608090005_phase_2_close_core_submission_rpc.sql`, `supabase/tests/report_submission_atomicity.sql`, `docs/phase-2/06-phase-2a-acceptance.md`, `docs/brain/01-architecture.md`, `docs/brain/03-decisions.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Đường production bắt buộc qua finalize có file; RPC lõi không được là public/authenticated contract.
+- **Kiểm tra:** `npm ci`, `npm run lint`, `npm test`, `npm run build`; pgTAP/Deno chờ CI vì máy local không có Supabase CLI, Docker hoặc Deno.
+
+---
+
 ## [2026-08-09] Khởi tạo bộ não dự án (AI project brain)
 
 - **Agent:** Claude Code

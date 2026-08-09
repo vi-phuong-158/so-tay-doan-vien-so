@@ -64,6 +64,13 @@
 - **Người quyết định:** user + triển khai (PR #1, branch `fix/phase-1-security-remediation`).
 - **Tham chiếu:** `docs/phase-1-implementation-report.md`.
 
+## [2026-08-09] Core RPC nộp báo cáo là nội bộ
+
+- **Quyết định:** Thu hồi `EXECUTE` của `authenticated` trên `create_report_submission(uuid,text,text)`; chỉ `create_report_submission_with_files` là RPC có thể gọi bởi người dùng đã xác thực.
+- **Lý do:** RPC lõi không buộc contract file nên cho phép bypass đường production đã xác minh Storage; wrapper gọi lõi trong transaction với `SECURITY DEFINER`.
+- **Đánh đổi:** pgTAP lifecycle phải đi qua wrapper với fixture file; mọi caller tương lai phải dùng Edge Function `submit-report` hoặc wrapper đã kiểm soát.
+- **Người quyết định:** Codex, theo P2-06 handoff security gate.
+
 ---
 
 ## Template cho entry mới

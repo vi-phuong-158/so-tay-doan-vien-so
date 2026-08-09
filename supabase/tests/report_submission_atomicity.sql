@@ -26,6 +26,34 @@ end $$;
 -- ---- Fixtures (created as postgres; time windows are relative to transaction now()) --
 select reset_auth();
 
+-- Exercise the internal lifecycle core only through the production wrapper. The helper is
+-- created inside this rolled-back pgTAP transaction so it is never part of the application API.
+create or replace function public.test_submit_with_file(p_assignment_id uuid, p_summary text default null)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_assignment public.report_assignments%rowtype;
+begin
+  select * into v_assignment from public.report_assignments where id = p_assignment_id;
+  if not found then raise exception 'ASSIGNMENT_NOT_FOUND'; end if;
+
+  perform public.create_report_submission_with_files(
+    p_assignment_id,
+    p_summary,
+    null,
+    jsonb_build_array(jsonb_build_object(
+      'storage_path', v_assignment.campaign_id::text || '/' || v_assignment.organization_id::text || '/' || p_assignment_id::text || '/v-test/test.pdf',
+      'original_name', 'test.pdf',
+      'safe_name', 'test.pdf',
+      'mime_type', 'application/pdf',
+      'size_bytes', 1
+    ))
+  );
+end $$;
+
 -- Campaigns. Columns: open_at, due_at, close_at, allow_late_submission, allow_resubmission
 insert into public.report_campaigns (id, title, issuer, open_at, due_at, close_at, allow_late_submission, allow_resubmission, status) values
   ('7c000001-0000-0000-0000-000000000001','OPEN','T', now()-interval '1 day', now()+interval '1 day', null,               false, true,  'PUBLISHED'),
@@ -73,7 +101,7 @@ select set_auth_user('cccccccc-cccc-cccc-cccc-cccccccccccc');
 
 -- T1: initial submit -> version 1, SUBMITTED, is_late=false
 select lives_ok(
-  $$ select public.create_report_submission('7a000001-0000-0000-0000-000000000001','tóm tắt','ghi chú') $$,
+  $$ select public.test_submit_with_file('7a000001-0000-0000-0000-000000000001','tóm tắt') $$,
   'T1 Officer A can submit initial version'
 );
 select results_eq(
@@ -88,7 +116,7 @@ select results_eq(
 
 -- T2: voluntary resubmit (allow_resubmission=true) -> version 2, RESUBMITTED
 select lives_ok(
-  $$ select public.create_report_submission('7a000001-0000-0000-0000-000000000001') $$,
+  $$ select public.test_submit_with_file('7a000001-0000-0000-0000-000000000001') $$,
   'T2 Officer A can resubmit when allowed');
 select results_eq(
   $$ select max(version_number)::integer from public.report_submissions where assignment_id='7a000001-0000-0000-0000-000000000001' $$,
@@ -121,7 +149,7 @@ select set_auth_user('cccccccc-cccc-cccc-cccc-cccccccccccc');
 
 -- T4: Officer A cannot submit an assignment belonging to Org B
 select throws_ok(
-  $$ select public.create_report_submission('7a000002-0000-0000-0000-000000000002') $$,
+  $$ select public.test_submit_with_file('7a000002-0000-0000-0000-000000000002') $$,
   'ASSIGNMENT_SCOPE_DENIED',
   'T4 cross-organization submission is denied');
 
@@ -130,6 +158,11 @@ select throws_ok(
   $$ insert into public.report_submissions (assignment_id, version_number, submitted_by) values ('7a000001-0000-0000-0000-000000000001', 99, 'cccccccc-cccc-cccc-cccc-cccccccccccc') $$,
   'permission denied for table report_submissions',
   'T5 direct INSERT into report_submissions is denied (permission)');
+
+select throws_ok(
+  $$ select public.create_report_submission('7a000001-0000-0000-0000-000000000001') $$,
+  'permission denied for function create_report_submission',
+  'T5a direct core submission RPC is denied to authenticated');
 
 -- No end-user role may write report_assignments directly; status changes flow only through the
 -- controlled RPCs (P2-05 revoked UPDATE from authenticated). The status stays unchanged.
@@ -145,11 +178,11 @@ select results_eq(
 -- TERMINAL STATES (D1/D2)
 -- =====================================================================================
 select throws_ok(
-  $$ select public.create_report_submission('7a00000a-0000-0000-0000-00000000000a') $$,
+  $$ select public.test_submit_with_file('7a00000a-0000-0000-0000-00000000000a') $$,
   'REPORT_ALREADY_ACCEPTED',
   'T6 submit into ACCEPTED assignment is denied');
 select throws_ok(
-  $$ select public.create_report_submission('7a00000b-0000-0000-0000-00000000000b') $$,
+  $$ select public.test_submit_with_file('7a00000b-0000-0000-0000-00000000000b') $$,
   'REPORT_EXEMPTED',
   'T7 submit into EXEMPTED assignment is denied');
 
@@ -158,19 +191,19 @@ select throws_ok(
 -- =====================================================================================
 -- T8: before open_at
 select throws_ok(
-  $$ select public.create_report_submission('7a000003-0000-0000-0000-000000000003') $$,
+  $$ select public.test_submit_with_file('7a000003-0000-0000-0000-000000000003') $$,
   'REPORT_NOT_OPEN',
   'T8 submit before open_at is denied');
 
 -- T9: after due, allow_late=false
 select throws_ok(
-  $$ select public.create_report_submission('7a000004-0000-0000-0000-000000000004') $$,
+  $$ select public.test_submit_with_file('7a000004-0000-0000-0000-000000000004') $$,
   'LATE_SUBMISSION_NOT_ALLOWED',
   'T9 late submission denied when allow_late=false');
 
 -- T10: after due, allow_late=true, before close -> LATE_SUBMITTED, is_late=true
 select lives_ok(
-  $$ select public.create_report_submission('7a000005-0000-0000-0000-000000000005') $$,
+  $$ select public.test_submit_with_file('7a000005-0000-0000-0000-000000000005') $$,
   'T10 late submission allowed within late window');
 select results_eq(
   $$ select status from public.report_assignments where id='7a000005-0000-0000-0000-000000000005' $$,
@@ -181,7 +214,7 @@ select results_eq(
 
 -- T11: after close_at -> denied even though allow_late=true (D5 hard close)
 select throws_ok(
-  $$ select public.create_report_submission('7a000007-0000-0000-0000-000000000007') $$,
+  $$ select public.test_submit_with_file('7a000007-0000-0000-0000-000000000007') $$,
   'REPORT_CLOSED',
   'T11 submission after close_at is denied regardless of allow_late');
 
@@ -189,7 +222,7 @@ select throws_ok(
 -- C1 / D4 — NEEDS_SUPPLEMENT after due keeps RESUBMITTED, marks is_late
 -- =====================================================================================
 select lives_ok(
-  $$ select public.create_report_submission('7a000006-0000-0000-0000-000000000006') $$,
+  $$ select public.test_submit_with_file('7a000006-0000-0000-0000-000000000006') $$,
   'T12 resubmit after NEEDS_SUPPLEMENT within late window is allowed');
 select results_eq(
   $$ select max(version_number)::integer from public.report_submissions where assignment_id='7a000006-0000-0000-0000-000000000006' $$,
@@ -206,13 +239,13 @@ select results_eq(
 -- =====================================================================================
 -- T13: voluntary resubmit blocked when allow_resubmission=false and not NEEDS_SUPPLEMENT
 select throws_ok(
-  $$ select public.create_report_submission('7a000008-0000-0000-0000-000000000008') $$,
+  $$ select public.test_submit_with_file('7a000008-0000-0000-0000-000000000008') $$,
   'RESUBMISSION_NOT_ALLOWED',
   'T13 voluntary resubmit denied when allow_resubmission=false');
 
 -- T14: NEEDS_SUPPLEMENT resubmit allowed even when allow_resubmission=false
 select lives_ok(
-  $$ select public.create_report_submission('7a000009-0000-0000-0000-000000000009') $$,
+  $$ select public.test_submit_with_file('7a000009-0000-0000-0000-000000000009') $$,
   'T14 admin-requested resubmit allowed despite allow_resubmission=false');
 select results_eq(
   $$ select status from public.report_assignments where id='7a000009-0000-0000-0000-000000000009' $$,
@@ -224,14 +257,14 @@ select results_eq(
 -- R1: MEMBER cannot submit
 select set_auth_user('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee');
 select throws_ok(
-  $$ select public.create_report_submission('7a00000d-0000-0000-0000-00000000000d') $$,
+  $$ select public.test_submit_with_file('7a00000d-0000-0000-0000-00000000000d') $$,
   'REPORT_ROLE_DENIED',
   'R1 MEMBER cannot submit reports');
 
 -- R3: INNOVATION_MEMBER cannot submit
 select set_auth_user('ffffffff-ffff-ffff-ffff-ffffffffffff');
 select throws_ok(
-  $$ select public.create_report_submission('7a00000d-0000-0000-0000-00000000000d') $$,
+  $$ select public.test_submit_with_file('7a00000d-0000-0000-0000-00000000000d') $$,
   'REPORT_ROLE_DENIED',
   'R3 INNOVATION_MEMBER cannot submit reports');
 
@@ -242,7 +275,7 @@ select reset_auth();
 update public.profiles set account_status='SUSPENDED' where id='cccccccc-cccc-cccc-cccc-cccccccccccc';
 select set_auth_user('cccccccc-cccc-cccc-cccc-cccccccccccc');
 select throws_ok(
-  $$ select public.create_report_submission('7a00000c-0000-0000-0000-00000000000c') $$,
+  $$ select public.test_submit_with_file('7a00000c-0000-0000-0000-00000000000c') $$,
   'ACCOUNT_NOT_ACTIVE',
   'T15 suspended officer cannot submit (fail-closed)');
 select reset_auth();
@@ -251,11 +284,11 @@ update public.profiles set account_status='ACTIVE' where id='cccccccc-cccc-cccc-
 -- =====================================================================================
 -- PRIVILEGE ASSERTIONS (S1 defense-in-depth)
 -- =====================================================================================
--- Behavioural denial of direct INSERT is already proven by T5 (SQLSTATE 42501).
--- Assert the controlled RPC is executable by authenticated but not anon.
+-- Behavioural denials of direct INSERT and the core RPC are proven by T5/T5a.
+-- Only the controlled wrapper remains executable by authenticated.
 select function_privs_are(
-  'public','create_report_submission', ARRAY['uuid','text','text'], 'authenticated', ARRAY['EXECUTE'],
-  'authenticated can EXECUTE create_report_submission');
+  'public','create_report_submission', ARRAY['uuid','text','text'], 'authenticated', ARRAY[]::text[],
+  'authenticated cannot EXECUTE the internal create_report_submission core');
 select function_privs_are(
   'public','create_report_submission', ARRAY['uuid','text','text'], 'anon', ARRAY[]::text[],
   'anon cannot EXECUTE create_report_submission');
