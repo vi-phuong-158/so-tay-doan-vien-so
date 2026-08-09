@@ -76,6 +76,7 @@ supabase/
 | `functions/_shared/auth.ts` | `clients()`→{userClient, adminClient}; `requireUser`, `requireGlobalRole`, `requireScopedRole` | **mọi** Edge Function | `@supabase/supabase-js`, env `SUPABASE_*` |
 | `functions/_shared/http.ts` | `corsHeaders`, `json`, `errorResponse`, `readJson` | mọi Edge Function | — |
 | `functions/_shared/validation.ts` | `assertUuid`, `fileExtension`, `safeText` | các function nhận input | — |
+| `src/services/reportService.js` | Factory `createReportService(supabase)`; mapper báo cáo; query RLS, upload Storage private, invoke `submit-report` | P2-08/P2-09/P2-10 (chưa nối UI) | `src/lib/status.mjs`, Supabase client được caller truyền vào |
 | `functions/submit-report` | Xác minh object Storage thật + quyền/tệp → RPC `create_report_submission_with_files` (atomic) → notification | client (khi đã nối) | `_shared/*`, Storage, RPC, bảng report_* |
 | `functions/review-report` | Chuyển trạng thái accepted/needs-supplement/exempted | client admin | `_shared/*`, requireRole |
 | `functions/ask-ai` | RAG: scope tài liệu → Gemini → chuẩn hóa nguồn → lưu lịch sử | client | `_shared/*`, `match_document_chunks` |
@@ -91,7 +92,8 @@ main.jsx → App(BrowserRouter) → AuthProvider(getSession + onAuthStateChange
          → RoleGuard(allowedRoles | SYSTEM_ADMIN) → AppShell → <page>
 
 # Nộp báo cáo (đích, khi frontend hết mock)
-Page nộp → invoke Edge Function submit-report
+Page nộp → reportService (Storage private upload dưới prefix assignment/staging)
+         → invoke Edge Function submit-report
          → clients()/requireUser → validate assignment+Storage object thật
          → RPC create_report_submission_with_files (atomic, versioned)
          → create_report_submission (internal core, không cấp execute cho user)

@@ -78,6 +78,13 @@
 - **Đánh đổi:** Thêm helper `SECURITY DEFINER` boolean với `search_path` cố định; helper không trả dữ liệu, chỉ xét account active, assignment cùng org hoặc role admin.
 - **Người quyết định:** Codex, theo CI P2-06.
 
+## [2026-08-09] Frontend upload báo cáo dùng path staging, không tự cấp version
+
+- **Quyết định:** `reportService` upload object theo `{campaign}/{organization}/{assignment}/staging/{uuid}-{safe-name}` và chỉ finalize qua Edge Function `submit-report`.
+- **Lý do:** `version_number` được database cấp nguyên tử khi finalize, còn Edge Function/Storage policy hiện chỉ yêu cầu prefix theo campaign/org/assignment. Tự đoán `v{n}` ở browser có race và không phải contract backend bắt buộc.
+- **Đánh đổi:** Object trong submission hiện giữ path staging thay vì tên versioned; chưa có cleanup/reconciliation cho upload bị bỏ dở. P2-09 hoặc hardening sau cần xử lý UX/vòng đời các object đó.
+- **Người quyết định:** Codex, theo P2-07 report service layer và contract Phase 2A hiện có.
+
 ---
 
 ## Template cho entry mới
