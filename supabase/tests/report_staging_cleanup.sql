@@ -52,10 +52,15 @@ values (
 on conflict (storage_path) do nothing;
 
 -- C1: own active officer may remove an unfinalized staged object.
+-- Storage protects storage.objects from direct SQL DELETE. Evaluate the exact DELETE policy
+-- predicates here; the frontend exercises the same policy through Storage API DELETE.
 select set_auth_user('cccccccc-cccc-cccc-cccc-cccccccccccc');
-select lives_ok(
-  $$ delete from storage.objects where name = '7f000001-0000-0000-0000-000000000001/22222222-2222-2222-2222-222222222222/7f000002-0000-0000-0000-000000000002/staging/77777777-7777-4777-8777-777777777777-own.pdf' $$,
-  'Owner can delete own unfinalized staging object'
+select results_eq(
+  $$ select (o.owner = auth.uid() and public.can_delete_report_staged_file(o.name))::integer
+      from storage.objects o
+      where o.name = '7f000001-0000-0000-0000-000000000001/22222222-2222-2222-2222-222222222222/7f000002-0000-0000-0000-000000000002/staging/77777777-7777-4777-8777-777777777777-own.pdf' $$,
+  array[1],
+  'C1 owner can delete own unfinalized staging object'
 );
 
 -- C2: cross-org object is invisible and cannot be deleted.
@@ -71,7 +76,7 @@ select set_config('request.jwt.claims', '{}', true);
 select results_eq(
   $$ select count(*)::integer from storage.objects where name = '7f000001-0000-0000-0000-000000000001/22222222-2222-2222-2222-222222222222/staging/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa-finalized.pdf' $$,
   array[0],
-  'Anonymous caller cannot delete finalized staging-path object'
+  'C3 anonymous caller cannot delete finalized staging-path object'
 );
 
 -- C4: suspended account is denied.
@@ -79,14 +84,17 @@ select set_auth_user('99999999-9999-9999-9999-999999999999');
 select results_eq(
   $$ select count(*)::integer from storage.objects where name = '7f000001-0000-0000-0000-000000000001/22222222-2222-2222-2222-222222222222/staging/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa-finalized.pdf' $$,
   array[0],
-  'Suspended account cannot delete staging object'
+  'C4 suspended account cannot delete staging object'
 );
 
 -- C5: a finalized reference blocks deletion even though the path contains /staging/.
 select set_auth_user('cccccccc-cccc-cccc-cccc-cccccccccccc');
-select lives_ok(
-  $$ delete from storage.objects where name = '7f000001-0000-0000-0000-000000000001/22222222-2222-2222-2222-222222222222/staging/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa-finalized.pdf' $$,
-  'Finalized staging-path object delete is evaluated without SQL exception'
+select results_eq(
+  $$ select (o.owner = auth.uid() and public.can_delete_report_staged_file(o.name))::integer
+      from storage.objects o
+      where o.name = '7f000001-0000-0000-0000-000000000001/22222222-2222-2222-2222-222222222222/staging/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa-finalized.pdf' $$,
+  array[0],
+  'C5 finalized staging-path object is denied by cleanup predicate'
 );
 select results_eq(
   $$ select count(*)::integer from storage.objects where name = '7f000001-0000-0000-0000-000000000001/22222222-2222-2222-2222-222222222222/staging/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa-finalized.pdf' $$,
@@ -95,9 +103,12 @@ select results_eq(
 );
 
 -- C8: same-org officer cannot delete another uploader's object.
-select lives_ok(
-  $$ delete from storage.objects where name = '7f000001-0000-0000-0000-000000000001/22222222-2222-2222-2222-222222222222/staging/bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb-other-uploader.pdf' $$,
-  'Other uploader delete is evaluated without SQL exception'
+select results_eq(
+  $$ select (o.owner = auth.uid() and public.can_delete_report_staged_file(o.name))::integer
+      from storage.objects o
+      where o.name = '7f000001-0000-0000-0000-000000000001/22222222-2222-2222-2222-222222222222/staging/bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb-other-uploader.pdf' $$,
+  array[0],
+  'C8 same-org officer cannot delete another uploader staging object'
 );
 select results_eq(
   $$ select count(*)::integer from storage.objects where name = '7f000001-0000-0000-0000-000000000001/22222222-2222-2222-2222-222222222222/staging/bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb-other-uploader.pdf' $$,
@@ -106,9 +117,12 @@ select results_eq(
 );
 
 -- C6: non-staging path is denied.
-select lives_ok(
-  $$ delete from storage.objects where name = '7f000001-0000-0000-0000-000000000001/22222222-2222-2222-2222-222222222222/v1/99999999-9999-4999-8999-999999999999-non-staging.pdf' $$,
-  'Non-staging delete is evaluated without SQL exception'
+select results_eq(
+  $$ select (o.owner = auth.uid() and public.can_delete_report_staged_file(o.name))::integer
+      from storage.objects o
+      where o.name = '7f000001-0000-0000-0000-000000000001/22222222-2222-2222-2222-222222222222/v1/99999999-9999-4999-8999-999999999999-non-staging.pdf' $$,
+  array[0],
+  'C6 non-staging object is denied by cleanup predicate'
 );
 select results_eq(
   $$ select count(*)::integer from storage.objects where name = '7f000001-0000-0000-0000-000000000001/22222222-2222-2222-2222-222222222222/v1/99999999-9999-4999-8999-999999999999-non-staging.pdf' $$,
@@ -117,10 +131,12 @@ select results_eq(
 );
 
 -- C7: malformed paths fail closed without leaking a SQL exception.
-select lives_ok(
-  $$ delete from storage.objects where name = 'malformed/path' $$,
-  'Malformed staging path is fail-closed without SQL exception'
+select results_eq(
+  $$ select public.can_delete_report_staged_file('malformed/path')::integer $$,
+  array[0],
+  'C7 malformed staging path fails closed'
 );
+select reset_auth();
 select results_eq(
   $$ select count(*)::integer from storage.objects where name = 'malformed/path' $$,
   array[1],
