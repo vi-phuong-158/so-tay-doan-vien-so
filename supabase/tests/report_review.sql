@@ -61,6 +61,14 @@ from public.report_submissions s
 where s.assignment_id = '8a000001-0000-0000-0000-000000000001' and s.version_number = 1
 on conflict (storage_path) do nothing;
 
+create temp table review_immutable_snapshot as
+select s.submitted_at,
+  f.storage_path, f.original_name, f.safe_name, f.mime_type, f.size_bytes, f.checksum, f.uploaded_by,
+  s.version_number
+from public.report_submissions s
+join public.report_submission_files f on f.submission_id = s.id
+where s.assignment_id = '8a000001-0000-0000-0000-000000000001' and s.version_number = 1;
+
 -- =====================================================================================
 -- HAPPY: ACCEPT (Youth Admin scoped to the org) + review_status sync (C4)
 -- =====================================================================================
@@ -85,9 +93,18 @@ select results_eq(
   $$ select count(*)::integer from public.notifications where user_id='cccccccc-cccc-cccc-cccc-cccccccccccc' and type='REPORT_ACCEPTED' and action_url='/cong-viec/bao-cao/8a000001-0000-0000-0000-000000000001' $$,
   ARRAY[1], 'H-ACCEPT notification is atomic and links to assignment');
 select results_eq(
-  $$ select storage_path || '|' || version_number::text || '|' || uploaded_by::text from public.report_submission_files f join public.report_submissions s on s.id=f.submission_id where s.assignment_id='8a000001-0000-0000-0000-000000000001' $$,
-  ARRAY['8c000001-0000-0000-0000-000000000001/22222222-2222-2222-2222-222222222222/8a000001-0000-0000-0000-000000000001/v1/report.pdf|1|cccccccc-cccc-cccc-cccc-cccccccccccc'::text],
-  'R13 review leaves finalized submission file path, version and uploader immutable');
+  $$ select count(*)::integer from review_immutable_snapshot before
+     join public.report_submissions s on s.version_number = before.version_number
+     join public.report_submission_files f on f.submission_id = s.id and f.storage_path = before.storage_path
+     where s.assignment_id='8a000001-0000-0000-0000-000000000001'
+       and s.submitted_at is not distinct from before.submitted_at
+       and f.original_name is not distinct from before.original_name
+       and f.safe_name is not distinct from before.safe_name
+       and f.mime_type is not distinct from before.mime_type
+       and f.size_bytes is not distinct from before.size_bytes
+       and f.checksum is not distinct from before.checksum
+       and f.uploaded_by is not distinct from before.uploaded_by $$,
+  ARRAY[1], 'R13 review leaves finalized submission timestamp, version and file metadata immutable');
 select isnt_empty(
   $$ select 1 from public.report_status_history where assignment_id='8a000001-0000-0000-0000-000000000001' and to_status='ACCEPTED' $$,
   'H-ACCEPT status history row written');
