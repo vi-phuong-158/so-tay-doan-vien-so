@@ -3,6 +3,12 @@ export const REPORT_STATUS_GROUPS = {
   completed: ['ACCEPTED', 'EXEMPTED', 'CLOSED']
 };
 
+export function canSubmitAssignment(assignment) {
+  const status = assignment?.status;
+  if (status === 'PENDING' || status === 'OVERDUE' || status === 'NEEDS_SUPPLEMENT') return true;
+  return (status === 'SUBMITTED' || status === 'RESUBMITTED') && assignment?.campaign?.allowResubmission === true;
+}
+
 const ATTENTION_ORDER = {
   NEEDS_SUPPLEMENT: 0,
   OVERDUE: 1,
@@ -53,4 +59,41 @@ export function formatFileSize(sizeBytes) {
   if (sizeBytes < 1024) return `${sizeBytes} B`;
   if (sizeBytes < 1024 * 1024) return `${Math.round(sizeBytes / 1024)} KB`;
   return `${(sizeBytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+export function getFileExtension(fileName) {
+  return String(fileName || '').toLowerCase().split('.').pop() || '';
+}
+
+export function getReportFileAccept(allowedExtensions) {
+  return (Array.isArray(allowedExtensions) ? allowedExtensions : [])
+    .map((extension) => extension.startsWith('.') ? extension : `.${extension}`)
+    .join(',');
+}
+
+export function validateReportFileSelection(fileList, campaign) {
+  const files = Array.from(fileList || []);
+  const maxFiles = Number(campaign?.maxFiles);
+  const maxFileSizeBytes = Number(campaign?.maxFileSizeMb) * 1024 * 1024;
+  const allowedExtensions = new Set((campaign?.allowedExtensions || []).map((extension) => extension.toLowerCase().replace(/^\./, '')));
+
+  if (Number.isFinite(maxFiles) && maxFiles > 0 && files.length > maxFiles) {
+    return { files: [], errorCode: 'TOO_MANY_FILES' };
+  }
+
+  const seen = new Set();
+  for (const file of files) {
+    const identity = `${file.name}:${file.size}:${file.lastModified || 0}`;
+    if (seen.has(identity)) return { files: [], errorCode: 'DUPLICATE_FILE_PATH' };
+    seen.add(identity);
+    if (file.size <= 0) return { files: [], errorCode: 'INVALID_FILE' };
+    if (allowedExtensions.size > 0 && !allowedExtensions.has(getFileExtension(file.name))) {
+      return { files: [], errorCode: 'FILE_TYPE_NOT_ALLOWED' };
+    }
+    if (Number.isFinite(maxFileSizeBytes) && maxFileSizeBytes > 0 && file.size > maxFileSizeBytes) {
+      return { files: [], errorCode: 'FILE_TOO_LARGE' };
+    }
+  }
+
+  return { files, errorCode: null };
 }

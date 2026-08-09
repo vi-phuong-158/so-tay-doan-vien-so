@@ -1,6 +1,7 @@
 import { clients, requireUser } from '../_shared/auth.ts';
 import { corsHeaders, errorResponse, json, readJson } from '../_shared/http.ts';
 import { assertUuid, fileExtension, safeFileName, safeText } from '../_shared/validation.ts';
+import { buildReportActionUrl } from './contract.ts';
 
 type InputFile = { storage_path: string; original_name: string; checksum?: string };
 type Payload = { assignment_id: string; summary?: string; submit_note?: string; files: InputFile[] };
@@ -85,7 +86,7 @@ Deno.serve(async request => {
       type: 'REPORT_SUBMITTED',
       title: 'Đã nộp báo cáo',
       body: `Phiên bản ${created.version_number} đã được ghi nhận.`,
-      action_url: `/cong-viec/bao-cao/${assignment.campaign_id}`,
+      action_url: buildReportActionUrl(assignment.id),
     });
 
     return json({ success: true, ...created }, 201);

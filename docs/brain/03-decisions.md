@@ -85,6 +85,13 @@
 - **Đánh đổi:** Object trong submission hiện giữ path staging thay vì tên versioned; chưa có cleanup/reconciliation cho upload bị bỏ dở. P2-09 hoặc hardening sau cần xử lý UX/vòng đời các object đó.
 - **Người quyết định:** Codex, theo P2-07 report service layer và contract Phase 2A hiện có.
 
+## [2026-08-09] Cleanup staging chỉ xóa exact object chưa finalize
+
+- **Quyết định:** Cho phép frontend gọi `reportService.removeStagedReportFile(path)` qua Storage DELETE RLS; policy gọi helper `can_delete_report_staged_file` để kiểm uploader, account ACTIVE/BRANCH_OFFICER, organization/assignment/path hợp lệ và `NOT EXISTS report_submission_files(storage_path = path)`.
+- **Lý do:** Object đã finalize có thể vẫn giữ `/staging/`; không thể dùng tên path đơn thuần để quyết định xóa.
+- **Đánh đổi:** Thêm migration forward-only và chưa có garbage collection cho session bỏ dở; cleanup chỉ xảy ra khi user explicit remove/reset.
+- **Người quyết định:** Codex, theo P2-09 cleanup invariant C1–C7.
+
 ---
 
 ## Template cho entry mới

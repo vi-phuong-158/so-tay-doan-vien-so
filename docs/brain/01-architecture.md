@@ -76,7 +76,7 @@ supabase/
 | `functions/_shared/auth.ts` | `clients()`→{userClient, adminClient}; `requireUser`, `requireGlobalRole`, `requireScopedRole` | **mọi** Edge Function | `@supabase/supabase-js`, env `SUPABASE_*` |
 | `functions/_shared/http.ts` | `corsHeaders`, `json`, `errorResponse`, `readJson` | mọi Edge Function | — |
 | `functions/_shared/validation.ts` | `assertUuid`, `fileExtension`, `safeText` | các function nhận input | — |
-| `src/services/reportService.js` | Factory `createReportService(supabase)`; mapper báo cáo; query RLS, upload Storage private, invoke `submit-report` | P2-08/P2-09/P2-10 (chưa nối UI) | `src/lib/status.mjs`, Supabase client được caller truyền vào |
+| `src/services/reportService.js` | Factory `createReportService(supabase)`; mapper báo cáo; query RLS, upload/remove Storage private, invoke `submit-report` | P2-08/P2-09/P2-10 | `src/lib/status.mjs`, Supabase client được caller truyền vào |
 | `functions/submit-report` | Xác minh object Storage thật + quyền/tệp → RPC `create_report_submission_with_files` (atomic) → notification | client (khi đã nối) | `_shared/*`, Storage, RPC, bảng report_* |
 | `functions/review-report` | Chuyển trạng thái accepted/needs-supplement/exempted | client admin | `_shared/*`, requireRole |
 | `functions/ask-ai` | RAG: scope tài liệu → Gemini → chuẩn hóa nguồn → lưu lịch sử | client | `_shared/*`, `match_document_chunks` |
@@ -98,6 +98,13 @@ Page nộp → reportService (Storage private upload dưới prefix assignment/s
          → RPC create_report_submission_with_files (atomic, versioned)
          → create_report_submission (internal core, không cấp execute cho user)
          → notification best-effort → trả submission mới
+
+# Dọn staging (chỉ object chưa finalize)
+UI remove/reset → reportService.removeStagedReportFile(exact path)
+              → Storage DELETE RLS
+              → can_delete_report_staged_file()
+                 → uploader + active account + own org/assignment + staging convention
+                 → NOT EXISTS report_submission_files(storage_path)
 
 # RAG hỏi AI
 Page trợ lý AI → invoke ask-ai → requireUser + quota → xác định scope tài liệu

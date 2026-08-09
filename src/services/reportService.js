@@ -16,6 +16,8 @@ const BUSINESS_ERROR_CODES = new Set([
   'FILE_SCOPE_INVALID',
   'FILE_TOO_LARGE',
   'FILE_TYPE_NOT_ALLOWED',
+  'TOO_MANY_FILES',
+  'DUPLICATE_FILE_PATH',
   'STORAGE_OBJECT_NOT_FOUND'
 ]);
 
@@ -182,6 +184,18 @@ function assertStoragePath(storagePath) {
   }
 }
 
+function assertStagedStoragePath(storagePath) {
+  assertStoragePath(storagePath);
+  const segments = storagePath.split('/');
+  if (segments.length !== 5 || segments[3] !== 'staging' || !UUID_PATTERN.test(segments[0]) || !UUID_PATTERN.test(segments[1]) || !UUID_PATTERN.test(segments[2])) {
+    throw new ReportServiceError('INVALID_STORAGE_PATH', 'A valid staging storage path is required.', undefined);
+  }
+  const objectName = segments[4];
+  if (!UUID_PATTERN.test(objectName.slice(0, 36)) || objectName[36] !== '-' || objectName.length < 38) {
+    throw new ReportServiceError('INVALID_STORAGE_PATH', 'A valid staging storage path is required.', undefined);
+  }
+}
+
 async function unwrap(request) {
   try {
     const { data, error } = await request;
@@ -274,6 +288,12 @@ export function createReportService(client, { createObjectId = () => globalThis.
       );
 
       return { storagePath, originalName: file.name };
+    },
+
+    async removeStagedReportFile(storagePath) {
+      assertStagedStoragePath(storagePath);
+      await unwrap(client.storage.from(REPORT_SUBMISSIONS_BUCKET).remove([storagePath]));
+      return { storagePath, removed: true };
     },
 
     async submitReport({ assignmentId, summary, submitNote, files }) {

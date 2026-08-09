@@ -43,6 +43,10 @@ function createClient({ responses = [], invokeResponse, uploadResponse, signedUr
             calls.push(['upload', path, file, options]);
             return Promise.resolve(uploadResponse || { data: { path }, error: null });
           },
+          remove(paths) {
+            calls.push(['remove', paths]);
+            return Promise.resolve({ data: paths, error: null });
+          },
           createSignedUrl(path, expiresIn) {
             calls.push(['createSignedUrl', path, expiresIn]);
             return Promise.resolve(signedUrlResponse || { data: { signedUrl: 'https://signed.example/file' }, error: null });
@@ -225,6 +229,22 @@ test('submitReport preserves backend business errors and normalizes unauthentica
   await assert.rejects(
     createReportService(unauthenticated.client).submitReport({ assignmentId: ids.assignment, files: [file] }),
     (error) => error.code === 'AUTHENTICATION_REQUIRED'
+  );
+});
+
+test('removeStagedReportFile requests exact-path Storage deletion and rejects non-staging paths locally', async () => {
+  const { client, calls } = createClient();
+  const path = `${ids.campaign}/${ids.organization}/${ids.assignment}/staging/${ids.object}-Bao-cao.pdf`;
+  const removed = await createReportService(client).removeStagedReportFile(path);
+
+  assert.deepEqual(removed, { storagePath: path, removed: true });
+  assert.deepEqual(calls, [
+    ['storage.from', REPORT_SUBMISSIONS_BUCKET],
+    ['remove', [path]]
+  ]);
+  await assert.rejects(
+    createReportService(client).removeStagedReportFile(`${ids.campaign}/${ids.organization}/${ids.assignment}/v1/${ids.object}-Bao-cao.pdf`),
+    (error) => error.code === 'INVALID_STORAGE_PATH'
   );
 });
 
