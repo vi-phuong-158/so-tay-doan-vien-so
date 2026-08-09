@@ -25,7 +25,7 @@ values
   ('9c000001-0000-0000-0000-000000000001', 'HIST-ALLOW', 'T', now()-interval '1 day', now()+interval '1 day', null, false, true, 'PUBLISHED'),
   ('9c000002-0000-0000-0000-000000000002', 'HIST-NEEDS', 'T', now()-interval '1 day', now()+interval '1 day', null, false, false, 'PUBLISHED'),
   ('9c000003-0000-0000-0000-000000000003', 'HIST-LATE', 'T', now()-interval '2 day', now()-interval '1 day', now()+interval '1 day', true, true, 'PUBLISHED'),
-  ('9c000004-0000-0000-0000-000000000004', 'HIST-CLOSED', 'T', now()-interval '2 day', now()+interval '1 day', now()-interval '1 hour', true, true, 'PUBLISHED'),
+  ('9c000004-0000-0000-0000-000000000004', 'HIST-CLOSED', 'T', now()-interval '3 day', now()-interval '2 hour', now()-interval '1 hour', true, true, 'PUBLISHED'),
   ('9c000005-0000-0000-0000-000000000005', 'HIST-DISABLED', 'T', now()-interval '1 day', now()+interval '1 day', null, false, false, 'PUBLISHED'),
   ('9c000006-0000-0000-0000-000000000006', 'HIST-LATE-DENY', 'T', now()-interval '2 day', now()-interval '1 day', now()+interval '1 day', false, true, 'PUBLISHED')
 on conflict (id) do nothing;
