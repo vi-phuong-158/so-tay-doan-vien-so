@@ -36,16 +36,19 @@ set search_path = public
 as $$
 declare
   v_assignment public.report_assignments%rowtype;
+  v_next_version integer;
 begin
   select * into v_assignment from public.report_assignments where id = p_assignment_id;
   if not found then raise exception 'ASSIGNMENT_NOT_FOUND'; end if;
+  select coalesce(max(version_number), 0) + 1 into v_next_version
+  from public.report_submissions where assignment_id = p_assignment_id;
 
   perform public.create_report_submission_with_files(
     p_assignment_id,
     p_summary,
     null,
     jsonb_build_array(jsonb_build_object(
-      'storage_path', v_assignment.campaign_id::text || '/' || v_assignment.organization_id::text || '/' || p_assignment_id::text || '/v-test/test.pdf',
+      'storage_path', v_assignment.campaign_id::text || '/' || v_assignment.organization_id::text || '/' || p_assignment_id::text || '/v-test-' || v_next_version || '/test.pdf',
       'original_name', 'test.pdf',
       'safe_name', 'test.pdf',
       'mime_type', 'application/pdf',

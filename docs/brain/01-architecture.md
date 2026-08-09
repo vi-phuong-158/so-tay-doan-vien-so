@@ -12,7 +12,7 @@
 | Backend | Supabase Edge Functions (Deno + TypeScript) |
 | Database | Supabase PostgreSQL + RLS + pgvector; RPC `security definer` |
 | Auth | Supabase Auth (GoTrue) |
-| Storage | Supabase Storage (bucket private + signed URL) |
+| Storage | Supabase Storage (bucket private + signed URL + SECURITY DEFINER access helpers where RLS policy needs protected table lookup) |
 | AI | Gemini (embedding + trả lời) qua Edge Function `ask-ai` |
 | Email | Brevo/Resend/SMTP qua `email_queue` + `process-email-queue` |
 | Hosting | Vercel (hoặc Mắt Bão) với SPA rewrite; xem `vercel.json` |

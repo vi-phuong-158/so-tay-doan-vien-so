@@ -71,6 +71,13 @@
 - **Đánh đổi:** pgTAP lifecycle phải đi qua wrapper với fixture file; mọi caller tương lai phải dùng Edge Function `submit-report` hoặc wrapper đã kiểm soát.
 - **Người quyết định:** Codex, theo P2-06 handoff security gate.
 
+## [2026-08-09] Storage policy dùng helper khi phải tra bảng protected
+
+- **Quyết định:** Policy `storage.objects` kiểm template gọi `can_read_report_template(uuid)` thay vì truy vấn trực tiếp `report_assignments`.
+- **Lý do:** PostgreSQL không bảo đảm thứ tự đánh giá nhánh policy; một truy vấn anon vào bucket khác có thể chạy nhánh tra bảng và raise `permission denied` thay vì RLS deny.
+- **Đánh đổi:** Thêm helper `SECURITY DEFINER` boolean với `search_path` cố định; helper không trả dữ liệu, chỉ xét account active, assignment cùng org hoặc role admin.
+- **Người quyết định:** Codex, theo CI P2-06.
+
 ---
 
 ## Template cho entry mới
