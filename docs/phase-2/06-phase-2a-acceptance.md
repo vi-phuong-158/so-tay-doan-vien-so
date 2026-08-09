@@ -2,7 +2,7 @@
 
 **Ngày:** 2026-08-09
 **Branch:** `feat/phase-2a-report-foundation`
-**Disposition hiện tại:** `BLOCKED` — chờ pgTAP/Deno CI thực thi.
+**Disposition:** `PASS_WITH_P2`
 
 ## 1. Handoff verification
 
@@ -66,7 +66,14 @@ The database files cover A–D and F of the P2-06 matrix, including structural d
 
 ## 7. CI evidence
 
-`PENDING CI` — the Draft PR is the authoritative trigger for `build` and `test-db`. This document must be updated with actual job logs/results before the Phase 2A gate can pass.
+Draft PR #3 rerun `31301926693` passed on 2026-08-09:
+
+| Job | Result |
+| --- | --- |
+| `build` | PASS — `npm ci`, lint, 9/9 frontend tests and Vite build. |
+| `test-db` | PASS — `supabase db reset`, pgTAP (5 files / 129 tests), Deno check of all Edge Function TypeScript files, Deno tests (7/7). |
+
+The initial CI run exposed two P2-06 defects: an anon Storage policy evaluation raised a protected-table permission error, and the pgTAP wrapper fixture reused a finalized file path. Forward-fix `202608090006` moves the protected assignment lookup behind a boolean `SECURITY DEFINER` helper; the fixture now includes the next version in its path. The rerun passed all jobs.
 
 ## 8. Findings and disposition
 
@@ -80,7 +87,6 @@ Resolved in P2-06: `authenticated` could execute the three-argument internal sub
 
 ### P2 / remaining risks
 
-- Runtime pgTAP, Deno check/test and Storage verification integration remain unexecuted until CI.
 - Export/download admin scope filtering is P2-13 scope, not a Phase 2A submission/review bypass.
 - The repository is public, as reported by P2-00; ownership/visibility change requires project-owner action.
 
@@ -91,4 +97,4 @@ Resolved in P2-06: `authenticated` could execute the three-argument internal sub
 
 ## 10. Final disposition
 
-`BLOCKED` pending actual CI. Do not begin P2-07 until the Draft PR gate has produced and been reviewed with real `build` and `test-db` results.
+`PASS_WITH_P2`: no known P0/P1 submission or review bypass remains; local and CI gates pass. Keep Draft PR #3 unmerged for owner review. The next task may be P2-07, but it is not started by this gate.
