@@ -11,3 +11,14 @@ export function assertUuid(value: unknown, code = 'INVALID_ID'): string {
   return text;
 }
 export function fileExtension(name: string) { return name.toLowerCase().split('.').pop() || ''; }
+
+// Backend-normalized, download-safe filename. Never trust a client-supplied safe_name.
+export function safeFileName(name: string): string {
+  const cleaned = String(name || 'tep')
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/đ/g, 'd').replace(/Đ/g, 'D')
+    .replace(/[^a-zA-Z0-9._-]+/g, '-')
+    .replace(/-+/g, '-').replace(/^-|-$/g, '')
+    .slice(0, 120);
+  return cleaned || 'tep';
+}
