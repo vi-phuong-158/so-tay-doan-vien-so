@@ -80,6 +80,7 @@ select results_eq(
 select results_eq(
   $$ select accepted_at is not null from public.report_assignments where id='8a000001-0000-0000-0000-000000000001' $$,
   ARRAY[true], 'H-ACCEPT accepted_at recorded');
+select reset_auth();
 select results_eq(
   $$ select count(*)::integer from public.notifications where user_id='cccccccc-cccc-cccc-cccc-cccccccccccc' and type='REPORT_ACCEPTED' and action_url='/cong-viec/bao-cao/8a000001-0000-0000-0000-000000000001' $$,
   ARRAY[1], 'H-ACCEPT notification is atomic and links to assignment');
@@ -107,6 +108,7 @@ select results_eq(
 select results_eq(
   $$ select review_note from public.report_submissions where assignment_id='8a000002-0000-0000-0000-000000000002' and version_number=1 $$,
   ARRAY['Bổ sung số liệu'::text], 'H-NEEDS review_note stored');
+select reset_auth();
 select results_eq(
   $$ select from_status || '|' || to_status || '|' || changed_by::text || '|' || reason from public.report_status_history where assignment_id='8a000002-0000-0000-0000-000000000002' $$,
   ARRAY['SUBMITTED|NEEDS_SUPPLEMENT|aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa|Bổ sung số liệu'::text],
@@ -131,6 +133,7 @@ select results_eq(
 select results_eq(
   $$ select exempted_at is not null from public.report_assignments where id='8a000003-0000-0000-0000-000000000003' $$,
   ARRAY[true], 'H-EXEMPT exempted_at recorded');
+select reset_auth();
 select results_eq(
   $$ select count(*)::integer from public.notifications where user_id='cccccccc-cccc-cccc-cccc-cccccccccccc' and type='REPORT_EXEMPTED' and action_url='/cong-viec/bao-cao/8a000003-0000-0000-0000-000000000003' $$,
   ARRAY[1], 'H-EXEMPT notification is atomic and links to assignment');
