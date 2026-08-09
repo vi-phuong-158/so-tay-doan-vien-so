@@ -131,11 +131,15 @@ select throws_ok(
   'permission denied for table report_submissions',
   'T5 direct INSERT into report_submissions is denied (permission)');
 
--- Officer A cannot self-review by directly updating the assignment status (RLS filters the row)
-update public.report_assignments set status='ACCEPTED' where id='7a000001-0000-0000-0000-000000000001';
+-- No end-user role may write report_assignments directly; status changes flow only through the
+-- controlled RPCs (P2-05 revoked UPDATE from authenticated). The status stays unchanged.
+select throws_ok(
+  $$ update public.report_assignments set status='ACCEPTED' where id='7a000001-0000-0000-0000-000000000001' $$,
+  'permission denied for table report_assignments',
+  'T5b direct UPDATE of report_assignments is denied for authenticated');
 select results_eq(
   $$ select status from public.report_assignments where id='7a000001-0000-0000-0000-000000000001' $$,
-  ARRAY['RESUBMITTED'::text], 'T5b Officer A cannot self-ACCEPT via direct UPDATE');
+  ARRAY['RESUBMITTED'::text], 'T5b assignment status unchanged after denied direct UPDATE');
 
 -- =====================================================================================
 -- TERMINAL STATES (D1/D2)
