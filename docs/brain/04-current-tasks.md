@@ -14,8 +14,9 @@
   chưa có upload/submit/history UI.
 - P2-09 hoàn thành: upload staging, confirmation, submit qua Edge Function, refresh server state và cleanup
   exact-path an toàn; chưa có history/export/admin.
-- P2-10 đang làm: review ACCEPTED/NEEDS_SUPPLEMENT/EXEMPTED qua RPC atomic, review surface tối thiểu và
-  notification/history/audit; không làm history UI đầy đủ, dashboard, export, email hoặc P2-11.
+- P2-10 đã hoàn thành technical acceptance trên branch `feat/phase-2c-report-review`: review
+  ACCEPTED/NEEDS_SUPPLEMENT/EXEMPTED qua RPC atomic, review surface tối thiểu và notification/history/audit;
+  không làm history UI đầy đủ, dashboard, export, email hoặc P2-11.
 
 ---
 
