@@ -21,6 +21,11 @@ export function mapDashboardError(error) {
     ACCOUNT_NOT_ACTIVE: 'Tài khoản không còn hoạt động.',
     REPORT_CAMPAIGN_SCOPE_DENIED: 'Bạn không có quyền xem dashboard báo cáo.',
     REPORT_DASHBOARD_NOT_FOUND_OR_FORBIDDEN: 'Không tìm thấy đợt báo cáo hoặc bạn không có quyền truy cập.',
+    BUNDLE_FILE_LIMIT_EXCEEDED: 'Gói tải xuống vượt quá 100 tệp.',
+    BUNDLE_SIZE_LIMIT_EXCEEDED: 'Gói tải xuống vượt quá 50 MB.',
+    STORAGE_OBJECT_NOT_FOUND: 'Không tìm thấy tệp riêng tư để đóng gói.',
+    BUNDLE_FILE_METADATA_MISMATCH: 'Metadata tệp không khớp với object lưu trữ.',
+    AUDIT_LOG_FAILED: 'Không thể ghi nhật ký audit cho thao tác tải xuống.',
     NOT_FOUND_OR_FORBIDDEN: 'Không tìm thấy đợt báo cáo hoặc bạn không có quyền truy cập.',
     AUTHENTICATION_REQUIRED: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.'
   };

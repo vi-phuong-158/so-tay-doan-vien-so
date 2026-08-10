@@ -7,9 +7,9 @@
 
 ## Đang làm
 
-**P2-13 — Report dashboard & aggregate status** (branch `feat/phase-2f-report-dashboard`, baseline `1e144cb`)
-- Dashboard scoped server-side: aggregate trạng thái, completion rate, effective overdue read-only, list/search/filter và link tới detail/review hiện có.
-- Hoàn tất implementation SHA `9e5b91e`: CI run `31405473107` PASS (frontend build/lint/test, Supabase reset/pgTAP, Deno check/test). Local Docker/Postgres và Deno vẫn không có.
+**P2-14 — Scoped export & report bundle download** (branch `feat/phase-2g-scoped-export-bundle`, baseline P2-13 `3e7c03d`)
+- Hoàn thiện export CSV và bundle ZIP qua Edge Functions; scope/filter lấy từ dashboard RPC, object private chỉ được đọc server-side, audit bắt buộc.
+- CI run `31409166458` PASS (frontend lint/test/build, Supabase reset/pgTAP, Deno check/test); local frontend test/lint/build cũng PASS.
 
 ---
 
@@ -49,6 +49,7 @@
 
 - [2026-08-10] P2-12: route `/admin/bao-cao`, service quản trị campaign, template private và publish assignment qua RPC.
 - [2026-08-10] P2-13: dashboard báo cáo scoped server-side, aggregate trạng thái/completion, filter/search và deep link assignment.
+- [2026-08-10] P2-14: export CSV scoped và bundle ZIP latest submission, giới hạn/metadata fail-closed, audit và nút tải dashboard.
 
 - [2026-08-09] P2-07: report service layer + behavior tests; không migration, không thay UI.
 - [2026-08-09] P2-08: report assignment list/detail UI, real status filters, RLS-backed detail and private template download.
