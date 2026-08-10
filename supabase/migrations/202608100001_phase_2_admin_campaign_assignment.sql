@@ -366,7 +366,7 @@ begin
   insert into public.report_assignments(campaign_id, organization_id, status)
   select v_campaign.id, organization_id, 'PENDING'
   from unnest(v_org_ids) as organization_id
-  on conflict (campaign_id, organization_id) do nothing;
+  on conflict on constraint report_assignments_campaign_id_organization_id_key do nothing;
 
   insert into public.report_status_history(assignment_id, from_status, to_status, changed_by, reason)
   select a.id, null, 'PENDING', auth.uid(), 'Phát hành đợt báo cáo'

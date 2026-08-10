@@ -31,6 +31,14 @@
 - **Lý do:** CI phát hiện PostgreSQL ưu tiên/nhầm lẫn giữa `RETURNS TABLE campaign_id` và cột không qualifier trong truy vấn đếm; đây là lỗi implementation thực tế cần sửa trước nghiệm thu.
 - **Kiểm tra:** `npm.cmd test` sẽ được chạy lại; CI Supabase/Deno được chạy lại trên commit forward-fix.
 
+## [2026-08-10] P2-12 publish conflict-target forward-fix
+
+- **Agent:** Codex
+- **Thay đổi:** Đổi conflict target publish sang constraint định danh để tách hoàn toàn cột unique `(campaign_id, organization_id)` khỏi output field cùng tên của `RETURNS TABLE`.
+- **File đã sửa:** `supabase/migrations/202608100001_phase_2_admin_campaign_assignment.sql`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** pgTAP CI vẫn báo `campaign_id` ambiguous tại câu INSERT/UPSERT; đây là nguồn tham chiếu cột không qualifier còn lại trong hàm.
+- **Kiểm tra:** CI Supabase/Deno sẽ được chạy lại sau commit.
+
 ---
 
 ## Format entry
