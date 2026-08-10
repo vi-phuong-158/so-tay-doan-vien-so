@@ -76,7 +76,7 @@ select throws_ok(
   'ORGANIZATION_INACTIVE', 'P7 inactive organization cannot be assigned');
 select reset_auth();
 select results_eq(
-  $$ select status || '|' || count(a.id)::text from public.report_campaigns c left join public.report_assignments a on a.campaign_id=c.id where c.id=(select id from p2_campaigns where name='scope') group by c.status $$,
+  $$ select c.status || '|' || count(a.id)::text from public.report_campaigns c left join public.report_assignments a on a.campaign_id=c.id where c.id=(select id from p2_campaigns where name='scope') group by c.status $$,
   array['DRAFT|0'::text], 'P11 failed publish is atomic: draft remains and no partial assignment exists');
 
 -- Non-admin, suspended and anonymous callers all fail closed.

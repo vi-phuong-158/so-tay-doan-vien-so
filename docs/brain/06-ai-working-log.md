@@ -15,6 +15,16 @@
 
 ---
 
+## [2026-08-10] P2-12 pgTAP fixture forward-fix
+
+- **Agent:** Codex
+- **Thay đổi:** Cấp quyền fixture tạm cho role `authenticated` và qualify `c.status` trong assertion atomicity sau khi CI phát hiện lỗi test harness, không thay đổi hành vi production.
+- **File đã sửa:** `supabase/tests/report_admin_campaign_assignment.sql`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** pgTAP chủ động đổi role để xác minh authorization, nên fixture test phải có quyền tường minh.
+- **Kiểm tra:** CI rerun đang được kích hoạt trên forward-fix.
+
+---
+
 ## Format entry
 
 ```
