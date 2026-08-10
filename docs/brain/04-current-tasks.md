@@ -9,7 +9,7 @@
 
 **P2-14 — Scoped export & report bundle download** (branch `feat/phase-2g-scoped-export-bundle`, baseline P2-13 `3e7c03d`)
 - Hoàn thiện export CSV và bundle ZIP qua Edge Functions; scope/filter lấy từ dashboard RPC, object private chỉ được đọc server-side, audit bắt buộc.
-- Đang chờ CI Supabase/Deno trên draft PR; local frontend test/lint/build đã chạy.
+- CI run `31409166458` PASS (frontend lint/test/build, Supabase reset/pgTAP, Deno check/test); local frontend test/lint/build cũng PASS.
 
 ---
 

@@ -47,3 +47,5 @@ submission hoặc file; response có `Cache-Control: private, no-store`.
 Frontend unit tests bao phủ payload/filter và guard chống double-click; contract tests Deno
 bao phủ CSV formula neutralization, allowlist filter, duplicate ZIP path và limits/status.
 Rollback an toàn bằng cách revert commit/PR P2-14; không có migration/schema change.
+
+CI acceptance: GitHub Actions run `31409166458` PASS (frontend lint/test/build, Supabase db reset + pgTAP, Deno check/test).
