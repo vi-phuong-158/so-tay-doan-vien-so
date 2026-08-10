@@ -49,6 +49,7 @@ test('submit form presentation follows server status without mutating it locally
   assert.equal(canSubmitAssignment({ status: 'PENDING', campaign: {} }), true);
   assert.equal(canSubmitAssignment({ status: 'NEEDS_SUPPLEMENT', campaign: {} }), true);
   assert.equal(canSubmitAssignment({ status: 'SUBMITTED', campaign: { allowResubmission: false } }), false);
+  assert.equal(canSubmitAssignment({ status: 'LATE_SUBMITTED', campaign: { allowResubmission: true } }), true);
   assert.equal(canSubmitAssignment({ status: 'ACCEPTED', campaign: { allowResubmission: true } }), false);
 });
 
@@ -70,10 +71,14 @@ test('Work production path uses reportService, real tabs, loading/error/empty st
   assert.doesNotMatch(workSource, /Còn 4 ngày|submitted\/total|Giao diện hiển thị dữ liệu minh họa/);
 });
 
-test('detail production path reads assignment/submission, signs downloads, and wires P2-09/P2-10 actions', () => {
+test('detail production path reads assignment/history, signs downloads, and wires P2-09/P2-10/P2-11 actions', () => {
   assert.match(detailSource, /getAssignment/);
   assert.match(detailSource, /getCampaignTemplates/);
   assert.match(detailSource, /getSubmissionHistory/);
+  assert.match(detailSource, /Lịch sử nộp báo cáo/);
+  assert.match(detailSource, /Phiên bản hiện tại/);
+  assert.match(detailSource, /aria-expanded/);
+  assert.match(detailSource, /Nộp muộn/);
   assert.match(detailSource, /getSignedFileUrl/);
   assert.match(detailSource, /REPORT_TEMPLATES_BUCKET/);
   assert.match(detailSource, /uploadReportFile/);
@@ -89,6 +94,7 @@ test('detail production path reads assignment/submission, signs downloads, and w
   assert.match(detailSource, /selectedFiles\.every\(\(\{ status \}\) => status === 'uploaded'\)/);
   assert.match(detailSource, /removeStagedReportFile/);
   assert.match(detailSource, /refreshAssignment/);
+  assert.match(detailSource, /Nội dung cần bổ sung/);
   assert.match(detailSource, /UPLOADS_EXIST/);
   assert.doesNotMatch(detailSource, /assignment\.status\s*=(?!=)/);
   assert.doesNotMatch(detailSource, /\b\d+%/);

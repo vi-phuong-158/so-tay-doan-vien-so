@@ -7,7 +7,7 @@
 
 ## Đang làm
 
-**Phase 2C — Review & trạng thái báo cáo** (branch `feat/phase-2c-report-review`, phụ thuộc P2-09)
+**Phase 2D — Submission history & resubmission** (branch `feat/phase-2d-resubmission-history`, phụ thuộc P2-10)
 - P2-07 hoàn thành: `src/services/reportService.js` đọc dữ liệu qua RLS, upload private Storage theo
   staging path, và finalize duy nhất qua Edge Function `submit-report`.
 - P2-08 hoàn thành: Work list/detail dùng service thật, route assignment detail và signed template download;
@@ -16,7 +16,9 @@
   exact-path an toàn; chưa có history/export/admin.
 - P2-10 đã hoàn thành technical acceptance trên branch `feat/phase-2c-report-review`: review
   ACCEPTED/NEEDS_SUPPLEMENT/EXEMPTED qua RPC atomic, review surface tối thiểu và notification/history/audit;
-  không làm history UI đầy đủ, dashboard, export, email hoặc P2-11.
+  không làm dashboard, export hoặc email.
+- P2-11 đang làm: history theo assignment, resubmit versioned qua namespace `vN`, expected-version
+  stale guard và regression H1–H26; không làm dashboard/export/email/ZIP/P2-12.
 
 ---
 

@@ -32,6 +32,7 @@ const ERROR_MESSAGES = {
   REPORT_CLOSED: 'Đợt báo cáo đã đóng.',
   LATE_SUBMISSION_NOT_ALLOWED: 'Đã quá hạn nộp báo cáo.',
   RESUBMISSION_NOT_ALLOWED: 'Báo cáo hiện không được phép nộp lại.',
+  STALE_SUBMISSION_VERSION: 'Báo cáo vừa được cập nhật ở phiên làm việc khác. Vui lòng tải lại trước khi nộp tiếp.',
   REPORT_ALREADY_ACCEPTED: 'Báo cáo đã được xác nhận hoàn thành.',
   REPORT_EXEMPTED: 'Đơn vị đã được miễn nộp báo cáo này.',
   INVALID_REPORT_TRANSITION: 'Trạng thái báo cáo đã thay đổi. Vui lòng tải lại trang.',
@@ -73,6 +74,7 @@ export function ReportAssignmentDetail() {
   const isReviewer = hasRole('YOUTH_ADMIN') || hasRole('SYSTEM_ADMIN');
   const [assignment, setAssignment] = useState(null);
   const [templates, setTemplates] = useState([]);
+  const [submissionHistory, setSubmissionHistory] = useState([]);
   const [latestSubmission, setLatestSubmission] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -95,6 +97,8 @@ export function ReportAssignmentDetail() {
   const [reviewError, setReviewError] = useState(null);
   const [reviewResult, setReviewResult] = useState(null);
   const [downloadingSubmissionFile, setDownloadingSubmissionFile] = useState(null);
+  const [submissionFileError, setSubmissionFileError] = useState(null);
+  const [expandedSubmissionIds, setExpandedSubmissionIds] = useState(() => new Set());
 
   const loadDetail = useCallback(() => {
     let mounted = true;
@@ -112,6 +116,7 @@ export function ReportAssignmentDetail() {
         if (!mounted) return;
         setAssignment(loadedAssignment);
         setTemplates(loadedTemplates);
+        setSubmissionHistory(submissions);
         setLatestSubmission(submissions[0] || null);
       })
       .catch((requestError) => {
@@ -144,6 +149,7 @@ export function ReportAssignmentDetail() {
         reportService.getSubmissionHistory(assignmentId)
       ]);
       setAssignment(refreshed);
+      setSubmissionHistory(submissions);
       setLatestSubmission(submissions[0] || null);
     } catch {
       // Keep the original operation result visible; the next explicit retry reloads the page.
@@ -324,15 +330,24 @@ export function ReportAssignmentDetail() {
 
   async function downloadSubmissionFile(file) {
     setDownloadingSubmissionFile(file.id);
-    setReviewError(null);
+    setSubmissionFileError(null);
     try {
       const signedUrl = await reportService.getSignedFileUrl(file.storagePath, { expiresIn: 60 });
       window.open(signedUrl, '_blank', 'noopener,noreferrer');
     } catch (requestError) {
-      setReviewError(requestError);
+      setSubmissionFileError(requestError);
     } finally {
       setDownloadingSubmissionFile(null);
     }
+  }
+
+  function toggleSubmission(submissionId) {
+    setExpandedSubmissionIds((current) => {
+      const next = new Set(current);
+      if (next.has(submissionId)) next.delete(submissionId);
+      else next.add(submissionId);
+      return next;
+    });
   }
 
   const campaign = assignment?.campaign;
@@ -396,6 +411,8 @@ export function ReportAssignmentDetail() {
                 <div className="info-grid">
                   <div><span>Phiên bản</span><strong>v{latestSubmission.versionNumber}</strong></div>
                   <div><span>Thời điểm nộp</span><strong>{formatReportDate(latestSubmission.submittedAt)}</strong></div>
+                  <div><span>Người nộp</span><strong>{latestSubmission.submittedByProfile?.fullName || 'Đơn vị được phân công'}</strong></div>
+                  <div><span>Đúng hạn</span><strong>{latestSubmission.isLate ? 'Nộp muộn' : 'Đúng hạn'}</strong></div>
                   <div><span>Trạng thái review</span><strong>{latestSubmission.reviewStatus}</strong></div>
                 </div>
                 {latestSubmission.summary && <p><strong>Tóm tắt:</strong> {latestSubmission.summary}</p>}
@@ -417,6 +434,59 @@ export function ReportAssignmentDetail() {
                   ))}
                 </div>
               </>
+            )}
+            {submissionFileError && <p role="alert">Không thể tải tệp. Vui lòng thử lại.</p>}
+          </section>
+
+          <section className="content-card" aria-labelledby="submission-history-title">
+            <h3 id="submission-history-title">Lịch sử nộp báo cáo</h3>
+            {submissionHistory.length === 0 && <p>Chưa có lịch sử nộp.</p>}
+            {submissionHistory.length > 0 && (
+              <div className="list card-list">
+                {submissionHistory.map((submission) => {
+                  const expanded = expandedSubmissionIds.has(submission.id);
+                  return (
+                    <div className="history-item" key={submission.id}>
+                      <button
+                        type="button"
+                        className="file-row"
+                        aria-expanded={expanded}
+                        onClick={() => toggleSubmission(submission.id)}
+                      >
+                        <span><Icon name="file" size={20} /></span>
+                        <div>
+                          <strong>Phiên bản {submission.versionNumber} {submission.isLatest ? '· Phiên bản hiện tại' : '· Phiên bản trước'}</strong>
+                          <small>{formatReportDate(submission.submittedAt)} · {submission.isLate ? 'Nộp muộn' : 'Đúng hạn'} · {submission.reviewStatus}</small>
+                        </div>
+                        <span>{expanded ? 'Thu gọn' : 'Xem chi tiết'}</span>
+                      </button>
+                      {expanded && (
+                        <div className="history-detail">
+                          <p><strong>Người nộp:</strong> {submission.submittedByProfile?.fullName || 'Đơn vị được phân công'}</p>
+                          {submission.summary && <p><strong>Tóm tắt:</strong> {submission.summary}</p>}
+                          {submission.submitNote && <p><strong>Ghi chú nộp:</strong> {submission.submitNote}</p>}
+                          {submission.reviewNote && <p><strong>Ghi chú review:</strong> {submission.reviewNote}</p>}
+                          <div className="list card-list">
+                            {submission.files.map((file) => (
+                              <button
+                                type="button"
+                                className="file-row"
+                                key={file.id}
+                                onClick={() => downloadSubmissionFile(file)}
+                                disabled={downloadingSubmissionFile === file.id}
+                              >
+                                <span><Icon name="file" size={18} /></span>
+                                <div><strong>{file.originalName}</strong><small>{formatFileSize(file.sizeBytes)}{file.mimeType ? ' · ' + file.mimeType : ''}</small></div>
+                                <Icon name="download" size={16} />
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </section>
 
@@ -491,6 +561,9 @@ export function ReportAssignmentDetail() {
             <section className="content-card">
               <h3>{formTitle}</h3>
               <p>Chọn tệp theo yêu cầu, tải lên staging rồi xác nhận trước khi gửi. Trạng thái cuối cùng do máy chủ quyết định.</p>
+              {assignment.status === 'NEEDS_SUPPLEMENT' && latestSubmission?.reviewNote && (
+                <div className="security-box"><strong>Nội dung cần bổ sung</strong><p>{latestSubmission.reviewNote}</p></div>
+              )}
               <div className="form-field">
                 <span>Chọn tệp</span>
                 <label className="button button-secondary" htmlFor="report-files">Chọn tệp</label>

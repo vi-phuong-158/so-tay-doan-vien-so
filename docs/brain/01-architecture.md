@@ -76,8 +76,8 @@ supabase/
 | `functions/_shared/auth.ts` | `clients()`→{userClient, adminClient}; `requireUser`, `requireGlobalRole`, `requireScopedRole` | **mọi** Edge Function | `@supabase/supabase-js`, env `SUPABASE_*` |
 | `functions/_shared/http.ts` | `corsHeaders`, `json`, `errorResponse`, `readJson` | mọi Edge Function | — |
 | `functions/_shared/validation.ts` | `assertUuid`, `fileExtension`, `safeText` | các function nhận input | — |
-| `src/services/reportService.js` | Factory `createReportService(supabase)`; mapper báo cáo; query RLS, upload/remove Storage private, invoke `submit-report`/`review-report` | P2-08/P2-09/P2-10 | `src/lib/status.mjs`, Supabase client được caller truyền vào |
-| `functions/submit-report` | Xác minh object Storage thật + quyền/tệp → RPC `create_report_submission_with_files` (atomic) → notification | client (khi đã nối) | `_shared/*`, Storage, RPC, bảng report_* |
+| `src/services/reportService.js` | Factory `createReportService(supabase)`; mapper assignment/submission history; query RLS, upload/remove Storage private, invoke `submit-report`/`review-report` | P2-08/P2-09/P2-10/P2-11 | `src/lib/status.mjs`, Supabase client được caller truyền vào |
+| `functions/submit-report` | Xác minh object staging thật + quyền/tệp → move sang namespace `vN` → RPC expected-version (atomic metadata/history/notification) | client (khi đã nối) | `_shared/*`, Storage, RPC, bảng report_* |
 | `functions/review-report` | Xác thực request rồi gọi RPC review; RPC atomic hóa transition, review metadata, history, audit và notification | client admin | `_shared/*`, `review_report_assignment`, RLS |
 | `functions/ask-ai` | RAG: scope tài liệu → Gemini → chuẩn hóa nguồn → lưu lịch sử | client | `_shared/*`, `match_document_chunks` |
 | `functions/process-document` | Trích xuất → chunk → embedding → chờ duyệt | admin | `_shared/*`, Gemini |
@@ -94,10 +94,12 @@ main.jsx → App(BrowserRouter) → AuthProvider(getSession + onAuthStateChange
 # Nộp báo cáo (đích, khi frontend hết mock)
 Page nộp → reportService (Storage private upload dưới prefix assignment/staging)
          → invoke Edge Function submit-report
-         → clients()/requireUser → validate assignment+Storage object thật
-         → RPC create_report_submission_with_files (atomic, versioned)
+         → clients()/requireUser → validate assignment+Storage object thật + expected latest version
+         → Storage move staging → {campaign}/{org}/{assignment}/vN/{uuid-safe}
+         → RPC create_report_submission_with_files(..., p_expected_version) (atomic, versioned)
          → create_report_submission (internal core, không cấp execute cho user)
-         → notification best-effort → trả submission mới
+         → file metadata + history + audit + notification cùng transaction
+         → stale/error thì move object về staging và trả conflict
 
 # Dọn staging (chỉ object chưa finalize)
 UI remove/reset → reportService.removeStagedReportFile(exact path)
@@ -114,6 +116,13 @@ Admin UI → reportService.reviewReport → review-report (JWT user client)
              → history + audit + in-app notification (cùng transaction)
              → UI refresh assignment/submission state; stale transition fail-closed
 
+# Lịch sử/nộp lại báo cáo (P2-11)
+Assignment detail → reportService.getSubmissionHistory (RLS, version desc, profile-safe fields)
+                 → history accordion; signed URL chỉ tạo khi mở file
+Nộp lại → upload staging → submit-report tính expected latest version
+        → move object sang vN → RPC khóa assignment + kiểm expected version
+        → tạo submission mới, giữ nguyên version cũ, status/history/audit/notification atomic
+
 # RAG hỏi AI
 Page trợ lý AI → invoke ask-ai → requireUser + quota → xác định scope tài liệu
          → embedding câu hỏi → match_document_chunks (chỉ chunk APPROVED)
@@ -128,7 +137,8 @@ Schema đầy đủ (~30 bảng) ở `docs/01-product-spec.md` mục 8. Nhóm ch
 `report_status_history`), văn bản + RAG (`documents`, `document_chunks` có `embedding`),
 học tập/quiz, trợ lý AI, đổi mới sáng tạo, email, `audit_logs`.
 
-RPC then chốt: `create_report_submission`, `create_report_assignments`, `review_report_assignment`, `get_report_dashboard`,
+RPC then chốt: `create_report_submission`, `create_report_submission_with_files` (expected-version overload),
+`create_report_assignments`, `review_report_assignment`, `get_report_dashboard`,
 `mark_overdue_assignments`, `match_document_chunks`, `transition_problem_status`,
 `is_organization_in_scope`.
 

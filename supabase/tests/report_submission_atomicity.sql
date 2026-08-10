@@ -48,7 +48,7 @@ begin
     p_summary,
     null,
     jsonb_build_array(jsonb_build_object(
-      'storage_path', v_assignment.campaign_id::text || '/' || v_assignment.organization_id::text || '/' || p_assignment_id::text || '/v-test-' || v_next_version || '/test.pdf',
+      'storage_path', v_assignment.campaign_id::text || '/' || v_assignment.organization_id::text || '/' || p_assignment_id::text || '/v' || v_next_version || '/test.pdf',
       'original_name', 'test.pdf',
       'safe_name', 'test.pdf',
       'mime_type', 'application/pdf',

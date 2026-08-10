@@ -137,6 +137,11 @@ test('getSubmissionHistory filters by assignment, sorts newest version first, an
     review_status: 'PENDING',
     reviewed_at: null,
     review_note: null,
+    profiles: [{
+      id: ids.organization,
+      full_name: 'Cán bộ CĐA',
+      organization_id: ids.organization
+    }],
     report_submission_files: [{
       id: ids.file,
       original_name: 'Bao cao.pdf',
@@ -153,6 +158,8 @@ test('getSubmissionHistory filters by assignment, sorts newest version first, an
   assert.deepEqual(calls.find(([name]) => name === 'eq'), ['eq', 'assignment_id', ids.assignment]);
   assert.deepEqual(calls.find(([name]) => name === 'order'), ['order', 'version_number', { ascending: false }]);
   assert.equal(history[0].versionNumber, 2);
+  assert.equal(history[0].isLatest, true);
+  assert.equal(history[0].submittedByProfile.fullName, 'Cán bộ CĐA');
   assert.equal(history[0].files[0].storagePath, 'a/b/c/staging/file.pdf');
 });
 

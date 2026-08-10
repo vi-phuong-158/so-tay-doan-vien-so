@@ -15,6 +15,7 @@ const BUSINESS_ERROR_CODES = new Set([
   'ACCOUNT_NOT_ACTIVE',
   'ASSIGNMENT_NOT_FOUND',
   'ASSIGNMENT_SCOPE_DENIED',
+  'STALE_SUBMISSION_VERSION',
   'REPORT_ALREADY_ACCEPTED',
   'REPORT_EXEMPTED',
   'FILE_SCOPE_INVALID',
@@ -59,6 +60,11 @@ const SUBMISSION_SELECT = `
   review_status,
   reviewed_at,
   review_note,
+  profiles!report_submissions_submitted_by_fkey (
+    id,
+    full_name,
+    organization_id
+  ),
   report_submission_files (
     id,
     original_name,
@@ -145,12 +151,18 @@ export function mapAssignmentRow(row) {
 }
 
 export function mapSubmissionRow(row) {
+  const submittedProfile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
   return {
     id: row.id,
     assignmentId: row.assignment_id,
     versionNumber: row.version_number,
     submittedAt: row.submitted_at,
     submittedBy: row.submitted_by,
+    submittedByProfile: submittedProfile ? {
+      id: submittedProfile.id,
+      fullName: submittedProfile.full_name,
+      organizationId: submittedProfile.organization_id
+    } : null,
     summary: row.summary,
     submitNote: row.submit_note,
     isLate: row.is_late,
@@ -260,7 +272,10 @@ export function createReportService(client, { createObjectId = () => globalThis.
           .eq('assignment_id', assignmentId)
           .order('version_number', { ascending: false })
       );
-      return (data || []).map(mapSubmissionRow);
+      return (data || []).map((row, index) => ({
+        ...mapSubmissionRow(row),
+        isLatest: index === 0
+      }));
     },
 
     async getCampaignTemplates(campaignId) {
