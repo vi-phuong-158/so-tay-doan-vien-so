@@ -39,7 +39,8 @@ src/
 ├── data/mock.js             # dữ liệu demo (campaigns, documents, topics, projects, problems)
 ├── lib/status.mjs           # REPORT_STATUS, getReportStatus, daysUntil, normalizeSafeFileName (có test)
 ├── lib/markdown.js          # render markdown an toàn (DOMPurify)
-└── services/supabaseClient.js  # khởi tạo supabase client từ VITE_SUPABASE_*
+├── services/supabaseClient.js  # khởi tạo supabase client từ VITE_SUPABASE_*
+└── services/reportAdminService.js # quản trị campaign + dashboard/export qua RPC/Edge Function, không ghi assignment trực tiếp
 
 supabase/
 ├── migrations/              # 4 migration: schema, storage/RPC security, fix bảo mật P1, admin txn
@@ -68,6 +69,9 @@ supabase/
 | `src/pages/*` (5 khu vực) | UI khu vực | routes trong `App.jsx` | `data/mock.js`, `useAuth`, `common` |
 | `src/data/mock.js` | Dữ liệu demo | 5 pages chính | — (⚠ thay bằng service khi nối Supabase) |
 | `src/lib/status.mjs` | Nhãn/tone trạng thái báo cáo, tính hạn, chuẩn hóa tên tệp | pages hiển thị báo cáo | — (thuần, có unit test) |
+| `src/services/reportAdminService.js` | Đọc campaign trong scope; tạo/sửa draft, upload/finalize template và publish | `AdminReports` | Supabase RPC + Storage private + `finalize-campaign-template` |
+| `src/pages/AdminReports.jsx` | Danh sách/form quản trị đợt báo cáo, chọn đơn vị, xác nhận phát hành | routes `/admin/bao-cao*` | `reportAdminService`, `reportAdmin.mjs`, `Auth`/`RoleGuard` |
+| `src/pages/AdminReportDashboard.jsx` | Aggregate, filter/search và tải CSV/ZIP theo filter hiện tại | route `/admin/bao-cao/:campaignId/dashboard` | `reportAdminService`, dashboard helpers, Blob download |
 
 ### Backend (Edge Functions) — module then chốt
 
@@ -76,9 +80,12 @@ supabase/
 | `functions/_shared/auth.ts` | `clients()`→{userClient, adminClient}; `requireUser`, `requireGlobalRole`, `requireScopedRole` | **mọi** Edge Function | `@supabase/supabase-js`, env `SUPABASE_*` |
 | `functions/_shared/http.ts` | `corsHeaders`, `json`, `errorResponse`, `readJson` | mọi Edge Function | — |
 | `functions/_shared/validation.ts` | `assertUuid`, `fileExtension`, `safeText` | các function nhận input | — |
-| `src/services/reportService.js` | Factory `createReportService(supabase)`; mapper báo cáo; query RLS, upload/remove Storage private, invoke `submit-report`/`review-report` | P2-08/P2-09/P2-10 | `src/lib/status.mjs`, Supabase client được caller truyền vào |
-| `functions/submit-report` | Xác minh object Storage thật + quyền/tệp → RPC `create_report_submission_with_files` (atomic) → notification | client (khi đã nối) | `_shared/*`, Storage, RPC, bảng report_* |
+| `src/services/reportService.js` | Factory `createReportService(supabase)`; mapper assignment/submission history; query RLS, upload/remove Storage private, invoke `submit-report`/`review-report` | P2-08/P2-09/P2-10/P2-11 | `src/lib/status.mjs`, Supabase client được caller truyền vào |
+| `functions/submit-report` | Xác minh object staging thật + quyền/tệp → move sang namespace `vN` → RPC expected-version; RPC xác minh lại object/size/mime ở Storage trước atomic metadata/history/notification | client (khi đã nối) | `_shared/*`, Storage, RPC, bảng report_* |
 | `functions/review-report` | Xác thực request rồi gọi RPC review; RPC atomic hóa transition, review metadata, history, audit và notification | client admin | `_shared/*`, `review_report_assignment`, RLS |
+| `functions/finalize-campaign-template` | Đọc metadata thật từ Storage, chuẩn hóa tên, move template và đăng ký metadata | `reportAdminService` | `_shared/*`, service-role Storage, `register_report_campaign_template` |
+| `functions/export-report-status` | CSV UTF-8/BOM scoped, formula-neutralized, audit bắt buộc | `AdminReportDashboard` qua `reportAdminService` | dashboard RPC, `_shared/*`, `audit_logs` |
+| `functions/download-report-bundle` | ZIP latest submission/file trong scope, private Storage, giới hạn 100 file/50 MB, audit | `AdminReportDashboard` qua `reportAdminService` | dashboard RPC, service-role Storage, `fflate`, `_shared/*` |
 | `functions/ask-ai` | RAG: scope tài liệu → Gemini → chuẩn hóa nguồn → lưu lịch sử | client | `_shared/*`, `match_document_chunks` |
 | `functions/process-document` | Trích xuất → chunk → embedding → chờ duyệt | admin | `_shared/*`, Gemini |
 | `functions/send-reminder` / `process-email-queue` | Nhắc hạn (idempotent) / gửi email theo batch | cron | `_shared/*`, email_queue |
@@ -94,10 +101,13 @@ main.jsx → App(BrowserRouter) → AuthProvider(getSession + onAuthStateChange
 # Nộp báo cáo (đích, khi frontend hết mock)
 Page nộp → reportService (Storage private upload dưới prefix assignment/staging)
          → invoke Edge Function submit-report
-         → clients()/requireUser → validate assignment+Storage object thật
-         → RPC create_report_submission_with_files (atomic, versioned)
+         → clients()/requireUser → validate assignment+Storage object thật + expected latest version
+         → Storage move staging → {campaign}/{org}/{assignment}/vN/{uuid-safe}
+         → RPC create_report_submission_with_files(..., p_expected_version) (atomic, versioned,
+           bắt buộc object vN tồn tại + metadata khớp Storage; overload 4 tham số không cấp cho user)
          → create_report_submission (internal core, không cấp execute cho user)
-         → notification best-effort → trả submission mới
+         → file metadata + history + audit + notification cùng transaction
+         → stale/error thì move object về staging và trả conflict
 
 # Dọn staging (chỉ object chưa finalize)
 UI remove/reset → reportService.removeStagedReportFile(exact path)
@@ -110,9 +120,35 @@ UI remove/reset → reportService.removeStagedReportFile(exact path)
 Admin UI → reportService.reviewReport → review-report (JWT user client)
              → review_report_assignment (SECURITY DEFINER + FOR UPDATE)
              → validate active/scope/action/current status/reason
+
+# Tạo/phát hành đợt báo cáo (P2-12)
+AdminReports → reportAdminService → RPC tạo/sửa draft + lấy đơn vị trong scope
+             → upload template staging private → finalize-campaign-template (metadata Storage thật)
+             → register_report_campaign_template → confirm → publish_report_campaign
+             → lock campaign; insert assignment + history/audit; PUBLISHED atomically
              → update assignment + latest submission review fields
              → history + audit + in-app notification (cùng transaction)
              → UI refresh assignment/submission state; stale transition fail-closed
+
+# Lịch sử/nộp lại báo cáo (P2-11)
+Assignment detail → reportService.getSubmissionHistory (RLS, version desc, profile-safe fields)
+                 → history accordion; signed URL chỉ tạo khi mở file
+Nộp lại → upload staging → submit-report tính expected latest version
+        → move object sang vN → RPC khóa assignment + kiểm expected version
+        → tạo submission mới, giữ nguyên version cũ, status/history/audit/notification atomic
+
+# Dashboard báo cáo (P2-13)
+AdminReportDashboard → reportAdminService → get_report_dashboard / get_report_dashboard_assignments
+                     → SECURITY DEFINER resolve auth.uid + active admin + organization scope
+                     → aggregate và rows chỉ trong scope; không trả file path/signed URL
+                     → effective overdue read-only dùng PostgreSQL now(), không thay cron
+
+# Export/bundle báo cáo (P2-14)
+AdminReportDashboard → reportAdminService → export-report-status / download-report-bundle
+                     → requireUser + dashboard RPC bằng JWT (active admin + organization scope + filter)
+                     → CSV từ rows scoped hoặc latest submission theo assignment scoped
+                     → ZIP chỉ đọc bucket report-submissions-private, kiểm size/object/path/trùng tên
+                     → audit actor/campaign/filter/count/bytes; trả file private với cache-control no-store
 
 # RAG hỏi AI
 Page trợ lý AI → invoke ask-ai → requireUser + quota → xác định scope tài liệu
@@ -128,7 +164,9 @@ Schema đầy đủ (~30 bảng) ở `docs/01-product-spec.md` mục 8. Nhóm ch
 `report_status_history`), văn bản + RAG (`documents`, `document_chunks` có `embedding`),
 học tập/quiz, trợ lý AI, đổi mới sáng tạo, email, `audit_logs`.
 
-RPC then chốt: `create_report_submission`, `create_report_assignments`, `review_report_assignment`, `get_report_dashboard`,
+RPC then chốt: `create_report_submission`, `create_report_submission_with_files` (expected-version overload),
+`create_report_assignments`, `review_report_assignment`, `get_report_dashboard`,
+`get_report_dashboard_assignments`,
 `mark_overdue_assignments`, `match_document_chunks`, `transition_problem_status`,
 `is_organization_in_scope`.
 

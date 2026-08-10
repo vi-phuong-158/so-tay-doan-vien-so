@@ -78,6 +78,27 @@
 - **Đánh đổi:** Thêm helper `SECURITY DEFINER` boolean với `search_path` cố định; helper không trả dữ liệu, chỉ xét account active, assignment cùng org hoặc role admin.
 - **Người quyết định:** Codex, theo CI P2-06.
 
+## [2026-08-10] Publish campaign và assignment là một RPC transaction idempotent
+
+- **Quyết định:** Draft campaign chỉ phát hành qua `publish_report_campaign(uuid, uuid[])` SECURITY DEFINER. RPC tự lấy `auth.uid()`, khóa campaign, kiểm role/trạng thái/scope/đơn vị active, tạo assignment `PENDING` + history/audit rồi mới đổi campaign sang `PUBLISHED`; request lặp trả kết quả hiện có.
+- **Lý do:** Không để browser tạo assignment hoặc để campaign đã phát hành mà assignment chỉ được tạo một phần.
+- **Đánh đổi:** Danh sách đơn vị được giữ ở form draft cho đến lúc publish; không thêm bảng target nháp ngoài schema cần thiết.
+- **Người quyết định:** Codex, theo P2-12.
+
+## [2026-08-10] Dashboard báo cáo tổng hợp và lọc scope trong database
+
+- **Quyết định:** Dashboard gọi hai SECURITY DEFINER RPC read-only; cả aggregate lẫn danh sách rows đều resolve `auth.uid()`, active role và recursive organization scope trước khi trả dữ liệu. Hoàn thành là `ACCEPTED + EXEMPTED`; rate được tính ở PostgreSQL. `PENDING` quá hạn được hiển thị/count như overdue bằng database clock, không mutate assignment.
+- **Lý do:** Không được trả aggregate toàn campaign rồi hy vọng frontend ẩn đơn vị ngoài scope; cron overdue thuộc Phase 3 nhưng dashboard phải phản ánh đúng tình trạng hiện thời.
+- **Đánh đổi:** Late metric có thể giao với trạng thái RESUBMITTED vì nguồn chân lý là `latest_submission.is_late`; điều này đúng workflow hơn việc ép nộp lại thành LATE_SUBMITTED.
+- **Người quyết định:** Codex, theo P2-13.
+
+## [2026-08-10] Export và bundle báo cáo dùng lại scope dashboard
+
+- **Quyết định:** `export-report-status` và `download-report-bundle` bắt buộc gọi dashboard RPC bằng JWT của người dùng để lấy campaign/assignment trong scope và filter hiện tại. Service role chỉ dùng backend để đọc object private và ghi audit; không nhận organization/assignment scope do client tự gửi.
+- **Lý do:** CSV/ZIP không được biến thành đường vòng để đọc toàn campaign hoặc lộ `storage_path`; scope phải được quyết định tại database trước khi tải dữ liệu.
+- **Đánh đổi:** Bundle chỉ lấy submission mới nhất mỗi assignment; object thiếu, metadata lệch, trùng tên ZIP hoặc vượt 100 file/50 MB đều fail-closed thay vì trả gói một phần.
+- **Người quyết định:** Codex, theo P2-14.
+
 ## [2026-08-09] Frontend upload báo cáo dùng path staging, không tự cấp version
 
 - **Quyết định:** `reportService` upload object theo `{campaign}/{organization}/{assignment}/staging/{uuid}-{safe-name}` và chỉ finalize qua Edge Function `submit-report`.
@@ -98,6 +119,25 @@
 - **Lý do:** Không được để assignment/submission đổi trạng thái mà thiếu history, audit hoặc notification; `FOR UPDATE` cũng làm stale review fail-closed thay vì ghi đè quyết định mới.
 - **Đánh đổi:** Notification exemption fan-out tới các BRANCH_OFFICER ACTIVE trong organization; chưa xây history UI đầy đủ hoặc dashboard review.
 - **Người quyết định:** Codex, theo P2-10 handoff security/atomicity.
+
+## [2026-08-09] Submission history dùng expected-version và namespace vN
+
+- **Quyết định:** Giữ upload staging của P2-09, nhưng submit-report tính version kế tiếp từ dữ liệu server, move object sang `{campaign}/{org}/{assignment}/vN/`, rồi gọi RPC overload có `p_expected_version`. RPC khóa assignment, từ chối expected version cũ, lưu metadata/history/audit/notification cùng transaction; resubmit sau NEEDS_SUPPLEMENT vẫn được phép dù `allow_resubmission=false`.
+- **Lý do:** Bảo đảm không duplicate/skip version khi double-click hoặc retry, không ghi đè file cũ, và giữ dữ liệu version cũ read-only trong khi tái sử dụng trusted submit path P2-09.
+- **Đánh đổi:** Storage move và database transaction không phải một distributed transaction; Edge Function rollback move về staging khi RPC fail, còn RPC atomic hóa toàn bộ metadata nghiệp vụ. Signed URL chỉ tạo lazy từ path versioned đã được RLS kiểm soát.
+- **Người quyết định:** Codex, theo P2-11 handoff versioning/concurrency.
+
+## [2026-08-10] Submission RPC tự xác minh finalized Storage object
+
+- **Quyết định:** Chỉ cấp `authenticated` quyền gọi overload 5 tham số có expected-version của
+  `create_report_submission_with_files`. RPC phải xác minh object vN tồn tại trong bucket private,
+  path/scope/policy file hợp lệ và size/mimetype khớp Storage trước khi ghi metadata; overload 4 tham
+  số bị thu hồi khỏi API end-user.
+- **Lý do:** JWT người dùng cần đi qua RPC để giữ `auth.uid()` nhưng không được phép bypass trusted
+  Edge Function bằng PostgREST và tạo submission trỏ tới object giả hoặc bỏ stale-version guard.
+- **Đánh đổi:** pgTAP positive fixture phải tạo `storage.objects` thực; Storage move và DB transaction
+  vẫn cần compensating rollback ở Edge vì không có distributed transaction.
+- **Người quyết định:** Codex, theo P2-15 final acceptance blocker P1.
 
 ---
 

@@ -7,16 +7,8 @@
 
 ## Đang làm
 
-**Phase 2C — Review & trạng thái báo cáo** (branch `feat/phase-2c-report-review`, phụ thuộc P2-09)
-- P2-07 hoàn thành: `src/services/reportService.js` đọc dữ liệu qua RLS, upload private Storage theo
-  staging path, và finalize duy nhất qua Edge Function `submit-report`.
-- P2-08 hoàn thành: Work list/detail dùng service thật, route assignment detail và signed template download;
-  chưa có upload/submit/history UI.
-- P2-09 hoàn thành: upload staging, confirmation, submit qua Edge Function, refresh server state và cleanup
-  exact-path an toàn; chưa có history/export/admin.
-- P2-10 đã hoàn thành technical acceptance trên branch `feat/phase-2c-report-review`: review
-  ACCEPTED/NEEDS_SUPPLEMENT/EXEMPTED qua RPC atomic, review surface tối thiểu và notification/history/audit;
-  không làm history UI đầy đủ, dashboard, export, email hoặc P2-11.
+Không có task implementation đang thực hiện. Bước tiếp theo chỉ là lập kế hoạch Phase 3 sau khi
+merge stack PR Phase 2 theo biên bản P2-15.
 
 ---
 
@@ -53,6 +45,11 @@
 ---
 
 ## Đã hoàn thành gần đây
+
+- [2026-08-11] P2-15: `Phase 2 — Công việc & Báo cáo: TECHNICAL ACCEPTANCE COMPLETE`; P1 direct RPC bypass đã đóng, integrated vertical slice + ma trận A–G PASS; CI `31411605381` PASS (40 frontend, 236 pgTAP, 16 Deno).
+- [2026-08-10] P2-14: export CSV scoped và bundle ZIP latest submission, giới hạn/metadata fail-closed, audit và nút tải dashboard; baseline CI `31409496394` PASS.
+- [2026-08-10] P2-12: route `/admin/bao-cao`, service quản trị campaign, template private và publish assignment qua RPC.
+- [2026-08-10] P2-13: dashboard báo cáo scoped server-side, aggregate trạng thái/completion, filter/search và deep link assignment.
 
 - [2026-08-09] P2-07: report service layer + behavior tests; không migration, không thay UI.
 - [2026-08-09] P2-08: report assignment list/detail UI, real status filters, RLS-backed detail and private template download.

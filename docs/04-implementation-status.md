@@ -12,6 +12,19 @@
 - PWA shell, manifest, service worker.
 - Supabase REST/Auth client.
 - Migration schema và policy RLS nền tảng.
+- Phase 2 report vertical slice đã có production path cho assignment, submit/review/resubmit,
+  campaign/template/publish, dashboard, scoped CSV và latest bundle.
+
+## Phase 2 technical acceptance
+
+- Baseline P2-14 `bdf0156`: CI PASS (40 frontend, 220 pgTAP, 16 Deno tests).
+- P2-15 phát hiện và sửa P1 direct submission RPC bypass; integrated database vertical slice,
+  ma trận A–G và Storage verification regression PASS.
+- Trạng thái: `Phase 2 — Công việc & Báo cáo: TECHNICAL ACCEPTANCE COMPLETE`.
+  Acceptance CI `31411605381`: 40 frontend, 236 pgTAP, 16 Deno tests PASS. Xem
+  `docs/phase-2/15-phase-2-final-acceptance.md`.
+- Technical acceptance không đồng nghĩa production-ready; rehearsal Supabase, secrets, live Storage,
+  backup/restore và monitoring vẫn chưa được xác nhận.
 
 ## Chưa thể xác nhận production khi chưa có Supabase project/secrets
 

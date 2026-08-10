@@ -15,6 +15,7 @@ const BUSINESS_ERROR_CODES = new Set([
   'ACCOUNT_NOT_ACTIVE',
   'ASSIGNMENT_NOT_FOUND',
   'ASSIGNMENT_SCOPE_DENIED',
+  'STALE_SUBMISSION_VERSION',
   'REPORT_ALREADY_ACCEPTED',
   'REPORT_EXEMPTED',
   'FILE_SCOPE_INVALID',
@@ -22,7 +23,27 @@ const BUSINESS_ERROR_CODES = new Set([
   'FILE_TYPE_NOT_ALLOWED',
   'TOO_MANY_FILES',
   'DUPLICATE_FILE_PATH',
-  'STORAGE_OBJECT_NOT_FOUND'
+  'STORAGE_OBJECT_NOT_FOUND',
+  'CAMPAIGN_NOT_FOUND',
+  'CAMPAIGN_NOT_DRAFT',
+  'REPORT_CAMPAIGN_SCOPE_DENIED',
+  'REPORT_DASHBOARD_NOT_FOUND_OR_FORBIDDEN',
+  'INVALID_DASHBOARD_FILTER',
+  'BUNDLE_FILE_LIMIT_EXCEEDED',
+  'BUNDLE_SIZE_LIMIT_EXCEEDED',
+  'BUNDLE_FILE_METADATA_MISMATCH',
+  'AUDIT_LOG_FAILED',
+  'ORGANIZATION_REQUIRED',
+  'ORGANIZATION_INACTIVE',
+  'ORGANIZATION_NOT_FOUND',
+  'INVALID_CAMPAIGN_TITLE',
+  'INVALID_CAMPAIGN_DATES',
+  'INVALID_FILE_SIZE_LIMIT',
+  'INVALID_FILE_COUNT_LIMIT',
+  'INVALID_FILE_EXTENSIONS',
+  'INVALID_VISIBILITY_LEVEL',
+  'INVALID_TEMPLATE_METADATA',
+  'TEMPLATE_SCOPE_INVALID'
 ]);
 
 const ASSIGNMENT_SELECT = `
@@ -59,6 +80,11 @@ const SUBMISSION_SELECT = `
   review_status,
   reviewed_at,
   review_note,
+  profiles!report_submissions_submitted_by_fkey (
+    id,
+    full_name,
+    organization_id
+  ),
   report_submission_files (
     id,
     original_name,
@@ -145,12 +171,18 @@ export function mapAssignmentRow(row) {
 }
 
 export function mapSubmissionRow(row) {
+  const submittedProfile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
   return {
     id: row.id,
     assignmentId: row.assignment_id,
     versionNumber: row.version_number,
     submittedAt: row.submitted_at,
     submittedBy: row.submitted_by,
+    submittedByProfile: submittedProfile ? {
+      id: submittedProfile.id,
+      fullName: submittedProfile.full_name,
+      organizationId: submittedProfile.organization_id
+    } : null,
     summary: row.summary,
     submitNote: row.submit_note,
     isLate: row.is_late,
@@ -260,7 +292,10 @@ export function createReportService(client, { createObjectId = () => globalThis.
           .eq('assignment_id', assignmentId)
           .order('version_number', { ascending: false })
       );
-      return (data || []).map(mapSubmissionRow);
+      return (data || []).map((row, index) => ({
+        ...mapSubmissionRow(row),
+        isLatest: index === 0
+      }));
     },
 
     async getCampaignTemplates(campaignId) {
