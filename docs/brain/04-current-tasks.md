@@ -7,9 +7,9 @@
 
 ## Đang làm
 
-**P2-12 — Admin campaign & assignment management** (branch `feat/phase-2e-admin-campaign-assignment`, baseline `caf650d`)
-- Tạo/sửa draft campaign, chọn đơn vị trong scope, template private và publish assignment atomic/idempotent.
-- Hoàn tất trên SHA `b27ab4e`: CI run `31403376831` PASS (build, pgTAP migration/reset, Deno check/test). Local Supabase/Docker và Deno vẫn không có.
+**P2-13 — Report dashboard & aggregate status** (branch `feat/phase-2f-report-dashboard`, baseline `1e144cb`)
+- Dashboard scoped server-side: aggregate trạng thái, completion rate, effective overdue read-only, list/search/filter và link tới detail/review hiện có.
+- Hoàn tất implementation SHA `9e5b91e`: CI run `31405473107` PASS (frontend build/lint/test, Supabase reset/pgTAP, Deno check/test). Local Docker/Postgres và Deno vẫn không có.
 
 ---
 
@@ -48,6 +48,7 @@
 ## Đã hoàn thành gần đây
 
 - [2026-08-10] P2-12: route `/admin/bao-cao`, service quản trị campaign, template private và publish assignment qua RPC.
+- [2026-08-10] P2-13: dashboard báo cáo scoped server-side, aggregate trạng thái/completion, filter/search và deep link assignment.
 
 - [2026-08-09] P2-07: report service layer + behavior tests; không migration, không thay UI.
 - [2026-08-09] P2-08: report assignment list/detail UI, real status filters, RLS-backed detail and private template download.

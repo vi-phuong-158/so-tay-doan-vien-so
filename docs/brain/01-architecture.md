@@ -133,6 +133,12 @@ Nộp lại → upload staging → submit-report tính expected latest version
         → move object sang vN → RPC khóa assignment + kiểm expected version
         → tạo submission mới, giữ nguyên version cũ, status/history/audit/notification atomic
 
+# Dashboard báo cáo (P2-13)
+AdminReportDashboard → reportAdminService → get_report_dashboard / get_report_dashboard_assignments
+                     → SECURITY DEFINER resolve auth.uid + active admin + organization scope
+                     → aggregate và rows chỉ trong scope; không trả file path/signed URL
+                     → effective overdue read-only dùng PostgreSQL now(), không thay cron
+
 # RAG hỏi AI
 Page trợ lý AI → invoke ask-ai → requireUser + quota → xác định scope tài liệu
          → embedding câu hỏi → match_document_chunks (chỉ chunk APPROVED)

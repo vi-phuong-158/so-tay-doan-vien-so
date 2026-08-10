@@ -42,6 +42,48 @@ function mapCampaign(row) {
   };
 }
 
+function mapDashboard(row) {
+  return {
+    campaign: {
+      id: row.campaign_id,
+      title: row.title,
+      status: row.status,
+      openAt: row.open_at,
+      dueAt: row.due_at,
+      closeAt: row.close_at
+    },
+    totalAssignments: Number(row.total_assignments || 0),
+    pendingCount: Number(row.pending_count || 0),
+    submittedCount: Number(row.submitted_count || 0),
+    needsSupplementCount: Number(row.needs_supplement_count || 0),
+    resubmittedCount: Number(row.resubmitted_count || 0),
+    acceptedCount: Number(row.accepted_count || 0),
+    overdueCount: Number(row.overdue_count || 0),
+    lateSubmittedCount: Number(row.late_submitted_count || 0),
+    exemptedCount: Number(row.exempted_count || 0),
+    closedCount: Number(row.closed_count || 0),
+    completedCount: Number(row.completed_count || 0),
+    completionRate: Number(row.completion_rate || 0)
+  };
+}
+
+function mapDashboardAssignment(row) {
+  return {
+    id: row.assignment_id,
+    organization: { id: row.organization_id, code: row.organization_code, name: row.organization_name },
+    status: row.status,
+    effectiveDueAt: row.effective_due_at,
+    latestVersion: row.latest_version,
+    latestSubmittedAt: row.latest_submitted_at,
+    isLate: Boolean(row.is_late),
+    reviewStatus: row.review_status,
+    reviewNote: row.review_note,
+    acceptedAt: row.accepted_at,
+    exemptReason: row.exempt_reason,
+    attentionRank: Number(row.attention_rank || 0)
+  };
+}
+
 function toRpcPayload(payload) {
   return {
     p_title: payload.title,
@@ -83,6 +125,24 @@ export function createReportAdminService(client, { createObjectId = () => global
       const campaign = Array.isArray(data) ? data[0] : data;
       if (!campaign) throw new ReportServiceError('NOT_FOUND_OR_FORBIDDEN', 'The report campaign was not found or is outside your scope.', undefined);
       return mapCampaign(campaign);
+    },
+
+    async getReportDashboard(campaignId) {
+      assertUuid(campaignId, 'campaignId');
+      const data = await unwrap(client.rpc('get_report_dashboard', { p_campaign_id: campaignId }));
+      const dashboard = Array.isArray(data) ? data[0] : data;
+      if (!dashboard) throw new ReportServiceError('NOT_FOUND_OR_FORBIDDEN', 'The report dashboard was not found or is outside your scope.', undefined);
+      return mapDashboard(dashboard);
+    },
+
+    async getDashboardAssignments(campaignId, { status = null, search = null } = {}) {
+      assertUuid(campaignId, 'campaignId');
+      const data = await unwrap(client.rpc('get_report_dashboard_assignments', {
+        p_campaign_id: campaignId,
+        p_status: status === 'ALL' ? null : status,
+        p_search: search || null
+      }));
+      return (data || []).map(mapDashboardAssignment);
     },
 
     async createCampaign(payload) {

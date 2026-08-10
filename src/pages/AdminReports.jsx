@@ -200,10 +200,10 @@ export function AdminReports() {
         ) : (
           <div className="campaign-list">
             {campaigns.map(item => (
-              <Link className="campaign-list-item" to={`/admin/bao-cao/${item.id}`} key={item.id}>
+              <article className="campaign-list-item" key={item.id}>
                 <div><h2>{item.title}</h2><p>Mở: {formatReportDate(item.openAt)} · Hạn: {formatReportDate(item.dueAt)}</p></div>
-                <div className="campaign-list-meta"><StatusBadge status={item.status} /><span>{item.assignmentCount} đơn vị</span></div>
-              </Link>
+                <div className="campaign-list-meta"><StatusBadge status={item.status} /><span>{item.assignmentCount} đơn vị</span><div className="campaign-list-actions"><Link className="button button-secondary" to={`/admin/bao-cao/${item.id}`}>Cấu hình</Link><Link className="button button-primary" to={`/admin/bao-cao/${item.id}/dashboard`}>Dashboard</Link></div></div>
+              </article>
             ))}
           </div>
         )}

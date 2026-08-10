@@ -5,6 +5,24 @@
 
 ---
 
+## [2026-08-10] P2-13 report dashboard & aggregate status
+
+- **Agent:** Codex
+- **Thay đổi:** Thêm RPC dashboard/read-model scoped, aggregate server-side, dashboard UI/filter/search/link detail, pgTAP security/semantic coverage và frontend service/UI tests.
+- **File đã sửa:** `supabase/migrations/202608100002_phase_2_report_dashboard.sql`, `supabase/tests/report_dashboard.sql`, `src/services/reportAdminService.js`, `src/lib/reportDashboard.mjs`, `src/pages/AdminReportDashboard.jsx`, `src/pages/AdminReports.jsx`, `src/App.jsx`, `src/index.css`, `tests/report_dashboard.test.mjs`, `docs/phase-2/13-report-dashboard.md`, `docs/brain/01-architecture.md`, `docs/brain/03-decisions.md`, `docs/brain/04-current-tasks.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Ban Thanh niên cần số liệu và danh sách theo scope được DB xác nhận, không tính trust metrics ở browser hoặc lộ rows ngoài scope.
+- **Kiểm tra:** Frontend test/lint/build và CI Supabase/pgTAP/Deno sẽ được chạy trước nghiệm thu.
+
+## [2026-08-10] P2-13 CI acceptance
+
+- **Agent:** Codex
+- **Thay đổi:** Ghi nhận bằng chứng CI green cho implementation dashboard P2-13.
+- **File đã sửa:** `docs/phase-2/13-report-dashboard.md`, `docs/brain/04-current-tasks.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Xác nhận migration/read-model scoped và regression P2-01 → P2-12 đã vượt acceptance gate trước khi mở PR review.
+- **Kiểm tra:** GitHub Actions run `31405473107` PASS: frontend lint/tests/build; Supabase db reset + pgTAP; Deno check/test.
+
+---
+
 ## [2026-08-10] P2-12 admin campaign & assignment management
 
 - **Agent:** Codex

@@ -85,6 +85,13 @@
 - **Đánh đổi:** Danh sách đơn vị được giữ ở form draft cho đến lúc publish; không thêm bảng target nháp ngoài schema cần thiết.
 - **Người quyết định:** Codex, theo P2-12.
 
+## [2026-08-10] Dashboard báo cáo tổng hợp và lọc scope trong database
+
+- **Quyết định:** Dashboard gọi hai SECURITY DEFINER RPC read-only; cả aggregate lẫn danh sách rows đều resolve `auth.uid()`, active role và recursive organization scope trước khi trả dữ liệu. Hoàn thành là `ACCEPTED + EXEMPTED`; rate được tính ở PostgreSQL. `PENDING` quá hạn được hiển thị/count như overdue bằng database clock, không mutate assignment.
+- **Lý do:** Không được trả aggregate toàn campaign rồi hy vọng frontend ẩn đơn vị ngoài scope; cron overdue thuộc Phase 3 nhưng dashboard phải phản ánh đúng tình trạng hiện thời.
+- **Đánh đổi:** Late metric có thể giao với trạng thái RESUBMITTED vì nguồn chân lý là `latest_submission.is_late`; điều này đúng workflow hơn việc ép nộp lại thành LATE_SUBMITTED.
+- **Người quyết định:** Codex, theo P2-13.
+
 ## [2026-08-09] Frontend upload báo cáo dùng path staging, không tự cấp version
 
 - **Quyết định:** `reportService` upload object theo `{campaign}/{organization}/{assignment}/staging/{uuid}-{safe-name}` và chỉ finalize qua Edge Function `submit-report`.
