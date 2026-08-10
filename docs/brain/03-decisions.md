@@ -92,6 +92,13 @@
 - **Đánh đổi:** Thêm migration forward-only và chưa có garbage collection cho session bỏ dở; cleanup chỉ xảy ra khi user explicit remove/reset.
 - **Người quyết định:** Codex, theo P2-09 cleanup invariant C1–C7.
 
+## [2026-08-09] Review báo cáo atomic và notification trong RPC
+
+- **Quyết định:** `review_report_assignment` là trusted path duy nhất cho ACCEPTED, NEEDS_SUPPLEMENT và EXEMPTED; function khóa assignment, kiểm scope/transition/reason, cập nhật review metadata, ghi history/audit và tạo notification trong cùng transaction. Edge Function không còn insert notification best-effort.
+- **Lý do:** Không được để assignment/submission đổi trạng thái mà thiếu history, audit hoặc notification; `FOR UPDATE` cũng làm stale review fail-closed thay vì ghi đè quyết định mới.
+- **Đánh đổi:** Notification exemption fan-out tới các BRANCH_OFFICER ACTIVE trong organization; chưa xây history UI đầy đủ hoặc dashboard review.
+- **Người quyết định:** Codex, theo P2-10 handoff security/atomicity.
+
 ---
 
 ## Template cho entry mới

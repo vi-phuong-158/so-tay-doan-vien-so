@@ -52,6 +52,23 @@ insert into public.report_submissions (assignment_id, version_number, submitted_
   ('8a000005-0000-0000-0000-000000000005', 1, 'cccccccc-cccc-cccc-cccc-cccccccccccc', 'PENDING')
 on conflict do nothing;
 
+-- Keep a finalized file fixture so review can prove it is not rewritten.
+insert into public.report_submission_files (submission_id, storage_path, original_name, safe_name, mime_type, size_bytes, checksum, uploaded_by)
+select s.id,
+  '8c000001-0000-0000-0000-000000000001/22222222-2222-2222-2222-222222222222/8a000001-0000-0000-0000-000000000001/v1/report.pdf',
+  'report.pdf', 'report.pdf', 'application/pdf', 42, 'review-fixture-checksum', s.submitted_by
+from public.report_submissions s
+where s.assignment_id = '8a000001-0000-0000-0000-000000000001' and s.version_number = 1
+on conflict (storage_path) do nothing;
+
+create temp table review_immutable_snapshot as
+select s.submitted_at,
+  f.storage_path, f.original_name, f.safe_name, f.mime_type, f.size_bytes, f.checksum, f.uploaded_by,
+  s.version_number
+from public.report_submissions s
+join public.report_submission_files f on f.submission_id = s.id
+where s.assignment_id = '8a000001-0000-0000-0000-000000000001' and s.version_number = 1;
+
 -- =====================================================================================
 -- HAPPY: ACCEPT (Youth Admin scoped to the org) + review_status sync (C4)
 -- =====================================================================================
@@ -68,6 +85,26 @@ select results_eq(
 select results_eq(
   $$ select (reviewed_by = '11112222-3333-4444-5555-666677778888') from public.report_submissions where assignment_id='8a000001-0000-0000-0000-000000000001' and version_number=1 $$,
   ARRAY[true], 'H-ACCEPT reviewed_by recorded');
+select results_eq(
+  $$ select accepted_at is not null from public.report_assignments where id='8a000001-0000-0000-0000-000000000001' $$,
+  ARRAY[true], 'H-ACCEPT accepted_at recorded');
+select reset_auth();
+select results_eq(
+  $$ select count(*)::integer from public.notifications where user_id='cccccccc-cccc-cccc-cccc-cccccccccccc' and type='REPORT_ACCEPTED' and action_url='/cong-viec/bao-cao/8a000001-0000-0000-0000-000000000001' $$,
+  ARRAY[1], 'H-ACCEPT notification is atomic and links to assignment');
+select results_eq(
+  $$ select count(*)::integer from review_immutable_snapshot before
+     join public.report_submissions s on s.version_number = before.version_number
+     join public.report_submission_files f on f.submission_id = s.id and f.storage_path = before.storage_path
+     where s.assignment_id='8a000001-0000-0000-0000-000000000001'
+       and s.submitted_at is not distinct from before.submitted_at
+       and f.original_name is not distinct from before.original_name
+       and f.safe_name is not distinct from before.safe_name
+       and f.mime_type is not distinct from before.mime_type
+       and f.size_bytes is not distinct from before.size_bytes
+       and f.checksum is not distinct from before.checksum
+       and f.uploaded_by is not distinct from before.uploaded_by $$,
+  ARRAY[1], 'R13 review leaves finalized submission timestamp, version and file metadata immutable');
 select isnt_empty(
   $$ select 1 from public.report_status_history where assignment_id='8a000001-0000-0000-0000-000000000001' and to_status='ACCEPTED' $$,
   'H-ACCEPT status history row written');
@@ -85,6 +122,17 @@ select results_eq(
 select results_eq(
   $$ select review_status from public.report_submissions where assignment_id='8a000002-0000-0000-0000-000000000002' and version_number=1 $$,
   ARRAY['NEEDS_SUPPLEMENT'::text], 'H-NEEDS submission review_status synced');
+select results_eq(
+  $$ select review_note from public.report_submissions where assignment_id='8a000002-0000-0000-0000-000000000002' and version_number=1 $$,
+  ARRAY['Bổ sung số liệu'::text], 'H-NEEDS review_note stored');
+select reset_auth();
+select results_eq(
+  $$ select from_status || '|' || to_status || '|' || changed_by::text || '|' || reason from public.report_status_history where assignment_id='8a000002-0000-0000-0000-000000000002' $$,
+  ARRAY['SUBMITTED|NEEDS_SUPPLEMENT|aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa|Bổ sung số liệu'::text],
+  'R10 NEEDS_SUPPLEMENT history preserves actor and reason');
+select results_eq(
+  $$ select count(*)::integer from public.notifications where user_id='cccccccc-cccc-cccc-cccc-cccccccccccc' and type='REPORT_NEEDS_SUPPLEMENT' and action_url='/cong-viec/bao-cao/8a000002-0000-0000-0000-000000000002' $$,
+  ARRAY[1], 'H-NEEDS notification is atomic and links to assignment');
 
 -- =====================================================================================
 -- HAPPY: EXEMPT (Youth Admin of parent org — recursive scope) with reason
@@ -99,6 +147,13 @@ select results_eq(
 select results_eq(
   $$ select exempt_reason from public.report_assignments where id='8a000003-0000-0000-0000-000000000003' $$,
   ARRAY['Đơn vị mới thành lập'::text], 'H-EXEMPT exempt_reason stored');
+select results_eq(
+  $$ select exempted_at is not null from public.report_assignments where id='8a000003-0000-0000-0000-000000000003' $$,
+  ARRAY[true], 'H-EXEMPT exempted_at recorded');
+select reset_auth();
+select results_eq(
+  $$ select count(*)::integer from public.notifications where user_id='cccccccc-cccc-cccc-cccc-cccccccccccc' and type='REPORT_EXEMPTED' and action_url='/cong-viec/bao-cao/8a000003-0000-0000-0000-000000000003' $$,
+  ARRAY[1], 'H-EXEMPT notification is atomic and links to assignment');
 
 -- =====================================================================================
 -- SCOPE DENIED: Youth Admin of CĐA cannot review a CĐB assignment
@@ -122,6 +177,11 @@ select throws_ok(
   $$ select public.review_report_assignment('8a000005-0000-0000-0000-000000000005','ACCEPTED',null) $$,
   'ASSIGNMENT_SCOPE_DENIED',
   'ROLE branch officer cannot review');
+
+select throws_ok(
+  $$ update public.report_assignments set status='ACCEPTED' where id='8a000005-0000-0000-0000-000000000005' $$,
+  'permission denied for table report_assignments',
+  'R14 direct client status mutation is denied');
 
 -- =====================================================================================
 -- TRANSITION GUARDS
@@ -152,6 +212,28 @@ select throws_ok(
   $$ select public.review_report_assignment('8a000004-0000-0000-0000-000000000004','ACCEPTED',null) $$,
   'REPORT_ALREADY_ACCEPTED',
   'TR reviewing an ACCEPTED assignment is denied');
+
+-- STALE REVIEW: a decision based on the old SUBMITTED state cannot overwrite ACCEPTED.
+select throws_ok(
+  $$ select public.review_report_assignment('8a000001-0000-0000-0000-000000000001','NEEDS_SUPPLEMENT','stale') $$,
+  'REPORT_ALREADY_ACCEPTED',
+  'R12 stale review is rejected after a competing ACCEPTED transition');
+select results_eq(
+  $$ select count(*)::integer from public.report_status_history where assignment_id='8a000001-0000-0000-0000-000000000001' $$,
+  ARRAY[1], 'R11 failed stale transition creates no history');
+
+-- SUSPENDED/ANONYMOUS: authentication and active-account gates fail closed.
+select set_auth_user('99999999-9999-9999-9999-999999999999');
+select throws_ok(
+  $$ select public.review_report_assignment('8a000005-0000-0000-0000-000000000005','ACCEPTED',null) $$,
+  'ACCOUNT_NOT_ACTIVE',
+  'R6 suspended reviewer is denied');
+select set_config('role', 'anon', true);
+select set_config('request.jwt.claims', '{}', true);
+select throws_ok(
+  $$ select public.review_report_assignment('8a000005-0000-0000-0000-000000000005','ACCEPTED',null) $$,
+  'permission denied for function review_report_assignment',
+  'R7 anonymous reviewer cannot execute review RPC');
 
 -- =====================================================================================
 -- PRIVILEGE

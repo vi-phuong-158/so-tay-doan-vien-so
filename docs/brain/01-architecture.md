@@ -76,9 +76,9 @@ supabase/
 | `functions/_shared/auth.ts` | `clients()`→{userClient, adminClient}; `requireUser`, `requireGlobalRole`, `requireScopedRole` | **mọi** Edge Function | `@supabase/supabase-js`, env `SUPABASE_*` |
 | `functions/_shared/http.ts` | `corsHeaders`, `json`, `errorResponse`, `readJson` | mọi Edge Function | — |
 | `functions/_shared/validation.ts` | `assertUuid`, `fileExtension`, `safeText` | các function nhận input | — |
-| `src/services/reportService.js` | Factory `createReportService(supabase)`; mapper báo cáo; query RLS, upload/remove Storage private, invoke `submit-report` | P2-08/P2-09/P2-10 | `src/lib/status.mjs`, Supabase client được caller truyền vào |
+| `src/services/reportService.js` | Factory `createReportService(supabase)`; mapper báo cáo; query RLS, upload/remove Storage private, invoke `submit-report`/`review-report` | P2-08/P2-09/P2-10 | `src/lib/status.mjs`, Supabase client được caller truyền vào |
 | `functions/submit-report` | Xác minh object Storage thật + quyền/tệp → RPC `create_report_submission_with_files` (atomic) → notification | client (khi đã nối) | `_shared/*`, Storage, RPC, bảng report_* |
-| `functions/review-report` | Chuyển trạng thái accepted/needs-supplement/exempted | client admin | `_shared/*`, requireRole |
+| `functions/review-report` | Xác thực request rồi gọi RPC review; RPC atomic hóa transition, review metadata, history, audit và notification | client admin | `_shared/*`, `review_report_assignment`, RLS |
 | `functions/ask-ai` | RAG: scope tài liệu → Gemini → chuẩn hóa nguồn → lưu lịch sử | client | `_shared/*`, `match_document_chunks` |
 | `functions/process-document` | Trích xuất → chunk → embedding → chờ duyệt | admin | `_shared/*`, Gemini |
 | `functions/send-reminder` / `process-email-queue` | Nhắc hạn (idempotent) / gửi email theo batch | cron | `_shared/*`, email_queue |
@@ -106,6 +106,14 @@ UI remove/reset → reportService.removeStagedReportFile(exact path)
                  → uploader + active account + own org/assignment + staging convention
                  → NOT EXISTS report_submission_files(storage_path)
 
+# Review báo cáo (P2-10)
+Admin UI → reportService.reviewReport → review-report (JWT user client)
+             → review_report_assignment (SECURITY DEFINER + FOR UPDATE)
+             → validate active/scope/action/current status/reason
+             → update assignment + latest submission review fields
+             → history + audit + in-app notification (cùng transaction)
+             → UI refresh assignment/submission state; stale transition fail-closed
+
 # RAG hỏi AI
 Page trợ lý AI → invoke ask-ai → requireUser + quota → xác định scope tài liệu
          → embedding câu hỏi → match_document_chunks (chỉ chunk APPROVED)
@@ -120,7 +128,7 @@ Schema đầy đủ (~30 bảng) ở `docs/01-product-spec.md` mục 8. Nhóm ch
 `report_status_history`), văn bản + RAG (`documents`, `document_chunks` có `embedding`),
 học tập/quiz, trợ lý AI, đổi mới sáng tạo, email, `audit_logs`.
 
-RPC then chốt: `create_report_submission`, `create_report_assignments`, `get_report_dashboard`,
+RPC then chốt: `create_report_submission`, `create_report_assignments`, `review_report_assignment`, `get_report_dashboard`,
 `mark_overdue_assignments`, `match_document_chunks`, `transition_problem_status`,
 `is_organization_in_scope`.
 
