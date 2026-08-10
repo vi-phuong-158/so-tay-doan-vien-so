@@ -7,18 +7,9 @@
 
 ## Đang làm
 
-**Phase 2D — Submission history & resubmission** (branch `feat/phase-2d-resubmission-history`, phụ thuộc P2-10)
-- P2-07 hoàn thành: `src/services/reportService.js` đọc dữ liệu qua RLS, upload private Storage theo
-  staging path, và finalize duy nhất qua Edge Function `submit-report`.
-- P2-08 hoàn thành: Work list/detail dùng service thật, route assignment detail và signed template download;
-  chưa có upload/submit/history UI.
-- P2-09 hoàn thành: upload staging, confirmation, submit qua Edge Function, refresh server state và cleanup
-  exact-path an toàn; chưa có history/export/admin.
-- P2-10 đã hoàn thành technical acceptance trên branch `feat/phase-2c-report-review`: review
-  ACCEPTED/NEEDS_SUPPLEMENT/EXEMPTED qua RPC atomic, review surface tối thiểu và notification/history/audit;
-  không làm dashboard, export hoặc email.
-- P2-11 đang làm: history theo assignment, resubmit versioned qua namespace `vN`, expected-version
-  stale guard và regression H1–H26; không làm dashboard/export/email/ZIP/P2-12.
+**P2-12 — Admin campaign & assignment management** (branch `feat/phase-2e-admin-campaign-assignment`, baseline `caf650d`)
+- Tạo/sửa draft campaign, chọn đơn vị trong scope, template private và publish assignment atomic/idempotent.
+- Hoàn tất trên SHA `b27ab4e`: CI run `31403376831` PASS (build, pgTAP migration/reset, Deno check/test). Local Supabase/Docker và Deno vẫn không có.
 
 ---
 
@@ -55,6 +46,8 @@
 ---
 
 ## Đã hoàn thành gần đây
+
+- [2026-08-10] P2-12: route `/admin/bao-cao`, service quản trị campaign, template private và publish assignment qua RPC.
 
 - [2026-08-09] P2-07: report service layer + behavior tests; không migration, không thay UI.
 - [2026-08-09] P2-08: report assignment list/detail UI, real status filters, RLS-backed detail and private template download.

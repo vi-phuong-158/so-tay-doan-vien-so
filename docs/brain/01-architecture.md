@@ -39,7 +39,8 @@ src/
 ├── data/mock.js             # dữ liệu demo (campaigns, documents, topics, projects, problems)
 ├── lib/status.mjs           # REPORT_STATUS, getReportStatus, daysUntil, normalizeSafeFileName (có test)
 ├── lib/markdown.js          # render markdown an toàn (DOMPurify)
-└── services/supabaseClient.js  # khởi tạo supabase client từ VITE_SUPABASE_*
+├── services/supabaseClient.js  # khởi tạo supabase client từ VITE_SUPABASE_*
+└── services/reportAdminService.js # quản trị campaign qua RPC/Edge Function, không ghi assignment trực tiếp
 
 supabase/
 ├── migrations/              # 4 migration: schema, storage/RPC security, fix bảo mật P1, admin txn
@@ -68,6 +69,8 @@ supabase/
 | `src/pages/*` (5 khu vực) | UI khu vực | routes trong `App.jsx` | `data/mock.js`, `useAuth`, `common` |
 | `src/data/mock.js` | Dữ liệu demo | 5 pages chính | — (⚠ thay bằng service khi nối Supabase) |
 | `src/lib/status.mjs` | Nhãn/tone trạng thái báo cáo, tính hạn, chuẩn hóa tên tệp | pages hiển thị báo cáo | — (thuần, có unit test) |
+| `src/services/reportAdminService.js` | Đọc campaign trong scope; tạo/sửa draft, upload/finalize template và publish | `AdminReports` | Supabase RPC + Storage private + `finalize-campaign-template` |
+| `src/pages/AdminReports.jsx` | Danh sách/form quản trị đợt báo cáo, chọn đơn vị, xác nhận phát hành | routes `/admin/bao-cao*` | `reportAdminService`, `reportAdmin.mjs`, `Auth`/`RoleGuard` |
 
 ### Backend (Edge Functions) — module then chốt
 
@@ -79,6 +82,7 @@ supabase/
 | `src/services/reportService.js` | Factory `createReportService(supabase)`; mapper assignment/submission history; query RLS, upload/remove Storage private, invoke `submit-report`/`review-report` | P2-08/P2-09/P2-10/P2-11 | `src/lib/status.mjs`, Supabase client được caller truyền vào |
 | `functions/submit-report` | Xác minh object staging thật + quyền/tệp → move sang namespace `vN` → RPC expected-version (atomic metadata/history/notification) | client (khi đã nối) | `_shared/*`, Storage, RPC, bảng report_* |
 | `functions/review-report` | Xác thực request rồi gọi RPC review; RPC atomic hóa transition, review metadata, history, audit và notification | client admin | `_shared/*`, `review_report_assignment`, RLS |
+| `functions/finalize-campaign-template` | Đọc metadata thật từ Storage, chuẩn hóa tên, move template và đăng ký metadata | `reportAdminService` | `_shared/*`, service-role Storage, `register_report_campaign_template` |
 | `functions/ask-ai` | RAG: scope tài liệu → Gemini → chuẩn hóa nguồn → lưu lịch sử | client | `_shared/*`, `match_document_chunks` |
 | `functions/process-document` | Trích xuất → chunk → embedding → chờ duyệt | admin | `_shared/*`, Gemini |
 | `functions/send-reminder` / `process-email-queue` | Nhắc hạn (idempotent) / gửi email theo batch | cron | `_shared/*`, email_queue |
@@ -112,6 +116,12 @@ UI remove/reset → reportService.removeStagedReportFile(exact path)
 Admin UI → reportService.reviewReport → review-report (JWT user client)
              → review_report_assignment (SECURITY DEFINER + FOR UPDATE)
              → validate active/scope/action/current status/reason
+
+# Tạo/phát hành đợt báo cáo (P2-12)
+AdminReports → reportAdminService → RPC tạo/sửa draft + lấy đơn vị trong scope
+             → upload template staging private → finalize-campaign-template (metadata Storage thật)
+             → register_report_campaign_template → confirm → publish_report_campaign
+             → lock campaign; insert assignment + history/audit; PUBLISHED atomically
              → update assignment + latest submission review fields
              → history + audit + in-app notification (cùng transaction)
              → UI refresh assignment/submission state; stale transition fail-closed

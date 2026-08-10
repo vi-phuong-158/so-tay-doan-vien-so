@@ -15,6 +15,7 @@ import { Knowledge } from './pages/Knowledge';
 import { Innovation } from './pages/Innovation';
 import { Profile } from './pages/Profile';
 import { AdminDashboard } from './pages/Admin';
+import { AdminReports } from './pages/AdminReports';
 
 import { EmptyState } from './components/common';
 
@@ -57,6 +58,16 @@ export default function App() {
             <Route path="admin" element={
               <RoleGuard allowedRoles={['YOUTH_ADMIN']}>
                 <AdminDashboard />
+              </RoleGuard>
+            } />
+            <Route path="admin/bao-cao" element={
+              <RoleGuard allowedRoles={['YOUTH_ADMIN']}>
+                <AdminReports />
+              </RoleGuard>
+            } />
+            <Route path="admin/bao-cao/:campaignId" element={
+              <RoleGuard allowedRoles={['YOUTH_ADMIN']}>
+                <AdminReports />
               </RoleGuard>
             } />
             
