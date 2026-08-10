@@ -23,6 +23,14 @@
 - **Lý do:** pgTAP chủ động đổi role để xác minh authorization, nên fixture test phải có quyền tường minh.
 - **Kiểm tra:** CI rerun đang được kích hoạt trên forward-fix.
 
+## [2026-08-10] P2-12 publish RPC ambiguity forward-fix
+
+- **Agent:** Codex
+- **Thay đổi:** Qualify `report_assignments.campaign_id` trong RPC trả về bảng để không xung đột với output parameter; cấp SELECT fixture tối thiểu cho `anon` để assertion quyền execute kiểm tra đúng function thay vì bị chặn ở fixture.
+- **File đã sửa:** `supabase/migrations/202608100001_phase_2_admin_campaign_assignment.sql`, `supabase/tests/report_admin_campaign_assignment.sql`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** CI phát hiện PostgreSQL ưu tiên/nhầm lẫn giữa `RETURNS TABLE campaign_id` và cột không qualifier trong truy vấn đếm; đây là lỗi implementation thực tế cần sửa trước nghiệm thu.
+- **Kiểm tra:** `npm.cmd test` sẽ được chạy lại; CI Supabase/Deno được chạy lại trên commit forward-fix.
+
 ---
 
 ## Format entry

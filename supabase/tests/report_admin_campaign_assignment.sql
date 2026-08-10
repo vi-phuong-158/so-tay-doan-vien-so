@@ -23,6 +23,7 @@ on conflict (id) do update set is_active = false;
 
 create temp table p2_campaigns(name text primary key, id uuid not null);
 grant all on table p2_campaigns to authenticated;
+grant select on table p2_campaigns to anon;
 
 -- Youth Admin A is scoped only to CĐA. It can create a draft and publish to CĐA.
 select set_auth_user('11112222-3333-4444-5555-666677778888');

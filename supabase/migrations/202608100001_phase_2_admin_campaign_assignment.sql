@@ -342,7 +342,7 @@ begin
   if v_campaign.status = 'PUBLISHED' then
     campaign_id := v_campaign.id;
     resulting_status := v_campaign.status;
-    select count(*)::integer into assignment_count from public.report_assignments where campaign_id = v_campaign.id;
+    select count(*)::integer into assignment_count from public.report_assignments a where a.campaign_id = v_campaign.id;
     return next;
     return;
   end if;
@@ -388,7 +388,7 @@ begin
 
   campaign_id := v_campaign.id;
   resulting_status := 'PUBLISHED';
-  select count(*)::integer into assignment_count from public.report_assignments where campaign_id = v_campaign.id;
+  select count(*)::integer into assignment_count from public.report_assignments a where a.campaign_id = v_campaign.id;
   return next;
 end;
 $$;
