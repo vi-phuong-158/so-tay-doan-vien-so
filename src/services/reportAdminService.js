@@ -145,6 +145,20 @@ export function createReportAdminService(client, { createObjectId = () => global
       return (data || []).map(mapDashboardAssignment);
     },
 
+    async exportReportStatus(campaignId, { status = 'ALL', search = '' } = {}) {
+      assertUuid(campaignId, 'campaignId');
+      return unwrap(client.functions.invoke('export-report-status', {
+        body: { campaign_id: campaignId, status: status === 'ALL' ? null : status, search: search || null }
+      }));
+    },
+
+    async downloadReportBundle(campaignId, { status = 'ALL', search = '' } = {}) {
+      assertUuid(campaignId, 'campaignId');
+      return unwrap(client.functions.invoke('download-report-bundle', {
+        body: { campaign_id: campaignId, status: status === 'ALL' ? null : status, search: search || null }
+      }));
+    },
+
     async createCampaign(payload) {
       const data = await unwrap(client.rpc('create_report_campaign', toRpcPayload(payload)));
       return mapCampaign(Array.isArray(data) ? data[0] : data);

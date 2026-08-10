@@ -37,6 +37,25 @@ test('dashboard filters cover workflow states and errors do not retain stale dat
   assert.match(mapDashboardError({ code: 'REPORT_DASHBOARD_NOT_FOUND_OR_FORBIDDEN' }), /Không tìm thấy/);
 });
 
+test('export and bundle actions preserve the dashboard scope and active filters', async () => {
+  const calls = [];
+  const client = {
+    functions: {
+      invoke(name, options) {
+        calls.push({ name, options });
+        return Promise.resolve({ data: new Blob(['ok']), error: null });
+      }
+    }
+  };
+  const service = createReportAdminService(client);
+  await service.exportReportStatus(campaignId, { status: 'OVERDUE', search: 'A' });
+  await service.downloadReportBundle(campaignId, { status: 'OVERDUE', search: 'A' });
+  assert.deepEqual(calls.map(call => ({ name: call.name, body: call.options.body })), [
+    { name: 'export-report-status', body: { campaign_id: campaignId, status: 'OVERDUE', search: 'A' } },
+    { name: 'download-report-bundle', body: { campaign_id: campaignId, status: 'OVERDUE', search: 'A' } }
+  ]);
+});
+
 test('dashboard UI has loading, retry, filters, deterministic server list and existing assignment route', async () => {
   const source = await readFile(new URL('../src/pages/AdminReportDashboard.jsx', import.meta.url), 'utf8');
   assert.match(source, /getReportDashboard\(campaignId\)/);
@@ -45,6 +64,9 @@ test('dashboard UI has loading, retry, filters, deterministic server list and ex
   assert.match(source, /action="Thử lại"/);
   assert.match(source, /DASHBOARD_FILTERS\.map/);
   assert.match(source, /\/cong-viec\/bao-cao\/\$\{item\.id\}/);
+  assert.match(source, /Xuất CSV/);
+  assert.match(source, /Tải gói báo cáo/);
+  assert.match(source, /disabled=\{Boolean\(downloadState\)\}/);
 });
 
 test('campaign management exposes the dashboard without replacing the existing edit route', async () => {

@@ -92,6 +92,13 @@
 - **Đánh đổi:** Late metric có thể giao với trạng thái RESUBMITTED vì nguồn chân lý là `latest_submission.is_late`; điều này đúng workflow hơn việc ép nộp lại thành LATE_SUBMITTED.
 - **Người quyết định:** Codex, theo P2-13.
 
+## [2026-08-10] Export và bundle báo cáo dùng lại scope dashboard
+
+- **Quyết định:** `export-report-status` và `download-report-bundle` bắt buộc gọi dashboard RPC bằng JWT của người dùng để lấy campaign/assignment trong scope và filter hiện tại. Service role chỉ dùng backend để đọc object private và ghi audit; không nhận organization/assignment scope do client tự gửi.
+- **Lý do:** CSV/ZIP không được biến thành đường vòng để đọc toàn campaign hoặc lộ `storage_path`; scope phải được quyết định tại database trước khi tải dữ liệu.
+- **Đánh đổi:** Bundle chỉ lấy submission mới nhất mỗi assignment; object thiếu, metadata lệch, trùng tên ZIP hoặc vượt 100 file/50 MB đều fail-closed thay vì trả gói một phần.
+- **Người quyết định:** Codex, theo P2-14.
+
 ## [2026-08-09] Frontend upload báo cáo dùng path staging, không tự cấp version
 
 - **Quyết định:** `reportService` upload object theo `{campaign}/{organization}/{assignment}/staging/{uuid}-{safe-name}` và chỉ finalize qua Edge Function `submit-report`.

@@ -40,7 +40,7 @@ src/
 ├── lib/status.mjs           # REPORT_STATUS, getReportStatus, daysUntil, normalizeSafeFileName (có test)
 ├── lib/markdown.js          # render markdown an toàn (DOMPurify)
 ├── services/supabaseClient.js  # khởi tạo supabase client từ VITE_SUPABASE_*
-└── services/reportAdminService.js # quản trị campaign qua RPC/Edge Function, không ghi assignment trực tiếp
+└── services/reportAdminService.js # quản trị campaign + dashboard/export qua RPC/Edge Function, không ghi assignment trực tiếp
 
 supabase/
 ├── migrations/              # 4 migration: schema, storage/RPC security, fix bảo mật P1, admin txn
@@ -71,6 +71,7 @@ supabase/
 | `src/lib/status.mjs` | Nhãn/tone trạng thái báo cáo, tính hạn, chuẩn hóa tên tệp | pages hiển thị báo cáo | — (thuần, có unit test) |
 | `src/services/reportAdminService.js` | Đọc campaign trong scope; tạo/sửa draft, upload/finalize template và publish | `AdminReports` | Supabase RPC + Storage private + `finalize-campaign-template` |
 | `src/pages/AdminReports.jsx` | Danh sách/form quản trị đợt báo cáo, chọn đơn vị, xác nhận phát hành | routes `/admin/bao-cao*` | `reportAdminService`, `reportAdmin.mjs`, `Auth`/`RoleGuard` |
+| `src/pages/AdminReportDashboard.jsx` | Aggregate, filter/search và tải CSV/ZIP theo filter hiện tại | route `/admin/bao-cao/:campaignId/dashboard` | `reportAdminService`, dashboard helpers, Blob download |
 
 ### Backend (Edge Functions) — module then chốt
 
@@ -83,6 +84,8 @@ supabase/
 | `functions/submit-report` | Xác minh object staging thật + quyền/tệp → move sang namespace `vN` → RPC expected-version (atomic metadata/history/notification) | client (khi đã nối) | `_shared/*`, Storage, RPC, bảng report_* |
 | `functions/review-report` | Xác thực request rồi gọi RPC review; RPC atomic hóa transition, review metadata, history, audit và notification | client admin | `_shared/*`, `review_report_assignment`, RLS |
 | `functions/finalize-campaign-template` | Đọc metadata thật từ Storage, chuẩn hóa tên, move template và đăng ký metadata | `reportAdminService` | `_shared/*`, service-role Storage, `register_report_campaign_template` |
+| `functions/export-report-status` | CSV UTF-8/BOM scoped, formula-neutralized, audit bắt buộc | `AdminReportDashboard` qua `reportAdminService` | dashboard RPC, `_shared/*`, `audit_logs` |
+| `functions/download-report-bundle` | ZIP latest submission/file trong scope, private Storage, giới hạn 100 file/50 MB, audit | `AdminReportDashboard` qua `reportAdminService` | dashboard RPC, service-role Storage, `fflate`, `_shared/*` |
 | `functions/ask-ai` | RAG: scope tài liệu → Gemini → chuẩn hóa nguồn → lưu lịch sử | client | `_shared/*`, `match_document_chunks` |
 | `functions/process-document` | Trích xuất → chunk → embedding → chờ duyệt | admin | `_shared/*`, Gemini |
 | `functions/send-reminder` / `process-email-queue` | Nhắc hạn (idempotent) / gửi email theo batch | cron | `_shared/*`, email_queue |
@@ -139,6 +142,13 @@ AdminReportDashboard → reportAdminService → get_report_dashboard / get_repor
                      → aggregate và rows chỉ trong scope; không trả file path/signed URL
                      → effective overdue read-only dùng PostgreSQL now(), không thay cron
 
+# Export/bundle báo cáo (P2-14)
+AdminReportDashboard → reportAdminService → export-report-status / download-report-bundle
+                     → requireUser + dashboard RPC bằng JWT (active admin + organization scope + filter)
+                     → CSV từ rows scoped hoặc latest submission theo assignment scoped
+                     → ZIP chỉ đọc bucket report-submissions-private, kiểm size/object/path/trùng tên
+                     → audit actor/campaign/filter/count/bytes; trả file private với cache-control no-store
+
 # RAG hỏi AI
 Page trợ lý AI → invoke ask-ai → requireUser + quota → xác định scope tài liệu
          → embedding câu hỏi → match_document_chunks (chỉ chunk APPROVED)
@@ -155,6 +165,7 @@ học tập/quiz, trợ lý AI, đổi mới sáng tạo, email, `audit_logs`.
 
 RPC then chốt: `create_report_submission`, `create_report_submission_with_files` (expected-version overload),
 `create_report_assignments`, `review_report_assignment`, `get_report_dashboard`,
+`get_report_dashboard_assignments`,
 `mark_overdue_assignments`, `match_document_chunks`, `transition_problem_status`,
 `is_organization_in_scope`.
 
