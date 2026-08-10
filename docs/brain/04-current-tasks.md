@@ -9,7 +9,7 @@
 
 **P2-12 — Admin campaign & assignment management** (branch `feat/phase-2e-admin-campaign-assignment`, baseline `caf650d`)
 - Tạo/sửa draft campaign, chọn đơn vị trong scope, template private và publish assignment atomic/idempotent.
-- Frontend gates đã chạy; cần local Supabase/Docker hoặc CI để chạy pgTAP và Deno gate của migration/Edge Function mới.
+- Hoàn tất trên SHA `b27ab4e`: CI run `31403376831` PASS (build, pgTAP migration/reset, Deno check/test). Local Supabase/Docker và Deno vẫn không có.
 
 ---
 

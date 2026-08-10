@@ -47,6 +47,14 @@
 - **Lý do:** CI đã thực thi đúng constraint nhưng overload 3-đối-số hiểu chuỗi expected là toàn bộ message; assertion cũ chỉ dùng prefix.
 - **Kiểm tra:** CI Supabase/Deno được chạy lại sau commit.
 
+## [2026-08-10] P2-12 CI acceptance
+
+- **Agent:** Codex
+- **Thay đổi:** Cập nhật tài liệu task/current task bằng kết quả nghiệm thu CI trên commit `b27ab4e`.
+- **File đã sửa:** `docs/phase-2/12-admin-campaign-assignment.md`, `docs/brain/04-current-tasks.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Ghi lại bằng chứng gate database/Edge Function đã PASS sau các forward-fix pgTAP.
+- **Kiểm tra:** GitHub Actions run `31403376831` PASS: build, lint, 34 frontend tests, Supabase reset/pgTAP, Deno check và test.
+
 ---
 
 ## Format entry

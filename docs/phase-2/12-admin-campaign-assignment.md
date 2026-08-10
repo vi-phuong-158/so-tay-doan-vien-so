@@ -4,6 +4,7 @@
 
 - **Branch:** `feat/phase-2e-admin-campaign-assignment`
 - **Starting SHA:** `caf650d83dc8858884c145e3a1a481a57c64d3b7`
+- **Accepted SHA:** `b27ab4eacd210ae0f4e4d49fe9c9289a080d9599`
 - **Dependency:** P2-09 PR #4 and P2-10 PR #5 are open drafts; P2-11 PR #6 is stacked on P2-10 and its accepted head is the baseline. P2-12 must stay stacked on P2-11 until those PRs merge.
 
 ## Scope delivered
@@ -43,6 +44,7 @@ The migration revokes authenticated direct write privileges on `report_campaigns
 - `npm.cmd run build` — **PASS**.
 - `supabase db reset`, `supabase test db` — **BLOCKED locally**: local Postgres/Docker is not running (`127.0.0.1:54322` refused).
 - `deno check` / `deno test` — **BLOCKED locally**: Deno is not installed.
+- GitHub Actions [run 31403376831](https://github.com/vi-phuong-158/so-tay-doan-vien-so/actions/runs/31403376831) — **PASS**: build, lint, frontend tests, Supabase migration/reset + pgTAP, Deno check and Deno tests.
 
 ## Manual acceptance when rehearsal is available
 
