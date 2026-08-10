@@ -5,6 +5,14 @@
 
 ---
 
+## [2026-08-11] P2-15 CI acceptance
+
+- **Agent:** Codex
+- **Thay đổi:** Ghi nhận full GitHub Actions xanh và nâng Phase 2 report verdict lên technical acceptance complete; chuyển P2-15 sang hoàn thành.
+- **File đã sửa:** `docs/phase-2/15-phase-2-final-acceptance.md`, `docs/brain/04-current-tasks.md`, `docs/04-implementation-status.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Chỉ được tuyên bố acceptance complete sau khi migration reset, toàn bộ pgTAP, Deno, frontend lint/test/build cùng PASS trên branch acceptance.
+- **Kiểm tra:** GitHub Actions run `31411605381` PASS — frontend 40/40, pgTAP 11 files/236 tests, Deno 16 tests, lint/build PASS.
+
 ## [2026-08-10] P2-15 Phase 2 final acceptance
 
 - **Agent:** Codex

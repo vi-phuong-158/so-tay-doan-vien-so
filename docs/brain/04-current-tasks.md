@@ -7,9 +7,8 @@
 
 ## Đang làm
 
-**P2-15 — Phase 2 final acceptance & end-to-end vertical slice** (branch `test/phase-2-final-acceptance`, baseline P2-14 `bdf0156`)
-- Audit tích hợp P2-07→P2-14, chạy vertical slice và ma trận trạng thái/scope, chỉ sửa acceptance blocker.
-- P1 direct submission RPC bypass đã được đóng bằng Storage object verification + thu hồi overload legacy; acceptance CI đang chờ.
+Không có task implementation đang thực hiện. Bước tiếp theo chỉ là lập kế hoạch Phase 3 sau khi
+merge stack PR Phase 2 theo biên bản P2-15.
 
 ---
 
@@ -47,6 +46,7 @@
 
 ## Đã hoàn thành gần đây
 
+- [2026-08-11] P2-15: `Phase 2 — Công việc & Báo cáo: TECHNICAL ACCEPTANCE COMPLETE`; P1 direct RPC bypass đã đóng, integrated vertical slice + ma trận A–G PASS; CI `31411605381` PASS (40 frontend, 236 pgTAP, 16 Deno).
 - [2026-08-10] P2-14: export CSV scoped và bundle ZIP latest submission, giới hạn/metadata fail-closed, audit và nút tải dashboard; baseline CI `31409496394` PASS.
 - [2026-08-10] P2-12: route `/admin/bao-cao`, service quản trị campaign, template private và publish assignment qua RPC.
 - [2026-08-10] P2-13: dashboard báo cáo scoped server-side, aggregate trạng thái/completion, filter/search và deep link assignment.

@@ -7,7 +7,7 @@ nghiệp vụ Phase 3.
 
 ## STATUS
 
-`ACCEPTANCE CANDIDATE — CI PENDING`
+`Phase 2 — Công việc & Báo cáo: TECHNICAL ACCEPTANCE COMPLETE`
 
 ## BASELINE
 
@@ -94,9 +94,9 @@ submission; privilege assertions chứng minh authenticated chỉ còn overload 
 | Local `npm run build` | PASS — 108 modules |
 | Baseline Supabase reset + pgTAP | PASS — 10 files/220 tests, CI `31409496394` |
 | Baseline Deno check/test | PASS — 16 tests, CI `31409496394` |
-| Acceptance Supabase reset + pgTAP | `PENDING_ACCEPTANCE_CI` |
-| Acceptance Deno check/test | `PENDING_ACCEPTANCE_CI` |
-| Acceptance frontend/lint/build | `PENDING_ACCEPTANCE_CI` |
+| Acceptance Supabase reset + pgTAP | PASS — 11 files/236 tests, CI `31411605381` |
+| Acceptance Deno check/test | PASS — 16 tests, CI `31411605381` |
+| Acceptance frontend/lint/build | PASS — 40/40, 0 lint errors, build success, CI `31411605381` |
 | Browser shell 390×844 | PASS — login content/controls, 390=390 width, no overlay |
 | Browser shell 768×1024 | PASS — 768=768 width, no overlay |
 | Browser shell 1440×900 | PASS — 1440=1440 width, no overlay |
@@ -107,8 +107,8 @@ fail-fast đúng thiết kế. Không dùng dummy credential để xác thực v
 ## BLOCKERS
 
 - P1 direct RPC/Storage metadata bypass: **FIXED**, có migration và regression.
-- Acceptance CI: `PENDING_ACCEPTANCE_CI`.
-- Không còn P0/P1/P2 code blocker đã biết ngoài kết quả CI đang chờ.
+- Acceptance CI: **PASS**, GitHub Actions run `31411605381` trên commit `db9a77f`.
+- Không còn P0/P1/P2 technical acceptance blocker đã biết.
 
 ## ACCEPTANCE MATRIX
 
@@ -161,9 +161,6 @@ Không merge trong P2-15. Tất cả PR #4–#9 đang draft/open và mergeable t
 
 ## PHASE 2 VERDICT
 
-`PENDING_ACCEPTANCE_CI`
-
-Khi acceptance CI xanh, cập nhật thành:
 `Phase 2 — Công việc & Báo cáo: TECHNICAL ACCEPTANCE COMPLETE`.
 
 Kết luận này chỉ là technical acceptance; **không đồng nghĩa production-ready**.
