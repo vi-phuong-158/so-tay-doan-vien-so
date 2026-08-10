@@ -5,6 +5,16 @@
 
 ---
 
+## [2026-08-10] P2-12 admin campaign & assignment management
+
+- **Agent:** Codex
+- **Thay đổi:** Thêm route/form quản trị campaign, service boundary, upload/finalize template private, RPC scoped tạo/sửa draft và publish atomic/idempotent; đóng quyền ghi trực tiếp assignment/template/campaign; thêm frontend + pgTAP acceptance.
+- **File đã sửa:** `src/App.jsx`, `src/pages/Admin.jsx`, `src/pages/AdminReports.jsx`, `src/services/reportAdminService.js`, `src/services/reportService.js`, `src/lib/reportAdmin.mjs`, `src/index.css`, `supabase/migrations/202608100001_phase_2_admin_campaign_assignment.sql`, `supabase/functions/finalize-campaign-template/index.ts`, `supabase/tests/report_admin_campaign_assignment.sql`, `tests/report_admin.test.mjs`, `docs/phase-2/12-admin-campaign-assignment.md`, `docs/brain/01-architecture.md`, `docs/brain/03-decisions.md`, `docs/brain/04-current-tasks.md`.
+- **Lý do:** Ban Thanh niên phải tạo/phát hành đợt báo cáo đúng scope mà không mở đường bypass các invariant P2-09 → P2-11.
+- **Kiểm tra:** `npm.cmd test` 34/34 PASS; `npm.cmd run lint` 0 errors (3 warning có sẵn); `npm.cmd run build` PASS; Supabase pgTAP/Deno chưa chạy local vì Docker/Postgres/Deno không có.
+
+---
+
 ## Format entry
 
 ```

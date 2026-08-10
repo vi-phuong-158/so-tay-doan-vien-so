@@ -78,6 +78,13 @@
 - **Đánh đổi:** Thêm helper `SECURITY DEFINER` boolean với `search_path` cố định; helper không trả dữ liệu, chỉ xét account active, assignment cùng org hoặc role admin.
 - **Người quyết định:** Codex, theo CI P2-06.
 
+## [2026-08-10] Publish campaign và assignment là một RPC transaction idempotent
+
+- **Quyết định:** Draft campaign chỉ phát hành qua `publish_report_campaign(uuid, uuid[])` SECURITY DEFINER. RPC tự lấy `auth.uid()`, khóa campaign, kiểm role/trạng thái/scope/đơn vị active, tạo assignment `PENDING` + history/audit rồi mới đổi campaign sang `PUBLISHED`; request lặp trả kết quả hiện có.
+- **Lý do:** Không để browser tạo assignment hoặc để campaign đã phát hành mà assignment chỉ được tạo một phần.
+- **Đánh đổi:** Danh sách đơn vị được giữ ở form draft cho đến lúc publish; không thêm bảng target nháp ngoài schema cần thiết.
+- **Người quyết định:** Codex, theo P2-12.
+
 ## [2026-08-09] Frontend upload báo cáo dùng path staging, không tự cấp version
 
 - **Quyết định:** `reportService` upload object theo `{campaign}/{organization}/{assignment}/staging/{uuid}-{safe-name}` và chỉ finalize qua Edge Function `submit-report`.
