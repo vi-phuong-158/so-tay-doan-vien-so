@@ -5,6 +5,14 @@
 
 ---
 
+## [2026-08-10] P2-15 Phase 2 final acceptance
+
+- **Agent:** Codex
+- **Thay đổi:** Audit P2-07→P2-14; đóng direct submission RPC bypass bằng expected-version + xác minh Storage tại DB; thêm regression và vertical slice tích hợp; lập acceptance matrix/PR merge plan và cập nhật trạng thái kiến trúc.
+- **File đã sửa:** `supabase/migrations/202608100003_phase_2_submit_rpc_storage_guard.sql`, `supabase/tests/phase_2_final_acceptance.sql`, `supabase/tests/report_submission_atomicity.sql`, `supabase/tests/report_submission_history.sql`, `supabase/tests/report_submit_atomic_finalize.sql`, `docs/phase-2/15-phase-2-final-acceptance.md`, `docs/brain/01-architecture.md`, `docs/brain/03-decisions.md`, `docs/brain/04-current-tasks.md`, `docs/04-implementation-status.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** P2-15 yêu cầu technical acceptance toàn Phase 2; audit phát hiện authenticated có thể gọi RPC trực tiếp để bỏ Edge Storage verification/legacy stale guard.
+- **Kiểm tra:** Local frontend 40/40, lint/build PASS; browser shell 390/768/1440 không overflow/overlay; baseline CI `31409496394` PASS; acceptance CI đang chờ.
+
 ## [2026-08-10] P2-13 report dashboard & aggregate status
 
 - **Agent:** Codex

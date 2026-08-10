@@ -43,6 +43,14 @@ begin
   select coalesce(max(version_number), 0) + 1 into v_next_version
   from public.report_submissions where assignment_id = p_assignment_id;
 
+  insert into storage.objects(bucket_id, name, owner, metadata)
+  values (
+    'report-submissions-private',
+    v_assignment.campaign_id::text || '/' || v_assignment.organization_id::text || '/' || p_assignment_id::text || '/v' || v_next_version || '/test.pdf',
+    auth.uid(),
+    '{"size":1,"mimetype":"application/pdf"}'::jsonb
+  );
+
   perform public.create_report_submission_with_files(
     p_assignment_id,
     p_summary,
@@ -53,7 +61,8 @@ begin
       'safe_name', 'test.pdf',
       'mime_type', 'application/pdf',
       'size_bytes', 1
-    ))
+    )),
+    v_next_version
   );
 end $$;
 

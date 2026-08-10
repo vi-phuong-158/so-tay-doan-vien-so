@@ -53,6 +53,14 @@ values
   ('9a000006-0000-0000-0000-000000000006', 1, 'dddddddd-dddd-dddd-dddd-dddddddddddd', 'other org', null, 'PENDING', null)
 on conflict (assignment_id, version_number) do nothing;
 
+insert into storage.objects(bucket_id, name, owner, metadata) values
+  ('report-submissions-private','9c000001-0000-0000-0000-000000000001/22222222-2222-2222-2222-222222222222/9a000001-0000-0000-0000-000000000001/v1/one.pdf','cccccccc-cccc-cccc-cccc-cccccccccccc','{"size":10}'::jsonb),
+  ('report-submissions-private','9c000001-0000-0000-0000-000000000001/22222222-2222-2222-2222-222222222222/9a000001-0000-0000-0000-000000000001/v2/two.pdf','cccccccc-cccc-cccc-cccc-cccccccccccc','{"size":20}'::jsonb),
+  ('report-submissions-private','9c000001-0000-0000-0000-000000000001/22222222-2222-2222-2222-222222222222/9a000001-0000-0000-0000-000000000001/v3/three.pdf','cccccccc-cccc-cccc-cccc-cccccccccccc','{"size":30}'::jsonb),
+  ('report-submissions-private','9c000002-0000-0000-0000-000000000002/22222222-2222-2222-2222-222222222222/9a000002-0000-0000-0000-000000000002/v2/corrected.pdf','cccccccc-cccc-cccc-cccc-cccccccccccc','{"size":12}'::jsonb),
+  ('report-submissions-private','9c000003-0000-0000-0000-000000000003/22222222-2222-2222-2222-222222222222/9a000003-0000-0000-0000-000000000003/v1/late.pdf','cccccccc-cccc-cccc-cccc-cccccccccccc','{"size":10}'::jsonb)
+on conflict do nothing;
+
 select set_auth_user('cccccccc-cccc-cccc-cccc-cccccccccccc');
 
 -- H1/H2/H3: first submit remains v1, then v2 and v3 are monotonic and readable.

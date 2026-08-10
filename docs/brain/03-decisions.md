@@ -127,6 +127,18 @@
 - **Đánh đổi:** Storage move và database transaction không phải một distributed transaction; Edge Function rollback move về staging khi RPC fail, còn RPC atomic hóa toàn bộ metadata nghiệp vụ. Signed URL chỉ tạo lazy từ path versioned đã được RLS kiểm soát.
 - **Người quyết định:** Codex, theo P2-11 handoff versioning/concurrency.
 
+## [2026-08-10] Submission RPC tự xác minh finalized Storage object
+
+- **Quyết định:** Chỉ cấp `authenticated` quyền gọi overload 5 tham số có expected-version của
+  `create_report_submission_with_files`. RPC phải xác minh object vN tồn tại trong bucket private,
+  path/scope/policy file hợp lệ và size/mimetype khớp Storage trước khi ghi metadata; overload 4 tham
+  số bị thu hồi khỏi API end-user.
+- **Lý do:** JWT người dùng cần đi qua RPC để giữ `auth.uid()` nhưng không được phép bypass trusted
+  Edge Function bằng PostgREST và tạo submission trỏ tới object giả hoặc bỏ stale-version guard.
+- **Đánh đổi:** pgTAP positive fixture phải tạo `storage.objects` thực; Storage move và DB transaction
+  vẫn cần compensating rollback ở Edge vì không có distributed transaction.
+- **Người quyết định:** Codex, theo P2-15 final acceptance blocker P1.
+
 ---
 
 ## Template cho entry mới
