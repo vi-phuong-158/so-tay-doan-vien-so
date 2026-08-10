@@ -7,11 +7,14 @@
 
 ## Đang làm
 
-**Phase 2A — Nền tảng luồng báo cáo** (branch `feat/phase-2a-report-foundation`)
-- Đã có: audit baseline + gap (`docs/phase-2/00-baseline-gap-audit.md`), state machine + bất biến
-  bảo mật của báo cáo (`docs/phase-2/01-report-state-machine.md`).
-- Kế tiếp (theo tài liệu phase-2): hiện thực hóa vòng đời báo cáo thật trên Supabase — thay mock ở
-  trang Công việc bằng service gọi `report_*` + Edge Function `submit-report`/`review-report`.
+**Phase 2B — Công việc & Báo cáo** (branch `feat/phase-2b-branch-submission`)
+- P2-07 hoàn thành: `src/services/reportService.js` đọc dữ liệu qua RLS, upload private Storage theo
+  staging path, và finalize duy nhất qua Edge Function `submit-report`.
+- P2-08 hoàn thành: Work list/detail dùng service thật, route assignment detail và signed template download;
+  chưa có upload/submit/history UI.
+- P2-09 hoàn thành: upload staging, confirmation, submit qua Edge Function, refresh server state và cleanup
+  exact-path an toàn; chưa có history/export/admin.
+- Kế tiếp: P2-10 hiển thị lịch sử phiên bản.
 
 ---
 
@@ -49,6 +52,9 @@
 
 ## Đã hoàn thành gần đây
 
+- [2026-08-09] P2-07: report service layer + behavior tests; không migration, không thay UI.
+- [2026-08-09] P2-08: report assignment list/detail UI, real status filters, RLS-backed detail and private template download.
+- [2026-08-09] P2-09: upload/submit UI, safe staged-object cleanup policy, assignment notification route fix.
 - [2026-08] Phase 2 docs: audit baseline/gap + state machine & bất biến bảo mật báo cáo.
 - [~2026-08] Phase 1: khắc phục bảo mật auth, `requireUser` Supabase Auth thuần, vá npm audit (PR #1).
 - [2026-07-30] Dựng frontend 5 khu vực + PWA shell + dữ liệu demo; schema/RLS/RPC + khung Edge
