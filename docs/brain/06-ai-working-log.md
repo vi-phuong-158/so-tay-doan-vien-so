@@ -13,6 +13,14 @@
 - **Lý do:** Ban Thanh niên cần số liệu và danh sách theo scope được DB xác nhận, không tính trust metrics ở browser hoặc lộ rows ngoài scope.
 - **Kiểm tra:** Frontend test/lint/build và CI Supabase/pgTAP/Deno sẽ được chạy trước nghiệm thu.
 
+## [2026-08-10] P2-13 CI acceptance
+
+- **Agent:** Codex
+- **Thay đổi:** Ghi nhận bằng chứng CI green cho implementation dashboard P2-13.
+- **File đã sửa:** `docs/phase-2/13-report-dashboard.md`, `docs/brain/04-current-tasks.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Xác nhận migration/read-model scoped và regression P2-01 → P2-12 đã vượt acceptance gate trước khi mở PR review.
+- **Kiểm tra:** GitHub Actions run `31405473107` PASS: frontend lint/tests/build; Supabase db reset + pgTAP; Deno check/test.
+
 ---
 
 ## [2026-08-10] P2-12 admin campaign & assignment management

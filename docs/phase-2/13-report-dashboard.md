@@ -4,6 +4,7 @@
 
 - Branch: `feat/phase-2f-report-dashboard`.
 - Starting SHA: `1e144cb9ba98c1b62a60b1f4a727720970eb8172` (accepted P2-12).
+- Accepted implementation SHA: `9e5b91ec07f6909356350e489895eea105616ebe`.
 - This PR stays stacked on P2-12 until the preceding report PRs merge.
 
 ## Read model
@@ -32,6 +33,7 @@ Both SECURITY DEFINER functions resolve actor identity from `auth.uid()`, requir
 - Frontend tests cover service RPC mapping, completion rendering, filters, error reset/retry, route wiring and assignment links.
 - pgTAP covers role/anonymous/suspended denial, narrow-scope rows and aggregates, SYSTEM_ADMIN behavior, status counts, completion, late resubmission semantics, server search and function privileges.
 - Local Supabase/Deno may require CI because Docker/Postgres and Deno are unavailable in this workspace.
+- GitHub Actions [run 31405473107](https://github.com/vi-phuong-158/so-tay-doan-vien-so/actions/runs/31405473107) — PASS: frontend lint/tests/build, Supabase migration/reset + all pgTAP suites, Deno check and tests.
 
 ## Forward-fix / scope boundary
 
