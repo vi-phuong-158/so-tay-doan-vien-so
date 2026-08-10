@@ -63,7 +63,8 @@ select results_eq(
 -- The unique database constraint remains the final line of defense.
 select throws_ok(
   $$ insert into public.report_assignments(campaign_id, organization_id) values ((select id from p2_campaigns where name='happy'), '22222222-2222-2222-2222-222222222222') $$,
-  'duplicate key value violates unique constraint', 'P10 campaign and organization pair remains structurally unique');
+  '23505', 'duplicate key value violates unique constraint "report_assignments_campaign_id_organization_id_key"',
+  'P10 campaign and organization pair remains structurally unique');
 
 -- Scope and active-organization validation happens before any status mutation.
 select set_auth_user('11112222-3333-4444-5555-666677778888');

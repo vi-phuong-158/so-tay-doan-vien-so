@@ -39,6 +39,14 @@
 - **Lý do:** pgTAP CI vẫn báo `campaign_id` ambiguous tại câu INSERT/UPSERT; đây là nguồn tham chiếu cột không qualifier còn lại trong hàm.
 - **Kiểm tra:** CI Supabase/Deno sẽ được chạy lại sau commit.
 
+## [2026-08-10] P2-12 pgTAP unique-constraint forward-fix
+
+- **Agent:** Codex
+- **Thay đổi:** Đổi assertion unique assignment sang overload pgTAP kiểm tra cả SQLSTATE `23505` và message đầy đủ của constraint.
+- **File đã sửa:** `supabase/tests/report_admin_campaign_assignment.sql`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** CI đã thực thi đúng constraint nhưng overload 3-đối-số hiểu chuỗi expected là toàn bộ message; assertion cũ chỉ dùng prefix.
+- **Kiểm tra:** CI Supabase/Deno được chạy lại sau commit.
+
 ---
 
 ## Format entry
