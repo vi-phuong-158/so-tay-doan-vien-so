@@ -5,6 +5,27 @@
 
 ---
 
+## [2026-08-11] P3-01 Notification Foundation
+
+- **Agent:** Codex
+- **Thay đổi:** Thêm event identity/source fields và safe action URL constraint cho notifications;
+  đóng direct authenticated writes; thêm mark-read/mark-all RPC; nối campaign publish, submit v1/v2+
+  và review events với recipient server-resolved/idempotent; thêm service, unread bell, inbox UI,
+  deep-link và pgTAP/frontend acceptance.
+- **File đã sửa:** supabase/migrations/202608110001_phase_3_notification_foundation.sql,
+  supabase/tests/notification_foundation.sql, src/services/notificationService.js,
+  src/components/NotificationBell.jsx, src/pages/Notifications.jsx, src/App.jsx,
+  src/components/Layout.jsx, src/pages/Profile.jsx, src/index.css,
+  tests/notification_service.test.mjs, tests/notification_ui.test.mjs,
+  docs/phase-3/01-notification-foundation.md, docs/brain/01-architecture.md,
+  docs/brain/03-decisions.md, docs/brain/04-current-tasks.md,
+  docs/brain/06-ai-working-log.md.
+- **Lý do:** Hoàn thiện nền tảng notification in-app theo P3-01 mà không mở rộng sang email/queue/
+  reminder/cron; giữ event side-effect atomic với Phase 2 report workflows.
+- **Kiểm tra:** npm.cmd test 45/45 PASS; npm.cmd run lint 0 lỗi, 3 warning Fast Refresh có sẵn;
+  npm.cmd run build PASS; git diff --check PASS. Supabase CLI/Docker không có local, pgTAP
+  chờ CI reset database.
+
 ## [2026-08-11] P2-15 CI acceptance
 
 - **Agent:** Codex

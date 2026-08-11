@@ -139,6 +139,31 @@
   vẫn cần compensating rollback ở Edge vì không có distributed transaction.
 - **Người quyết định:** Codex, theo P2-15 final acceptance blocker P1.
 
+## [2026-08-11] P3-01 notification foundation dùng trusted event identity
+
+- **Quyết định:** notifications bổ sung source_entity_type, source_entity_id và unique nullable
+  event_key; submit/review/publish RPC tự resolve recipient và ghi notification trong cùng
+  transaction. Campaign publish gửi đúng BRANCH_OFFICER ACTIVE của organization assignment;
+  submit v1 dùng REPORT_SUBMITTED, v2+ dùng REPORT_RESUBMITTED; review giữ recipient P2 đã
+  nghiệm thu.
+- **Lý do:** Frontend không được spoof recipient_user_id, retry không được tạo notification
+  trùng, và event phải truy ngược được về entity nghiệp vụ.
+- **Đánh đổi:** Không retroactively gán identity cho notification legacy ngoài các workflow được
+  thay thế; chưa bật realtime hoặc email side-effect trong P3-01.
+- **Người quyết định:** Codex theo đặc tả P3-01 và P3-00 handoff.
+
+## [2026-08-11] P3-01 notification access boundary và action URL
+
+- **Quyết định:** Authenticated chỉ có SELECT notification dưới RLS auth.uid() + account ACTIVE;
+  thu hồi INSERT/UPDATE/DELETE trực tiếp. Mark-read và mark-all là SECURITY DEFINER RPC với
+  search_path=public, chỉ cập nhật read_at, idempotent và trả false/0 cho owner khác hoặc
+  account suspended. action_url phải là app-relative route thuộc allowlist; frontend vẫn
+  loại URL không an toàn trước khi navigate.
+- **Lý do:** Grant UPDATE toàn bảng là quá rộng; deep-link từ dữ liệu notification là trust
+  boundary và không được trở thành open redirect/XSS.
+- **Đánh đổi:** Inbox không realtime; badge tải lại theo session/user id và cập nhật khi mở inbox.
+- **Người quyết định:** Codex theo đặc tả P3-01.
+
 ---
 
 ## Template cho entry mới

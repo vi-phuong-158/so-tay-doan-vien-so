@@ -7,8 +7,14 @@
 
 ## Đang làm
 
-Không có task implementation đang thực hiện. P3-00 đã PASS ở mức audit/docs-only trên
-branch `plan/phase-3-notification-email`; bước tiếp theo là P3-01 sau khi owner review tài liệu.
+### P3-01 — Notification Foundation
+- **Branch:** feat/phase-3a-notification-foundation, stack trên P3-00 commit 1377265 vì Draft PR #11 chưa merge.
+- **Trạng thái:** Đã triển khai migration/RPC/service/UI/pgTAP/frontend tests; local frontend gates PASS,
+  DB/pgTAP chờ CI vì workspace không có Supabase CLI/Docker.
+- **Phạm vi:** in-app notification only; không email provider, queue worker, reminder hoặc cron.
+- **Next gate:** CI DB reset + pgTAP và review Draft PR trước khi đánh dấu PASS/cho phép P3-02.
+
+P3-00 đã PASS ở mức audit/docs-only; P3-01 đang chờ CI database acceptance.
 
 ---
 
@@ -34,9 +40,9 @@ branch `plan/phase-3-notification-email`; bước tiếp theo là P3-01 sau khi 
 - **Ưu tiên:** Trung bình (sau luồng báo cáo).
 
 ### Phase 3 — Notification, Email Queue & Reminder/Cron
-- **Mô tả:** P3-00 đã PASS baseline/rehearsal audit trên branch `plan/phase-3-notification-email`; chưa bắt đầu implementation.
+- **Mô tả:** P3-00 đã PASS; P3-01 implementation đang chờ CI database acceptance trên branch feat/phase-3a-notification-foundation.
 - **Báo cáo:** `docs/phase-3/00-baseline-rehearsal-plan.md`.
-- **Next recommended:** P3-01 Notification Foundation.
+- **Next recommended sau P3-01 PASS:** P3-02 Email Queue State Machine & Concurrency Safety.
 - **Ưu tiên:** Cao sau baseline.
 
 ---

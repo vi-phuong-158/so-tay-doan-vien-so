@@ -29,21 +29,24 @@ src/
 ├── components/
 │   ├── Guards.jsx           # AuthGuard, RoleGuard (+ getAuthGuardAction thuần, có test)
 │   ├── Layout.jsx           # AppShell: Sidebar + BottomNav + Outlet
+│   ├── NotificationBell.jsx # badge unread server-backed, user-keyed cache reset
 │   ├── common.jsx           # Brand, EmptyState, SectionHeader...
 │   ├── Icon.jsx             # line icon
 │   ├── ErrorBoundary.jsx / Skeleton.jsx
 ├── pages/
 │   ├── auth/                # Login, ForgotPassword, ResetPassword, ChangePassword (dùng Supabase)
 │   ├── Home/Work/Knowledge/Innovation/Profile.jsx  # 5 khu vực — HIỆN DÙNG MOCK
+│   ├── Notifications.jsx    # inbox/read state, safe deep-link, bounded pagination
 │   └── Admin.jsx            # dashboard quản trị (dùng Supabase)
 ├── data/mock.js             # dữ liệu demo (campaigns, documents, topics, projects, problems)
 ├── lib/status.mjs           # REPORT_STATUS, getReportStatus, daysUntil, normalizeSafeFileName (có test)
 ├── lib/markdown.js          # render markdown an toàn (DOMPurify)
 ├── services/supabaseClient.js  # khởi tạo supabase client từ VITE_SUPABASE_*
-└── services/reportAdminService.js # quản trị campaign + dashboard/export qua RPC/Edge Function, không ghi assignment trực tiếp
+├── services/reportAdminService.js # quản trị campaign + dashboard/export qua RPC/Edge Function
+└── services/notificationService.js # read-only inbox/count + mark-read RPC boundary
 
 supabase/
-├── migrations/              # 4 migration: schema, storage/RPC security, fix bảo mật P1, admin txn
+├── migrations/              # ordered schema/RLS/RPC migrations
 ├── seed.sql                 # dữ liệu seed local (gồm auth.users cho GoTrue)
 ├── tests/rls_acceptance.sql # test RLS
 └── functions/
@@ -60,6 +63,9 @@ supabase/
 
 | Module / file | Vai trò | Được gọi bởi | Phụ thuộc vào |
 |---------------|---------|--------------|---------------|
+| `src/components/NotificationBell.jsx` | Unread badge và điều hướng inbox | `Layout.jsx` | `notificationService`, `AuthContext`, Supabase anon client |
+| `src/pages/Notifications.jsx` | Inbox thông báo, loading/empty/error, mark-read/mark-all, pagination và deep-link | route `/ca-nhan/thong-bao` | `notificationService`, `AuthContext`, `Icon`, `common` |
+| `src/services/notificationService.js` | Query rows/count dưới RLS; gọi mark-read RPC; loại action URL không an toàn | `NotificationBell`, `Notifications` | Supabase client |
 | `src/main.jsx` | Entry, mount, đăng ký SW | (trình duyệt) | `App.jsx`, `index.css` |
 | `src/App.jsx` | Khai báo route + bọc Guard | `main.jsx` | `AuthContext`, `Guards`, `Layout`, mọi `pages/*` |
 | `src/contexts/AuthContext.jsx` | Session/user/profile/roles, `login/logout/hasRole` | `App`, mọi component gọi `useAuth` | `services/supabaseClient` |
@@ -130,6 +136,14 @@ AdminReports → reportAdminService → RPC tạo/sửa draft + lấy đơn vị
              → history + audit + in-app notification (cùng transaction)
              → UI refresh assignment/submission state; stale transition fail-closed
 
+# Notification foundation (P3-01)
+Trusted submit/review/publish RPC → recipient resolved from auth/workflow/active BRANCH_OFFICER scope
+             → notifications(source_entity_type/source_entity_id/event_key) in same transaction
+             → RLS SELECT only own active-account rows
+Inbox/Bell → notificationService (bounded created_at DESC + id DESC query)
+             → mark_notification_read / mark_all_notifications_read (read_at only)
+             → safe app-relative action URL → mark read first → React Router deep-link
+
 # Lịch sử/nộp lại báo cáo (P2-11)
 Assignment detail → reportService.getSubmissionHistory (RLS, version desc, profile-safe fields)
                  → history accordion; signed URL chỉ tạo khi mở file
@@ -169,6 +183,8 @@ RPC then chốt: `create_report_submission`, `create_report_submission_with_file
 `get_report_dashboard_assignments`,
 `mark_overdue_assignments`, `match_document_chunks`, `transition_problem_status`,
 `is_organization_in_scope`.
+
+P3-01 notification RPC: publish_report_campaign, mark_notification_read, mark_all_notifications_read.
 
 ## Biến môi trường
 
