@@ -26,6 +26,17 @@
   npm.cmd run build PASS; git diff --check PASS. Supabase CLI/Docker không có local, pgTAP
   chờ CI reset database.
 
+## [2026-08-11] P3-01 pgTAP assertion forward-fix
+
+- **Agent:** Codex
+- **Thay đổi:** Sửa expected exception message trong notification_foundation.sql cho ba assertion
+  constraint/unique key theo overload throws_ok thực tế của pgTAP.
+- **File đã sửa:** supabase/tests/notification_foundation.sql, docs/brain/06-ai-working-log.md.
+- **Lý do:** CI đã chứng minh migration reset thành công và test logic đúng; chỉ expected string
+  của test harness không khớp message PostgreSQL.
+- **Kiểm tra:** CI run 31491382954: build PASS; test-db chạy đến pgTAP và fail đúng 3 assertion
+  expected string, các suite Phase 2 PASS. Local frontend 45/45, lint 0 lỗi/3 warning, build PASS.
+
 ## [2026-08-11] P2-15 CI acceptance
 
 - **Agent:** Codex

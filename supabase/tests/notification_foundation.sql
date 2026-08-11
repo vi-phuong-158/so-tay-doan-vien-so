@@ -140,17 +140,17 @@ select throws_ok(
 select reset_auth();
 select throws_ok(
   $$ insert into public.notifications(user_id, type, title, action_url) values ('cccccccc-cccc-cccc-cccc-cccccccccccc', 'UNSAFE', 'Unsafe', 'https://evil.example') $$,
-  '23514',
+  'new row for relation "notifications" violates check constraint "notifications_action_url_check"',
   'unsafe external action URL is rejected by database constraint'
 );
 select throws_ok(
   $$ insert into public.notifications(user_id, type, title, source_entity_type) values ('cccccccc-cccc-cccc-cccc-cccccccccccc', 'INVALID', 'Invalid', 'report_assignment') $$,
-  '23514',
+  'new row for relation "notifications" violates check constraint "notifications_source_entity_pair_check"',
   'partial notification source identity is rejected'
 );
 select throws_ok(
   $$ insert into public.notifications(user_id, type, title, event_key) values ('cccccccc-cccc-cccc-cccc-cccccccccccc', 'DUPLICATE', 'Duplicate', 'P3-FIXTURE-A') $$,
-  '23505',
+  'duplicate key value violates unique constraint "notifications_event_key_unique"',
   'notification event key is unique when present'
 );
 
