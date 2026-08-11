@@ -95,3 +95,15 @@ P3-00 đã PASS ở mức audit/docs-only; P3-01 đang chờ CI database accepta
 - Verification: GitHub Actions run 31498548925 PASS; migration reset + 14 pgTAP files / 292
   assertions (279 P3-02 baseline + 13 P3-03 assertions), Deno check/tests (30 passed), and
   frontend lint/test/build all passed. No live provider request was made.
+
+# P3-03R - Live Email Rehearsal Acceptance
+
+- Branch: `feat/phase-3c-email-provider`, baseline `7edce42` (P3-03 acceptance HEAD); Draft PR
+  #14 remains open and is not merged.
+- Status: `BLOCKED`. No dedicated rehearsal Supabase project/credentials, Resend provider key,
+  accepted sender or controlled test inbox is available. No live provider request was made.
+- Scope guard: no production data, cron, reminder, report hook, bulk send or production deploy.
+- Evidence: local frontend 45/45, lint 0 errors with 3 existing warnings, build PASS; P3-03 CI
+  run 31499062927 remains PASS. See `docs/phase-3/03r-live-email-rehearsal.md`.
+- Next action: provision the controlled rehearsal environment and rerun P3-03R; do not start
+  P3-04 before live acceptance PASS.

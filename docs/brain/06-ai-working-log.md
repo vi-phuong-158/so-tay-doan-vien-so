@@ -278,3 +278,17 @@
   assertions (279 baseline + 13 P3-03), Deno check/tests `30 passed, 0 failed`, and frontend
   lint/test/build. No live provider request was made; controlled rehearsal remains blocked
   pending a non-production Supabase project, provider secret, verified sender and test inbox.
+
+## [2026-08-11] P3-03R live email rehearsal acceptance
+
+- Agent: Codex
+- Change: Performed the rehearsal preflight, recorded the controlled-live acceptance matrix,
+  and documented the provisioning blocker without changing production source code.
+- Files: `docs/phase-3/03r-live-email-rehearsal.md`, `docs/phase-3/03-email-provider-integration.md`,
+  `docs/brain/04-current-tasks.md`, `docs/brain/06-ai-working-log.md`.
+- Reason: The task requires a real provider acceptance and must not claim `PASS` without a
+  dedicated Supabase rehearsal project, server-only provider secret, accepted sender and test
+  inbox. None was available; no unsafe fallback or production send was attempted.
+- Verification: branch/worktree baseline verified at `7edce42`; PR #14 remains Draft; CI
+  `31499062927` is PASS; local `npm.cmd test` is 45/45 PASS, lint has 0 errors/3 existing
+  warnings, and build PASS. Final P3-03R status: `BLOCKED`.

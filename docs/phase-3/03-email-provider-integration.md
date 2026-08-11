@@ -105,6 +105,14 @@ result/message ID, SENT state and receipt without recording the secret.
 - No attachments or signed Storage URLs.
 - No production deployment.
 
+## Live Rehearsal Acceptance (P3-03R)
+
+The first P3-03R attempt is recorded in
+[03r-live-email-rehearsal.md](03r-live-email-rehearsal.md) with status `BLOCKED`.
+No rehearsal project, provider secret, accepted sender or controlled test inbox was
+available, so no live provider request was made and P3-03 remains
+`PASS_WITH_REHEARSAL_BLOCKED`.
+
 ## Next recommended task
 
 After the controlled rehearsal passes, recommend **P3-04 - Report Event Email Hooks**.
