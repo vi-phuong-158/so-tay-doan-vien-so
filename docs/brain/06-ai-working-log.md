@@ -292,3 +292,20 @@
 - Verification: branch/worktree baseline verified at `7edce42`; PR #14 remains Draft; CI
   `31499062927` is PASS; local `npm.cmd test` is 45/45 PASS, lint has 0 errors/3 existing
   warnings, and build PASS. Final P3-03R status: `BLOCKED`.
+
+## [2026-08-11] P3-03R live email rehearsal acceptance completion
+
+- Agent: Codex
+- Change: Completed live rehearsal in Supabase project `znexculhbdjiflkczpyu`; updated the
+  acceptance documents to status `PASS` and verdict `P3_03_FULL_ACCEPTANCE_PASS`.
+- Files: `docs/phase-3/03r-live-email-rehearsal.md`,
+  `docs/phase-3/03-email-provider-integration.md`, `docs/brain/04-current-tasks.md`,
+  `docs/brain/06-ai-working-log.md`.
+- Reason: The user confirmed controlled inbox receipt after the normal rehearsal and
+  safe-render fixture were accepted by Resend; P3-03R needed to be closed without sending
+  more email or changing production code.
+- Verification: Normal event `SENT`, attempt 1, Resend `HTTP_200`, provider message ID
+  present and claim clear; second worker invocation `claimed: 0, sent: 0`; safe-render event
+  `SENT` with XSS escaped; renderer `4/4`, frontend `45/45`, build PASS, lint `0 errors`,
+  secret leak audit `NO`. The `/` failed fixture remains fail-closed evidence. Production
+  used: NO.

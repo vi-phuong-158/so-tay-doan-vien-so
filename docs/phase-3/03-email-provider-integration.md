@@ -2,9 +2,9 @@
 
 ## Status
 
-`PASS_WITH_REHEARSAL_BLOCKED` until a controlled rehearsal Supabase project, provider
-secret and test inbox are supplied. Technical implementation is intentionally separate
-from live-send acceptance; this branch does not deploy production.
+`PASS` after controlled live rehearsal acceptance in the dedicated Supabase rehearsal
+project. Technical and live-send acceptance are complete; this branch does not deploy
+production.
 
 Baseline is P3-02 final acceptance HEAD `f3afaeb`, stacked because P3-02 Draft PR #13
 was not merged when this task started. Branch: `feat/phase-3c-email-provider`.
@@ -32,8 +32,8 @@ and `SUPABASE_SERVICE_ROLE_KEY`. Only names are in `.env.example`; no values are
 logged, returned in worker JSON, or exposed through `VITE_*`.
 
 The sender address and display name are trusted environment configuration. Queue payloads
-cannot choose `From`, arbitrary headers, Reply-To or additional recipients. A verified
-Resend sender/domain is still required for a real rehearsal; none is claimed here.
+cannot choose `From`, arbitrary headers, Reply-To or additional recipients. The verified
+rehearsal sender was accepted by Resend with HTTP 200; secret values remain server-only.
 
 ## Safe renderer
 
@@ -92,10 +92,13 @@ queue ownership/terminal state and checks provider metadata bounds and RPC privi
 
 CI passed the migration reset, 14 pgTAP files / 292 assertions (279 P3-02 baseline plus 13
 P3-03 assertions), Deno check/tests (30 passed) and frontend gates in run `31498548925`. No
-live provider request is executed by CI. A controlled rehearsal remains blocked until the
-project has a non-production Supabase boundary, a provider sandbox/test key, a verified test
-sender and a test recipient inbox. The rehearsal evidence must record queue ID, provider
-result/message ID, SENT state and receipt without recording the secret.
+live provider request is executed by CI. The controlled rehearsal was completed in Supabase
+project `znexculhbdjiflkczpyu` using a server-only provider secret and controlled test inbox.
+The normal event reached `SENT` at attempt 1 with Resend `HTTP_200`, a provider message ID,
+cleared claim state and confirmed inbox receipt. A second worker invocation claimed and sent
+nothing. A separate safe-render fixture also reached `SENT`; renderer tests passed 4/4 and
+the XSS payload was escaped. The initial invalid `/` fixture remains FAILED as fail-closed
+evidence.
 
 ## Known limitations and deferred work
 
@@ -107,14 +110,13 @@ result/message ID, SENT state and receipt without recording the secret.
 
 ## Live Rehearsal Acceptance (P3-03R)
 
-The first P3-03R attempt is recorded in
-[03r-live-email-rehearsal.md](03r-live-email-rehearsal.md) with status `BLOCKED`.
-No rehearsal project, provider secret, accepted sender or controlled test inbox was
-available, so no live provider request was made and P3-03 remains
-`PASS_WITH_REHEARSAL_BLOCKED`.
+The completed P3-03R acceptance is recorded in
+[03r-live-email-rehearsal.md](03r-live-email-rehearsal.md) with status `PASS` and verdict
+`P3_03_FULL_ACCEPTANCE_PASS`. The rehearsal used project `znexculhbdjiflkczpyu`, did not
+use production, confirmed provider acceptance and controlled inbox receipt, and retained
+the invalid `/` fixture as terminal fail-closed evidence.
 
 ## Next recommended task
 
-After the controlled rehearsal passes, recommend **P3-04 - Report Event Email Hooks**.
-If the rehearsal remains unavailable, keep status `PASS_WITH_REHEARSAL_BLOCKED` and do not
-claim full P3-03 PASS.
+The next recommended task is **P3-04 - Report Event Email Hooks**. It is not part of this
+acceptance and must not be started automatically.

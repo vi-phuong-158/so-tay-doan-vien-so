@@ -86,24 +86,24 @@ P3-00 đã PASS ở mức audit/docs-only; P3-01 đang chờ CI database accepta
 
 - Branch: feat/phase-3c-email-provider, stacked on P3-02 final acceptance HEAD f3afaeb;
   P3-02 Draft PR #13 was not merged when this task started.
-- Status: technical acceptance PASS; live acceptance remains PASS_WITH_REHEARSAL_BLOCKED because
-  no controlled rehearsal project/provider secret/test inbox is available. Resend adapter, safe
-  SYSTEM_EMAIL_TEST renderer and queue-claim worker are complete; report hooks, reminders, cron
-  and production deploy are not in scope.
-- Acceptance distinction: technical CI may PASS, but full P3-03 requires a controlled
-  rehearsal project/provider/test inbox. Without those, status is PASS_WITH_REHEARSAL_BLOCKED.
+- Status: PASS technical and live acceptance. Resend adapter, safe SYSTEM_EMAIL_TEST
+  renderer and queue-claim worker are complete; report hooks, reminders, cron and production
+  deploy are not in scope.
 - Verification: GitHub Actions run 31498548925 PASS; migration reset + 14 pgTAP files / 292
   assertions (279 P3-02 baseline + 13 P3-03 assertions), Deno check/tests (30 passed), and
-  frontend lint/test/build all passed. No live provider request was made.
+  frontend lint/test/build all passed. P3-03R live evidence is recorded below.
 
 # P3-03R - Live Email Rehearsal Acceptance
 
-- Branch: `feat/phase-3c-email-provider`, baseline `7edce42` (P3-03 acceptance HEAD); Draft PR
-  #14 remains open and is not merged.
-- Status: `BLOCKED`. No dedicated rehearsal Supabase project/credentials, Resend provider key,
-  accepted sender or controlled test inbox is available. No live provider request was made.
-- Scope guard: no production data, cron, reminder, report hook, bulk send or production deploy.
-- Evidence: local frontend 45/45, lint 0 errors with 3 existing warnings, build PASS; P3-03 CI
-  run 31499062927 remains PASS. See `docs/phase-3/03r-live-email-rehearsal.md`.
-- Next action: provision the controlled rehearsal environment and rerun P3-03R; do not start
-  P3-04 before live acceptance PASS.
+- Branch: feat/phase-3c-email-provider; Draft PR #14 remains open and is not merged.
+- Status: PASS.
+- Verdict: `P3_03_FULL_ACCEPTANCE_PASS`.
+- Supabase rehearsal project: `znexculhbdjiflkczpyu`; production used: NO.
+- Evidence: normal event SENT at attempt 1 with Resend HTTP 200, provider message ID,
+  cleared claim and confirmed controlled inbox receipt; second invocation claimed 0/sent 0.
+  Safe-render fixture also SENT with escaped XSS payload. Renderer tests 4/4 PASS, frontend
+  tests 45/45 PASS, build PASS, lint 0 errors, and secret leak audit NO.
+- The failed `/` fixture remains terminal FAILED as fail-closed rendering evidence and was
+  not edited or deleted. No production code, cron, report hooks or P3-04 work was started.
+- Full report: `docs/phase-3/03r-live-email-rehearsal.md`.
+- Next recommended task: P3-04 Report Event Email Hooks (recommendation only).
