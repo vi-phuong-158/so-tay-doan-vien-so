@@ -261,3 +261,18 @@
   and frontend gates are green.
 - Verification: GitHub Actions run 31494989851 PASS; migration reset + 13 pgTAP files / 279
   tests, deno check, Deno integration/contract tests, frontend lint/test/build all passed.
+# [2026-08-11] P3-03 provider integration implementation
+
+- Agent: Codex
+- Change: Selected Resend REST adapter; added server-only provider configuration, stable
+  provider idempotency, centralized failure classification, safe SYSTEM_EMAIL_TEST renderer
+  with HTML/text/subject/action-path defenses, provider-code completion RPC overload, and
+  claim-based worker dispatch.
+- Files: .env.example, supabase/migrations/202608110003_phase_3_email_provider.sql,
+  supabase/functions/process-email-queue/*, supabase/tests/email_provider_foundation.sql,
+  docs/phase-3/03-email-provider-integration.md, docs/brain/01-architecture.md,
+  docs/brain/03-decisions.md, docs/brain/04-current-tasks.md, docs/brain/06-ai-working-log.md.
+- Reason: activate P3-03 provider delivery without restoring the legacy fetch/send/update
+  race, exposing secrets, rendering arbitrary HTML or coupling notifications to email.
+- Verification: pending CI migration/Deno/frontend gates; controlled live rehearsal is not
+  available in this environment and must remain separately documented.

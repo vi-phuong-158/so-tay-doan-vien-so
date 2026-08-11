@@ -238,3 +238,15 @@ supplies the provider adapter and secret boundary.
 P3-02 queue RPC: enqueue_email_for_user_event, claim_email_queue, mark_email_sent,
 mark_email_retry, get_email_queue_stats. Ordinary users have no table or RPC
 privileges for email queue/logs; trusted server code uses service_role.
+# Email provider integration (P3-03)
+
+process-email-queue (trusted secret invocation)
+        -> claim_email_queue (P3-02 atomic ownership)
+        -> SYSTEM_EMAIL_TEST server renderer (subject + text + escaped HTML)
+        -> Resend REST adapter (server-only API key, stable email:{queue_id} key)
+        -> mark_email_sent(..., provider_code) or mark_email_retry(...)
+
+The worker never directly selects PENDING rows and never accepts provider/sender/HTML
+configuration from queue payload or frontend. `send-reminder` and report event hooks remain
+separate deferred producers. Provider metadata is persisted in `email_logs`; live rehearsal
+is a controlled manual gate, not a CI or production deployment step.

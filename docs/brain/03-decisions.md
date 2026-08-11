@@ -199,3 +199,27 @@
   idempotency key; P3-02 must not silently send real email or implement reminders.
 - Trade-off: legacy producers such as send-reminder remain a separate scope; business
   transactions do not depend on an asynchronous email insert.
+# P3-03 Resend adapter and safe renderer
+
+- Decision: use one direct Resend HTTPS REST adapter in the trusted Edge Function worker.
+  It sends JSON with configured sender, plain text, escaped HTML, `User-Agent` and stable
+  `Idempotency-Key: email:{queue_id}`; it maps provider status to a normalized retryable or
+  permanent error and persists only bounded metadata.
+- Reason: Resend matches the existing provider direction and documents a small REST contract,
+  provider message ID and idempotency support. Centralizing the adapter avoids a worker that
+  knows provider-specific HTTP details or leaks raw responses.
+- Trade-off: Resend idempotency retention is provider-scoped/limited, so ambiguous timeout
+  can still duplicate physical delivery after that window. Live sender/domain verification
+  remains a manual rehearsal gate.
+
+# P3-03 template and invocation boundary
+
+- Decision: allowlist only SYSTEM_EMAIL_TEST; render server-side structured payload into
+  bounded subject/text/HTML, escape all user-controlled HTML fields, sanitize CR/LF/header-like
+  subject content, and build links only from trusted APP_URL plus app-relative paths. Worker
+  invocation requires an exact CRON_SECRET comparison and service_role client; no frontend
+  caller can trigger arbitrary sends.
+- Reason: P3-03 proves the provider path without reintroducing arbitrary HTML, external links,
+  sender spoofing or report/reminder event scope.
+- Trade-off: report templates, reminder/cron and live receipt are deferred; technical status
+  can be PASS while final task status remains PASS_WITH_REHEARSAL_BLOCKED.

@@ -82,3 +82,11 @@ P3-00 đã PASS ở mức audit/docs-only; P3-01 đang chờ CI database accepta
   and integration concurrency coverage are complete. Provider/cron/reminder remain disabled.
 - Gate: CI run 31494989851 passed migration reset, 13 pgTAP files / 279 tests, Deno
   check/tests and frontend gates. Handoff recommendation: P3-03 provider integration.
+# P3-03 - Email Provider Integration and Safe Template Rendering
+
+- Branch: feat/phase-3c-email-provider, stacked on P3-02 final acceptance HEAD f3afaeb;
+  P3-02 Draft PR #13 was not merged when this task started.
+- Status: implementation in progress. Resend adapter, safe SYSTEM_EMAIL_TEST renderer and
+  queue-claim worker are in scope; report hooks, reminders, cron and production deploy are not.
+- Acceptance distinction: technical CI may PASS, but full P3-03 requires a controlled
+  rehearsal project/provider/test inbox. Without those, status is PASS_WITH_REHEARSAL_BLOCKED.
