@@ -7,8 +7,8 @@
 
 ## Đang làm
 
-Không có task implementation đang thực hiện. Bước tiếp theo chỉ là lập kế hoạch Phase 3 sau khi
-merge stack PR Phase 2 theo biên bản P2-15.
+Không có task implementation đang thực hiện. P3-00 đã PASS ở mức audit/docs-only trên
+branch `plan/phase-3-notification-email`; bước tiếp theo là P3-01 sau khi owner review tài liệu.
 
 ---
 
@@ -33,6 +33,12 @@ merge stack PR Phase 2 theo biên bản P2-15.
 - **Liên quan:** `supabase/functions/*`.
 - **Ưu tiên:** Trung bình (sau luồng báo cáo).
 
+### Phase 3 — Notification, Email Queue & Reminder/Cron
+- **Mô tả:** P3-00 đã PASS baseline/rehearsal audit trên branch `plan/phase-3-notification-email`; chưa bắt đầu implementation.
+- **Báo cáo:** `docs/phase-3/00-baseline-rehearsal-plan.md`.
+- **Next recommended:** P3-01 Notification Foundation.
+- **Ưu tiên:** Cao sau baseline.
+
 ---
 
 ## Không làm lúc này
@@ -47,6 +53,7 @@ merge stack PR Phase 2 theo biên bản P2-15.
 ## Đã hoàn thành gần đây
 
 - [2026-08-11] P2-15: `Phase 2 — Công việc & Báo cáo: TECHNICAL ACCEPTANCE COMPLETE`; P1 direct RPC bypass đã đóng, integrated vertical slice + ma trận A–G PASS; CI `31411605381` PASS (40 frontend, 236 pgTAP, 16 Deno).
+- [2026-08-11] P3-00: baseline/rehearsal audit PASS; merged Phase 2 baseline `0ecc3a9` xác nhận, Phase 3 được chia task và chưa triển khai production code.
 - [2026-08-10] P2-14: export CSV scoped và bundle ZIP latest submission, giới hạn/metadata fail-closed, audit và nút tải dashboard; baseline CI `31409496394` PASS.
 - [2026-08-10] P2-12: route `/admin/bao-cao`, service quản trị campaign, template private và publish assignment qua RPC.
 - [2026-08-10] P2-13: dashboard báo cáo scoped server-side, aggregate trạng thái/completion, filter/search và deep link assignment.

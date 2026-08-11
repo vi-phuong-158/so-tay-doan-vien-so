@@ -104,6 +104,16 @@
 
 ---
 
+## [2026-08-11] P3-00 Phase 3 baseline, rehearsal and implementation plan
+
+- **Agent:** Codex
+- **Thay đổi:** Đối chiếu Phase 3 notification/email queue/reminder/cron giữa migration, Edge Functions, frontend, auth, seed, config và test; lập báo cáo baseline, rehearsal requirements, security gaps, retry/idempotency/timezone direction và task graph trên branch kế hoạch từ merged Phase 2 master.
+- **File đã sửa:** `docs/phase-3/00-baseline-rehearsal-plan.md`, `docs/brain/04-current-tasks.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** P3-00 là audit/docs-only; phải xác nhận merged Phase 2 baseline trước khi cho phép Phase 3 implementation.
+- **Kiểm tra:** PR #10 đã merge vào `master` tại `0ecc3a9`; CI `31411605381` PASS với 40 frontend, 236 pgTAP và 16 Deno tests. Local `npm.cmd test` PASS 40/40, lint 0 error/3 warning có sẵn, build PASS; Supabase CLI/Docker/Deno không có nên không rerun DB/Edge tests.
+
+---
+
 ## [2026-08-09] P2-09 upload and submit report
 
 - **Agent:** Codex
