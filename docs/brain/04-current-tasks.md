@@ -86,7 +86,12 @@ P3-00 đã PASS ở mức audit/docs-only; P3-01 đang chờ CI database accepta
 
 - Branch: feat/phase-3c-email-provider, stacked on P3-02 final acceptance HEAD f3afaeb;
   P3-02 Draft PR #13 was not merged when this task started.
-- Status: implementation in progress. Resend adapter, safe SYSTEM_EMAIL_TEST renderer and
-  queue-claim worker are in scope; report hooks, reminders, cron and production deploy are not.
+- Status: technical acceptance PASS; live acceptance remains PASS_WITH_REHEARSAL_BLOCKED because
+  no controlled rehearsal project/provider secret/test inbox is available. Resend adapter, safe
+  SYSTEM_EMAIL_TEST renderer and queue-claim worker are complete; report hooks, reminders, cron
+  and production deploy are not in scope.
 - Acceptance distinction: technical CI may PASS, but full P3-03 requires a controlled
   rehearsal project/provider/test inbox. Without those, status is PASS_WITH_REHEARSAL_BLOCKED.
+- Verification: GitHub Actions run 31498548925 PASS; migration reset + 14 pgTAP files / 292
+  assertions (279 P3-02 baseline + 13 P3-03 assertions), Deno check/tests (30 passed), and
+  frontend lint/test/build all passed. No live provider request was made.

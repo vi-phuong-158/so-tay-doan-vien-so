@@ -90,10 +90,12 @@ errors, template escaping, external-link rejection, subject injection, worker cl
 flow, SENT/RETRY/FAILED mapping and malformed payload handling. pgTAP preserves P3-02
 queue ownership/terminal state and checks provider metadata bounds and RPC privileges.
 
-No live provider request is executed by CI. A controlled rehearsal remains blocked until
-the project has a non-production Supabase boundary, a provider sandbox/test key, a verified
-test sender and a test recipient inbox. The rehearsal evidence must record queue ID,
-provider result/message ID, SENT state and receipt without recording the secret.
+CI passed the migration reset, 14 pgTAP files / 292 assertions (279 P3-02 baseline plus 13
+P3-03 assertions), Deno check/tests (30 passed) and frontend gates in run `31498548925`. No
+live provider request is executed by CI. A controlled rehearsal remains blocked until the
+project has a non-production Supabase boundary, a provider sandbox/test key, a verified test
+sender and a test recipient inbox. The rehearsal evidence must record queue ID, provider
+result/message ID, SENT state and receipt without recording the secret.
 
 ## Known limitations and deferred work
 

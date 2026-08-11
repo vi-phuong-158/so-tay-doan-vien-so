@@ -274,5 +274,7 @@
   docs/brain/03-decisions.md, docs/brain/04-current-tasks.md, docs/brain/06-ai-working-log.md.
 - Reason: activate P3-03 provider delivery without restoring the legacy fetch/send/update
   race, exposing secrets, rendering arbitrary HTML or coupling notifications to email.
-- Verification: pending CI migration/Deno/frontend gates; controlled live rehearsal is not
-  available in this environment and must remain separately documented.
+- Verification: GitHub Actions run `31498548925` PASS — migration reset + 14 pgTAP files / 292
+  assertions (279 baseline + 13 P3-03), Deno check/tests `30 passed, 0 failed`, and frontend
+  lint/test/build. No live provider request was made; controlled rehearsal remains blocked
+  pending a non-production Supabase project, provider secret, verified sender and test inbox.
