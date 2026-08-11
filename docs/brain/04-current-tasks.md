@@ -74,3 +74,11 @@ P3-00 đã PASS ở mức audit/docs-only; P3-01 đang chờ CI database accepta
 - [~2026-08] Phase 1: khắc phục bảo mật auth, `requireUser` Supabase Auth thuần, vá npm audit (PR #1).
 - [2026-07-30] Dựng frontend 5 khu vực + PWA shell + dữ liệu demo; schema/RLS/RPC + khung Edge
   Functions; unit test nền tảng 3/3 pass.
+# P3-02 - Email Queue State Machine and Concurrency Safety
+
+- Branch: feat/phase-3b-email-queue-safety, stacked on P3-01 acceptance HEAD b445045;
+  P3-01 Draft PR #12 was not merged when this task started.
+- Status: PASS technical acceptance; migration, trusted enqueue, claim/retry/reclaim, pgTAP
+  and integration concurrency coverage are complete. Provider/cron/reminder remain disabled.
+- Gate: CI run 31494989851 passed migration reset, 13 pgTAP files / 279 tests, Deno
+  check/tests and frontend gates. Handoff recommendation: P3-03 provider integration.

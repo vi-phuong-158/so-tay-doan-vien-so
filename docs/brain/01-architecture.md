@@ -213,3 +213,28 @@ SUPABASE_SERVICE_ROLE_KEY   # (fallback: SERVICE_ROLE_KEY)
 - **AI:** chỉ truy hồi chunk `APPROVED`, luôn trả nguồn; lọc dữ liệu nhạy cảm trước khi gửi Gemini.
 - **GoTrue nhạy cảm với seed:** `supabase/seed.sql` phải điền đủ cột `auth.users`/`auth.identities`
   đúng cách (nhiều commit lịch sử sửa lỗi này) — cẩn thận khi đổi seed.
+# Email queue foundation (P3-02)
+
+Trusted producer (service role only)
+        -> enqueue_email_for_user_event (server-resolved auth.users email,
+           bounded structured payload, computed idempotency key)
+        -> email_queue PENDING
+
+claim_email_queue(worker, bounded batch)
+        -> PENDING/RETRY eligible or stale PROCESSING
+        -> PROCESSING + claim_token + worker_id + lease
+        -> email_logs attempt evidence
+
+current owner + token
+        -> mark_email_sent -> SENT (terminal)
+        -> mark_email_retry -> RETRY + deterministic next_attempt_at
+                              -> max attempts/non-retryable -> FAILED (terminal)
+
+Stale leases are reclaimed atomically by the next claim transaction; an old
+claim token cannot complete or retry a reclaimed row. process-email-queue does
+not call a provider in P3-02 and returns EMAIL_PROVIDER_DEFERRED until P3-03
+supplies the provider adapter and secret boundary.
+
+P3-02 queue RPC: enqueue_email_for_user_event, claim_email_queue, mark_email_sent,
+mark_email_retry, get_email_queue_stats. Ordinary users have no table or RPC
+privileges for email queue/logs; trusted server code uses service_role.

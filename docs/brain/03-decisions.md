@@ -176,3 +176,26 @@
 - **Đánh đổi:** <cái gì bị đánh đổi>
 - **Người quyết định:** <user / Claude / Codex>
 ```
+# P3-02 queue lifecycle and ownership token
+
+- Decision: email_queue uses PENDING -> PROCESSING -> SENT/RETRY and RETRY ->
+  PROCESSING; FAILED is terminal, while legacy CANCELLED remains terminal. Claim uses
+  FOR UPDATE SKIP LOCKED, a batch cap of 50, deterministic order, database time, claim
+  token, worker id and lease. Completion/retry requires the current token; expired leases
+  are reclaimed in the claim transaction and old tokens are rejected.
+- Reason: the old SELECT-then-UPDATE worker raced, stale workers could overwrite a new
+  owner, and fixed retry timing was not observable. Ownership belongs in the database.
+- Trade-off: the database guarantees one logical enqueue, one active claim and finite
+  retries; provider timeout ambiguity/exactly-once delivery waits for the provider adapter.
+
+# P3-02 trusted enqueue and provider boundary
+
+- Decision: only service_role can call enqueue_email_for_user_event. The RPC resolves
+  email/name from auth.users plus ACTIVE profile, computes the idempotency key from
+  template/source/recipient/revision, bounds JSON payloads and rejects HTML keys.
+  email_queue/email_logs have no direct anon/authenticated privileges. The old
+  process-email-queue endpoint is disabled with EMAIL_PROVIDER_DEFERRED until P3-03.
+- Reason: frontend callers must not choose recipient, template, subject/html or an
+  idempotency key; P3-02 must not silently send real email or implement reminders.
+- Trade-off: legacy producers such as send-reminder remain a separate scope; business
+  transactions do not depend on an asynchronous email insert.

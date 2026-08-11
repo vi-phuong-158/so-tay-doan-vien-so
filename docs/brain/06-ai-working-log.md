@@ -233,3 +233,31 @@
 - **File đã sửa:** `supabase/functions/export-report-status/*`, `supabase/functions/download-report-bundle/*`, `supabase/tests/report_export.sql`, `src/services/reportAdminService.js`, `src/pages/AdminReportDashboard.jsx`, `src/index.css`, `src/services/reportService.js`, `src/lib/reportDashboard.mjs`, `tests/report_dashboard.test.mjs`, `docs/phase-2/14-scoped-export-report-bundle.md`, `docs/brain/01-architecture.md`, `docs/brain/03-decisions.md`, `docs/brain/04-current-tasks.md`.
 - **Lý do:** Đáp ứng P2-14 mà không tạo đường vòng phân quyền hoặc làm lộ private storage path; giữ dashboard là nguồn scope duy nhất.
 - **Kiểm tra:** `npm.cmd test` (40 pass), `npm.cmd run lint` (0 errors, 3 warning có sẵn), `npm.cmd run build` pass; GitHub Actions run `31409166458` PASS (Supabase db reset + pgTAP, Deno check/test và frontend gates).
+# [2026-08-11] P3-02 Email Queue State Machine and Concurrency Safety
+
+- Agent: Codex
+- Change: Added PENDING/PROCESSING/RETRY/SENT/FAILED lifecycle with claim token,
+  worker lease, bounded claim, deterministic backoff, stale reclaim, trusted idempotent
+  enqueue, bounded/sanitized attempt logs and service-role stats. Disabled the legacy
+  provider worker and added pgTAP plus real concurrent Deno coverage.
+- Files: supabase/migrations/202608110002_phase_3_email_queue_state_machine.sql,
+  supabase/tests/email_queue_state_machine.sql, supabase/functions/process-email-queue/*,
+  supabase/functions/email_queue_state_machine.integration.test.ts, docs/phase-3/02-email-queue-state-machine.md,
+  docs/brain/01-architecture.md, docs/brain/03-decisions.md, docs/brain/04-current-tasks.md,
+  docs/brain/06-ai-working-log.md.
+- Reason: close SELECT-to-UPDATE races, stale-owner overwrite and real-send exposure in
+  P3-02 without coupling P3-01 notifications to email delivery.
+- Verification: npm.cmd run lint has 0 errors/3 pre-existing warnings and npm.cmd test is
+  45/45 PASS. Supabase CLI, Docker and Deno are unavailable locally; DB/Deno gates await CI.
+
+## [2026-08-11] P3-02 CI acceptance
+
+- Agent: Codex
+- Change: Recorded technical acceptance after the forward fixes for PostgreSQL conflict-target
+  ambiguity and Deno SupabaseClient typing.
+- Files: docs/phase-3/02-email-queue-state-machine.md, docs/brain/04-current-tasks.md,
+  docs/brain/06-ai-working-log.md.
+- Reason: Do not recommend P3-03 until migration reset, full pgTAP regression, Deno checks/tests
+  and frontend gates are green.
+- Verification: GitHub Actions run 31494989851 PASS; migration reset + 13 pgTAP files / 279
+  tests, deno check, Deno integration/contract tests, frontend lint/test/build all passed.
