@@ -7,8 +7,9 @@
 
 ## Trạng thái
 
-Implementation đã hoàn tất ở local cho phạm vi in-app notification. Frontend tests/build/lint
-đã PASS; pgTAP cần CI chạy migration reset vì workspace không có Supabase CLI/Docker.
+Implementation đã hoàn tất cho phạm vi in-app notification. Frontend tests/build/lint và CI
+database/Edge Function đã PASS trên run 31491748132; migration reset thành công, 12 pgTAP files
+với 267 tests cùng Edge Function tests xanh.
 Không triển khai email provider, email queue worker, reminder, cron, realtime hoặc P3-02.
 
 ## Phạm vi và contract
@@ -77,7 +78,9 @@ Frontend:
 - npm.cmd run lint: 0 errors, 3 existing Fast Refresh warnings.
 - npm.cmd run build: PASS.
 - git diff --check: PASS.
-- Supabase CLI/Docker: không có local; chưa chạy được db reset/pgTAP.
+- GitHub Actions run 31491748132: build PASS; test-db PASS (migration reset, 12 pgTAP files /
+  267 tests, Edge Function tests PASS).
+- Supabase CLI/Docker: không có local; DB gate được xác nhận qua CI.
 
 Rủi ro còn lại: CI có thể phát hiện khác biệt pgTAP/Supabase runtime hoặc fixture privilege. Nếu
 CI fail, sửa forward-only trên cùng branch; không merge master và không triển khai email/cron.
@@ -90,6 +93,6 @@ NotFound/placeholder mà không xóa event identity hoặc notification rows.
 
 ## Handoff
 
-Chỉ sau khi CI DB reset + pgTAP PASS và review Draft PR mới đánh dấu P3-01 PASS. Nếu PASS, task
-tiếp theo được khuyến nghị là P3-02 Email Queue State Machine & Concurrency Safety; P3-02 không
-được triển khai trong task này.
+CI DB reset + pgTAP đã PASS trên run 31491748132. P3-01 đạt technical acceptance; sau review
+Draft PR, task tiếp theo được khuyến nghị là P3-02 Email Queue State Machine & Concurrency Safety.
+P3-02 không được triển khai trong task này.

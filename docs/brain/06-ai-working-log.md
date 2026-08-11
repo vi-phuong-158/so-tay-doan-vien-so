@@ -37,6 +37,16 @@
 - **Kiểm tra:** CI run 31491382954: build PASS; test-db chạy đến pgTAP và fail đúng 3 assertion
   expected string, các suite Phase 2 PASS. Local frontend 45/45, lint 0 lỗi/3 warning, build PASS.
 
+## [2026-08-11] P3-01 CI acceptance
+
+- **Agent:** Codex
+- **Thay đổi:** Ghi nhận technical acceptance cho notification foundation sau forward-fix pgTAP.
+- **File đã sửa:** docs/phase-3/01-notification-foundation.md, docs/brain/04-current-tasks.md,
+  docs/brain/06-ai-working-log.md.
+- **Lý do:** Xác nhận migration/RLS/RPC và toàn bộ regression gate trước khi handoff sang P3-02.
+- **Kiểm tra:** GitHub Actions run 31491748132 PASS — build; migration reset; 12 pgTAP files /
+  267 tests; Edge Function tests. Local frontend 45/45, lint 0 lỗi/3 warning, build PASS.
+
 ## [2026-08-11] P2-15 CI acceptance
 
 - **Agent:** Codex

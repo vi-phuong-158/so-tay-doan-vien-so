@@ -9,10 +9,10 @@
 
 ### P3-01 — Notification Foundation
 - **Branch:** feat/phase-3a-notification-foundation, stack trên P3-00 commit 1377265 vì Draft PR #11 chưa merge.
-- **Trạng thái:** Đã triển khai migration/RPC/service/UI/pgTAP/frontend tests; local frontend gates PASS,
-  DB/pgTAP chờ CI vì workspace không có Supabase CLI/Docker.
+- **Trạng thái:** PASS technical acceptance; migration/RPC/service/UI/pgTAP/frontend tests đã triển khai,
+  CI run 31491748132 xanh.
 - **Phạm vi:** in-app notification only; không email provider, queue worker, reminder hoặc cron.
-- **Next gate:** CI DB reset + pgTAP và review Draft PR trước khi đánh dấu PASS/cho phép P3-02.
+- **Next gate:** Owner review Draft PR; P3-02 chỉ mở sau handoff này.
 
 P3-00 đã PASS ở mức audit/docs-only; P3-01 đang chờ CI database acceptance.
 
@@ -40,7 +40,7 @@ P3-00 đã PASS ở mức audit/docs-only; P3-01 đang chờ CI database accepta
 - **Ưu tiên:** Trung bình (sau luồng báo cáo).
 
 ### Phase 3 — Notification, Email Queue & Reminder/Cron
-- **Mô tả:** P3-00 đã PASS; P3-01 implementation đang chờ CI database acceptance trên branch feat/phase-3a-notification-foundation.
+- **Mô tả:** P3-00 và P3-01 đã PASS technical acceptance; P3-02 là bước kế tiếp sau review.
 - **Báo cáo:** `docs/phase-3/00-baseline-rehearsal-plan.md`.
 - **Next recommended sau P3-01 PASS:** P3-02 Email Queue State Machine & Concurrency Safety.
 - **Ưu tiên:** Cao sau baseline.
@@ -57,6 +57,8 @@ P3-00 đã PASS ở mức audit/docs-only; P3-01 đang chờ CI database accepta
 ---
 
 ## Đã hoàn thành gần đây
+
+- [2026-08-11] P3-01: Notification Foundation PASS; CI 31491748132 xanh với migration reset, 267 pgTAP, Edge Function và frontend gates.
 
 - [2026-08-11] P2-15: `Phase 2 — Công việc & Báo cáo: TECHNICAL ACCEPTANCE COMPLETE`; P1 direct RPC bypass đã đóng, integrated vertical slice + ma trận A–G PASS; CI `31411605381` PASS (40 frontend, 236 pgTAP, 16 Deno).
 - [2026-08-11] P3-00: baseline/rehearsal audit PASS; merged Phase 2 baseline `0ecc3a9` xác nhận, Phase 3 được chia task và chưa triển khai production code.
