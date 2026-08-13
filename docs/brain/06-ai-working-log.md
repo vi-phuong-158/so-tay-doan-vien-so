@@ -1,5 +1,13 @@
 # 06 — AI Working Log
 
+## [2026-08-13] P3-05 CI forward-fix — persist reminder queue source identity
+
+- **Agent:** Codex
+- **Thay đổi:** Sau khi enqueue email reminder thành công, ghi `source_entity_type` và `source_entity_id` vào queue row và cập nhật `updated_at`.
+- **File đã sửa:** `supabase/migrations/202608130002_phase_3_reminder_engine.sql`.
+- **Lý do:** CI run `31719018832` cho thấy queue được tạo nhưng không truy vấn được theo assignment vì helper P3-02 chưa persist hai cột source identity; payload assertion và duplicate queue assertion vì vậy thất bại.
+- **Kiểm tra:** Các lỗi SQL trước đó đã qua; sẽ chạy lại pgTAP và Edge Function CI sau khi push.
+
 ## [2026-08-13] P3-05 CI forward-fix — qualify reminder event retry columns
 
 - **Agent:** Codex

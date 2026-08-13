@@ -205,6 +205,14 @@ begin
         email_enqueue_status = 'CREATED',
         email_error_code = null
     where id = v_event.id;
+
+    -- P3-02's trusted enqueue helper owns idempotency but older queue rows may not
+    -- carry the source identity columns. Keep the P3-05 relation queryable and bounded.
+    update public.email_queue
+    set source_entity_type = 'report_assignment',
+        source_entity_id = v_assignment.id,
+        updated_at = now()
+    where id = v_queue_id;
   exception when others then
     get stacked diagnostics v_error_code = returned_sqlstate;
     update public.report_reminder_events
