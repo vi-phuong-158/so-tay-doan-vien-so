@@ -20,6 +20,16 @@
   `npm.cmd run build` PASS; `git diff --check` PASS. Supabase CLI/Deno không có local nên pgTAP,
   `supabase db reset`, `deno check` và Deno tests chờ CI.
 
+## [2026-08-13] P3-04 pgTAP assertion forward-fix
+
+- **Agent:** Codex
+- **Thay đổi:** Sửa tên function trong assertion privilege của bộ test P3-04 từ trigger function
+  sang trusted queue RPC thực tế `enqueue_email_for_user_event`.
+- **File đã sửa:** `supabase/tests/report_event_email_hooks.sql`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** CI run `31711269018` xác nhận migration reset và 14 suite cũ PASS; chỉ assertion thứ
+  ba của P3-04 tham chiếu nhầm tên function nên pgTAP không tìm thấy function.
+- **Kiểm tra:** Forward-fix sẽ chạy lại full CI trên Draft PR #15.
+
 ---
 
 ## [2026-08-11] P3-01 Notification Foundation

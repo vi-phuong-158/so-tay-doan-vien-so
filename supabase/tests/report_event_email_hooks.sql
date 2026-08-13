@@ -20,7 +20,7 @@ select p304_reset_auth();
 select has_function('public', 'enqueue_report_email_from_notification', ARRAY[]::text[], 'P3-04 notification email trigger function exists');
 select has_column('public', 'email_queue', 'recipient_user_id', 'queue keeps server-resolved recipient identity');
 select function_privs_are(
-  'public', 'enqueue_report_email_for_user_event',
+  'public', 'enqueue_email_for_user_event',
   ARRAY['text', 'uuid', 'text', 'uuid', 'text', 'jsonb', 'timestamp with time zone', 'integer'],
   'authenticated', ARRAY[]::text[],
   'authenticated cannot enqueue report email events directly'
