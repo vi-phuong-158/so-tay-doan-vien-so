@@ -1,5 +1,13 @@
 # 06 — AI Working Log
 
+## [2026-08-13] P3-05 CI forward-fix — partial unique event key
+
+- **Agent:** Codex
+- **Thay đổi:** Sửa conflict target khi tạo notification reminder để chỉ rõ predicate `event_key is not null` của partial unique index.
+- **File đã sửa:** `supabase/migrations/202608130002_phase_3_reminder_engine.sql`.
+- **Lý do:** CI pgTAP phát hiện PostgreSQL không suy ra được partial unique index từ `ON CONFLICT (event_key)`, làm scan reminder dừng trước khi hoàn tất.
+- **Kiểm tra:** Đã đối chiếu log run `31717904456`; sẽ kiểm tra lại toàn bộ DB/Edge Function CI sau khi push.
+
 > Nhật ký các lần AI (Claude Code / Codex) sửa code. Mỗi agent PHẢI thêm entry sau mỗi lần
 > chạm vào code. Đọc ngược từ trên xuống để biết gần đây ai đã làm gì và vì sao.
 

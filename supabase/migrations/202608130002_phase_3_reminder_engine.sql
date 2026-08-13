@@ -362,7 +362,7 @@ begin
     end,
     format('/cong-viec/bao-cao/%s', p_assignment_id),
     'report_assignment', p_assignment_id, v_key
-  ) on conflict (event_key) do nothing
+  ) on conflict (event_key) where event_key is not null do nothing
   returning id into v_notification_id;
 
   if v_notification_id is not null then
