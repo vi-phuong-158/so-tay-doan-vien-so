@@ -1,5 +1,13 @@
 # 06 — AI Working Log
 
+## [2026-08-13] P3-05 acceptance handoff
+
+- **Agent:** Codex
+- **Thay đổi:** Ghi nhận P3-05 đạt full acceptance và cập nhật handoff/status tài liệu với HEAD `4876e44`, Draft PR #16 và CI run `31719821897`.
+- **File đã sửa:** `docs/04-implementation-status.md`, `docs/brain/04-current-tasks.md`, `docs/phase-3/05-reminder-engine.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Full CI đã xanh; cần chuyển trạng thái từ implementation in progress sang review pending và giữ rõ các giới hạn không cron, không deploy, không live email.
+- **Kiểm tra:** CI `31719821897` PASS: frontend build/lint/test, Supabase migration reset + pgTAP, Deno check/tests.
+
 ## [2026-08-13] P3-05 CI forward-fix — align local due-date display assertion
 
 - **Agent:** Codex

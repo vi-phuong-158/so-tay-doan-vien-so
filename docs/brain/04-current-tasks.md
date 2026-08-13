@@ -7,9 +7,9 @@
 
 ## Đang làm
 
-### P3-05 — Reminder Engine (active)
+### P3-05 — Reminder Engine (PASS; PR review pending)
 - **Branch:** `feat/phase-3e-reminder-engine`, stacked from cumulative P3-04 HEAD `bf78b07`.
-- **Trạng thái:** Đang triển khai; chưa commit/push/merge/deploy.
+- **Trạng thái:** PASS technical acceptance; HEAD `4876e44`, CI `31719821897` xanh; Draft PR #16 đang chờ review, chưa merge/deploy.
 - **Phạm vi:** policy-driven due-soon/overdue/needs-supplement scan, server recipient resolution,
   notification + email queue logical idempotency; không scheduler/cron/overdue persistence/live email.
 
@@ -75,11 +75,11 @@ vẫn chờ owner review/merge.
 - [2026-07-30] Dựng frontend 5 khu vực + PWA shell + dữ liệu demo; schema/RLS/RPC + khung Edge
   Functions; unit test nền tảng 3/3 pass.
 
-## P3-05 active handoff
+## P3-05 completed handoff
 
 - Branch: `feat/phase-3e-reminder-engine`, stacked from cumulative P3-04 acceptance HEAD `bf78b07`
   because PR #11 through #15 are still open draft PRs.
-- Status: implementation in progress locally; no commit, push, merge or production deployment yet.
+- Status: `P3_05_FULL_ACCEPTANCE_PASS`; HEAD `4876e44`, Draft PR #16, CI `31719821897` passed all gates; no merge or production deployment.
 - Scope: policy-driven report reminders with mandatory in-app notification and secondary email queue.
   Cron, persisted overdue transition and live email are explicitly deferred to P3-06/rehearsal.
 # P3-02 - Email Queue State Machine and Concurrency Safety

@@ -92,11 +92,13 @@ renderer tiếp tục reject external URL và escape HTML/subject.
 - Deno: reminder request contract, trusted secret, concurrent scan integration và reminder renderer
   templates/action URL/escaping.
 - Frontend regression: không thêm UI lớn; notification inbox hiện render bounded text/title chung.
-- Local Supabase CLI/Deno không có trong môi trường thi công; full DB/Deno gate chờ CI.
+  - Local Supabase CLI/Deno không có trong môi trường thi công; CI run `31719821897` đã chạy full
+    migration reset, pgTAP, Deno check/tests và frontend gates thành công.
 
 ## Acceptance and limitations
 
-Acceptance phải xác nhận full repo gate và CI. Không gửi email thật trong phase này:
+Acceptance: `P3_05_FULL_ACCEPTANCE_PASS` trên CI run `31719821897`; full repo gate, migration reset,
+pgTAP, Deno check/tests và frontend build/lint/test đều xanh. Không gửi email thật trong phase này:
 
 `LIVE_EMAIL_NOT_REQUIRED_FOR_P3_05`
 
