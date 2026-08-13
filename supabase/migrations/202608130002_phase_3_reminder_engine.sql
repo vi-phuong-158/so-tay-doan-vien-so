@@ -333,7 +333,7 @@ begin
   returning id into v_event_id;
 
   if v_event_id is null then
-    select id, notification_id into v_event_id, v_notification_id
+    select e.id, e.notification_id into v_event_id, v_notification_id
     from public.report_reminder_events e
     where e.logical_key = v_key;
     update public.report_reminder_events

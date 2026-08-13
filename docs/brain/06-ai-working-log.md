@@ -1,5 +1,13 @@
 # 06 — AI Working Log
 
+## [2026-08-13] P3-05 CI forward-fix — qualify reminder event retry columns
+
+- **Agent:** Codex
+- **Thay đổi:** Qualify `report_reminder_events.id` và `notification_id` trong nhánh đọc lại event đã tồn tại.
+- **File đã sửa:** `supabase/migrations/202608130002_phase_3_reminder_engine.sql`.
+- **Lý do:** CI run `31718647707` phát hiện `notification_id` bị mơ hồ với output parameter cùng tên trong `create_report_reminder_event`.
+- **Kiểm tra:** Các suite cũ và build/frontend đã qua; sẽ xác minh lại pgTAP và Edge Function trên CI sau khi push.
+
 ## [2026-08-13] P3-05 CI forward-fix — partial unique event key
 
 - **Agent:** Codex
