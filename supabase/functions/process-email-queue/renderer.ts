@@ -115,8 +115,91 @@ export function renderSystemEmailTest(row: QueueTemplateRow, appUrl?: string): R
 }
 
 export function renderQueueEmail(row: QueueTemplateRow, appUrl?: string): RenderedEmail {
-  if (row.template_code !== 'SYSTEM_EMAIL_TEST') {
-    throw new TemplateError('TEMPLATE_NOT_ALLOWLISTED');
+  if (row.template_code === 'SYSTEM_EMAIL_TEST') {
+    return renderSystemEmailTest(row, appUrl);
   }
-  return renderSystemEmailTest(row, appUrl);
+  if (['REPORT_CAMPAIGN_PUBLISHED', 'REPORT_SUBMITTED', 'REPORT_RESUBMITTED', 'REPORT_NEEDS_SUPPLEMENT', 'REPORT_ACCEPTED'].includes(row.template_code)) {
+    return renderReportEventEmail(row, appUrl);
+  }
+  throw new TemplateError('TEMPLATE_NOT_ALLOWLISTED');
+}
+
+function reportPayload(row: QueueTemplateRow): {
+  campaignTitle: string;
+  unitName: string;
+  actionPath: string;
+  version?: string;
+  submittedAt?: string;
+  dueAt?: string;
+  reviewReason?: string;
+} {
+  const payload = row.payload;
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    throw new TemplateError('TEMPLATE_PAYLOAD_INVALID');
+  }
+  const campaignTitle = boundedText(payload.campaign_title, '', 300, 'TEMPLATE_CAMPAIGN_TITLE_INVALID');
+  const unitName = boundedText(payload.unit_name, '', 200, 'TEMPLATE_UNIT_INVALID');
+  const actionPath = payload.action_path;
+  if (!campaignTitle || !unitName || typeof actionPath !== 'string') {
+    throw new TemplateError('TEMPLATE_PAYLOAD_INVALID');
+  }
+  return {
+    campaignTitle,
+    unitName,
+    actionPath,
+    version: payload.version == null ? undefined : boundedText(payload.version, '', 20, 'TEMPLATE_VERSION_INVALID'),
+    submittedAt: payload.submitted_at == null ? undefined : boundedText(payload.submitted_at, '', 32, 'TEMPLATE_TIME_INVALID'),
+    dueAt: payload.due_at == null ? undefined : boundedText(payload.due_at, '', 32, 'TEMPLATE_TIME_INVALID'),
+    reviewReason: payload.review_reason == null ? undefined : boundedText(payload.review_reason, '', 1000, 'TEMPLATE_REVIEW_REASON_INVALID')
+  };
+}
+
+export function renderReportEventEmail(row: QueueTemplateRow, appUrl?: string): RenderedEmail {
+  const payload = reportPayload(row);
+  const actionUrl = buildActionUrl(appUrl, payload.actionPath);
+  const title = sanitizeSubject(payload.campaignTitle);
+  const versionText = payload.version ? ` Phiên bản ${payload.version}.` : '';
+  const submittedText = payload.submittedAt ? ` Thời điểm: ${payload.submittedAt}.` : '';
+  const dueText = payload.dueAt ? ` Hạn nộp: ${payload.dueAt}.` : '';
+  const reasonText = payload.reviewReason ? ` Lý do: ${payload.reviewReason}` : '';
+  const content = {
+    REPORT_CAMPAIGN_PUBLISHED: {
+      subject: `Đợt báo cáo mới: ${title}`,
+      message: `Đợt báo cáo “${payload.campaignTitle}” của ${payload.unitName} đã được phát hành.${dueText}`
+    },
+    REPORT_SUBMITTED: {
+      subject: `Đã tiếp nhận báo cáo: ${title}`,
+      message: `Báo cáo “${payload.campaignTitle}” của ${payload.unitName} đã được tiếp nhận.${versionText}${submittedText}`
+    },
+    REPORT_RESUBMITTED: {
+      subject: `Đã tiếp nhận báo cáo bổ sung: ${title}`,
+      message: `Báo cáo “${payload.campaignTitle}” của ${payload.unitName} đã được tiếp nhận lại.${versionText}${submittedText}`
+    },
+    REPORT_NEEDS_SUPPLEMENT: {
+      subject: `Báo cáo cần bổ sung: ${title}`,
+      message: `Báo cáo “${payload.campaignTitle}” của ${payload.unitName} cần được bổ sung.${reasonText}`
+    },
+    REPORT_ACCEPTED: {
+      subject: `Báo cáo đã hoàn thành: ${title}`,
+      message: `Báo cáo “${payload.campaignTitle}” của ${payload.unitName} đã được xác nhận hoàn thành.`
+    }
+  }[row.template_code as 'REPORT_CAMPAIGN_PUBLISHED' | 'REPORT_SUBMITTED' | 'REPORT_RESUBMITTED' | 'REPORT_NEEDS_SUPPLEMENT' | 'REPORT_ACCEPTED'];
+  if (!content) throw new TemplateError('TEMPLATE_NOT_ALLOWLISTED');
+
+  const safeMessage = escapeHtml(content.message).replace(/\n/g, '<br>');
+  const safeTitle = escapeHtml(content.subject);
+  const safeUnit = escapeHtml(payload.unitName);
+  const safeActionUrl = escapeHtml(actionUrl);
+  return {
+    subject: sanitizeSubject(content.subject),
+    text: `${content.message}\n\nMở nhiệm vụ: ${actionUrl}`,
+    html: [
+      '<!doctype html><html lang="vi"><body>',
+      `<p>Đơn vị: ${safeUnit}</p>`,
+      `<h1>${safeTitle}</h1>`,
+      `<p>${safeMessage}</p>`,
+      `<p><a href="${safeActionUrl}">Mở nhiệm vụ trong Sổ tay Đoàn viên số</a></p>`,
+      '</body></html>'
+    ].join('')
+  };
 }

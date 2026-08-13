@@ -3,6 +3,23 @@
 > Nhật ký các lần AI (Claude Code / Codex) sửa code. Mỗi agent PHẢI thêm entry sau mỗi lần
 > chạm vào code. Đọc ngược từ trên xuống để biết gần đây ai đã làm gì và vì sao.
 
+## [2026-08-13] P3-04 report event email hooks
+
+- **Agent:** Codex
+- **Thay đổi:** Audit remote dependency PR #11–#14; tạo stacked branch từ P3-03R `de952fa`; nối
+  trusted report notifications với P3-02 email enqueue; thêm allowlisted report templates, bounded
+  payload/rendering, server-side recipient/audit behavior và pgTAP/Deno coverage.
+- **File đã sửa:** `supabase/migrations/202608130001_phase_3_report_event_email_hooks.sql`,
+  `supabase/tests/report_event_email_hooks.sql`, `supabase/functions/process-email-queue/renderer.ts`,
+  `supabase/functions/process-email-queue/renderer.test.ts`, `docs/phase-3/04-report-event-email-hooks.md`,
+  `docs/brain/01-architecture.md`, `docs/brain/03-decisions.md`, `docs/brain/04-current-tasks.md`,
+  `docs/04-implementation-status.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Email phải là secondary side effect của trusted report event, không phải request độc lập
+  do frontend gọi; giữ notification bắt buộc, server-resolved recipient và deterministic idempotency.
+- **Kiểm tra:** `npm.cmd test` 45/45 PASS; `npm.cmd run lint` 0 lỗi với 3 warning Fast Refresh có sẵn;
+  `npm.cmd run build` PASS; `git diff --check` PASS. Supabase CLI/Deno không có local nên pgTAP,
+  `supabase db reset`, `deno check` và Deno tests chờ CI.
+
 ---
 
 ## [2026-08-11] P3-01 Notification Foundation

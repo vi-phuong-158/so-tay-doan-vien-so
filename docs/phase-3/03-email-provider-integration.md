@@ -44,7 +44,8 @@ rejects malformed payloads, removes CR/LF and header-like tokens from subject te
 builds links only from trusted `APP_URL` plus an internal path. Full external URLs,
 `javascript:`, `data:`, protocol-relative paths and backslashes are rejected.
 
-Report event templates, reminders and production hooks remain deferred to P3-04/P3-05.
+Reminder/cron and production deployment remain deferred to later work. P3-04 adds the report event
+templates on top of this shared renderer and queue boundary.
 No signed Storage URL or attachment is included.
 
 ## Worker flow
@@ -102,7 +103,7 @@ evidence.
 
 ## Known limitations and deferred work
 
-- No report notification email hooks (P3-04).
+- Report notification email hooks are implemented separately by P3-04.
 - No reminder/deadline/overdue engine or cron (P3-05/P3-06).
 - No provider webhook, delivery/read tracking or admin email dashboard.
 - No attachments or signed Storage URLs.

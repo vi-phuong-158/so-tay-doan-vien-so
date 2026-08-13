@@ -214,12 +214,24 @@
 
 # P3-03 template and invocation boundary
 
-- Decision: allowlist only SYSTEM_EMAIL_TEST; render server-side structured payload into
+- Decision: P3-03 initially allowlisted only SYSTEM_EMAIL_TEST; P3-04 extends the same renderer
+  contract with report-event templates. Render server-side structured payload into
   bounded subject/text/HTML, escape all user-controlled HTML fields, sanitize CR/LF/header-like
   subject content, and build links only from trusted APP_URL plus app-relative paths. Worker
   invocation requires an exact CRON_SECRET comparison and service_role client; no frontend
   caller can trigger arbitrary sends.
-- Reason: P3-03 proves the provider path without reintroducing arbitrary HTML, external links,
-  sender spoofing or report/reminder event scope.
-- Trade-off: report templates, reminder/cron and live receipt are deferred; technical status
-  can be PASS while final task status remains PASS_WITH_REHEARSAL_BLOCKED.
+- Reason: P3-03 proves the provider path without reintroducing arbitrary HTML, external links or
+  sender spoofing; P3-04 keeps report events on the same allowlisted boundary.
+- Trade-off: reminder/cron and live receipt are deferred; technical status can be PASS while final
+  task status remains PASS_WITH_REHEARSAL_BLOCKED.
+
+# P3-04 trusted report event email hooks
+
+- Decision: Do not add a frontend send-email request or a general event bus. Trusted report
+  notifications that already resolved a recipient pass through a backend-only trigger, call the
+  existing `enqueue_email_for_user_event` RPC, and derive the queue revision from the event key.
+- Reason: Keep the business mutation, in-app notification and secondary email enqueue on the same
+  database transaction boundary; retries cannot create duplicate queue rows; clients cannot choose
+  an email address or recipient.
+- Trade-off: Email remains secondary. Missing recipients or enqueue errors are recorded in a bounded
+  audit row and do not fail the report mutation. P3-03R physical delivery evidence is not repeated.

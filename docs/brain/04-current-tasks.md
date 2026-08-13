@@ -7,14 +7,14 @@
 
 ## Đang làm
 
-### P3-01 — Notification Foundation
-- **Branch:** feat/phase-3a-notification-foundation, stack trên P3-00 commit 1377265 vì Draft PR #11 chưa merge.
-- **Trạng thái:** PASS technical acceptance; migration/RPC/service/UI/pgTAP/frontend tests đã triển khai,
-  CI run 31491748132 xanh.
-- **Phạm vi:** in-app notification only; không email provider, queue worker, reminder hoặc cron.
-- **Next gate:** Owner review Draft PR; P3-02 chỉ mở sau handoff này.
+### P3-04 — Report Event Email Hooks (active)
+- **Branch:** `feat/phase-3d-report-event-email-hooks`, stacked from cumulative P3-03R HEAD `de952fa`.
+- **Trạng thái:** Implementation local đang hoàn thiện; chưa commit/push/merge/deploy.
+- **Phạm vi:** campaign publish, submit/resubmit, NEEDS_SUPPLEMENT và ACCEPTED email hooks; in-app
+  notification vẫn bắt buộc; không reminder/cron/live email mới.
 
-P3-00 đã PASS ở mức audit/docs-only; P3-01 đang chờ CI database acceptance.
+P3-01, P3-02, P3-03 và P3-03R đã hoàn tất acceptance trên các stacked branch; các Draft PR tương ứng
+vẫn chờ owner review/merge.
 
 ---
 
@@ -74,6 +74,14 @@ P3-00 đã PASS ở mức audit/docs-only; P3-01 đang chờ CI database accepta
 - [~2026-08] Phase 1: khắc phục bảo mật auth, `requireUser` Supabase Auth thuần, vá npm audit (PR #1).
 - [2026-07-30] Dựng frontend 5 khu vực + PWA shell + dữ liệu demo; schema/RLS/RPC + khung Edge
   Functions; unit test nền tảng 3/3 pass.
+
+## P3-04 active handoff
+
+- Branch: `feat/phase-3d-report-event-email-hooks`, stacked from cumulative P3-03R acceptance
+  HEAD `de952fa` because PR #11 through #14 are still open draft PRs.
+- Status: implementation in progress locally; no commit, push, merge or production deployment yet.
+- Scope: campaign publish, submit/resubmit, NEEDS_SUPPLEMENT and ACCEPTED email hooks only. In-app
+  notifications remain mandatory; reminders, cron and live email are out of scope.
 # P3-02 - Email Queue State Machine and Concurrency Safety
 
 - Branch: feat/phase-3b-email-queue-safety, stacked on P3-01 acceptance HEAD b445045;

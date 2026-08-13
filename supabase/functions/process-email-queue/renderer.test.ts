@@ -44,3 +44,33 @@ Deno.test('subject strips CRLF and header-like fields and stays bounded', () => 
 Deno.test('HTML escape covers all required special characters', () => {
   assertEquals(escapeHtml(`& < > " '`), '&amp; &lt; &gt; &quot; &#39;');
 });
+
+Deno.test('report event templates are allowlisted and escape bounded review reasons', () => {
+  const email = renderQueueEmail({
+    ...baseRow,
+    template_code: 'REPORT_NEEDS_SUPPLEMENT',
+    payload: {
+      campaign_title: 'Báo cáo <quý>',
+      unit_name: 'Chi đoàn A',
+      review_reason: '<script>alert(1)</script>',
+      action_path: '/cong-viec/bao-cao/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+    }
+  }, 'https://app.example');
+
+  assertStringIncludes(email.subject, 'Báo cáo');
+  assertStringIncludes(email.html, '&lt;script&gt;alert(1)&lt;/script&gt;');
+  assert(!email.html.includes('<script>'));
+  assertStringIncludes(email.html, 'https://app.example/cong-viec/bao-cao/');
+});
+
+Deno.test('report event templates reject missing bounded payload fields', () => {
+  assertThrows(
+    () => renderQueueEmail({
+      ...baseRow,
+      template_code: 'REPORT_ACCEPTED',
+      payload: { action_path: '/cong-viec/bao-cao/assignment' }
+    }, 'https://app.example'),
+    TemplateError,
+    'TEMPLATE_PAYLOAD_INVALID'
+  );
+});

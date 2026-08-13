@@ -144,6 +144,13 @@ Inbox/Bell → notificationService (bounded created_at DESC + id DESC query)
              → mark_notification_read / mark_all_notifications_read (read_at only)
              → safe app-relative action URL → mark read first → React Router deep-link
 
+# Report event email hooks (P3-04)
+Trusted report notification insert → `enqueue_report_email_from_notification` trigger
+             → server-resolved auth.users email via `enqueue_email_for_user_event`
+             → allowlisted REPORT_* queue row with deterministic event identity
+             → `process-email-queue` renderer/provider boundary
+No valid recipient → primary report mutation remains successful and a bounded audit row records the gap
+
 # Lịch sử/nộp lại báo cáo (P2-11)
 Assignment detail → reportService.getSubmissionHistory (RLS, version desc, profile-safe fields)
                  → history accordion; signed URL chỉ tạo khi mở file
@@ -185,6 +192,9 @@ RPC then chốt: `create_report_submission`, `create_report_submission_with_file
 `is_organization_in_scope`.
 
 P3-01 notification RPC: publish_report_campaign, mark_notification_read, mark_all_notifications_read.
+P3-04 notification trigger: enqueue_report_email_from_notification; email templates are
+REPORT_CAMPAIGN_PUBLISHED, REPORT_SUBMITTED, REPORT_RESUBMITTED, REPORT_NEEDS_SUPPLEMENT and
+REPORT_ACCEPTED. The trigger is backend-only and calls the existing P3-02 trusted enqueue RPC.
 
 ## Biến môi trường
 
@@ -247,6 +257,7 @@ process-email-queue (trusted secret invocation)
         -> mark_email_sent(..., provider_code) or mark_email_retry(...)
 
 The worker never directly selects PENDING rows and never accepts provider/sender/HTML
-configuration from queue payload or frontend. `send-reminder` and report event hooks remain
-separate deferred producers. Provider metadata is persisted in `email_logs`; live rehearsal
-is a controlled manual gate, not a CI or production deployment step.
+configuration from queue payload or frontend. `send-reminder` remains a deferred producer;
+report event hooks are implemented by the P3-04 trusted notification trigger. Provider metadata
+is persisted in `email_logs`; live rehearsal is a controlled manual gate, not a CI or production
+deployment step.
