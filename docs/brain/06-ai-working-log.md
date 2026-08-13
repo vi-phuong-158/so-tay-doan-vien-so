@@ -30,6 +30,16 @@
   ba của P3-04 tham chiếu nhầm tên function nên pgTAP không tìm thấy function.
 - **Kiểm tra:** Forward-fix sẽ chạy lại full CI trên Draft PR #15.
 
+## [2026-08-13] P3-04 Deno typecheck forward-fix
+
+- **Agent:** Codex
+- **Thay đổi:** Thêm guard fail-closed cho action URL trong report renderer để thu hẹp kiểu
+  `string | null` trước khi escape HTML.
+- **File đã sửa:** `supabase/functions/process-email-queue/renderer.ts`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** CI run `31711594922` đã PASS migration/pgTAP và frontend; `deno check` fail một lỗi
+  TypeScript tại `escapeHtml(actionUrl)`.
+- **Kiểm tra:** Forward-fix sẽ chạy lại full CI trên Draft PR #15.
+
 ---
 
 ## [2026-08-11] P3-01 Notification Foundation

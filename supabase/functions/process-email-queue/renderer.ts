@@ -157,6 +157,7 @@ function reportPayload(row: QueueTemplateRow): {
 export function renderReportEventEmail(row: QueueTemplateRow, appUrl?: string): RenderedEmail {
   const payload = reportPayload(row);
   const actionUrl = buildActionUrl(appUrl, payload.actionPath);
+  if (!actionUrl) throw new TemplateError('TEMPLATE_ACTION_URL_INVALID');
   const title = sanitizeSubject(payload.campaignTitle);
   const versionText = payload.version ? ` Phiên bản ${payload.version}.` : '';
   const submittedText = payload.submittedAt ? ` Thời điểm: ${payload.submittedAt}.` : '';
