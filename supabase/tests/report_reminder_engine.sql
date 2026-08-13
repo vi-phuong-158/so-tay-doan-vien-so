@@ -117,7 +117,7 @@ select is(
 );
 select is(
   (select payload->>'due_at' from public.email_queue where source_entity_id = '30510000-0000-4000-8000-000000000001' and template_code = 'REPORT_DUE_SOON' limit 1),
-  '18/08/2026 00:00',
+  '18/08/2026 07:00',
   'email payload uses the effective override due date'
 );
 select is(

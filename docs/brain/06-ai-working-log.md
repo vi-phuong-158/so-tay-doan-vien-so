@@ -1,5 +1,13 @@
 # 06 — AI Working Log
 
+## [2026-08-13] P3-05 CI forward-fix — align local due-date display assertion
+
+- **Agent:** Codex
+- **Thay đổi:** Cập nhật expectation pgTAP của `due_at` email reminder từ UTC sang `Asia/Ho_Chi_Minh` (`07:00`).
+- **File đã sửa:** `supabase/tests/report_reminder_engine.sql`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** CI run `31719456452` xác nhận code trả `18/08/2026 07:00`, phù hợp formatter P3-04 hiện hành; test cũ kỳ vọng `00:00` dù chỉ P3-06 mới chốt scheduler timezone.
+- **Kiểm tra:** Các assertion reminder còn lại, suite cũ và frontend build đã qua; sẽ xác minh lại full CI sau khi push.
+
 ## [2026-08-13] P3-05 CI forward-fix — persist reminder queue source identity
 
 - **Agent:** Codex
