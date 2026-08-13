@@ -29,7 +29,7 @@ Deno.test('renderer rejects external action URLs and unknown templates', () => {
     'TEMPLATE_ACTION_URL_INVALID'
   );
   assertThrows(
-    () => renderQueueEmail({ ...baseRow, template_code: 'REPORT_ACCEPTED' }, 'https://app.example'),
+    () => renderQueueEmail({ ...baseRow, template_code: 'UNKNOWN_TEMPLATE' }, 'https://app.example'),
     TemplateError,
     'TEMPLATE_NOT_ALLOWLISTED'
   );

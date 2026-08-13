@@ -30,6 +30,16 @@
   ba của P3-04 tham chiếu nhầm tên function nên pgTAP không tìm thấy function.
 - **Kiểm tra:** Forward-fix sẽ chạy lại full CI trên Draft PR #15.
 
+## [2026-08-13] P3-04 renderer allowlist test forward-fix
+
+- **Agent:** Codex
+- **Thay đổi:** Cập nhật fixture unknown-template trong renderer test sang mã thật sự ngoài allowlist;
+  `REPORT_ACCEPTED` nay là template hợp lệ và được kiểm tra bằng fixture report riêng.
+- **File đã sửa:** `supabase/functions/process-email-queue/renderer.test.ts`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** CI run `31712000337` đã PASS migration/pgTAP và Deno check; chỉ test cũ kỳ vọng
+  `REPORT_ACCEPTED` là unknown sau khi P3-04 thêm template này.
+- **Kiểm tra:** Forward-fix sẽ chạy lại full CI trên Draft PR #15.
+
 ## [2026-08-13] P3-04 Deno typecheck forward-fix
 
 - **Agent:** Codex
