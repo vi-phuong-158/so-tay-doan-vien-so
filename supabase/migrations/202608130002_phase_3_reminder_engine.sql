@@ -329,13 +329,13 @@ begin
   ) values (
     v_key, p_assignment_id, p_recipient_user_id, p_reminder_type, p_policy_offset,
     p_as_of, p_as_of
-  ) on conflict (logical_key) do nothing
+  ) on conflict on constraint report_reminder_events_logical_key_key do nothing
   returning id into v_event_id;
 
   if v_event_id is null then
     select id, notification_id into v_event_id, v_notification_id
-    from public.report_reminder_events
-    where logical_key = v_key;
+    from public.report_reminder_events e
+    where e.logical_key = v_key;
     update public.report_reminder_events
     set scan_count = scan_count + 1,
         last_scan_as_of = p_as_of,
@@ -383,8 +383,8 @@ begin
     );
   else
     select id into v_notification_id
-    from public.notifications
-    where event_key = v_key;
+    from public.notifications n
+    where n.event_key = v_key;
     update public.report_reminder_events
     set notification_id = v_notification_id,
         scan_count = scan_count + 1,

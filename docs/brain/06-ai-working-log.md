@@ -36,6 +36,18 @@
   ngay tại fixture duplicate, trước khi chạy acceptance assertions.
 - **Kiểm tra:** Đã chạy lại frontend gates trước đó; commit forward-fix sẽ kích hoạt full CI DB/Deno.
 
+## [2026-08-13] P3-05 SQL ambiguity forward-fix
+
+- **Agent:** Codex
+- **Thay đổi:** Dùng named unique constraint cho `report_reminder_events` trong `ON CONFLICT` và
+  qualify các truy vấn đọc `logical_key`/`event_key` trong helper.
+- **File đã sửa:** `supabase/migrations/202608130002_phase_3_reminder_engine.sql`,
+  `docs/brain/06-ai-working-log.md`.
+- **Lý do:** CI run `31717544017` đã chạy tới pgTAP; helper fail do PostgreSQL phân biệt không rõ
+  giữa cột `logical_key` và output parameter cùng tên.
+- **Kiểm tra:** Migration reset và toàn bộ suite cũ đã PASS trước lỗi; forward-fix sẽ chạy lại
+  full DB/Deno/frontend CI.
+
 ## [2026-08-13] P3-04 report event email hooks
 
 - **Agent:** Codex
