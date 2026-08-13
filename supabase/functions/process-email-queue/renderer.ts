@@ -118,7 +118,16 @@ export function renderQueueEmail(row: QueueTemplateRow, appUrl?: string): Render
   if (row.template_code === 'SYSTEM_EMAIL_TEST') {
     return renderSystemEmailTest(row, appUrl);
   }
-  if (['REPORT_CAMPAIGN_PUBLISHED', 'REPORT_SUBMITTED', 'REPORT_RESUBMITTED', 'REPORT_NEEDS_SUPPLEMENT', 'REPORT_ACCEPTED'].includes(row.template_code)) {
+  if ([
+    'REPORT_CAMPAIGN_PUBLISHED',
+    'REPORT_SUBMITTED',
+    'REPORT_RESUBMITTED',
+    'REPORT_NEEDS_SUPPLEMENT',
+    'REPORT_ACCEPTED',
+    'REPORT_DUE_SOON',
+    'REPORT_OVERDUE',
+    'REPORT_SUPPLEMENT_REMINDER'
+  ].includes(row.template_code)) {
     return renderReportEventEmail(row, appUrl);
   }
   throw new TemplateError('TEMPLATE_NOT_ALLOWLISTED');
@@ -132,6 +141,8 @@ function reportPayload(row: QueueTemplateRow): {
   submittedAt?: string;
   dueAt?: string;
   reviewReason?: string;
+  daysRemaining?: string;
+  policyOffset?: string;
 } {
   const payload = row.payload;
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
@@ -147,10 +158,27 @@ function reportPayload(row: QueueTemplateRow): {
     campaignTitle,
     unitName,
     actionPath,
-    version: payload.version == null ? undefined : boundedText(payload.version, '', 20, 'TEMPLATE_VERSION_INVALID'),
+    version: payload.version == null ? undefined : boundedText(
+      typeof payload.version === 'number' ? String(payload.version) : payload.version,
+      '',
+      20,
+      'TEMPLATE_VERSION_INVALID'
+    ),
     submittedAt: payload.submitted_at == null ? undefined : boundedText(payload.submitted_at, '', 32, 'TEMPLATE_TIME_INVALID'),
     dueAt: payload.due_at == null ? undefined : boundedText(payload.due_at, '', 32, 'TEMPLATE_TIME_INVALID'),
-    reviewReason: payload.review_reason == null ? undefined : boundedText(payload.review_reason, '', 1000, 'TEMPLATE_REVIEW_REASON_INVALID')
+    reviewReason: payload.review_reason == null ? undefined : boundedText(payload.review_reason, '', 1000, 'TEMPLATE_REVIEW_REASON_INVALID'),
+    daysRemaining: payload.days_remaining == null ? undefined : boundedText(
+      typeof payload.days_remaining === 'number' ? String(payload.days_remaining) : payload.days_remaining,
+      '',
+      10,
+      'TEMPLATE_DAYS_REMAINING_INVALID'
+    ),
+    policyOffset: payload.policy_offset == null ? undefined : boundedText(
+      typeof payload.policy_offset === 'number' ? String(payload.policy_offset) : payload.policy_offset,
+      '',
+      10,
+      'TEMPLATE_POLICY_OFFSET_INVALID'
+    )
   };
 }
 
@@ -158,6 +186,12 @@ export function renderReportEventEmail(row: QueueTemplateRow, appUrl?: string): 
   const payload = reportPayload(row);
   const actionUrl = buildActionUrl(appUrl, payload.actionPath);
   if (!actionUrl) throw new TemplateError('TEMPLATE_ACTION_URL_INVALID');
+  if (row.template_code === 'REPORT_DUE_SOON' && (!payload.dueAt || !payload.daysRemaining)) {
+    throw new TemplateError('TEMPLATE_PAYLOAD_INVALID');
+  }
+  if (row.template_code === 'REPORT_OVERDUE' && !payload.dueAt) {
+    throw new TemplateError('TEMPLATE_PAYLOAD_INVALID');
+  }
   const title = sanitizeSubject(payload.campaignTitle);
   const versionText = payload.version ? ` Phiên bản ${payload.version}.` : '';
   const submittedText = payload.submittedAt ? ` Thời điểm: ${payload.submittedAt}.` : '';
@@ -183,8 +217,20 @@ export function renderReportEventEmail(row: QueueTemplateRow, appUrl?: string): 
     REPORT_ACCEPTED: {
       subject: `Báo cáo đã hoàn thành: ${title}`,
       message: `Báo cáo “${payload.campaignTitle}” của ${payload.unitName} đã được xác nhận hoàn thành.`
+    },
+    REPORT_DUE_SOON: {
+      subject: `Nhắc hạn báo cáo: ${title}`,
+      message: `Báo cáo “${payload.campaignTitle}” của ${payload.unitName} sắp đến hạn. Hạn nộp: ${payload.dueAt ?? 'chưa xác định'}. Còn ${payload.daysRemaining ?? 'một số'} ngày.`
+    },
+    REPORT_OVERDUE: {
+      subject: `Báo cáo đã quá hạn: ${title}`,
+      message: `Báo cáo “${payload.campaignTitle}” của ${payload.unitName} đã quá hạn. Hạn nộp: ${payload.dueAt ?? 'chưa xác định'}.`
+    },
+    REPORT_SUPPLEMENT_REMINDER: {
+      subject: `Nhắc bổ sung báo cáo: ${title}`,
+      message: `Báo cáo “${payload.campaignTitle}” của ${payload.unitName} đang ở trạng thái cần bổ sung.`
     }
-  }[row.template_code as 'REPORT_CAMPAIGN_PUBLISHED' | 'REPORT_SUBMITTED' | 'REPORT_RESUBMITTED' | 'REPORT_NEEDS_SUPPLEMENT' | 'REPORT_ACCEPTED'];
+  }[row.template_code as 'REPORT_CAMPAIGN_PUBLISHED' | 'REPORT_SUBMITTED' | 'REPORT_RESUBMITTED' | 'REPORT_NEEDS_SUPPLEMENT' | 'REPORT_ACCEPTED' | 'REPORT_DUE_SOON' | 'REPORT_OVERDUE' | 'REPORT_SUPPLEMENT_REMINDER'];
   if (!content) throw new TemplateError('TEMPLATE_NOT_ALLOWLISTED');
 
   const safeMessage = escapeHtml(content.message).replace(/\n/g, '<br>');

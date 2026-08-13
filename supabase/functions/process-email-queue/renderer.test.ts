@@ -74,3 +74,61 @@ Deno.test('report event templates reject missing bounded payload fields', () => 
     'TEMPLATE_PAYLOAD_INVALID'
   );
 });
+
+Deno.test('reminder templates require their bounded deadline fields and escape payloads', () => {
+  const actionPath = '/cong-viec/bao-cao/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+  const dueSoon = renderQueueEmail({
+    ...baseRow,
+    template_code: 'REPORT_DUE_SOON',
+    payload: {
+      campaign_title: 'Đợt <báo cáo>',
+      unit_name: 'Đơn vị A & B',
+      due_at: '17/08/2026 07:00',
+      days_remaining: 3,
+      action_path: actionPath
+    }
+  }, 'https://app.example');
+
+  assertStringIncludes(dueSoon.subject, 'Nhắc hạn báo cáo');
+  assertStringIncludes(dueSoon.html, 'Còn 3 ngày');
+  assertStringIncludes(dueSoon.html, 'Đơn vị A &amp; B');
+  assert(!dueSoon.html.includes('<báo cáo>'));
+
+  const overdue = renderQueueEmail({
+    ...baseRow,
+    template_code: 'REPORT_OVERDUE',
+    payload: {
+      campaign_title: 'Quá hạn',
+      unit_name: 'Đơn vị A',
+      due_at: '17/08/2026 07:00',
+      action_path: actionPath
+    }
+  }, 'https://app.example');
+  assertStringIncludes(overdue.text, 'đã quá hạn');
+
+  assertThrows(
+    () => renderQueueEmail({
+      ...baseRow,
+      template_code: 'REPORT_DUE_SOON',
+      payload: { campaign_title: 'Thiếu hạn', unit_name: 'A', action_path: actionPath }
+    }, 'https://app.example'),
+    TemplateError,
+    'TEMPLATE_PAYLOAD_INVALID'
+  );
+});
+
+Deno.test('reminder templates reject external action URLs', () => {
+  assertThrows(
+    () => renderQueueEmail({
+      ...baseRow,
+      template_code: 'REPORT_SUPPLEMENT_REMINDER',
+      payload: {
+        campaign_title: 'Bổ sung',
+        unit_name: 'Đơn vị A',
+        action_path: 'https://evil.example/report'
+      }
+    }, 'https://app.example'),
+    TemplateError,
+    'TEMPLATE_ACTION_URL_INVALID'
+  );
+});

@@ -1,3 +1,41 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.49.1';
-import { corsHeaders,errorResponse,json } from '../_shared/http.ts';
-Deno.serve(async request=>{if(request.method==='OPTIONS')return new Response('ok',{headers:corsHeaders});try{if(request.headers.get('x-cron-secret')!==Deno.env.get('CRON_SECRET'))throw new Error('FORBIDDEN');const admin=createClient(Deno.env.get('SUPABASE_URL')!,Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,{auth:{persistSession:false}});const now=new Date();const horizon=new Date(now.getTime()+72*3600_000).toISOString();const{data,error}=await admin.from('report_assignments').select('id,status,organization_id,campaign_id,report_campaigns(title,due_at),organizations(name,email)').in('status',['PENDING','OVERDUE','NEEDS_SUPPLEMENT']).lte('report_campaigns.due_at',horizon);if(error)throw error;const rows=(data||[]).flatMap((a:any)=>{const org=Array.isArray(a.organizations)?a.organizations[0]:a.organizations;const c=Array.isArray(a.report_campaigns)?a.report_campaigns[0]:a.report_campaigns;if(!org?.email||!c)return[];const type=a.status==='OVERDUE'?'OVERDUE':'DUE_SOON';const date=now.toISOString().slice(0,10);return[{template_code:`REPORT_${type}`,recipient_email:org.email,recipient_name:org.name,payload:{campaign_id:a.campaign_id,assignment_id:a.id,title:c.title,due_at:c.due_at},scheduled_at:now.toISOString(),idempotency_key:`${a.campaign_id}:${a.id}:${type}:${date}`}];});if(rows.length){const{error:insertError}=await admin.from('email_queue').upsert(rows,{onConflict:'idempotency_key',ignoreDuplicates:true});if(insertError)throw insertError;}return json({success:true,queued:rows.length});}catch(error){return errorResponse(error,String(error).includes('FORBIDDEN')?403:400)}});
+import { corsHeaders, errorResponse, json } from '../_shared/http.ts';
+import { hasTrustedWorkerSecret, parseReminderRequest } from './contract.ts';
+
+function requiredEnv(name: string): string {
+  const value = Deno.env.get(name);
+  if (!value) throw new Error(`${name}_NOT_CONFIGURED`);
+  return value;
+}
+
+Deno.serve(async request => {
+  if (request.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  if (request.method !== 'POST') return errorResponse(new Error('METHOD_NOT_ALLOWED'), 405);
+
+  try {
+    if (!hasTrustedWorkerSecret(request.headers.get('x-cron-secret'), Deno.env.get('CRON_SECRET'))) {
+      throw new Error('FORBIDDEN');
+    }
+
+    const rawBody = await request.text();
+    const body = rawBody.trim() ? JSON.parse(rawBody) : {};
+    const { asOf } = parseReminderRequest(body);
+    const adminClient = createClient(
+      requiredEnv('SUPABASE_URL'),
+      requiredEnv('SUPABASE_SERVICE_ROLE_KEY'),
+      { auth: { persistSession: false, autoRefreshToken: false } }
+    );
+    const { data, error } = await adminClient.rpc('scan_report_reminders', {
+      p_as_of: asOf ?? new Date().toISOString()
+    });
+    if (error) throw error;
+
+    return json({ success: true, result: data?.[0] ?? null });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return errorResponse(
+      new Error(message.includes('FORBIDDEN') ? 'FORBIDDEN' : message),
+      message.includes('FORBIDDEN') ? 403 : 503
+    );
+  }
+});

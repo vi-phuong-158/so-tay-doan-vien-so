@@ -94,7 +94,7 @@ supabase/
 | `functions/download-report-bundle` | ZIP latest submission/file trong scope, private Storage, giới hạn 100 file/50 MB, audit | `AdminReportDashboard` qua `reportAdminService` | dashboard RPC, service-role Storage, `fflate`, `_shared/*` |
 | `functions/ask-ai` | RAG: scope tài liệu → Gemini → chuẩn hóa nguồn → lưu lịch sử | client | `_shared/*`, `match_document_chunks` |
 | `functions/process-document` | Trích xuất → chunk → embedding → chờ duyệt | admin | `_shared/*`, Gemini |
-| `functions/send-reminder` / `process-email-queue` | Nhắc hạn (idempotent) / gửi email theo batch | cron | `_shared/*`, email_queue |
+| `functions/send-reminder` / `process-email-queue` | Gọi reminder scan trusted / gửi email theo batch | trusted caller (scheduler deferred) | `_shared/*`, reminder RPC, email_queue |
 
 ### Luồng xử lý chính
 
@@ -151,6 +151,16 @@ Trusted report notification insert → `enqueue_report_email_from_notification` 
              → `process-email-queue` renderer/provider boundary
 No valid recipient → primary report mutation remains successful and a bounded audit row records the gap
 
+# Reminder engine (P3-05)
+Trusted `send-reminder` caller + exact `CRON_SECRET` → `scan_report_reminders(as_of)`
+             → PUBLISHED/open campaign + eligible assignment + effective due date
+             → server-resolved ACTIVE BRANCH_OFFICER recipients
+             → unique `report_reminder_events` logical key
+             → notification (`REPORT_DUE_SOON` / `REPORT_OVERDUE` /
+                `REPORT_SUPPLEMENT_REMINDER`)
+             → reminder email trigger → P3-02 queue idempotency → P3-03 renderer
+No scheduler, persisted OVERDUE transition or provider send is enabled by P3-05.
+
 # Lịch sử/nộp lại báo cáo (P2-11)
 Assignment detail → reportService.getSubmissionHistory (RLS, version desc, profile-safe fields)
                  → history accordion; signed URL chỉ tạo khi mở file
@@ -195,6 +205,9 @@ P3-01 notification RPC: publish_report_campaign, mark_notification_read, mark_al
 P3-04 notification trigger: enqueue_report_email_from_notification; email templates are
 REPORT_CAMPAIGN_PUBLISHED, REPORT_SUBMITTED, REPORT_RESUBMITTED, REPORT_NEEDS_SUPPLEMENT and
 REPORT_ACCEPTED. The trigger is backend-only and calls the existing P3-02 trusted enqueue RPC.
+P3-05 adds `report_reminder_events`, `scan_report_reminders(as_of)` and the backend-only
+`enqueue_report_reminder_email_from_notification` trigger. Reminder email templates are
+REPORT_DUE_SOON, REPORT_OVERDUE and REPORT_SUPPLEMENT_REMINDER; recipients remain server-resolved.
 
 ## Biến môi trường
 

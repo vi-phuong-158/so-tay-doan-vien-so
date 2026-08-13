@@ -235,3 +235,31 @@
   an email address or recipient.
 - Trade-off: Email remains secondary. Missing recipients or enqueue errors are recorded in a bounded
   audit row and do not fail the report mutation. P3-03R physical delivery evidence is not repeated.
+
+# P3-05 deterministic report reminder engine
+
+- Decision: Use a trusted `scan_report_reminders(as_of)` RPC with a server-supplied reference
+  time. Scan only `PUBLISHED`/open campaigns and `PENDING`, `OVERDUE` or `NEEDS_SUPPLEMENT`
+  assignments according to the bounded `reminder_policy` format (`due_soon_days`, `overdue`,
+  `needs_supplement`). Effective due time is `coalesce(due_at_override, campaign.due_at)`;
+  `SUBMITTED`/`RESUBMITTED` waiting for review and terminal `ACCEPTED`/`EXEMPTED`/`CLOSED` are
+  excluded.
+- Reason: Reminder eligibility must be deterministic and use the authoritative assignment
+  state/due override, while leaving timezone scheduling and persisted overdue transitions to P3-06.
+- Trade-off: Unsupported policy values are ignored fail-safe instead of rejected at campaign write
+  time. A valid in-app recipient with a missing/invalid email receives the mandatory notification
+  while the secondary email is marked skipped for later repair.
+
+# P3-05 logical event and recipient boundary
+
+- Decision: Persist one `report_reminder_events` row per
+  `assignment + recipient + reminder_type + policy milestone`; enforce uniqueness in the database,
+  then create the in-app notification and use the backend-only reminder trigger to call the
+  existing server-resolved email enqueue RPC. Recipient fan-out is limited to ACTIVE
+  `BRANCH_OFFICER` profiles in the assignment organization with a matching role scope.
+- Reason: Concurrent scanners must converge on one logical event without trusting a client
+  recipient or relying on application-level SELECT-then-INSERT. The event row also links the
+  notification, queue row and bounded skip evidence.
+- Trade-off: This guarantees exactly-once logical reminder creation, not exactly-once physical
+  provider delivery. Queue failures are secondary and remain visible as `SKIPPED`; no automatic
+  repair worker or scheduler is introduced in P3-05.

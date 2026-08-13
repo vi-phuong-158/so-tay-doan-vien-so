@@ -15,11 +15,11 @@
 - Phase 2 report vertical slice đã có production path cho assignment, submit/review/resubmit,
   campaign/template/publish, dashboard, scoped CSV và latest bundle.
 
-## Phase 3 P3-04 in progress
+## Phase 3 P3-05 in progress
 
-- P3-01/P3-02/P3-03/P3-03R acceptance evidence is present on cumulative stacked branches.
-- P3-04 report event email hooks are being implemented from `de952fa`; no production deploy or
-  new physical live email send is allowed in this task.
+- P3-01/P3-02/P3-03/P3-03R/P3-04 acceptance evidence is present on cumulative stacked branches.
+- P3-05 reminder engine is being implemented from cumulative `bf78b07`; no scheduler, production
+  deploy or new physical live email send is allowed in this task.
 
 ## Phase 2 technical acceptance
 

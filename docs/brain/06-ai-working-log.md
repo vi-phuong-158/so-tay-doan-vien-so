@@ -3,6 +3,29 @@
 > Nhật ký các lần AI (Claude Code / Codex) sửa code. Mỗi agent PHẢI thêm entry sau mỗi lần
 > chạm vào code. Đọc ngược từ trên xuống để biết gần đây ai đã làm gì và vì sao.
 
+## [2026-08-13] P3-05 reminder engine
+
+- **Agent:** Codex
+- **Thay đổi:** Audit cumulative P3-00→P3-04 dependency/PR/CI; tạo stacked branch từ `bf78b07`;
+  thêm policy-driven trusted reminder scan với `as_of`, effective due override, campaign/state
+  filters, server-resolved BRANCH_OFFICER fan-out, logical reminder event uniqueness, app
+  notification và secondary email queue; thay `send-reminder` bằng RPC caller; thêm reminder
+  renderer templates, pgTAP và concurrent Deno integration coverage.
+- **File đã sửa:** `supabase/migrations/202608130002_phase_3_reminder_engine.sql`,
+  `supabase/tests/report_reminder_engine.sql`, `supabase/functions/send-reminder/index.ts`,
+  `supabase/functions/send-reminder/contract.ts`, `supabase/functions/send-reminder/contract.test.ts`,
+  `supabase/functions/reminder_engine.integration.test.ts`,
+  `supabase/functions/process-email-queue/renderer.ts`,
+  `supabase/functions/process-email-queue/renderer.test.ts`, `docs/phase-3/05-reminder-engine.md`,
+  `docs/brain/01-architecture.md`, `docs/brain/03-decisions.md`, `docs/brain/04-current-tasks.md`,
+  `docs/04-implementation-status.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** P3-05 cần xác định đúng milestone/recipient/state mà không dùng clock frontend,
+  tạo cả notification và queue, đồng thời chống duplicate khi retry/concurrent scan mà không bật
+  cron hoặc gửi email thật.
+- **Kiểm tra:** `npm.cmd test` 45/45 PASS; `npm.cmd run lint` 0 lỗi với 3 warning Fast Refresh
+  có sẵn; `npm.cmd run build` PASS; `git diff --check` PASS. Supabase CLI/Deno không có local,
+  nên migration/pgTAP, Deno check/test và concurrency integration chờ CI.
+
 ## [2026-08-13] P3-04 report event email hooks
 
 - **Agent:** Codex

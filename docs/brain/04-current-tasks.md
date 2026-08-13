@@ -7,11 +7,11 @@
 
 ## Đang làm
 
-### P3-04 — Report Event Email Hooks (active)
-- **Branch:** `feat/phase-3d-report-event-email-hooks`, stacked from cumulative P3-03R HEAD `de952fa`.
-- **Trạng thái:** Implementation local đang hoàn thiện; chưa commit/push/merge/deploy.
-- **Phạm vi:** campaign publish, submit/resubmit, NEEDS_SUPPLEMENT và ACCEPTED email hooks; in-app
-  notification vẫn bắt buộc; không reminder/cron/live email mới.
+### P3-05 — Reminder Engine (active)
+- **Branch:** `feat/phase-3e-reminder-engine`, stacked from cumulative P3-04 HEAD `bf78b07`.
+- **Trạng thái:** Đang triển khai; chưa commit/push/merge/deploy.
+- **Phạm vi:** policy-driven due-soon/overdue/needs-supplement scan, server recipient resolution,
+  notification + email queue logical idempotency; không scheduler/cron/overdue persistence/live email.
 
 P3-01, P3-02, P3-03 và P3-03R đã hoàn tất acceptance trên các stacked branch; các Draft PR tương ứng
 vẫn chờ owner review/merge.
@@ -75,13 +75,13 @@ vẫn chờ owner review/merge.
 - [2026-07-30] Dựng frontend 5 khu vực + PWA shell + dữ liệu demo; schema/RLS/RPC + khung Edge
   Functions; unit test nền tảng 3/3 pass.
 
-## P3-04 active handoff
+## P3-05 active handoff
 
-- Branch: `feat/phase-3d-report-event-email-hooks`, stacked from cumulative P3-03R acceptance
-  HEAD `de952fa` because PR #11 through #14 are still open draft PRs.
+- Branch: `feat/phase-3e-reminder-engine`, stacked from cumulative P3-04 acceptance HEAD `bf78b07`
+  because PR #11 through #15 are still open draft PRs.
 - Status: implementation in progress locally; no commit, push, merge or production deployment yet.
-- Scope: campaign publish, submit/resubmit, NEEDS_SUPPLEMENT and ACCEPTED email hooks only. In-app
-  notifications remain mandatory; reminders, cron and live email are out of scope.
+- Scope: policy-driven report reminders with mandatory in-app notification and secondary email queue.
+  Cron, persisted overdue transition and live email are explicitly deferred to P3-06/rehearsal.
 # P3-02 - Email Queue State Machine and Concurrency Safety
 
 - Branch: feat/phase-3b-email-queue-safety, stacked on P3-01 acceptance HEAD b445045;
