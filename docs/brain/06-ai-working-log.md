@@ -26,6 +26,16 @@
   có sẵn; `npm.cmd run build` PASS; `git diff --check` PASS. Supabase CLI/Deno không có local,
   nên migration/pgTAP, Deno check/test và concurrency integration chờ CI.
 
+## [2026-08-13] P3-05 pgTAP fixture forward-fix
+
+- **Agent:** Codex
+- **Thay đổi:** Đổi assignment `CLOSED` trong fixture reminder engine sang campaign riêng để
+  không vi phạm unique `(campaign_id, organization_id)` của report assignment.
+- **File đã sửa:** `supabase/tests/report_reminder_engine.sql`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** CI run `31717128423` đã reset migration và các suite cũ thành công; P3-05 test dừng
+  ngay tại fixture duplicate, trước khi chạy acceptance assertions.
+- **Kiểm tra:** Đã chạy lại frontend gates trước đó; commit forward-fix sẽ kích hoạt full CI DB/Deno.
+
 ## [2026-08-13] P3-04 report event email hooks
 
 - **Agent:** Codex
