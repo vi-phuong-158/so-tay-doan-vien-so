@@ -122,20 +122,30 @@ exercises the same code path a concurrent second writer would hit.
 
 ## Validation
 
-- Frontend: `npm test`, `npm run lint`, `npm run build` — see working log for exact counts.
+- Frontend (local): `npm test` 45/45 PASS, `npm run lint` 0 errors/3 pre-existing warnings,
+  `npm run build` PASS.
 - DB/Deno: Supabase CLI, Docker and Deno are not available in this working environment (same
   constraint recorded on every prior Phase 2/3 task — see `docs/brain/05-testing-and-deploy.md`
-  "Lưu ý"). `supabase db reset`, the full pgTAP suite (including this file) and `deno check`/
-  `deno test` are deferred to the repository's GitHub Actions CI (`.github/workflows/ci.yml`,
-  `test-db` job), which runs `supabase start && supabase db reset && supabase test db` plus
-  `deno check`/`deno test` on every PR against `master`.
+  "Lưu ý"), so `supabase db reset`, the full pgTAP suite and `deno check`/`deno test` were
+  validated on the repository's GitHub Actions CI (`.github/workflows/ci.yml`, `test-db` job:
+  `supabase start && supabase db reset && supabase test db` plus `deno check`/`deno test`) on
+  Draft PR #20. **CI run `31811349804`: PASS** — `test-db` job green (10m25s), `build` job green
+  (24s). pgTAP: `Files=18, Tests=450, Result: PASS` (18 suites including the new
+  `report_cron_overdue.sql`, 450 total assertions, `All tests successful`). `deno check **/*.ts`
+  clean; Edge Function tests `42 passed, 0 failed`.
+- Two CI iterations caught and fixed real bugs in the new test fixtures before this: a
+  `report_assignments` `unique(campaign_id, organization_id)` violation from reusing one campaign
+  across multiple status fixtures (run `31810933708`'s predecessor `31810462640`), and an unscoped
+  aggregate return-value assertion that was inflated by `seed.sql`'s own rehearsal PENDING
+  assignments being (correctly) also swept by the fixed future `as_of` used in this test file (run
+  `31810933708`). Both are fixed in the current `report_cron_overdue.sql`; no application/migration
+  code needed to change for either.
 
 ## Acceptance and limitations
 
 No live email is sent by this task. No production deployment. No `EMAIL_DELIVERY_MODE` change.
-Draft PR only, not merged. DB/Deno gates await the CI run on the Draft PR — final acceptance
-status will be recorded once that run completes; see `docs/brain/06-ai-working-log.md` for the
-entry updated with the CI run ID.
+Draft PR #20 only, not merged. `P3_06_PASS` — see `docs/brain/06-ai-working-log.md` for the final
+entry with CI run ID and counts.
 
 ## Next step
 

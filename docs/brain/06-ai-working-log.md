@@ -23,11 +23,15 @@
   4 nào.
 - **Kiểm tra:** `npm test` 45/45 PASS (không đổi frontend); `npm run lint` 0 lỗi/3 warning có sẵn;
   `npm run build` PASS. Supabase CLI/Docker/Deno không có trong môi trường thi công này (như mọi
-  task Phase 2/3 trước) — `supabase db reset`, pgTAP đầy đủ (bao gồm file mới) và
-  `deno check`/`deno test` chờ GitHub Actions CI trên Draft PR (`.github/workflows/ci.yml`, job
-  `test-db`). Đã rà soát tĩnh: cân bằng dollar-quoting/paren trong migration + test file, đối
-  chiếu logic ma trận test A–O bằng tay so với state machine (`docs/phase-2/01-report-state-machine.md`)
-  trước khi commit.
+  task Phase 2/3 trước) nên DB/Deno được xác nhận qua GitHub Actions CI trên Draft PR #20
+  (`.github/workflows/ci.yml`, job `test-db`). Hai vòng CI đầu phát hiện lỗi thật trong fixture
+  test mới (vi phạm `unique(campaign_id, organization_id)` do dùng chung 1 campaign cho nhiều
+  status, và một assertion đếm tổng chưa scope bị lẫn 2 assignment PENDING sẵn có của
+  `seed.sql`) — cả hai đã sửa chỉ trong file test, không đổi migration. **CI run `31811349804`
+  PASS**: `test-db` xanh (10m25s) — pgTAP `Files=18, Tests=450, Result: PASS` (gồm
+  `report_cron_overdue.sql`), `deno check` sạch, Deno `42 passed, 0 failed`; `build` xanh (24s).
+- **Verdict:** `P3_06_PASS`. Draft PR: https://github.com/vi-phuong-158/so-tay-doan-vien-so/pull/20
+  (chưa merge).
 
 ## [2026-08-14] P3-R1 — Email Delivery Safety Gate & Reminder Cycle Fix
 

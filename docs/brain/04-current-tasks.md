@@ -9,10 +9,10 @@
 
 ### P3-06 — Cron & Overdue Automation
 - **Base:** `master@5665dc4` (P3-R1 merged via PR #19, confirmed clean baseline).
-- **Branch:** `claude/phase-3-cron-overdue-8f4cea`.
-- **Trạng thái:** implementation + local frontend regression PASS; pgTAP/Deno pending CI
-  (Supabase CLI/Docker/Deno not available in this working environment — see
-  `docs/phase-3/06-cron-overdue-automation.md`).
+- **Branch:** `claude/phase-3-cron-overdue-8f4cea`; Draft PR #20 (not merged).
+- **Trạng thái:** `P3_06_PASS`. CI run `31811349804` xanh: pgTAP `Files=18, Tests=450`, Deno
+  `42 passed, 0 failed`, frontend 45/45 + lint + build — xem
+  `docs/phase-3/06-cron-overdue-automation.md`.
 - **Phạm vi:** hardened `mark_overdue_assignments(p_as_of default now())` (persisted
   `report_status_history`/`audit_logs` per transition, null/system actor, same PENDING→OVERDUE
   eligibility rule as before); `pg_cron` schedule for `report_mark_overdue_daily` (00:05 ICT =
