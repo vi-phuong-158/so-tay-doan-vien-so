@@ -28,10 +28,12 @@ function parseAllowlist(value: string | undefined): string[] {
 }
 
 // Fail-closed by construction: any value other than the two explicit opt-in modes
-// (including missing, empty, or unrecognized strings) resolves to OFF. LIVE is never
-// a fallback or default; it is only reachable by an exact, deliberate env value.
+// (including missing, empty, wrong-case, or unrecognized strings) resolves to OFF. LIVE is
+// never a fallback or default; it is only reachable by the exact literal "LIVE" — case and
+// content both matter, only surrounding whitespace (e.g. a trailing newline from some CI env
+// UIs) is trimmed. "live", "Live", or " LIVE" with other stray characters are not LIVE.
 export function getEmailDeliveryConfig(env: Record<string, string | undefined>): EmailDeliveryConfig {
-  const raw = (env.EMAIL_DELIVERY_MODE ?? '').trim().toUpperCase();
+  const raw = (env.EMAIL_DELIVERY_MODE ?? '').trim();
   const mode: EmailDeliveryMode = raw === 'ALLOWLIST' || raw === 'LIVE' ? raw : 'OFF';
   return { mode, allowlist: parseAllowlist(env.EMAIL_TEST_RECIPIENTS) };
 }
