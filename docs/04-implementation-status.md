@@ -15,12 +15,17 @@
 - Phase 2 report vertical slice đã có production path cho assignment, submit/review/resubmit,
   campaign/template/publish, dashboard, scoped CSV và latest bundle.
 
-## Phase 3 P3-05 PASS
+## Phase 3 through P3-05 merged to master
 
-- P3-01/P3-02/P3-03/P3-03R/P3-04 acceptance evidence is present on cumulative stacked branches.
-- P3-05 reminder engine is complete on `feat/phase-3e-reminder-engine` at `4876e44`; CI
-  `31719821897` passed frontend, migration reset, full pgTAP, Deno check/tests and build gates.
-  No scheduler, production deploy or new physical live email send was enabled in this task.
+- P3-00 through P3-05 (including P3-03R live rehearsal evidence) are consolidated in `master`
+  through integration PR #17, merge commit `2a68f20`.
+- The cumulative acceptance lineage remains traceable from P3-00 HEAD `1377265` through
+  P3-05 HEAD `df7b9d0`; no feature or business-logic changes were introduced by consolidation.
+- Final merged-master CI `31783521687` passed: frontend 45/45, lint 0 errors with 3 existing
+  warnings, build PASS, 21 migrations applied by `supabase db reset`, 16 pgTAP suites PASS,
+  and Deno 37/37 PASS.
+- P3-06, P3-07 and P3-08 remain unimplemented. No scheduler, production deploy, cron enablement,
+  or new physical live email send was performed by consolidation.
 
 ## Phase 2 technical acceptance
 

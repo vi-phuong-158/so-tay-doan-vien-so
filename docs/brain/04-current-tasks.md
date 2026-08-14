@@ -7,14 +7,13 @@
 
 ## Đang làm
 
-### P3-05 — Reminder Engine (PASS; PR review pending)
-- **Branch:** `feat/phase-3e-reminder-engine`, stacked from cumulative P3-04 HEAD `bf78b07`.
-- **Trạng thái:** PASS technical acceptance; HEAD `4876e44`, CI `31719821897` xanh; Draft PR #16 đang chờ review, chưa merge/deploy.
-- **Phạm vi:** policy-driven due-soon/overdue/needs-supplement scan, server recipient resolution,
-  notification + email queue logical idempotency; không scheduler/cron/overdue persistence/live email.
-
-P3-01, P3-02, P3-03 và P3-03R đã hoàn tất acceptance trên các stacked branch; các Draft PR tương ứng
-vẫn chờ owner review/merge.
+### Phase 3 Stack Consolidation through P3-05 (PASS)
+- **Master:** `2a68f20` — merged integration PR #17 from `integrate/phase-3-through-p3-05`.
+- **Trạng thái:** P3-00 → P3-05 đã nằm trên `master`; final merged-master CI `31783521687` xanh.
+- **Validation:** frontend 45/45, lint 0 errors/3 existing warnings, build PASS, 21 migrations,
+  16 pgTAP suites, Deno 37/37 PASS.
+- **Giới hạn:** Không triển khai P3-06/P3-07/P3-08, không bật cron/scheduler, không deploy production,
+  không gửi live email mới.
 
 ---
 
@@ -39,11 +38,12 @@ vẫn chờ owner review/merge.
 - **Liên quan:** `supabase/functions/*`.
 - **Ưu tiên:** Trung bình (sau luồng báo cáo).
 
-### Phase 3 — Notification, Email Queue & Reminder/Cron
-- **Mô tả:** P3-00 và P3-01 đã PASS technical acceptance; P3-02 là bước kế tiếp sau review.
-- **Báo cáo:** `docs/phase-3/00-baseline-rehearsal-plan.md`.
-- **Next recommended sau P3-01 PASS:** P3-02 Email Queue State Machine & Concurrency Safety.
-- **Ưu tiên:** Cao sau baseline.
+### Phase 3 — Next: P3-06 Cron & Overdue Persistence
+- **Mô tả:** P3-00 đến P3-05 đã merge vào `master`; P3-06 mới chỉ là đề xuất tiếp theo.
+- **Báo cáo:** `docs/phase-3/05-reminder-engine.md`.
+- **Phạm vi kế tiếp:** chốt timezone scheduler, trusted schedule và persisted overdue transition;
+  không tự bắt đầu trong task consolidation này.
+- **Ưu tiên:** Chờ task riêng và rehearsal/production authorization.
 
 ---
 
@@ -59,6 +59,8 @@ vẫn chờ owner review/merge.
 ## Đã hoàn thành gần đây
 
 - [2026-08-11] P3-01: Notification Foundation PASS; CI 31491748132 xanh với migration reset, 267 pgTAP, Edge Function và frontend gates.
+
+- [2026-08-14] Phase 3 Stack Consolidation: P3-00 → P3-05 merged to `master` via PR #17 at `2a68f20`; CI `31783521687` PASS.
 
 - [2026-08-11] P2-15: `Phase 2 — Công việc & Báo cáo: TECHNICAL ACCEPTANCE COMPLETE`; P1 direct RPC bypass đã đóng, integrated vertical slice + ma trận A–G PASS; CI `31411605381` PASS (40 frontend, 236 pgTAP, 16 Deno).
 - [2026-08-11] P3-00: baseline/rehearsal audit PASS; merged Phase 2 baseline `0ecc3a9` xác nhận, Phase 3 được chia task và chưa triển khai production code.
@@ -77,11 +79,11 @@ vẫn chờ owner review/merge.
 
 ## P3-05 completed handoff
 
-- Branch: `feat/phase-3e-reminder-engine`, stacked from cumulative P3-04 acceptance HEAD `bf78b07`
-  because PR #11 through #15 are still open draft PRs.
-- Status: `P3_05_FULL_ACCEPTANCE_PASS`; HEAD `4876e44`, Draft PR #16, CI `31719821897` passed all gates; no merge or production deployment.
+- Cumulative P3-05 acceptance HEAD: `df7b9d0`; integrated on `master` by PR #17 merge commit `2a68f20`.
+- Final merged-master CI `31783521687` passed all repository gates; no production deployment or
+  new live email was performed.
 - Scope: policy-driven report reminders with mandatory in-app notification and secondary email queue.
-  Cron, persisted overdue transition and live email are explicitly deferred to P3-06/rehearsal.
+  Cron, persisted overdue transition and live email remain explicitly deferred to P3-06/rehearsal.
 # P3-02 - Email Queue State Machine and Concurrency Safety
 
 - Branch: feat/phase-3b-email-queue-safety, stacked on P3-01 acceptance HEAD b445045;
