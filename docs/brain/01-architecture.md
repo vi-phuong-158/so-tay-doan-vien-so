@@ -274,3 +274,31 @@ configuration from queue payload or frontend. `send-reminder` remains a deferred
 report event hooks are implemented by the P3-04 trusted notification trigger. Provider metadata
 is persisted in `email_logs`; live rehearsal is a controlled manual gate, not a CI or production
 deployment step.
+# Email delivery safety gate and reminder cycle fix (P3-R1)
+
+process-email-queue (trusted secret invocation)
+        -> EMAIL_DELIVERY_MODE resolved fail-closed (OFF default; only exact "LIVE" reaches
+           unrestricted send)
+        -> OFF: return immediately, claim_email_queue is never called, provider is never built
+        -> ALLOWLIST/LIVE: claim_email_queue (P3-02 atomic ownership)
+             -> ALLOWLIST: recipient_email checked against EMAIL_TEST_RECIPIENTS (normalized,
+                exact match, no wildcard); no match -> mark_email_retry(retryable=false,
+                RECIPIENT_NOT_ALLOWLISTED) without ever calling the provider
+             -> match (or LIVE): existing P3-03/P3-04/P3-05 render/send/log path, unchanged
+
+P3-04/P3-05 opened the renderer allowlist from `SYSTEM_EMAIL_TEST` alone to eight report/reminder
+templates, which removed the implicit "nothing renders so nothing sends" safety net P3-03 had.
+`EMAIL_DELIVERY_MODE` restores an explicit, fail-closed gate ahead of P3-06 (cron/scheduler):
+missing, empty or unrecognized values behave as `OFF`; `LIVE` is only reachable by that exact env
+value, never as a default or fallback.
+
+`enqueue_email_for_user_event` now stores `source_entity_type`/`source_entity_id` directly on the
+`email_queue` row it inserts (previously only used to build the idempotency key); the P3-05
+reminder trigger's post-enqueue `UPDATE email_queue` workaround is removed, leaving one source of
+truth for queue row provenance.
+
+`REPORT_SUPPLEMENT_REMINDER`'s logical/idempotency milestone is now
+`NEEDS_SUPPLEMENT:v{latest_submission_version}` instead of a fixed `NEEDS_SUPPLEMENT` string, so a
+resubmission that earns a new NEEDS_SUPPLEMENT decision opens a new reminder milestone while the
+current review cycle still cannot be reminded twice. Earlier `report_reminder_events` rows are
+never edited.

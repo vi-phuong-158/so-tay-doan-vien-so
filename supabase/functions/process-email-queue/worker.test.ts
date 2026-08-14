@@ -30,7 +30,7 @@ Deno.test('worker claims through RPC, sends, and persists provider metadata', as
     provider: { send: async email => ({ provider: 'RESEND', providerMessageId: 'msg-1', providerCode: 'HTTP_200' }) },
     workerId: 'worker-test', batchSize: 50, leaseSeconds: 300, appUrl: 'https://app.example'
   });
-  assertEquals(result, { claimed: 1, sent: 1, retried: 0, failed: 0, stale: 0, rpcErrors: 0 });
+  assertEquals(result, { claimed: 1, sent: 1, retried: 0, failed: 0, stale: 0, rpcErrors: 0, skippedNotAllowlisted: 0 });
   assertEquals(client.calls.map(call => call.name), ['claim_email_queue', 'mark_email_sent']);
   assertEquals(client.calls[1].args.p_provider_message_id, 'msg-1');
   assertEquals(client.calls[1].args.p_provider_code, 'HTTP_200');
@@ -67,4 +67,34 @@ Deno.test('malformed queue payload fails without calling provider', async () => 
   assertEquals(providerCalls, 0);
   assertEquals(result.failed, 1);
   assertEquals(client.calls[1].args.p_error_code, 'TEMPLATE_MESSAGE_INVALID');
+});
+
+Deno.test('recipient outside the allowlist is rejected before the provider is ever called', async () => {
+  const client = fakeClient([row('queue-not-allowlisted')]);
+  let providerCalls = 0;
+  const result = await processQueueBatch({
+    adminClient: client,
+    provider: { send: async () => { providerCalls += 1; return { provider: 'RESEND', providerMessageId: 'never', providerCode: 'HTTP_200' }; } },
+    workerId: 'worker-test', batchSize: 1, leaseSeconds: 300,
+    isRecipientAllowed: email => email === 'allowed-only@example.com'
+  });
+  assertEquals(providerCalls, 0);
+  assertEquals(client.calls.map(call => call.name), ['claim_email_queue', 'mark_email_retry']);
+  assertEquals(client.calls[1].args.p_error_code, 'RECIPIENT_NOT_ALLOWLISTED');
+  assertEquals(client.calls[1].args.p_retryable, false);
+  assertEquals(result, { claimed: 1, sent: 0, retried: 0, failed: 0, stale: 0, rpcErrors: 0, skippedNotAllowlisted: 1 });
+});
+
+Deno.test('recipient inside the allowlist is processed normally', async () => {
+  const client = fakeClient([{ ...row('queue-allowed'), recipient_email: 'allowed-only@example.com' }]);
+  let providerCalls = 0;
+  const result = await processQueueBatch({
+    adminClient: client,
+    provider: { send: async () => { providerCalls += 1; return { provider: 'RESEND', providerMessageId: 'msg-allowed', providerCode: 'HTTP_200' }; } },
+    workerId: 'worker-test', batchSize: 1, leaseSeconds: 300, appUrl: 'https://app.example',
+    isRecipientAllowed: email => email === 'allowed-only@example.com'
+  });
+  assertEquals(providerCalls, 1);
+  assertEquals(result.sent, 1);
+  assertEquals(result.skippedNotAllowlisted, 0);
 });

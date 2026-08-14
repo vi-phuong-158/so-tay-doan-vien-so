@@ -7,6 +7,20 @@
 
 ## Đang làm
 
+### P3-R1 — Email Delivery Safety Gate & Reminder Cycle Fix
+- **Base:** `master@131789c` (Phase 3 Stack Consolidation through P3-05, PASS).
+- **Branch:** `fix/phase-3-email-safety-remediation`.
+- **Trạng thái:** implementation + local frontend regression PASS; pgTAP/Deno pending CI
+  (Supabase CLI/Deno full stack not available in this working environment — see
+  `docs/phase-3/r1-email-safety-remediation.md`).
+- **Phạm vi:** `EMAIL_DELIVERY_MODE` (OFF/ALLOWLIST/LIVE, default OFF, fail-closed) trước P3-06;
+  `REPORT_SUPPLEMENT_REMINDER` idempotency theo review cycle (`NEEDS_SUPPLEMENT:v{version}`);
+  `enqueue_email_for_user_event` lưu `source_entity_type/id` trực tiếp, gỡ workaround P3-05;
+  regression test cho cả bốn fix, bao gồm test "email failure không rollback business
+  transaction" qua `review_report_assignment` thật.
+- **Giới hạn:** Không triển khai P3-06/cron/scheduler, không đổi `EMAIL_DELIVERY_MODE=LIVE` trên
+  môi trường thật, không gửi email thật, không deploy production, không merge PR.
+
 ### Phase 3 Stack Consolidation through P3-05 (PASS)
 - **Master:** `2a68f20` — merged integration PR #17 from `integrate/phase-3-through-p3-05`.
 - **Trạng thái:** P3-00 → P3-05 đã nằm trên `master`; final merged-master CI `31783521687` xanh.
@@ -43,6 +57,8 @@
 - **Báo cáo:** `docs/phase-3/05-reminder-engine.md`.
 - **Phạm vi kế tiếp:** chốt timezone scheduler, trusted schedule và persisted overdue transition;
   không tự bắt đầu trong task consolidation này.
+- **Điều kiện tiên quyết:** P3-R1 (email delivery safety gate) phải merge trước — bật scheduler
+  khi chưa có gate an toàn là hành động không thể đảo ngược trên hộp thư người dùng thật.
 - **Ưu tiên:** Chờ task riêng và rehearsal/production authorization.
 
 ---

@@ -263,3 +263,57 @@
 - Trade-off: This guarantees exactly-once logical reminder creation, not exactly-once physical
   provider delivery. Queue failures are secondary and remain visible as `SKIPPED`; no automatic
   repair worker or scheduler is introduced in P3-05.
+
+## [2026-08-14] P3-R1 email delivery safety gate defaults to OFF, LIVE is opt-in only
+
+- **Quyết định:** `process-email-queue` reads `EMAIL_DELIVERY_MODE` before doing anything else.
+  `OFF` (including missing/empty/unrecognized values) returns immediately without calling
+  `claim_email_queue` or constructing a provider client. `ALLOWLIST` claims and renders as normal
+  but gates every row's `recipient_email` against a normalized, exact-match `EMAIL_TEST_RECIPIENTS`
+  list before the provider is ever invoked; a non-match is marked terminal `FAILED` with
+  `RECIPIENT_NOT_ALLOWLISTED` via the existing `mark_email_retry(retryable=false)` path, never
+  retried. `LIVE` is the only mode that reaches the unrestricted P3-03 send path, and it is only
+  reachable by that exact string — never a default or a fallback for a misconfigured value.
+- **Lý do:** P3-04/P3-05 opened the renderer allowlist from one inert `SYSTEM_EMAIL_TEST` template
+  to eight live report/reminder templates, so P3-03's implicit "nothing renders, nothing sends"
+  safety net no longer exists once a worker is invoked. Before P3-06 introduces a scheduler that
+  can invoke the worker automatically and repeatedly, an explicit env-gated switch must exist so a
+  misconfigured or accidentally-triggered invocation cannot send real email.
+- **Đánh đổi:** Every deploy target must set `EMAIL_DELIVERY_MODE` deliberately; forgetting it is
+  safe (falls back to `OFF`) but means no email at all, including rehearsal. `ALLOWLIST` still
+  calls the real provider for allowlisted recipients, so it is not a full offline/dry-run mode —
+  only a recipient-scoping guard.
+- **Người quyết định:** Claude (Sonnet), theo yêu cầu remediation P3-R1 trước khi giao P3-06.
+
+## [2026-08-14] P3-R1 report_reminder_events milestone keyed by review cycle, not assignment
+
+- **Quyết định:** `REPORT_SUPPLEMENT_REMINDER`'s policy milestone changed from the fixed literal
+  `NEEDS_SUPPLEMENT` to `NEEDS_SUPPLEMENT:v{latest_submission_version}`, computed from
+  `report_submissions.version_number` for the assignment at the moment `create_report_reminder_event`
+  runs. The unique `logical_key` (and therefore the email idempotency key derived from it) now
+  changes across review cycles instead of being fixed for the assignment's entire lifetime.
+- **Lý do:** The previous key meant an assignment could receive at most one
+  `REPORT_SUPPLEMENT_REMINDER` ever — a resubmission that earned a second NEEDS_SUPPLEMENT decision
+  produced no reminder at all, because the unique constraint on `logical_key` silently treated it
+  as the same logical event as the first cycle. This is the exact scenario reminders exist to catch
+  (an unresponsive branch across multiple review rounds).
+- **Đánh đổi:** Requires a `report_submissions` row to exist for the assignment before a
+  NEEDS_SUPPLEMENT reminder can be created (an assignment reaching that status without one is
+  treated as fail-safe skip, not an error); this is already guaranteed by the real
+  `review_report_assignment` transition path. No historical `report_reminder_events` row is
+  edited — old milestones remain queryable exactly as they were created.
+- **Người quyết định:** Claude (Sonnet), theo yêu cầu remediation P3-R1.
+
+## [2026-08-14] P3-R1 email_queue source entity stored at enqueue, not patched afterward
+
+- **Quyết định:** `enqueue_email_for_user_event` now inserts `source_entity_type`/`source_entity_id`
+  directly into the `email_queue` row it creates. The P3-05 reminder trigger's compensating
+  `update public.email_queue set source_entity_type = ..., source_entity_id = ...` after calling
+  the RPC is removed.
+- **Lý do:** The RPC already validated and used both parameters to build the idempotency key but
+  never persisted them, so every P3-04 report-event queue row had `NULL` source columns and only
+  P3-05 reminder rows were usable for traceability, via a workaround patch outside the RPC's own
+  transaction boundary. Two parallel ways to set the same columns is a correctness risk.
+- **Đánh đổi:** None functionally; this is a bug fix at the correct layer. Existing rows enqueued
+  before this migration keep whatever source columns they already had (untouched, forward-only).
+- **Người quyết định:** Claude (Sonnet), theo yêu cầu remediation P3-R1.
