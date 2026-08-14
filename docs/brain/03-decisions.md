@@ -317,3 +317,55 @@
 - **Đánh đổi:** None functionally; this is a bug fix at the correct layer. Existing rows enqueued
   before this migration keep whatever source columns they already had (untouched, forward-only).
 - **Người quyết định:** Claude (Sonnet), theo yêu cầu remediation P3-R1.
+
+## [2026-08-14] P3-06 cron scheduled via pg_cron calling DB functions directly, not HTTP
+
+- **Quyết định:** The two daily jobs (`mark_overdue_assignments`, `scan_report_reminders`) are
+  scheduled with `pg_cron`'s `cron.schedule(jobname, cron_expr, sql)`, where the SQL body is a
+  direct `select public.<function>();` call. No `pg_net`/HTTP call to an Edge Function, no
+  `CRON_SECRET` or service-role key in the migration.
+- **Lý do:** Both functions are pure SQL RPCs with no external side effect (no email provider
+  call). Calling them via HTTP would require embedding a shared secret or the service-role key in
+  a migration to authenticate the request — forbidden by this project's rule against production
+  secrets in migrations, and unnecessary complexity when the same database can just call its own
+  function. This keeps the schedule fully forward-only, idempotent (`db reset`-safe) and testable
+  in CI without any Supabase Secrets being configured.
+- **Đánh đổi:** The existing `send-reminder` Edge Function (CRON_SECRET-gated, wraps
+  `scan_report_reminders`) is no longer the production trigger path for the daily scan — it
+  remains in the repo unchanged as a manual/ops invocation tool (e.g. for rehearsal, or as a
+  fallback if a given Supabase project ever cannot enable `pg_cron`). No equivalent Edge Function
+  was added for `mark_overdue_assignments`; if one becomes necessary later it can mirror
+  `send-reminder`'s pattern exactly.
+- **Người quyết định:** Claude (Sonnet), theo yêu cầu P3-06.
+
+## [2026-08-14] P3-06 cron times fixed in UTC for Asia/Ho_Chi_Minh, no scheduler-side TZ config
+
+- **Quyết định:** `report_mark_overdue_daily` runs at `5 17 * * *` UTC and
+  `report_reminder_scan_daily` runs at `0 0 * * *` UTC — the fixed UTC-equivalents of 00:05 and
+  07:00 Asia/Ho_Chi_Minh (product spec §12.1). No per-job timezone parameter is used.
+- **Lý do:** Vietnam (ICT, UTC+7) observes no daylight saving time, so a fixed UTC offset is exact
+  year-round and needs no dynamic timezone conversion or maintenance. `pg_cron` schedules are
+  interpreted in UTC by default in both the Supabase local dev image and Supabase Cloud, matching
+  this project's `to_char(... at time zone 'Asia/Ho_Chi_Minh', ...)` convention already used
+  elsewhere in the reminder email payload (P3-05).
+- **Đánh đổi:** If Vietnam ever adopted DST (it has not, historically), these two literal
+  cron expressions would need a manual forward-fix migration; this is judged acceptable given the
+  country's actual, decades-long practice.
+- **Người quyết định:** Claude (Sonnet), theo yêu cầu P3-06.
+
+## [2026-08-14] P3-06 does not schedule the email worker (process-email-queue)
+
+- **Quyết định:** Only the overdue sweep and the reminder scan are installed as cron jobs. The
+  email queue worker (`process-email-queue`, which actually calls the Resend provider once
+  `EMAIL_DELIVERY_MODE` allows it) is left exactly as it was: a manually/externally triggered
+  Edge Function, not on any automatic schedule.
+- **Lý do:** P3-06's mandate (docs/brain/04-current-tasks.md) is "chốt timezone scheduler, trusted
+  schedule và persisted overdue transition" for the state-machine/reminder-generation side.
+  Automatically scheduling the worker that can put real messages in front of real inboxes is a
+  materially bigger, harder-to-reverse operational decision (rule 23 forbids enabling
+  `EMAIL_DELIVERY_MODE=LIVE` or sending live email in this task) and belongs with a later live
+  rehearsal phase, not bundled silently into cron installation.
+- **Đánh đổi:** Until a later phase schedules it, enqueued reminder/report emails only get sent
+  when someone manually invokes `process-email-queue` (or wires an external scheduler to it).
+  This is the same operational state the repo was already in before P3-06.
+- **Người quyết định:** Claude (Sonnet), theo yêu cầu P3-06 (giữ đúng phạm vi, không tự mở rộng).

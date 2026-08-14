@@ -1,5 +1,34 @@
 # 06 — AI Working Log
 
+## [2026-08-14] P3-06 — Cron & Overdue Automation
+
+- **Agent:** Claude (Sonnet)
+- **Thay đổi:** Thay `mark_overdue_assignments()` (0 tham số) bằng
+  `mark_overdue_assignments(p_as_of timestamptz default now())` — giữ nguyên rule chuyển
+  `PENDING → OVERDUE` (campaign `PUBLISHED`, quá `effective_due_at` — strict `>`), thêm ghi
+  `report_status_history` + `audit_logs` (actor null/hệ thống) atomic trong cùng một câu lệnh
+  (chained data-modifying CTE) cho từng dòng thực sự chuyển trạng thái. Cài đặt `pg_cron` với 2
+  job ổn định tên: `report_mark_overdue_daily` (`5 17 * * *` UTC = 00:05 ICT) gọi
+  `mark_overdue_assignments()`, và `report_reminder_scan_daily` (`0 0 * * *` UTC = 07:00 ICT) gọi
+  `scan_report_reminders()` — cả hai gọi RPC trực tiếp trong database, không qua HTTP/Edge
+  Function, không cần `CRON_SECRET`/service-role key trong migration. Không lịch hóa
+  `process-email-queue` (worker email vẫn thủ công/bên ngoài như trước). Không đổi
+  `scan_report_reminders`, `EMAIL_DELIVERY_MODE`, hay bất kỳ remediation P3-R1 nào.
+- **File đã sửa/tạo:** `supabase/migrations/202608140002_phase_3_cron_overdue_automation.sql`,
+  `supabase/tests/report_cron_overdue.sql`, `docs/phase-3/06-cron-overdue-automation.md`,
+  `docs/brain/01-architecture.md`, `docs/brain/03-decisions.md`, `docs/brain/04-current-tasks.md`,
+  `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Hoàn thiện phần P3-05 đã chủ động để lại: persisted/audited overdue transition và
+  trusted schedule đúng timezone, không mở rộng sang lịch email worker hay bất kỳ nghiệp vụ Phase
+  4 nào.
+- **Kiểm tra:** `npm test` 45/45 PASS (không đổi frontend); `npm run lint` 0 lỗi/3 warning có sẵn;
+  `npm run build` PASS. Supabase CLI/Docker/Deno không có trong môi trường thi công này (như mọi
+  task Phase 2/3 trước) — `supabase db reset`, pgTAP đầy đủ (bao gồm file mới) và
+  `deno check`/`deno test` chờ GitHub Actions CI trên Draft PR (`.github/workflows/ci.yml`, job
+  `test-db`). Đã rà soát tĩnh: cân bằng dollar-quoting/paren trong migration + test file, đối
+  chiếu logic ma trận test A–O bằng tay so với state machine (`docs/phase-2/01-report-state-machine.md`)
+  trước khi commit.
+
 ## [2026-08-14] P3-R1 — Email Delivery Safety Gate & Reminder Cycle Fix
 
 - **Agent:** Claude (Sonnet)

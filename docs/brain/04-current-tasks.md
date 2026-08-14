@@ -7,19 +7,21 @@
 
 ## Đang làm
 
-### P3-R1 — Email Delivery Safety Gate & Reminder Cycle Fix
-- **Base:** `master@131789c` (Phase 3 Stack Consolidation through P3-05, PASS).
-- **Branch:** `fix/phase-3-email-safety-remediation`.
+### P3-06 — Cron & Overdue Automation
+- **Base:** `master@5665dc4` (P3-R1 merged via PR #19, confirmed clean baseline).
+- **Branch:** `claude/phase-3-cron-overdue-8f4cea`.
 - **Trạng thái:** implementation + local frontend regression PASS; pgTAP/Deno pending CI
-  (Supabase CLI/Deno full stack not available in this working environment — see
-  `docs/phase-3/r1-email-safety-remediation.md`).
-- **Phạm vi:** `EMAIL_DELIVERY_MODE` (OFF/ALLOWLIST/LIVE, default OFF, fail-closed) trước P3-06;
-  `REPORT_SUPPLEMENT_REMINDER` idempotency theo review cycle (`NEEDS_SUPPLEMENT:v{version}`);
-  `enqueue_email_for_user_event` lưu `source_entity_type/id` trực tiếp, gỡ workaround P3-05;
-  regression test cho cả bốn fix, bao gồm test "email failure không rollback business
-  transaction" qua `review_report_assignment` thật.
-- **Giới hạn:** Không triển khai P3-06/cron/scheduler, không đổi `EMAIL_DELIVERY_MODE=LIVE` trên
-  môi trường thật, không gửi email thật, không deploy production, không merge PR.
+  (Supabase CLI/Docker/Deno not available in this working environment — see
+  `docs/phase-3/06-cron-overdue-automation.md`).
+- **Phạm vi:** hardened `mark_overdue_assignments(p_as_of default now())` (persisted
+  `report_status_history`/`audit_logs` per transition, null/system actor, same PENDING→OVERDUE
+  eligibility rule as before); `pg_cron` schedule for `report_mark_overdue_daily` (00:05 ICT =
+  17:05 UTC) and `report_reminder_scan_daily` (07:00 ICT = 00:00 UTC), both calling trusted RPCs
+  directly in-database (no HTTP, no secret in migration); regression tests covering the full
+  P3-06 test matrix plus P3-05/P3-R1 non-regression (supplement version cycle, delivery-mode
+  safety, source entity persistence).
+- **Giới hạn:** Không thay `EMAIL_DELIVERY_MODE`, không lịch cho `process-email-queue`, không
+  thêm Edge Function mới, không deploy production, không bật LIVE, không merge PR.
 
 ### Phase 3 Stack Consolidation through P3-05 (PASS)
 - **Master:** `2a68f20` — merged integration PR #17 from `integrate/phase-3-through-p3-05`.
@@ -52,14 +54,11 @@
 - **Liên quan:** `supabase/functions/*`.
 - **Ưu tiên:** Trung bình (sau luồng báo cáo).
 
-### Phase 3 — Next: P3-06 Cron & Overdue Persistence
-- **Mô tả:** P3-00 đến P3-05 đã merge vào `master`; P3-06 mới chỉ là đề xuất tiếp theo.
-- **Báo cáo:** `docs/phase-3/05-reminder-engine.md`.
-- **Phạm vi kế tiếp:** chốt timezone scheduler, trusted schedule và persisted overdue transition;
-  không tự bắt đầu trong task consolidation này.
-- **Điều kiện tiên quyết:** P3-R1 (email delivery safety gate) phải merge trước — bật scheduler
-  khi chưa có gate an toàn là hành động không thể đảo ngược trên hộp thư người dùng thật.
-- **Ưu tiên:** Chờ task riêng và rehearsal/production authorization.
+### Phase 3 — Next: P3-07/P3-08 (sau P3-06)
+- **Mô tả:** Sau P3-06 (xem "Đang làm" phía trên), các bước còn lại của Phase 3 là: lịch hóa
+  `process-email-queue` (nếu cần) và live rehearsal chấp nhận cron/scheduler trên project thật.
+- **Báo cáo:** `docs/phase-3/06-cron-overdue-automation.md`.
+- **Ưu tiên:** Chờ P3-06 merge + rehearsal/production authorization.
 
 ---
 
@@ -74,6 +73,7 @@
 
 ## Đã hoàn thành gần đây
 
+- [2026-08-14] P3-R1: Email delivery safety gate & reminder cycle fix merged via PR #19 (`5665dc4`).
 - [2026-08-11] P3-01: Notification Foundation PASS; CI 31491748132 xanh với migration reset, 267 pgTAP, Edge Function và frontend gates.
 
 - [2026-08-14] Phase 3 Stack Consolidation: P3-00 → P3-05 merged to `master` via PR #17 at `2a68f20`; CI `31783521687` PASS.
