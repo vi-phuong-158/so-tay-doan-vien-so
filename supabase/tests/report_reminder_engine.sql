@@ -86,6 +86,14 @@ values
   ('30510000-0000-4000-8000-000000000009', '30500000-0000-4000-8000-000000000006', '22222222-2222-2222-2222-222222222222', 'NEEDS_SUPPLEMENT', null),
   ('30510000-0000-4000-8000-000000000010', '30500000-0000-4000-8000-000000000007', '22222222-2222-2222-2222-222222222222', 'PENDING', null);
 
+-- P3-R1: NEEDS_SUPPLEMENT reminder milestones are keyed off the latest submission version, so a
+-- real assignment/submission pair is required for the supplement-reminder assertion below.
+insert into public.report_submissions(id, assignment_id, version_number, submitted_by, summary, submitted_at, created_at)
+values (
+  '30510000-0000-4000-8000-000000000901', '30510000-0000-4000-8000-000000000009', 1,
+  'cccccccc-cccc-cccc-cccc-cccccccccccc', 'P3-05 supplement fixture v1', now() - interval '1 day', now() - interval '1 day'
+);
+
 select results_eq(
   $$ select policy_offset from public.report_reminder_policy_due_offsets('{"due_soon_days":[7,"3",3,"bad",0,366]}'::jsonb) order by policy_offset $$,
   $$ values (3), (7) $$,
@@ -153,6 +161,11 @@ select is(
   (select count(*)::integer from public.report_reminder_events where assignment_id = '30510000-0000-4000-8000-000000000009' and reminder_type = 'REPORT_SUPPLEMENT_REMINDER'),
   1,
   'NEEDS_SUPPLEMENT creates its own reminder type'
+);
+select is(
+  (select logical_key from public.report_reminder_events where assignment_id = '30510000-0000-4000-8000-000000000009' and reminder_type = 'REPORT_SUPPLEMENT_REMINDER' limit 1),
+  'REPORT_REMINDER:30510000-0000-4000-8000-000000000009:cccccccc-cccc-cccc-cccc-cccccccccccc:REPORT_SUPPLEMENT_REMINDER:NEEDS_SUPPLEMENT:v1',
+  'P3-R1: supplement reminder milestone is keyed by the latest submission version'
 );
 select is(
   (select count(*)::integer from public.report_reminder_events where assignment_id in (

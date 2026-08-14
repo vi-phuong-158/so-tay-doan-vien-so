@@ -1,6 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.49.1';
 import { corsHeaders, errorResponse, json } from '../_shared/http.ts';
-import { getWorkerConfig, hasTrustedWorkerSecret } from './contract.ts';
+import { getEmailDeliveryConfig, getWorkerConfig, hasTrustedWorkerSecret, isRecipientAllowlisted } from './contract.ts';
 import { createResendProvider } from './provider.ts';
 import { processQueueBatch } from './worker.ts';
 
@@ -17,6 +17,21 @@ Deno.serve(async request => {
   try {
     if (!hasTrustedWorkerSecret(request.headers.get('x-cron-secret'), Deno.env.get('CRON_SECRET'))) {
       throw new Error('FORBIDDEN');
+    }
+
+    // Delivery mode is the first gate evaluated, before any provider secret is even read.
+    // OFF (missing/invalid EMAIL_DELIVERY_MODE included) never claims a queue row and never
+    // requires provider configuration to be present. This must stay fail-closed: only the
+    // exact string LIVE reaches the unrestricted send path below.
+    const delivery = getEmailDeliveryConfig({
+      EMAIL_DELIVERY_MODE: Deno.env.get('EMAIL_DELIVERY_MODE'),
+      EMAIL_TEST_RECIPIENTS: Deno.env.get('EMAIL_TEST_RECIPIENTS')
+    });
+    if (delivery.mode === 'OFF') {
+      return json({
+        success: true, delivery_mode: 'OFF',
+        claimed: 0, sent: 0, retried: 0, failed: 0, stale: 0, rpcErrors: 0, skippedNotAllowlisted: 0
+      });
     }
 
     const config = getWorkerConfig({
@@ -46,9 +61,12 @@ Deno.serve(async request => {
       workerId: `email-worker-${crypto.randomUUID()}`,
       batchSize: config.batchSize,
       leaseSeconds: config.leaseSeconds,
-      appUrl: Deno.env.get('APP_URL') ?? undefined
+      appUrl: Deno.env.get('APP_URL') ?? undefined,
+      isRecipientAllowed: delivery.mode === 'ALLOWLIST'
+        ? email => isRecipientAllowlisted(email, delivery.allowlist)
+        : undefined
     });
-    return json({ success: true, ...result });
+    return json({ success: true, delivery_mode: delivery.mode, ...result });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return errorResponse(new Error(message.includes('FORBIDDEN') ? 'FORBIDDEN' : message), message.includes('FORBIDDEN') ? 403 : 503);

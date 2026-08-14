@@ -1,5 +1,34 @@
 # 06 — AI Working Log
 
+## [2026-08-14] P3-R1 — Email Delivery Safety Gate & Reminder Cycle Fix
+
+- **Agent:** Claude (Sonnet)
+- **Thay đổi:** Thêm `EMAIL_DELIVERY_MODE` (OFF/ALLOWLIST/LIVE, default OFF, fail-closed) vào
+  `process-email-queue` trước P3-06; sửa `REPORT_SUPPLEMENT_REMINDER` idempotency key thành
+  `NEEDS_SUPPLEMENT:v{version}` theo từng vòng review thay vì cố định một lần cho cả assignment;
+  đưa `source_entity_type/id` vào INSERT của `enqueue_email_for_user_event`, gỡ workaround UPDATE
+  của P3-05; chuyển `@supabase/supabase-js`/`react-router-dom` từ `devDependencies` sang
+  `dependencies`; bổ sung test cho cả bốn thay đổi.
+- **File đã sửa:** `supabase/functions/process-email-queue/{contract.ts,worker.ts,index.ts,contract.test.ts,worker.test.ts}`,
+  `supabase/migrations/202608140001_phase_3_r1_email_safety_remediation.sql`,
+  `supabase/tests/{report_email_safety_remediation.sql,report_reminder_engine.sql}`,
+  `package.json`, `.env.example`, `docs/brain/01-architecture.md`, `docs/brain/03-decisions.md`,
+  `docs/brain/04-current-tasks.md`, `docs/phase-3/r1-email-safety-remediation.md`,
+  `docs/brain/06-ai-working-log.md`.
+- **Lý do:** P3-04/P3-05 (đã merge) mở renderer allowlist từ 1 template vô hại lên 8 template báo
+  cáo/nhắc hạn thật, xóa mất lớp an toàn ngầm "không render thì không gửi" của P3-03. Trước khi
+  P3-06 bật scheduler tự động invoke worker, cần một gate tường minh, fail-closed. Song song, review
+  phát hiện `REPORT_SUPPLEMENT_REMINDER` chỉ có thể gửi một lần vĩnh viễn cho một assignment do
+  logical key cố định — im lặng ngừng hoạt động đúng lúc cần nhất (đơn vị chây ì qua nhiều vòng bổ
+  sung); và `source_entity_type/id` bị bỏ trống ở tầng RPC, phải vá bằng UPDATE riêng ở P3-05.
+- **Kiểm tra:** Frontend local: `npm test` 45/45 PASS, `npm run lint` 0 errors/3 existing warnings,
+  `npm run build` PASS, `npm audit --omit=dev` và `npm audit` đều 0 vulnerabilities. pgTAP mới
+  (`report_email_safety_remediation.sql`) và Deno mới (`contract.test.ts`/`worker.test.ts`) viết
+  đầy đủ nhưng **chưa chạy được cục bộ** trong môi trường thi công này (không có Docker daemon cho
+  Supabase CLI; `deno.land` bị chặn bởi egress policy của tổ chức) — khớp với hạn chế đã ghi nhận ở
+  mọi task Phase 3 trước đó; kết quả thật nằm ở CI trên Draft PR. Không gửi email thật, không gọi
+  provider thật, không đổi secret, không bật cron, không deploy production.
+
 ## [2026-08-14] Phase 3 Stack Consolidation through P3-05
 
 - **Agent:** Codex
