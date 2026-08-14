@@ -511,3 +511,11 @@
   `SENT` with XSS escaped; renderer `4/4`, frontend `45/45`, build PASS, lint `0 errors`,
   secret leak audit `NO`. The `/` failed fixture remains fail-closed evidence. Production
   used: NO.
+
+## [2026-08-14] P3-07B Live Cron Rehearsal
+
+- **Agent:** Codex
+- **Thay đổi:** Thực hiện rehearsal scheduler thật trên project Supabase tách biệt, ghi evidence hai lượt overdue/reminder, idempotency, source entity, email queue PENDING và cleanup; cập nhật trạng thái handoff.
+- **File đã sửa:** `docs/phase-3/07-live-cron-rehearsal.md`, `docs/brain/04-current-tasks.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Chứng minh `pg_cron` thật thực thi P3-06 end-to-end mà không schedule worker email, gửi email hoặc ảnh hưởng production.
+- **Kiểm tra:** `cron.job_run_details` ghi overdue job 3 và reminder job 4 đều succeeded; Fixture A chỉ tạo 1 history/audit và 1 reminder/notification/queue qua lần chạy lặp; B/C không đổi; queue PENDING, source identity đúng; cleanup và official schedules đều được xác nhận bằng SQL đọc lại.

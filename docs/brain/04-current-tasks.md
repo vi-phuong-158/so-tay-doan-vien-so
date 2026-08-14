@@ -12,7 +12,9 @@
 - **Branch:** `claude/phase-3-cron-overdue-8f4cea`; Draft PR #20 (not merged).
 - **Trạng thái:** `P3_06_PASS`. CI run `31811349804` xanh: pgTAP `Files=18, Tests=450`, Deno
   `42 passed, 0 failed`, frontend 45/45 + lint + build — xem
-  `docs/phase-3/06-cron-overdue-automation.md`.
+  `docs/phase-3/06-cron-overdue-automation.md`. P3-07B live rehearsal trên project tách biệt đã
+  PASS: scheduler thực thi, overdue/reminder idempotent, queue dừng ở `PENDING`, temporary jobs
+  và fixtures đã cleanup — xem `docs/phase-3/07-live-cron-rehearsal.md`.
 - **Phạm vi:** hardened `mark_overdue_assignments(p_as_of default now())` (persisted
   `report_status_history`/`audit_logs` per transition, null/system actor, same PENDING→OVERDUE
   eligibility rule as before); `pg_cron` schedule for `report_mark_overdue_daily` (00:05 ICT =
@@ -54,11 +56,12 @@
 - **Liên quan:** `supabase/functions/*`.
 - **Ưu tiên:** Trung bình (sau luồng báo cáo).
 
-### Phase 3 — Next: P3-07/P3-08 (sau P3-06)
-- **Mô tả:** Sau P3-06 (xem "Đang làm" phía trên), các bước còn lại của Phase 3 là: lịch hóa
-  `process-email-queue` (nếu cần) và live rehearsal chấp nhận cron/scheduler trên project thật.
-- **Báo cáo:** `docs/phase-3/06-cron-overdue-automation.md`.
-- **Ưu tiên:** Chờ P3-06 merge + rehearsal/production authorization.
+### Phase 3 — Next: P3-06 Final Acceptance & Merge PR #20
+- **Mô tả:** P3-06 technical CI và P3-07B live scheduler rehearsal đã PASS. Chỉ rà soát evidence,
+  CI final và merge Draft PR #20 theo authority riêng; không bắt đầu P3-08 trong phase này.
+- **Báo cáo:** `docs/phase-3/06-cron-overdue-automation.md`,
+  `docs/phase-3/07-live-cron-rehearsal.md`.
+- **Ưu tiên:** Cao sau approval merge riêng.
 
 ---
 
