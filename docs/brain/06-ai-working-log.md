@@ -1,9 +1,183 @@
 # 06 — AI Working Log
 
+## [2026-08-13] P3-05 acceptance handoff
+
+- **Agent:** Codex
+- **Thay đổi:** Ghi nhận P3-05 đạt full acceptance và cập nhật handoff/status tài liệu với HEAD `4876e44`, Draft PR #16 và CI run `31719821897`.
+- **File đã sửa:** `docs/04-implementation-status.md`, `docs/brain/04-current-tasks.md`, `docs/phase-3/05-reminder-engine.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Full CI đã xanh; cần chuyển trạng thái từ implementation in progress sang review pending và giữ rõ các giới hạn không cron, không deploy, không live email.
+- **Kiểm tra:** CI `31719821897` PASS: frontend build/lint/test, Supabase migration reset + pgTAP, Deno check/tests.
+
+## [2026-08-13] P3-05 CI forward-fix — align local due-date display assertion
+
+- **Agent:** Codex
+- **Thay đổi:** Cập nhật expectation pgTAP của `due_at` email reminder từ UTC sang `Asia/Ho_Chi_Minh` (`07:00`).
+- **File đã sửa:** `supabase/tests/report_reminder_engine.sql`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** CI run `31719456452` xác nhận code trả `18/08/2026 07:00`, phù hợp formatter P3-04 hiện hành; test cũ kỳ vọng `00:00` dù chỉ P3-06 mới chốt scheduler timezone.
+- **Kiểm tra:** Các assertion reminder còn lại, suite cũ và frontend build đã qua; sẽ xác minh lại full CI sau khi push.
+
+## [2026-08-13] P3-05 CI forward-fix — persist reminder queue source identity
+
+- **Agent:** Codex
+- **Thay đổi:** Sau khi enqueue email reminder thành công, ghi `source_entity_type` và `source_entity_id` vào queue row và cập nhật `updated_at`.
+- **File đã sửa:** `supabase/migrations/202608130002_phase_3_reminder_engine.sql`.
+- **Lý do:** CI run `31719018832` cho thấy queue được tạo nhưng không truy vấn được theo assignment vì helper P3-02 chưa persist hai cột source identity; payload assertion và duplicate queue assertion vì vậy thất bại.
+- **Kiểm tra:** Các lỗi SQL trước đó đã qua; sẽ chạy lại pgTAP và Edge Function CI sau khi push.
+
+## [2026-08-13] P3-05 CI forward-fix — qualify reminder event retry columns
+
+- **Agent:** Codex
+- **Thay đổi:** Qualify `report_reminder_events.id` và `notification_id` trong nhánh đọc lại event đã tồn tại.
+- **File đã sửa:** `supabase/migrations/202608130002_phase_3_reminder_engine.sql`.
+- **Lý do:** CI run `31718647707` phát hiện `notification_id` bị mơ hồ với output parameter cùng tên trong `create_report_reminder_event`.
+- **Kiểm tra:** Các suite cũ và build/frontend đã qua; sẽ xác minh lại pgTAP và Edge Function trên CI sau khi push.
+
+## [2026-08-13] P3-05 CI forward-fix — partial unique event key
+
+- **Agent:** Codex
+- **Thay đổi:** Sửa conflict target khi tạo notification reminder để chỉ rõ predicate `event_key is not null` của partial unique index.
+- **File đã sửa:** `supabase/migrations/202608130002_phase_3_reminder_engine.sql`.
+- **Lý do:** CI pgTAP phát hiện PostgreSQL không suy ra được partial unique index từ `ON CONFLICT (event_key)`, làm scan reminder dừng trước khi hoàn tất.
+- **Kiểm tra:** Đã đối chiếu log run `31717904456`; sẽ kiểm tra lại toàn bộ DB/Edge Function CI sau khi push.
+
 > Nhật ký các lần AI (Claude Code / Codex) sửa code. Mỗi agent PHẢI thêm entry sau mỗi lần
 > chạm vào code. Đọc ngược từ trên xuống để biết gần đây ai đã làm gì và vì sao.
 
+## [2026-08-13] P3-05 reminder engine
+
+- **Agent:** Codex
+- **Thay đổi:** Audit cumulative P3-00→P3-04 dependency/PR/CI; tạo stacked branch từ `bf78b07`;
+  thêm policy-driven trusted reminder scan với `as_of`, effective due override, campaign/state
+  filters, server-resolved BRANCH_OFFICER fan-out, logical reminder event uniqueness, app
+  notification và secondary email queue; thay `send-reminder` bằng RPC caller; thêm reminder
+  renderer templates, pgTAP và concurrent Deno integration coverage.
+- **File đã sửa:** `supabase/migrations/202608130002_phase_3_reminder_engine.sql`,
+  `supabase/tests/report_reminder_engine.sql`, `supabase/functions/send-reminder/index.ts`,
+  `supabase/functions/send-reminder/contract.ts`, `supabase/functions/send-reminder/contract.test.ts`,
+  `supabase/functions/reminder_engine.integration.test.ts`,
+  `supabase/functions/process-email-queue/renderer.ts`,
+  `supabase/functions/process-email-queue/renderer.test.ts`, `docs/phase-3/05-reminder-engine.md`,
+  `docs/brain/01-architecture.md`, `docs/brain/03-decisions.md`, `docs/brain/04-current-tasks.md`,
+  `docs/04-implementation-status.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** P3-05 cần xác định đúng milestone/recipient/state mà không dùng clock frontend,
+  tạo cả notification và queue, đồng thời chống duplicate khi retry/concurrent scan mà không bật
+  cron hoặc gửi email thật.
+- **Kiểm tra:** `npm.cmd test` 45/45 PASS; `npm.cmd run lint` 0 lỗi với 3 warning Fast Refresh
+  có sẵn; `npm.cmd run build` PASS; `git diff --check` PASS. Supabase CLI/Deno không có local,
+  nên migration/pgTAP, Deno check/test và concurrency integration chờ CI.
+
+## [2026-08-13] P3-05 pgTAP fixture forward-fix
+
+- **Agent:** Codex
+- **Thay đổi:** Đổi assignment `CLOSED` trong fixture reminder engine sang campaign riêng để
+  không vi phạm unique `(campaign_id, organization_id)` của report assignment.
+- **File đã sửa:** `supabase/tests/report_reminder_engine.sql`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** CI run `31717128423` đã reset migration và các suite cũ thành công; P3-05 test dừng
+  ngay tại fixture duplicate, trước khi chạy acceptance assertions.
+- **Kiểm tra:** Đã chạy lại frontend gates trước đó; commit forward-fix sẽ kích hoạt full CI DB/Deno.
+
+## [2026-08-13] P3-05 SQL ambiguity forward-fix
+
+- **Agent:** Codex
+- **Thay đổi:** Dùng named unique constraint cho `report_reminder_events` trong `ON CONFLICT` và
+  qualify các truy vấn đọc `logical_key`/`event_key` trong helper.
+- **File đã sửa:** `supabase/migrations/202608130002_phase_3_reminder_engine.sql`,
+  `docs/brain/06-ai-working-log.md`.
+- **Lý do:** CI run `31717544017` đã chạy tới pgTAP; helper fail do PostgreSQL phân biệt không rõ
+  giữa cột `logical_key` và output parameter cùng tên.
+- **Kiểm tra:** Migration reset và toàn bộ suite cũ đã PASS trước lỗi; forward-fix sẽ chạy lại
+  full DB/Deno/frontend CI.
+
+## [2026-08-13] P3-04 report event email hooks
+
+- **Agent:** Codex
+- **Thay đổi:** Audit remote dependency PR #11–#14; tạo stacked branch từ P3-03R `de952fa`; nối
+  trusted report notifications với P3-02 email enqueue; thêm allowlisted report templates, bounded
+  payload/rendering, server-side recipient/audit behavior và pgTAP/Deno coverage.
+- **File đã sửa:** `supabase/migrations/202608130001_phase_3_report_event_email_hooks.sql`,
+  `supabase/tests/report_event_email_hooks.sql`, `supabase/functions/process-email-queue/renderer.ts`,
+  `supabase/functions/process-email-queue/renderer.test.ts`, `docs/phase-3/04-report-event-email-hooks.md`,
+  `docs/brain/01-architecture.md`, `docs/brain/03-decisions.md`, `docs/brain/04-current-tasks.md`,
+  `docs/04-implementation-status.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Email phải là secondary side effect của trusted report event, không phải request độc lập
+  do frontend gọi; giữ notification bắt buộc, server-resolved recipient và deterministic idempotency.
+- **Kiểm tra:** `npm.cmd test` 45/45 PASS; `npm.cmd run lint` 0 lỗi với 3 warning Fast Refresh có sẵn;
+  `npm.cmd run build` PASS; `git diff --check` PASS. Supabase CLI/Deno không có local nên pgTAP,
+  `supabase db reset`, `deno check` và Deno tests chờ CI.
+
+## [2026-08-13] P3-04 pgTAP assertion forward-fix
+
+- **Agent:** Codex
+- **Thay đổi:** Sửa tên function trong assertion privilege của bộ test P3-04 từ trigger function
+  sang trusted queue RPC thực tế `enqueue_email_for_user_event`.
+- **File đã sửa:** `supabase/tests/report_event_email_hooks.sql`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** CI run `31711269018` xác nhận migration reset và 14 suite cũ PASS; chỉ assertion thứ
+  ba của P3-04 tham chiếu nhầm tên function nên pgTAP không tìm thấy function.
+- **Kiểm tra:** Forward-fix sẽ chạy lại full CI trên Draft PR #15.
+
+## [2026-08-13] P3-04 renderer allowlist test forward-fix
+
+- **Agent:** Codex
+- **Thay đổi:** Cập nhật fixture unknown-template trong renderer test sang mã thật sự ngoài allowlist;
+  `REPORT_ACCEPTED` nay là template hợp lệ và được kiểm tra bằng fixture report riêng.
+- **File đã sửa:** `supabase/functions/process-email-queue/renderer.test.ts`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** CI run `31712000337` đã PASS migration/pgTAP và Deno check; chỉ test cũ kỳ vọng
+  `REPORT_ACCEPTED` là unknown sau khi P3-04 thêm template này.
+- **Kiểm tra:** Forward-fix sẽ chạy lại full CI trên Draft PR #15.
+
+## [2026-08-13] P3-04 Deno typecheck forward-fix
+
+- **Agent:** Codex
+- **Thay đổi:** Thêm guard fail-closed cho action URL trong report renderer để thu hẹp kiểu
+  `string | null` trước khi escape HTML.
+- **File đã sửa:** `supabase/functions/process-email-queue/renderer.ts`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** CI run `31711594922` đã PASS migration/pgTAP và frontend; `deno check` fail một lỗi
+  TypeScript tại `escapeHtml(actionUrl)`.
+- **Kiểm tra:** Forward-fix sẽ chạy lại full CI trên Draft PR #15.
+
 ---
+
+## [2026-08-11] P3-01 Notification Foundation
+
+- **Agent:** Codex
+- **Thay đổi:** Thêm event identity/source fields và safe action URL constraint cho notifications;
+  đóng direct authenticated writes; thêm mark-read/mark-all RPC; nối campaign publish, submit v1/v2+
+  và review events với recipient server-resolved/idempotent; thêm service, unread bell, inbox UI,
+  deep-link và pgTAP/frontend acceptance.
+- **File đã sửa:** supabase/migrations/202608110001_phase_3_notification_foundation.sql,
+  supabase/tests/notification_foundation.sql, src/services/notificationService.js,
+  src/components/NotificationBell.jsx, src/pages/Notifications.jsx, src/App.jsx,
+  src/components/Layout.jsx, src/pages/Profile.jsx, src/index.css,
+  tests/notification_service.test.mjs, tests/notification_ui.test.mjs,
+  docs/phase-3/01-notification-foundation.md, docs/brain/01-architecture.md,
+  docs/brain/03-decisions.md, docs/brain/04-current-tasks.md,
+  docs/brain/06-ai-working-log.md.
+- **Lý do:** Hoàn thiện nền tảng notification in-app theo P3-01 mà không mở rộng sang email/queue/
+  reminder/cron; giữ event side-effect atomic với Phase 2 report workflows.
+- **Kiểm tra:** npm.cmd test 45/45 PASS; npm.cmd run lint 0 lỗi, 3 warning Fast Refresh có sẵn;
+  npm.cmd run build PASS; git diff --check PASS. Supabase CLI/Docker không có local, pgTAP
+  chờ CI reset database.
+
+## [2026-08-11] P3-01 pgTAP assertion forward-fix
+
+- **Agent:** Codex
+- **Thay đổi:** Sửa expected exception message trong notification_foundation.sql cho ba assertion
+  constraint/unique key theo overload throws_ok thực tế của pgTAP.
+- **File đã sửa:** supabase/tests/notification_foundation.sql, docs/brain/06-ai-working-log.md.
+- **Lý do:** CI đã chứng minh migration reset thành công và test logic đúng; chỉ expected string
+  của test harness không khớp message PostgreSQL.
+- **Kiểm tra:** CI run 31491382954: build PASS; test-db chạy đến pgTAP và fail đúng 3 assertion
+  expected string, các suite Phase 2 PASS. Local frontend 45/45, lint 0 lỗi/3 warning, build PASS.
+
+## [2026-08-11] P3-01 CI acceptance
+
+- **Agent:** Codex
+- **Thay đổi:** Ghi nhận technical acceptance cho notification foundation sau forward-fix pgTAP.
+- **File đã sửa:** docs/phase-3/01-notification-foundation.md, docs/brain/04-current-tasks.md,
+  docs/brain/06-ai-working-log.md.
+- **Lý do:** Xác nhận migration/RLS/RPC và toàn bộ regression gate trước khi handoff sang P3-02.
+- **Kiểm tra:** GitHub Actions run 31491748132 PASS — build; migration reset; 12 pgTAP files /
+  267 tests; Edge Function tests. Local frontend 45/45, lint 0 lỗi/3 warning, build PASS.
 
 ## [2026-08-11] P2-15 CI acceptance
 
@@ -104,6 +278,16 @@
 
 ---
 
+## [2026-08-11] P3-00 Phase 3 baseline, rehearsal and implementation plan
+
+- **Agent:** Codex
+- **Thay đổi:** Đối chiếu Phase 3 notification/email queue/reminder/cron giữa migration, Edge Functions, frontend, auth, seed, config và test; lập báo cáo baseline, rehearsal requirements, security gaps, retry/idempotency/timezone direction và task graph trên branch kế hoạch từ merged Phase 2 master.
+- **File đã sửa:** `docs/phase-3/00-baseline-rehearsal-plan.md`, `docs/brain/04-current-tasks.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** P3-00 là audit/docs-only; phải xác nhận merged Phase 2 baseline trước khi cho phép Phase 3 implementation.
+- **Kiểm tra:** PR #10 đã merge vào `master` tại `0ecc3a9`; CI `31411605381` PASS với 40 frontend, 236 pgTAP và 16 Deno tests. Local `npm.cmd test` PASS 40/40, lint 0 error/3 warning có sẵn, build PASS; Supabase CLI/Docker/Deno không có nên không rerun DB/Edge tests.
+
+---
+
 ## [2026-08-09] P2-09 upload and submit report
 
 - **Agent:** Codex
@@ -181,3 +365,79 @@
 - **File đã sửa:** `supabase/functions/export-report-status/*`, `supabase/functions/download-report-bundle/*`, `supabase/tests/report_export.sql`, `src/services/reportAdminService.js`, `src/pages/AdminReportDashboard.jsx`, `src/index.css`, `src/services/reportService.js`, `src/lib/reportDashboard.mjs`, `tests/report_dashboard.test.mjs`, `docs/phase-2/14-scoped-export-report-bundle.md`, `docs/brain/01-architecture.md`, `docs/brain/03-decisions.md`, `docs/brain/04-current-tasks.md`.
 - **Lý do:** Đáp ứng P2-14 mà không tạo đường vòng phân quyền hoặc làm lộ private storage path; giữ dashboard là nguồn scope duy nhất.
 - **Kiểm tra:** `npm.cmd test` (40 pass), `npm.cmd run lint` (0 errors, 3 warning có sẵn), `npm.cmd run build` pass; GitHub Actions run `31409166458` PASS (Supabase db reset + pgTAP, Deno check/test và frontend gates).
+# [2026-08-11] P3-02 Email Queue State Machine and Concurrency Safety
+
+- Agent: Codex
+- Change: Added PENDING/PROCESSING/RETRY/SENT/FAILED lifecycle with claim token,
+  worker lease, bounded claim, deterministic backoff, stale reclaim, trusted idempotent
+  enqueue, bounded/sanitized attempt logs and service-role stats. Disabled the legacy
+  provider worker and added pgTAP plus real concurrent Deno coverage.
+- Files: supabase/migrations/202608110002_phase_3_email_queue_state_machine.sql,
+  supabase/tests/email_queue_state_machine.sql, supabase/functions/process-email-queue/*,
+  supabase/functions/email_queue_state_machine.integration.test.ts, docs/phase-3/02-email-queue-state-machine.md,
+  docs/brain/01-architecture.md, docs/brain/03-decisions.md, docs/brain/04-current-tasks.md,
+  docs/brain/06-ai-working-log.md.
+- Reason: close SELECT-to-UPDATE races, stale-owner overwrite and real-send exposure in
+  P3-02 without coupling P3-01 notifications to email delivery.
+- Verification: npm.cmd run lint has 0 errors/3 pre-existing warnings and npm.cmd test is
+  45/45 PASS. Supabase CLI, Docker and Deno are unavailable locally; DB/Deno gates await CI.
+
+## [2026-08-11] P3-02 CI acceptance
+
+- Agent: Codex
+- Change: Recorded technical acceptance after the forward fixes for PostgreSQL conflict-target
+  ambiguity and Deno SupabaseClient typing.
+- Files: docs/phase-3/02-email-queue-state-machine.md, docs/brain/04-current-tasks.md,
+  docs/brain/06-ai-working-log.md.
+- Reason: Do not recommend P3-03 until migration reset, full pgTAP regression, Deno checks/tests
+  and frontend gates are green.
+- Verification: GitHub Actions run 31494989851 PASS; migration reset + 13 pgTAP files / 279
+  tests, deno check, Deno integration/contract tests, frontend lint/test/build all passed.
+# [2026-08-11] P3-03 provider integration implementation
+
+- Agent: Codex
+- Change: Selected Resend REST adapter; added server-only provider configuration, stable
+  provider idempotency, centralized failure classification, safe SYSTEM_EMAIL_TEST renderer
+  with HTML/text/subject/action-path defenses, provider-code completion RPC overload, and
+  claim-based worker dispatch.
+- Files: .env.example, supabase/migrations/202608110003_phase_3_email_provider.sql,
+  supabase/functions/process-email-queue/*, supabase/tests/email_provider_foundation.sql,
+  docs/phase-3/03-email-provider-integration.md, docs/brain/01-architecture.md,
+  docs/brain/03-decisions.md, docs/brain/04-current-tasks.md, docs/brain/06-ai-working-log.md.
+- Reason: activate P3-03 provider delivery without restoring the legacy fetch/send/update
+  race, exposing secrets, rendering arbitrary HTML or coupling notifications to email.
+- Verification: GitHub Actions run `31498548925` PASS — migration reset + 14 pgTAP files / 292
+  assertions (279 baseline + 13 P3-03), Deno check/tests `30 passed, 0 failed`, and frontend
+  lint/test/build. No live provider request was made; controlled rehearsal remains blocked
+  pending a non-production Supabase project, provider secret, verified sender and test inbox.
+
+## [2026-08-11] P3-03R live email rehearsal acceptance
+
+- Agent: Codex
+- Change: Performed the rehearsal preflight, recorded the controlled-live acceptance matrix,
+  and documented the provisioning blocker without changing production source code.
+- Files: `docs/phase-3/03r-live-email-rehearsal.md`, `docs/phase-3/03-email-provider-integration.md`,
+  `docs/brain/04-current-tasks.md`, `docs/brain/06-ai-working-log.md`.
+- Reason: The task requires a real provider acceptance and must not claim `PASS` without a
+  dedicated Supabase rehearsal project, server-only provider secret, accepted sender and test
+  inbox. None was available; no unsafe fallback or production send was attempted.
+- Verification: branch/worktree baseline verified at `7edce42`; PR #14 remains Draft; CI
+  `31499062927` is PASS; local `npm.cmd test` is 45/45 PASS, lint has 0 errors/3 existing
+  warnings, and build PASS. Final P3-03R status: `BLOCKED`.
+
+## [2026-08-11] P3-03R live email rehearsal acceptance completion
+
+- Agent: Codex
+- Change: Completed live rehearsal in Supabase project `znexculhbdjiflkczpyu`; updated the
+  acceptance documents to status `PASS` and verdict `P3_03_FULL_ACCEPTANCE_PASS`.
+- Files: `docs/phase-3/03r-live-email-rehearsal.md`,
+  `docs/phase-3/03-email-provider-integration.md`, `docs/brain/04-current-tasks.md`,
+  `docs/brain/06-ai-working-log.md`.
+- Reason: The user confirmed controlled inbox receipt after the normal rehearsal and
+  safe-render fixture were accepted by Resend; P3-03R needed to be closed without sending
+  more email or changing production code.
+- Verification: Normal event `SENT`, attempt 1, Resend `HTTP_200`, provider message ID
+  present and claim clear; second worker invocation `claimed: 0, sent: 0`; safe-render event
+  `SENT` with XSS escaped; renderer `4/4`, frontend `45/45`, build PASS, lint `0 errors`,
+  secret leak audit `NO`. The `/` failed fixture remains fail-closed evidence. Production
+  used: NO.

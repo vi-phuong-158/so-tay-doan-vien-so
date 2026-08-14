@@ -139,6 +139,31 @@
   vẫn cần compensating rollback ở Edge vì không có distributed transaction.
 - **Người quyết định:** Codex, theo P2-15 final acceptance blocker P1.
 
+## [2026-08-11] P3-01 notification foundation dùng trusted event identity
+
+- **Quyết định:** notifications bổ sung source_entity_type, source_entity_id và unique nullable
+  event_key; submit/review/publish RPC tự resolve recipient và ghi notification trong cùng
+  transaction. Campaign publish gửi đúng BRANCH_OFFICER ACTIVE của organization assignment;
+  submit v1 dùng REPORT_SUBMITTED, v2+ dùng REPORT_RESUBMITTED; review giữ recipient P2 đã
+  nghiệm thu.
+- **Lý do:** Frontend không được spoof recipient_user_id, retry không được tạo notification
+  trùng, và event phải truy ngược được về entity nghiệp vụ.
+- **Đánh đổi:** Không retroactively gán identity cho notification legacy ngoài các workflow được
+  thay thế; chưa bật realtime hoặc email side-effect trong P3-01.
+- **Người quyết định:** Codex theo đặc tả P3-01 và P3-00 handoff.
+
+## [2026-08-11] P3-01 notification access boundary và action URL
+
+- **Quyết định:** Authenticated chỉ có SELECT notification dưới RLS auth.uid() + account ACTIVE;
+  thu hồi INSERT/UPDATE/DELETE trực tiếp. Mark-read và mark-all là SECURITY DEFINER RPC với
+  search_path=public, chỉ cập nhật read_at, idempotent và trả false/0 cho owner khác hoặc
+  account suspended. action_url phải là app-relative route thuộc allowlist; frontend vẫn
+  loại URL không an toàn trước khi navigate.
+- **Lý do:** Grant UPDATE toàn bảng là quá rộng; deep-link từ dữ liệu notification là trust
+  boundary và không được trở thành open redirect/XSS.
+- **Đánh đổi:** Inbox không realtime; badge tải lại theo session/user id và cập nhật khi mở inbox.
+- **Người quyết định:** Codex theo đặc tả P3-01.
+
 ---
 
 ## Template cho entry mới
@@ -151,3 +176,90 @@
 - **Đánh đổi:** <cái gì bị đánh đổi>
 - **Người quyết định:** <user / Claude / Codex>
 ```
+# P3-02 queue lifecycle and ownership token
+
+- Decision: email_queue uses PENDING -> PROCESSING -> SENT/RETRY and RETRY ->
+  PROCESSING; FAILED is terminal, while legacy CANCELLED remains terminal. Claim uses
+  FOR UPDATE SKIP LOCKED, a batch cap of 50, deterministic order, database time, claim
+  token, worker id and lease. Completion/retry requires the current token; expired leases
+  are reclaimed in the claim transaction and old tokens are rejected.
+- Reason: the old SELECT-then-UPDATE worker raced, stale workers could overwrite a new
+  owner, and fixed retry timing was not observable. Ownership belongs in the database.
+- Trade-off: the database guarantees one logical enqueue, one active claim and finite
+  retries; provider timeout ambiguity/exactly-once delivery waits for the provider adapter.
+
+# P3-02 trusted enqueue and provider boundary
+
+- Decision: only service_role can call enqueue_email_for_user_event. The RPC resolves
+  email/name from auth.users plus ACTIVE profile, computes the idempotency key from
+  template/source/recipient/revision, bounds JSON payloads and rejects HTML keys.
+  email_queue/email_logs have no direct anon/authenticated privileges. The old
+  process-email-queue endpoint is disabled with EMAIL_PROVIDER_DEFERRED until P3-03.
+- Reason: frontend callers must not choose recipient, template, subject/html or an
+  idempotency key; P3-02 must not silently send real email or implement reminders.
+- Trade-off: legacy producers such as send-reminder remain a separate scope; business
+  transactions do not depend on an asynchronous email insert.
+# P3-03 Resend adapter and safe renderer
+
+- Decision: use one direct Resend HTTPS REST adapter in the trusted Edge Function worker.
+  It sends JSON with configured sender, plain text, escaped HTML, `User-Agent` and stable
+  `Idempotency-Key: email:{queue_id}`; it maps provider status to a normalized retryable or
+  permanent error and persists only bounded metadata.
+- Reason: Resend matches the existing provider direction and documents a small REST contract,
+  provider message ID and idempotency support. Centralizing the adapter avoids a worker that
+  knows provider-specific HTTP details or leaks raw responses.
+- Trade-off: Resend idempotency retention is provider-scoped/limited, so ambiguous timeout
+  can still duplicate physical delivery after that window. Live sender/domain verification
+  remains a manual rehearsal gate.
+
+# P3-03 template and invocation boundary
+
+- Decision: P3-03 initially allowlisted only SYSTEM_EMAIL_TEST; P3-04 extends the same renderer
+  contract with report-event templates. Render server-side structured payload into
+  bounded subject/text/HTML, escape all user-controlled HTML fields, sanitize CR/LF/header-like
+  subject content, and build links only from trusted APP_URL plus app-relative paths. Worker
+  invocation requires an exact CRON_SECRET comparison and service_role client; no frontend
+  caller can trigger arbitrary sends.
+- Reason: P3-03 proves the provider path without reintroducing arbitrary HTML, external links or
+  sender spoofing; P3-04 keeps report events on the same allowlisted boundary.
+- Trade-off: reminder/cron and live receipt are deferred; technical status can be PASS while final
+  task status remains PASS_WITH_REHEARSAL_BLOCKED.
+
+# P3-04 trusted report event email hooks
+
+- Decision: Do not add a frontend send-email request or a general event bus. Trusted report
+  notifications that already resolved a recipient pass through a backend-only trigger, call the
+  existing `enqueue_email_for_user_event` RPC, and derive the queue revision from the event key.
+- Reason: Keep the business mutation, in-app notification and secondary email enqueue on the same
+  database transaction boundary; retries cannot create duplicate queue rows; clients cannot choose
+  an email address or recipient.
+- Trade-off: Email remains secondary. Missing recipients or enqueue errors are recorded in a bounded
+  audit row and do not fail the report mutation. P3-03R physical delivery evidence is not repeated.
+
+# P3-05 deterministic report reminder engine
+
+- Decision: Use a trusted `scan_report_reminders(as_of)` RPC with a server-supplied reference
+  time. Scan only `PUBLISHED`/open campaigns and `PENDING`, `OVERDUE` or `NEEDS_SUPPLEMENT`
+  assignments according to the bounded `reminder_policy` format (`due_soon_days`, `overdue`,
+  `needs_supplement`). Effective due time is `coalesce(due_at_override, campaign.due_at)`;
+  `SUBMITTED`/`RESUBMITTED` waiting for review and terminal `ACCEPTED`/`EXEMPTED`/`CLOSED` are
+  excluded.
+- Reason: Reminder eligibility must be deterministic and use the authoritative assignment
+  state/due override, while leaving timezone scheduling and persisted overdue transitions to P3-06.
+- Trade-off: Unsupported policy values are ignored fail-safe instead of rejected at campaign write
+  time. A valid in-app recipient with a missing/invalid email receives the mandatory notification
+  while the secondary email is marked skipped for later repair.
+
+# P3-05 logical event and recipient boundary
+
+- Decision: Persist one `report_reminder_events` row per
+  `assignment + recipient + reminder_type + policy milestone`; enforce uniqueness in the database,
+  then create the in-app notification and use the backend-only reminder trigger to call the
+  existing server-resolved email enqueue RPC. Recipient fan-out is limited to ACTIVE
+  `BRANCH_OFFICER` profiles in the assignment organization with a matching role scope.
+- Reason: Concurrent scanners must converge on one logical event without trusting a client
+  recipient or relying on application-level SELECT-then-INSERT. The event row also links the
+  notification, queue row and bounded skip evidence.
+- Trade-off: This guarantees exactly-once logical reminder creation, not exactly-once physical
+  provider delivery. Queue failures are secondary and remain visible as `SKIPPED`; no automatic
+  repair worker or scheduler is introduced in P3-05.

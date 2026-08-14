@@ -15,6 +15,13 @@
 - Phase 2 report vertical slice đã có production path cho assignment, submit/review/resubmit,
   campaign/template/publish, dashboard, scoped CSV và latest bundle.
 
+## Phase 3 P3-05 PASS
+
+- P3-01/P3-02/P3-03/P3-03R/P3-04 acceptance evidence is present on cumulative stacked branches.
+- P3-05 reminder engine is complete on `feat/phase-3e-reminder-engine` at `4876e44`; CI
+  `31719821897` passed frontend, migration reset, full pgTAP, Deno check/tests and build gates.
+  No scheduler, production deploy or new physical live email send was enabled in this task.
+
 ## Phase 2 technical acceptance
 
 - Baseline P2-14 `bdf0156`: CI PASS (40 frontend, 220 pgTAP, 16 Deno tests).
