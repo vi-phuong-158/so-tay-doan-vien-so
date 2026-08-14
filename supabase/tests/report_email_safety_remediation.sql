@@ -84,11 +84,6 @@ select is(
   'reminder email queue row carries the assignment as its source entity (P2-01 fix applies to P3-05 events too)'
 );
 
-create temp table pr1_v1_event_before as
-select id, scan_count, notification_id, email_queue_id
-from public.report_reminder_events
-where assignment_id = 'a0510000-0000-4000-8000-000000000001' and reminder_type = 'REPORT_SUPPLEMENT_REMINDER';
-
 select * from public.scan_report_reminders('2026-08-16 00:00:00+00');
 select is(
   (select count(*)::integer from public.report_reminder_events
@@ -109,6 +104,15 @@ select is(
   'rescanning the same v1 cycle does not duplicate the email queue row'
 );
 
+-- Snapshot the fully-settled v1 cycle (after its own rescan) before the v2 cycle begins, so the
+-- "untouched by v2" assertions below compare against the right baseline. All rows in this test
+-- share one transaction-frozen now(), so identify v1 by its own primary key, never by created_at
+-- ordering.
+create temp table pr1_v1_event_before as
+select id, scan_count, notification_id, email_queue_id
+from public.report_reminder_events
+where assignment_id = 'a0510000-0000-4000-8000-000000000001' and reminder_type = 'REPORT_SUPPLEMENT_REMINDER';
+
 -- Resubmission: a new version is reviewed and needs supplement again. The assignment stays
 -- NEEDS_SUPPLEMENT (as review_report_assignment leaves it), but a new submission version exists.
 insert into public.report_submissions(id, assignment_id, version_number, submitted_by, summary, submitted_at, created_at)
@@ -127,7 +131,7 @@ select is(
 select is(
   (select logical_key from public.report_reminder_events
     where assignment_id = 'a0510000-0000-4000-8000-000000000001' and reminder_type = 'REPORT_SUPPLEMENT_REMINDER'
-    order by created_at desc limit 1),
+      and id <> (select id from pr1_v1_event_before)),
   'REPORT_REMINDER:a0510000-0000-4000-8000-000000000001:cccccccc-cccc-cccc-cccc-cccccccccccc:REPORT_SUPPLEMENT_REMINDER:NEEDS_SUPPLEMENT:v2',
   'v2 milestone key is scoped to submission version 2, distinct from v1'
 );
