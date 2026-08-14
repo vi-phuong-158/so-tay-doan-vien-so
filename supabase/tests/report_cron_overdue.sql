@@ -71,6 +71,9 @@ select ok(
 -- =====================================================================================
 -- Fixtures. Fixed literal timestamps keep every assertion deterministic (no wall-clock race).
 -- =====================================================================================
+-- report_assignments has unique(campaign_id, organization_id), so each fixture below that needs
+-- a distinct starting status gets its own dedicated campaign rather than sharing one campaign
+-- across multiple orgs/statuses.
 insert into public.report_campaigns(id, title, issuer, open_at, due_at, status, reminder_policy) values
   ('06c00000-0000-4000-8000-00000000000a', 'P3-06 base (past due)', 'Ban Thanh niên',
     '2027-01-01 00:00:00+00', '2027-03-10 00:00:00+00', 'PUBLISHED', '{"overdue":true}'::jsonb),
@@ -83,7 +86,21 @@ insert into public.report_campaigns(id, title, issuer, open_at, due_at, status, 
   ('06c00000-0000-4000-8000-00000000000e', 'P3-06 override past wins', 'Ban Thanh niên',
     '2027-01-01 00:00:00+00', '2027-06-01 00:00:00+00', 'PUBLISHED', '{}'::jsonb),
   ('06c00000-0000-4000-8000-00000000000f', 'P3-06 draft not published', 'Ban Thanh niên',
-    '2027-01-01 00:00:00+00', '2027-03-10 00:00:00+00', 'DRAFT', '{}'::jsonb);
+    '2027-01-01 00:00:00+00', '2027-03-10 00:00:00+00', 'DRAFT', '{}'::jsonb),
+  ('06c00000-0000-4000-8000-000000000010', 'P3-06 exclude SUBMITTED', 'Ban Thanh niên',
+    '2027-01-01 00:00:00+00', '2027-03-10 00:00:00+00', 'PUBLISHED', '{}'::jsonb),
+  ('06c00000-0000-4000-8000-000000000011', 'P3-06 exclude ACCEPTED', 'Ban Thanh niên',
+    '2027-01-01 00:00:00+00', '2027-03-10 00:00:00+00', 'PUBLISHED', '{}'::jsonb),
+  ('06c00000-0000-4000-8000-000000000012', 'P3-06 exclude EXEMPTED', 'Ban Thanh niên',
+    '2027-01-01 00:00:00+00', '2027-03-10 00:00:00+00', 'PUBLISHED', '{}'::jsonb),
+  ('06c00000-0000-4000-8000-000000000013', 'P3-06 exclude CLOSED', 'Ban Thanh niên',
+    '2027-01-01 00:00:00+00', '2027-03-10 00:00:00+00', 'PUBLISHED', '{}'::jsonb),
+  ('06c00000-0000-4000-8000-000000000014', 'P3-06 exclude NEEDS_SUPPLEMENT', 'Ban Thanh niên',
+    '2027-01-01 00:00:00+00', '2027-03-10 00:00:00+00', 'PUBLISHED', '{"needs_supplement":true}'::jsonb),
+  ('06c00000-0000-4000-8000-000000000015', 'P3-06 exclude RESUBMITTED', 'Ban Thanh niên',
+    '2027-01-01 00:00:00+00', '2027-03-10 00:00:00+00', 'PUBLISHED', '{}'::jsonb),
+  ('06c00000-0000-4000-8000-000000000016', 'P3-06 exclude LATE_SUBMITTED', 'Ban Thanh niên',
+    '2027-01-01 00:00:00+00', '2027-03-10 00:00:00+00', 'PUBLISHED', '{}'::jsonb);
 
 insert into public.report_assignments(id, campaign_id, organization_id, status, due_at_override) values
   -- A: basic overdue candidate
@@ -98,14 +115,14 @@ insert into public.report_assignments(id, campaign_id, organization_id, status, 
   ('06a00000-0000-4000-8000-000000000005', '06c00000-0000-4000-8000-00000000000d', '22222222-2222-2222-2222-222222222222', 'PENDING', '2027-04-01 00:00:00+00'),
   -- E: campaign due still in the future, but per-assignment override has already passed
   ('06a00000-0000-4000-8000-000000000006', '06c00000-0000-4000-8000-00000000000e', '22222222-2222-2222-2222-222222222222', 'PENDING', '2027-03-10 00:00:00+00'),
-  -- Terminal / non-eligible statuses on the same past-due campaign: must never transition
-  ('06a00000-0000-4000-8000-000000000007', '06c00000-0000-4000-8000-00000000000a', '22222222-2222-2222-2222-222222222222', 'SUBMITTED', null),
-  ('06a00000-0000-4000-8000-000000000008', '06c00000-0000-4000-8000-00000000000a', '33333333-3333-3333-3333-333333333333', 'ACCEPTED', null),
-  ('06a00000-0000-4000-8000-000000000009', '06c00000-0000-4000-8000-00000000000a', '44444444-4444-4444-4444-444444444444', 'EXEMPTED', null),
-  ('06a0000a-0000-4000-8000-00000000000a', '06c00000-0000-4000-8000-00000000000a', '22222222-2222-2222-2222-222222222222', 'CLOSED', null),
-  ('06a0000b-0000-4000-8000-00000000000b', '06c00000-0000-4000-8000-00000000000a', '22222222-2222-2222-2222-222222222222', 'NEEDS_SUPPLEMENT', null),
-  ('06a0000c-0000-4000-8000-00000000000c', '06c00000-0000-4000-8000-00000000000a', '22222222-2222-2222-2222-222222222222', 'RESUBMITTED', null),
-  ('06a0000d-0000-4000-8000-00000000000d', '06c00000-0000-4000-8000-00000000000a', '22222222-2222-2222-2222-222222222222', 'LATE_SUBMITTED', null),
+  -- Terminal / non-eligible statuses, each on its own past-due PUBLISHED campaign: must never transition
+  ('06a00000-0000-4000-8000-000000000007', '06c00000-0000-4000-8000-000000000010', '22222222-2222-2222-2222-222222222222', 'SUBMITTED', null),
+  ('06a00000-0000-4000-8000-000000000008', '06c00000-0000-4000-8000-000000000011', '33333333-3333-3333-3333-333333333333', 'ACCEPTED', null),
+  ('06a00000-0000-4000-8000-000000000009', '06c00000-0000-4000-8000-000000000012', '44444444-4444-4444-4444-444444444444', 'EXEMPTED', null),
+  ('06a0000a-0000-4000-8000-00000000000a', '06c00000-0000-4000-8000-000000000013', '22222222-2222-2222-2222-222222222222', 'CLOSED', null),
+  ('06a0000b-0000-4000-8000-00000000000b', '06c00000-0000-4000-8000-000000000014', '22222222-2222-2222-2222-222222222222', 'NEEDS_SUPPLEMENT', null),
+  ('06a0000c-0000-4000-8000-00000000000c', '06c00000-0000-4000-8000-000000000015', '22222222-2222-2222-2222-222222222222', 'RESUBMITTED', null),
+  ('06a0000d-0000-4000-8000-00000000000d', '06c00000-0000-4000-8000-000000000016', '22222222-2222-2222-2222-222222222222', 'LATE_SUBMITTED', null),
   -- F: DRAFT campaign, past due, PENDING: must stay untouched (campaign never PUBLISHED)
   ('06a0000e-0000-4000-8000-00000000000e', '06c00000-0000-4000-8000-00000000000f', '22222222-2222-2222-2222-222222222222', 'PENDING', null);
 
@@ -274,9 +291,8 @@ select is(
 );
 
 -- L: NEEDS_SUPPLEMENT reminder milestones stay keyed by submission version across a resubmit
--- cycle; direct-insert submission fixtures mirror report_reminder_engine.sql's approach.
-update public.report_campaigns set reminder_policy = '{"needs_supplement":true}'::jsonb
-where id = '06c00000-0000-4000-8000-00000000000a';
+-- cycle; direct-insert submission fixtures mirror report_reminder_engine.sql's approach. The
+-- dedicated campaign for assignment 06a0000b already has needs_supplement:true from creation.
 insert into public.report_submissions(id, assignment_id, version_number, submitted_by, summary, submitted_at, created_at)
 values ('06a0000b-0000-4000-8000-000000000901', '06a0000b-0000-4000-8000-00000000000b', 1,
   'cccccccc-cccc-cccc-cccc-cccccccccccc', 'P3-06 supplement v1', '2027-03-11 00:00:00+00', '2027-03-11 00:00:00+00');
