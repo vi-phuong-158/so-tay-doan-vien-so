@@ -128,11 +128,23 @@ insert into public.report_assignments(id, campaign_id, organization_id, status, 
 
 -- =====================================================================================
 -- A/D/E/F/G/H/J -- one batch sweep at a fixed as_of covers the exclusion matrix in one call.
--- =====================================================================================
+-- The raw integer this returns also counts any unrelated PENDING assignment elsewhere in the
+-- database (e.g. seed.sql's own rehearsal campaign) that happens to be past due relative to this
+-- fixed future as_of, so the aggregate assertion below is scoped to exactly this file's fixture
+-- IDs rather than asserting the unscoped return value.
+select public.mark_overdue_assignments('2027-03-11 00:00:00+00');
 select is(
-  public.mark_overdue_assignments('2027-03-11 00:00:00+00'),
+  (select count(*)::integer from public.report_assignments
+   where status = 'OVERDUE' and id = any(array[
+     '06a00000-0000-4000-8000-000000000001'::uuid,
+     '06a00000-0000-4000-8000-000000000002'::uuid,
+     '06a00000-0000-4000-8000-000000000003'::uuid,
+     '06a00000-0000-4000-8000-000000000004'::uuid,
+     '06a00000-0000-4000-8000-000000000005'::uuid,
+     '06a00000-0000-4000-8000-000000000006'::uuid
+   ])),
   3,
-  'sweep transitions exactly the 3 eligible PENDING+PUBLISHED+past-due assignments (basic, second org, override-past-wins)'
+  'sweep transitions exactly the 3 eligible PENDING+PUBLISHED+past-due fixtures (basic, second org, override-past-wins)'
 );
 
 select is(
