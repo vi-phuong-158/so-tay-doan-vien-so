@@ -1,5 +1,13 @@
 # 06 — AI Working Log
 
+## [2026-08-14] Phase 3 Stack Consolidation through P3-05
+
+- **Agent:** Codex
+- **Thay đổi:** Audit GitHub PR #11–#16, xác minh ancestry cumulative P3-00 → P3-05, tạo integration branch từ `origin/master`, merge `--no-ff` cumulative P3-05, và merge PR #17 vào `master` tại `2a68f20`.
+- **File đã sửa:** `docs/04-implementation-status.md`, `docs/brain/04-current-tasks.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Chốt an toàn stacked Phase 3 tới P3-05 mà không squash/rebase, không duplicate code/migration, và không mở rộng sang P3-06.
+- **Kiểm tra:** Final merged-master CI `31783521687` PASS: frontend 45/45, lint 0 errors/3 existing warnings, build PASS, 21 migrations, 16 pgTAP suites, Deno 37/37; không deploy production, không bật cron, không gửi live email mới.
+
 ## [2026-08-13] P3-05 acceptance handoff
 
 - **Agent:** Codex
