@@ -29,21 +29,24 @@ src/
 ├── components/
 │   ├── Guards.jsx           # AuthGuard, RoleGuard (+ getAuthGuardAction thuần, có test)
 │   ├── Layout.jsx           # AppShell: Sidebar + BottomNav + Outlet
+│   ├── NotificationBell.jsx # badge unread server-backed, user-keyed cache reset
 │   ├── common.jsx           # Brand, EmptyState, SectionHeader...
 │   ├── Icon.jsx             # line icon
 │   ├── ErrorBoundary.jsx / Skeleton.jsx
 ├── pages/
 │   ├── auth/                # Login, ForgotPassword, ResetPassword, ChangePassword (dùng Supabase)
 │   ├── Home/Work/Knowledge/Innovation/Profile.jsx  # 5 khu vực — HIỆN DÙNG MOCK
+│   ├── Notifications.jsx    # inbox/read state, safe deep-link, bounded pagination
 │   └── Admin.jsx            # dashboard quản trị (dùng Supabase)
 ├── data/mock.js             # dữ liệu demo (campaigns, documents, topics, projects, problems)
 ├── lib/status.mjs           # REPORT_STATUS, getReportStatus, daysUntil, normalizeSafeFileName (có test)
 ├── lib/markdown.js          # render markdown an toàn (DOMPurify)
 ├── services/supabaseClient.js  # khởi tạo supabase client từ VITE_SUPABASE_*
-└── services/reportAdminService.js # quản trị campaign + dashboard/export qua RPC/Edge Function, không ghi assignment trực tiếp
+├── services/reportAdminService.js # quản trị campaign + dashboard/export qua RPC/Edge Function
+└── services/notificationService.js # read-only inbox/count + mark-read RPC boundary
 
 supabase/
-├── migrations/              # 4 migration: schema, storage/RPC security, fix bảo mật P1, admin txn
+├── migrations/              # ordered schema/RLS/RPC migrations
 ├── seed.sql                 # dữ liệu seed local (gồm auth.users cho GoTrue)
 ├── tests/rls_acceptance.sql # test RLS
 └── functions/
@@ -60,6 +63,9 @@ supabase/
 
 | Module / file | Vai trò | Được gọi bởi | Phụ thuộc vào |
 |---------------|---------|--------------|---------------|
+| `src/components/NotificationBell.jsx` | Unread badge và điều hướng inbox | `Layout.jsx` | `notificationService`, `AuthContext`, Supabase anon client |
+| `src/pages/Notifications.jsx` | Inbox thông báo, loading/empty/error, mark-read/mark-all, pagination và deep-link | route `/ca-nhan/thong-bao` | `notificationService`, `AuthContext`, `Icon`, `common` |
+| `src/services/notificationService.js` | Query rows/count dưới RLS; gọi mark-read RPC; loại action URL không an toàn | `NotificationBell`, `Notifications` | Supabase client |
 | `src/main.jsx` | Entry, mount, đăng ký SW | (trình duyệt) | `App.jsx`, `index.css` |
 | `src/App.jsx` | Khai báo route + bọc Guard | `main.jsx` | `AuthContext`, `Guards`, `Layout`, mọi `pages/*` |
 | `src/contexts/AuthContext.jsx` | Session/user/profile/roles, `login/logout/hasRole` | `App`, mọi component gọi `useAuth` | `services/supabaseClient` |
@@ -88,7 +94,7 @@ supabase/
 | `functions/download-report-bundle` | ZIP latest submission/file trong scope, private Storage, giới hạn 100 file/50 MB, audit | `AdminReportDashboard` qua `reportAdminService` | dashboard RPC, service-role Storage, `fflate`, `_shared/*` |
 | `functions/ask-ai` | RAG: scope tài liệu → Gemini → chuẩn hóa nguồn → lưu lịch sử | client | `_shared/*`, `match_document_chunks` |
 | `functions/process-document` | Trích xuất → chunk → embedding → chờ duyệt | admin | `_shared/*`, Gemini |
-| `functions/send-reminder` / `process-email-queue` | Nhắc hạn (idempotent) / gửi email theo batch | cron | `_shared/*`, email_queue |
+| `functions/send-reminder` / `process-email-queue` | Gọi reminder scan trusted / gửi email theo batch | trusted caller (scheduler deferred) | `_shared/*`, reminder RPC, email_queue |
 
 ### Luồng xử lý chính
 
@@ -130,6 +136,31 @@ AdminReports → reportAdminService → RPC tạo/sửa draft + lấy đơn vị
              → history + audit + in-app notification (cùng transaction)
              → UI refresh assignment/submission state; stale transition fail-closed
 
+# Notification foundation (P3-01)
+Trusted submit/review/publish RPC → recipient resolved from auth/workflow/active BRANCH_OFFICER scope
+             → notifications(source_entity_type/source_entity_id/event_key) in same transaction
+             → RLS SELECT only own active-account rows
+Inbox/Bell → notificationService (bounded created_at DESC + id DESC query)
+             → mark_notification_read / mark_all_notifications_read (read_at only)
+             → safe app-relative action URL → mark read first → React Router deep-link
+
+# Report event email hooks (P3-04)
+Trusted report notification insert → `enqueue_report_email_from_notification` trigger
+             → server-resolved auth.users email via `enqueue_email_for_user_event`
+             → allowlisted REPORT_* queue row with deterministic event identity
+             → `process-email-queue` renderer/provider boundary
+No valid recipient → primary report mutation remains successful and a bounded audit row records the gap
+
+# Reminder engine (P3-05)
+Trusted `send-reminder` caller + exact `CRON_SECRET` → `scan_report_reminders(as_of)`
+             → PUBLISHED/open campaign + eligible assignment + effective due date
+             → server-resolved ACTIVE BRANCH_OFFICER recipients
+             → unique `report_reminder_events` logical key
+             → notification (`REPORT_DUE_SOON` / `REPORT_OVERDUE` /
+                `REPORT_SUPPLEMENT_REMINDER`)
+             → reminder email trigger → P3-02 queue idempotency → P3-03 renderer
+No scheduler, persisted OVERDUE transition or provider send is enabled by P3-05.
+
 # Lịch sử/nộp lại báo cáo (P2-11)
 Assignment detail → reportService.getSubmissionHistory (RLS, version desc, profile-safe fields)
                  → history accordion; signed URL chỉ tạo khi mở file
@@ -170,6 +201,14 @@ RPC then chốt: `create_report_submission`, `create_report_submission_with_file
 `mark_overdue_assignments`, `match_document_chunks`, `transition_problem_status`,
 `is_organization_in_scope`.
 
+P3-01 notification RPC: publish_report_campaign, mark_notification_read, mark_all_notifications_read.
+P3-04 notification trigger: enqueue_report_email_from_notification; email templates are
+REPORT_CAMPAIGN_PUBLISHED, REPORT_SUBMITTED, REPORT_RESUBMITTED, REPORT_NEEDS_SUPPLEMENT and
+REPORT_ACCEPTED. The trigger is backend-only and calls the existing P3-02 trusted enqueue RPC.
+P3-05 adds `report_reminder_events`, `scan_report_reminders(as_of)` and the backend-only
+`enqueue_report_reminder_email_from_notification` trigger. Reminder email templates are
+REPORT_DUE_SOON, REPORT_OVERDUE and REPORT_SUPPLEMENT_REMINDER; recipients remain server-resolved.
+
 ## Biến môi trường
 
 ```
@@ -197,3 +236,41 @@ SUPABASE_SERVICE_ROLE_KEY   # (fallback: SERVICE_ROLE_KEY)
 - **AI:** chỉ truy hồi chunk `APPROVED`, luôn trả nguồn; lọc dữ liệu nhạy cảm trước khi gửi Gemini.
 - **GoTrue nhạy cảm với seed:** `supabase/seed.sql` phải điền đủ cột `auth.users`/`auth.identities`
   đúng cách (nhiều commit lịch sử sửa lỗi này) — cẩn thận khi đổi seed.
+# Email queue foundation (P3-02)
+
+Trusted producer (service role only)
+        -> enqueue_email_for_user_event (server-resolved auth.users email,
+           bounded structured payload, computed idempotency key)
+        -> email_queue PENDING
+
+claim_email_queue(worker, bounded batch)
+        -> PENDING/RETRY eligible or stale PROCESSING
+        -> PROCESSING + claim_token + worker_id + lease
+        -> email_logs attempt evidence
+
+current owner + token
+        -> mark_email_sent -> SENT (terminal)
+        -> mark_email_retry -> RETRY + deterministic next_attempt_at
+                              -> max attempts/non-retryable -> FAILED (terminal)
+
+Stale leases are reclaimed atomically by the next claim transaction; an old
+claim token cannot complete or retry a reclaimed row. process-email-queue does
+not call a provider in P3-02 and returns EMAIL_PROVIDER_DEFERRED until P3-03
+supplies the provider adapter and secret boundary.
+
+P3-02 queue RPC: enqueue_email_for_user_event, claim_email_queue, mark_email_sent,
+mark_email_retry, get_email_queue_stats. Ordinary users have no table or RPC
+privileges for email queue/logs; trusted server code uses service_role.
+# Email provider integration (P3-03)
+
+process-email-queue (trusted secret invocation)
+        -> claim_email_queue (P3-02 atomic ownership)
+        -> SYSTEM_EMAIL_TEST server renderer (subject + text + escaped HTML)
+        -> Resend REST adapter (server-only API key, stable email:{queue_id} key)
+        -> mark_email_sent(..., provider_code) or mark_email_retry(...)
+
+The worker never directly selects PENDING rows and never accepts provider/sender/HTML
+configuration from queue payload or frontend. `send-reminder` remains a deferred producer;
+report event hooks are implemented by the P3-04 trusted notification trigger. Provider metadata
+is persisted in `email_logs`; live rehearsal is a controlled manual gate, not a CI or production
+deployment step.

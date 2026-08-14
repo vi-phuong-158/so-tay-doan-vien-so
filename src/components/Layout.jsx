@@ -2,6 +2,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { Icon } from './Icon';
 import { Brand } from './common';
 import { useAuth } from '../contexts/AuthContext';
+import { NotificationBell } from './NotificationBell';
 
 function Sidebar() {
   const navigate = useNavigate();
@@ -61,16 +62,13 @@ function BottomNav() {
 }
 
 export function AppShell() {
-  const navigate = useNavigate();
   return (
     <div className="app-layout">
       <Sidebar />
       <main className="main-content">
         <div className="mobile-topbar">
           <Brand compact />
-          <button className="icon-button" aria-label="Thông báo" onClick={() => navigate('/ca-nhan/thong-bao')}>
-            <Icon name="bell" /><i>3</i>
-          </button>
+          <NotificationBell />
         </div>
         <Outlet />
       </main>

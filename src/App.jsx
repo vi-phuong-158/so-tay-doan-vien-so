@@ -14,6 +14,7 @@ import { ReportAssignmentDetail } from './pages/ReportAssignmentDetail';
 import { Knowledge } from './pages/Knowledge';
 import { Innovation } from './pages/Innovation';
 import { Profile } from './pages/Profile';
+import { Notifications } from './pages/Notifications';
 import { AdminDashboard } from './pages/Admin';
 import { AdminReports } from './pages/AdminReports';
 import { AdminReportDashboard } from './pages/AdminReportDashboard';
@@ -50,9 +51,7 @@ export default function App() {
             <Route path="ca-nhan" element={<Profile />} />
 
             {/* Profile Routes */}
-            <Route path="ca-nhan/thong-bao" element={
-              <div className="page"><div style={{padding: '16px'}}><h2>Thông báo</h2><p>Tính năng đang phát triển.</p></div></div>
-            } />
+            <Route path="ca-nhan/thong-bao" element={<Notifications />} />
             <Route path="ca-nhan/doi-mat-khau" element={<ChangePassword />} />
 
             {/* Admin Routes */}

@@ -1,4 +1,56 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.49.1';
-import { corsHeaders,errorResponse,json } from '../_shared/http.ts';
-async function sendEmail(to:string,subject:string,html:string){const provider=Deno.env.get('EMAIL_PROVIDER');if(provider==='RESEND'){const r=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${Deno.env.get('RESEND_API_KEY')}`,'Content-Type':'application/json'},body:JSON.stringify({from:Deno.env.get('EMAIL_FROM'),to:[to],subject,html})});if(!r.ok)throw new Error(`RESEND_${r.status}`);return await r.json();}if(provider==='BREVO'){const r=await fetch('https://api.brevo.com/v3/smtp/email',{method:'POST',headers:{'api-key':Deno.env.get('BREVO_API_KEY')!,'Content-Type':'application/json'},body:JSON.stringify({sender:{email:Deno.env.get('EMAIL_FROM')},to:[{email:to}],subject,htmlContent:html})});if(!r.ok)throw new Error(`BREVO_${r.status}`);return await r.json();}throw new Error('EMAIL_PROVIDER_NOT_CONFIGURED');}
-Deno.serve(async request=>{if(request.method==='OPTIONS')return new Response('ok',{headers:corsHeaders});try{if(request.headers.get('x-cron-secret')!==Deno.env.get('CRON_SECRET'))throw new Error('FORBIDDEN');const admin=createClient(Deno.env.get('SUPABASE_URL')!,Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,{auth:{persistSession:false}});const{data,error}=await admin.from('email_queue').select('*').eq('status','PENDING').lte('scheduled_at',new Date().toISOString()).order('scheduled_at').limit(20);if(error)throw error;let sent=0,failed=0;for(const item of data||[]){await admin.from('email_queue').update({status:'PROCESSING',attempt_count:item.attempt_count+1}).eq('id',item.id).eq('status','PENDING');try{const subject=item.payload?.title||'Thông báo từ Sổ tay Đoàn viên số';const html=`<p>Kính gửi ${item.recipient_name||'đồng chí'},</p><p>${item.payload?.message||subject}</p><p>Vui lòng đăng nhập hệ thống để xem chi tiết.</p>`;const result=await sendEmail(item.recipient_email,subject,html);await admin.from('email_queue').update({status:'SENT',last_error:null}).eq('id',item.id);await admin.from('email_logs').insert({queue_id:item.id,provider:Deno.env.get('EMAIL_PROVIDER'),provider_message_id:result?.id||result?.messageId,status:'SENT',sent_at:new Date().toISOString()});sent++;}catch(e){const retry=item.attempt_count+1<4;await admin.from('email_queue').update({status:retry?'PENDING':'FAILED',last_error:String(e),scheduled_at:new Date(Date.now()+15*60_000).toISOString()}).eq('id',item.id);failed++;}}return json({success:true,sent,failed});}catch(error){return errorResponse(error,String(error).includes('FORBIDDEN')?403:400)}});
+import { corsHeaders, errorResponse, json } from '../_shared/http.ts';
+import { getWorkerConfig, hasTrustedWorkerSecret } from './contract.ts';
+import { createResendProvider } from './provider.ts';
+import { processQueueBatch } from './worker.ts';
+
+function requiredEnv(name: string): string {
+  const value = Deno.env.get(name);
+  if (!value) throw new Error(`${name}_NOT_CONFIGURED`);
+  return value;
+}
+
+Deno.serve(async request => {
+  if (request.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  if (request.method !== 'POST') return errorResponse(new Error('METHOD_NOT_ALLOWED'), 405);
+
+  try {
+    if (!hasTrustedWorkerSecret(request.headers.get('x-cron-secret'), Deno.env.get('CRON_SECRET'))) {
+      throw new Error('FORBIDDEN');
+    }
+
+    const config = getWorkerConfig({
+      EMAIL_WORKER_BATCH_SIZE: Deno.env.get('EMAIL_WORKER_BATCH_SIZE'),
+      EMAIL_WORKER_LEASE_SECONDS: Deno.env.get('EMAIL_WORKER_LEASE_SECONDS'),
+      EMAIL_PROVIDER_TIMEOUT_MS: Deno.env.get('EMAIL_PROVIDER_TIMEOUT_MS')
+    });
+    if ((Deno.env.get('EMAIL_PROVIDER') ?? 'RESEND') !== 'RESEND') {
+      throw new Error('EMAIL_PROVIDER_UNSUPPORTED');
+    }
+
+    const provider = createResendProvider({
+      apiKey: requiredEnv('EMAIL_PROVIDER_API_KEY'),
+      fromAddress: requiredEnv('EMAIL_FROM_ADDRESS'),
+      fromName: Deno.env.get('EMAIL_FROM_NAME') ?? undefined,
+      baseUrl: Deno.env.get('EMAIL_PROVIDER_BASE_URL') ?? undefined,
+      timeoutMs: config.timeoutMs
+    });
+    const adminClient = createClient(
+      requiredEnv('SUPABASE_URL'),
+      requiredEnv('SUPABASE_SERVICE_ROLE_KEY'),
+      { auth: { persistSession: false, autoRefreshToken: false } }
+    );
+    const result = await processQueueBatch({
+      adminClient: adminClient as any,
+      provider,
+      workerId: `email-worker-${crypto.randomUUID()}`,
+      batchSize: config.batchSize,
+      leaseSeconds: config.leaseSeconds,
+      appUrl: Deno.env.get('APP_URL') ?? undefined
+    });
+    return json({ success: true, ...result });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return errorResponse(new Error(message.includes('FORBIDDEN') ? 'FORBIDDEN' : message), message.includes('FORBIDDEN') ? 403 : 503);
+  }
+});
