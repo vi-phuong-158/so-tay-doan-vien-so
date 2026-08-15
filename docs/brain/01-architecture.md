@@ -94,7 +94,7 @@ supabase/
 | `functions/download-report-bundle` | ZIP latest submission/file trong scope, private Storage, giới hạn 100 file/50 MB, audit | `AdminReportDashboard` qua `reportAdminService` | dashboard RPC, service-role Storage, `fflate`, `_shared/*` |
 | `functions/ask-ai` | RAG: scope tài liệu → Gemini → chuẩn hóa nguồn → lưu lịch sử | client | `_shared/*`, `match_document_chunks` |
 | `functions/process-document` | Trích xuất → chunk → embedding → chờ duyệt | admin | `_shared/*`, Gemini |
-| `functions/send-reminder` / `process-email-queue` | Gọi reminder scan trusted / gửi email theo batch | trusted caller (scheduler deferred) | `_shared/*`, reminder RPC, email_queue |
+| `functions/send-reminder` / `process-email-queue` | Gọi reminder scan trusted / gửi email theo batch | trusted caller manual/external (không nằm trong pg_cron path của P3-06) | `_shared/*`, reminder RPC, email_queue |
 
 ### Luồng xử lý chính
 
@@ -161,6 +161,22 @@ Trusted `send-reminder` caller + exact `CRON_SECRET` → `scan_report_reminders(
              → reminder email trigger → P3-02 queue idempotency → P3-03 renderer
 No scheduler, persisted OVERDUE transition or provider send is enabled by P3-05.
 
+# Cron & overdue automation (P3-06)
+pg_cron (installed by migration, no HTTP/secret) → two daily in-database jobs:
+  `report_mark_overdue_daily` @ `5 17 * * *` UTC (= 00:05 Asia/Ho_Chi_Minh, no DST)
+             → `mark_overdue_assignments(p_as_of default now())`
+             → single atomic UPDATE ... WHERE status='PENDING' AND campaign PUBLISHED AND
+               effective_due_at < p_as_of (chained CTE also writes report_status_history +
+               audit_logs for every row it actually flips; system/null actor)
+             → idempotent/concurrency-safe by construction: a second concurrent UPDATE
+               re-checks status='PENDING' against the just-committed row and matches nothing
+  `report_reminder_scan_daily` @ `0 0 * * *` UTC (= 07:00 Asia/Ho_Chi_Minh, no DST)
+             → `scan_report_reminders()` (unchanged P3-05/P3-R1 engine, called directly)
+Neither cron job calls an Edge Function, HTTP endpoint or email provider; `send-reminder`
+(CRON_SECRET-gated Edge Function) remains an untouched manual/external-trigger fallback, not
+part of the pg_cron path. `process-email-queue` (the email worker) is still NOT scheduled by
+any cron job — EMAIL_DELIVERY_MODE-gated sending stays a manually/externally triggered step.
+
 # Lịch sử/nộp lại báo cáo (P2-11)
 Assignment detail → reportService.getSubmissionHistory (RLS, version desc, profile-safe fields)
                  → history accordion; signed URL chỉ tạo khi mở file
@@ -198,7 +214,7 @@ học tập/quiz, trợ lý AI, đổi mới sáng tạo, email, `audit_logs`.
 RPC then chốt: `create_report_submission`, `create_report_submission_with_files` (expected-version overload),
 `create_report_assignments`, `review_report_assignment`, `get_report_dashboard`,
 `get_report_dashboard_assignments`,
-`mark_overdue_assignments`, `match_document_chunks`, `transition_problem_status`,
+`mark_overdue_assignments(p_as_of)`, `match_document_chunks`, `transition_problem_status`,
 `is_organization_in_scope`.
 
 P3-01 notification RPC: publish_report_campaign, mark_notification_read, mark_all_notifications_read.
@@ -208,6 +224,11 @@ REPORT_ACCEPTED. The trigger is backend-only and calls the existing P3-02 truste
 P3-05 adds `report_reminder_events`, `scan_report_reminders(as_of)` and the backend-only
 `enqueue_report_reminder_email_from_notification` trigger. Reminder email templates are
 REPORT_DUE_SOON, REPORT_OVERDUE and REPORT_SUPPLEMENT_REMINDER; recipients remain server-resolved.
+P3-06 replaces `mark_overdue_assignments()` (zero-arg) with `mark_overdue_assignments(p_as_of
+timestamptz default now())` — same PENDING→OVERDUE eligibility rule, now with atomic
+`report_status_history`/`audit_logs` writes (null/system actor) — and installs two `pg_cron` jobs
+(`report_mark_overdue_daily`, `report_reminder_scan_daily`) that call trusted RPCs directly
+in-database. `service_role` and `postgres` hold EXECUTE; `anon`/`authenticated` do not.
 
 ## Biến môi trường
 
