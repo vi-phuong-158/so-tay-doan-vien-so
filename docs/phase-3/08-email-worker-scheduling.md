@@ -2,13 +2,17 @@
 
 ## Status
 
-- `P3_08A_REPO_IMPLEMENTATION`: **PASS** — self-verified by this agent (see "Automated
-  validation" below). CI run `31854967535` on Draft PR #21 HEAD `3f082ef4` is green.
-- `P3_08A_LIVE_REHEARSAL`: **OPERATOR_ACCEPTED_AGENT_UNVERIFIED** — see "External operator
-  rehearsal (Gate 1 / OFF mode)" below.
-- `P3_08A_PROJECT_GATE`: **CLOSED_BY_OWNER_ACCEPTANCE**.
-- Gate 2 (`ALLOWLIST` single-email send, P3-08B) has **not** been attempted by anyone in this
-  record and is not covered by this status.
+- `P3_08_REPOSITORY_IMPLEMENTATION`: **SELF_VERIFIED_BY_CODEX** — scheduler migration, P3-R1
+  delivery gate, full PR diff, and secret-exposure audit were reviewed on PR #21 HEAD
+  `499f999d8102389c98446502e7036c39666924ae`.
+- `P3_08A_LIVE_REHEARSAL`: **AUTHENTICATED_EXTERNAL_OPERATOR**; **OWNER_ACCEPTED** — OFF-mode
+  scheduler rehearsal was accepted under the project's established governance model.
+- `P3_08B_LIVE_REHEARSAL`: **AUTHENTICATED_EXTERNAL_OPERATOR** — the controlled ALLOWLIST
+  rehearsal is recorded in the final acceptance evidence below.
+- `P3_08B_INBOX_CONFIRMATION`: **OWNER_CONFIRMED**.
+- `P3_08_FINAL_RUNTIME_DELIVERY_MODE`: **OFF**.
+- `P3_08_FINAL_ACCEPTANCE`: **READY_FOR_PR_MERGE**. Production Supabase was not deployed or
+  changed by this task.
 
 ## Baseline
 
@@ -514,3 +518,71 @@ AUTHENTICATED_EXTERNAL_OPERATOR
 Agent independent live verification:
 NOT AVAILABLE
 ```
+
+## Final acceptance evidence — P3-08B (completed)
+
+### Provenance
+
+- **Repository implementation:** `SELF_VERIFIED_BY_CODEX`.
+- **P3-08A OFF-mode live execution:** `AUTHENTICATED_EXTERNAL_OPERATOR`; `OWNER_ACCEPTED`.
+- **P3-08B ALLOWLIST live execution:** `AUTHENTICATED_EXTERNAL_OPERATOR`.
+- **Inbox confirmation:** `OWNER_CONFIRMED`.
+- **Codex independent Supabase verification:** **NO** — no authenticated Supabase connection was
+  available or used by Codex for this acceptance. The live data below is recorded with its stated
+  external-operator/owner provenance, not as independently observed by Codex.
+
+### Controlled run
+
+- **Environment:** `so-tay-doan-vien-rehearsal` (`znexculhbdjiflkczpyu`); Production untouched.
+- **Run ID:** `P3_08B_20260815_153537_2aa7de09`.
+- **Queue ID:** `e5fcd423-5e30-4164-ad1a-63af5c00f5ae`.
+- **Template:** `SYSTEM_EMAIL_TEST`; the fixture contained no report or other business content.
+- **Pre-flight:** eligible `PENDING`/`RETRY` rows = `0`; the official active worker was
+  `email_queue_worker` on `*/10 * * * *`; `EMAIL_DELIVERY_MODE=ALLOWLIST` and the allowlist
+  contained exactly the approved controlled inbox. `LIVE` was not enabled.
+
+### First invocation and delivery
+
+The external operator invoked the Vault-authenticated HTTP path used by the scheduler (pg_net
+request `14`) and received HTTP `200`:
+
+```json
+{
+  "success": true,
+  "delivery_mode": "ALLOWLIST",
+  "claimed": 1,
+  "sent": 1,
+  "retried": 0,
+  "failed": 0,
+  "stale": 0,
+  "rpcErrors": 0,
+  "skippedNotAllowlisted": 0
+}
+```
+
+The fixture ended in `SENT` with `attempt_count=1`, no last error, and no next attempt. Exactly
+one `email_logs` row was recorded: provider `RESEND`, log ID
+`1e1a39ac-a4d6-4bfc-a801-e55f0d60119d`, provider message ID
+`67478c36-49b4-4452-b479-156749eb2b3a`, provider code `HTTP_200`, status `SENT`, attempt `1`.
+The owner confirmed receipt in the controlled inbox with subject marker
+`[P3-08B REHEARSAL] P3_08B_20260815_153537_2aa7de09`.
+
+### Duplicate check and safe final state
+
+The second operator invocation (pg_net request `15`) returned ALLOWLIST mode with `claimed=0` and
+`sent=0`. The fixture remained `SENT` at `attempt_count=1`; the log count remained `1` and the
+provider message ID was unchanged. This confirms the normal already-`SENT` path was not re-claimed;
+it does not claim a mathematically exact-once guarantee across the documented provider-accepted /
+database-mark-failed residual window.
+
+After confirmation, the owner restored `EMAIL_DELIVERY_MODE=OFF`, restored the official worker,
+and the final OFF smoke (pg_net request `16`, HTTP `200`) returned `delivery_mode=OFF`, `claimed=0`,
+and `sent=0`. Final operator-observed cron state was exactly:
+
+- `email_queue_worker`: active, `*/10 * * * *`.
+- `report_mark_overdue_daily`: active, `5 17 * * *`.
+- `report_reminder_scan_daily`: active, `0 0 * * *`.
+- Temporary rehearsal jobs: `0`; eligible `PENDING`/`RETRY` rows: `0`.
+
+The rehearsal fixture and its one immutable log remain as audit evidence. No production deployment,
+production Supabase mutation, or `EMAIL_DELIVERY_MODE=LIVE` enablement occurred.

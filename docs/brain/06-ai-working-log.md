@@ -1,5 +1,20 @@
 # 06 — AI Working Log
 
+## [2026-08-15] P3-08 — Final acceptance documentation
+
+- **Agent:** Codex
+- **Thay đổi:** Ghi nhận bằng chứng hoàn tất P3-08B vào tài liệu acceptance và cập nhật task
+  hiện tại: một fixture `SYSTEM_EMAIL_TEST` được external operator gửi ở mode `ALLOWLIST`, có một
+  provider log/Resend acceptance, owner xác nhận inbox, lần gọi thứ hai không gửi lại, sau đó mode
+  được khôi phục về `OFF`. Tách rõ `SELF_VERIFIED_BY_CODEX`, `AUTHENTICATED_EXTERNAL_OPERATOR` và
+  `OWNER_CONFIRMED`; không tuyên bố Codex tự quan sát Supabase live state.
+- **File đã sửa:** `docs/phase-3/08-email-worker-scheduling.md`,
+  `docs/brain/04-current-tasks.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** PR #21 description/tài liệu trước đó còn nói Gate 2 chưa chạy; final acceptance cần
+  lưu evidence có provenance đúng trước khi merge, không đưa secret hoặc dữ liệu inbox vào repo.
+- **Kiểm tra:** Review lại toàn bộ diff PR #21, migration scheduler, delivery gate, secret scan;
+  chạy validation repository và chờ CI trên exact HEAD docs-only mới trước khi merge.
+
 ## [2026-08-16] P3-08B — ALLOWLIST rehearsal preparation (repo-only, no live send)
 
 - **Agent:** Claude (Sonnet)

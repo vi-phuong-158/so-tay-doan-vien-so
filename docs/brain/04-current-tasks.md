@@ -10,18 +10,19 @@
 ### P3-08 — Email Worker Scheduling & End-to-End Delivery Rehearsal
 - **Base:** `master@63d1b7a` (P3-06 merged via PR #20, confirmed clean baseline).
 - **Branch:** `claude/phase-3-email-worker-scheduling-825108`.
-- **Trạng thái:** Repo implementation + CI tự agent xác minh: `PASS` (CI `31854967535`, PR #21
-  Draft). Gate 1 (OFF mode) trên `znexculhbdjiflkczpyu`: agent này **không** có quyền truy cập
-  Supabase (không MCP, không token, không CLI auth trong suốt task) nên không tự chạy/kiểm chứng
-  được; chủ dự án đã xem xét evidence từ một operator session bên ngoài và chấp nhận trên thẩm
-  quyền của mình (`P3_08A_PROJECT_GATE: CLOSED_BY_OWNER_ACCEPTANCE`) — xem
-  `docs/phase-3/08-email-worker-scheduling.md` mục "External operator rehearsal" để biết chính
-  xác agent xác minh gì và chủ dự án tự chấp nhận gì. Gate 2 (ALLOWLIST) **chưa** thực hiện.
+- **Trạng thái:** `P3_08_FINAL_ACCEPTANCE_READY_FOR_MERGE`. Repository implementation,
+  scheduler migration, P3-R1 safety gate, full diff và secret audit do Codex tự kiểm chứng;
+  P3-08A (OFF) do `AUTHENTICATED_EXTERNAL_OPERATOR` thực hiện và `OWNER_ACCEPTED`; P3-08B
+  (ALLOWLIST một người nhận) do `AUTHENTICATED_EXTERNAL_OPERATOR` thực hiện, có đúng một provider
+  send và `OWNER_CONFIRMED` inbox receipt. Lần gọi thứ hai gửi `0`; trạng thái delivery cuối là
+  `OFF`. Codex không có truy cập Supabase xác thực nên không tuyên bố tự quan sát live state.
+  Production không bị thay đổi. Chi tiết/provenance: `docs/phase-3/08-email-worker-scheduling.md`.
 - **Phạm vi:** một `pg_cron` job `email_queue_worker` (mỗi 10 phút) gọi `process-email-queue`
   qua `pg_net`/`net.http_post`, xác thực bằng `x-cron-secret` (không đổi, P3-03), URL và secret
   đọc từ Supabase Vault tại thời điểm chạy (không có literal secret trong migration). Không đổi
   `EMAIL_DELIVERY_MODE`, không thêm worker/queue thứ hai, không bật `LIVE`.
-- **Giới hạn:** Không deploy production, không merge PR, không bật `EMAIL_DELIVERY_MODE=LIVE`.
+- **Giới hạn:** Không deploy production, không bật `EMAIL_DELIVERY_MODE=LIVE`; chỉ merge PR #21
+  sau khi CI xanh trên đúng HEAD cuối.
 
 ### Phase 3 Stack Consolidation through P3-05 (PASS)
 - **Master:** `2a68f20` — merged integration PR #17 from `integrate/phase-3-through-p3-05`.
