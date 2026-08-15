@@ -7,23 +7,18 @@
 
 ## Đang làm
 
-### P3-06 — Cron & Overdue Automation
-- **Base:** `master@5665dc4` (P3-R1 merged via PR #19, confirmed clean baseline).
-- **Branch:** `claude/phase-3-cron-overdue-8f4cea`; Draft PR #20 (not merged).
-- **Trạng thái:** `P3_06_PASS`. CI run `31811349804` xanh: pgTAP `Files=18, Tests=450`, Deno
-  `42 passed, 0 failed`, frontend 45/45 + lint + build — xem
-  `docs/phase-3/06-cron-overdue-automation.md`. P3-07B live rehearsal trên project tách biệt đã
-  PASS: scheduler thực thi, overdue/reminder idempotent, queue dừng ở `PENDING`, temporary jobs
-  và fixtures đã cleanup — xem `docs/phase-3/07-live-cron-rehearsal.md`.
-- **Phạm vi:** hardened `mark_overdue_assignments(p_as_of default now())` (persisted
-  `report_status_history`/`audit_logs` per transition, null/system actor, same PENDING→OVERDUE
-  eligibility rule as before); `pg_cron` schedule for `report_mark_overdue_daily` (00:05 ICT =
-  17:05 UTC) and `report_reminder_scan_daily` (07:00 ICT = 00:00 UTC), both calling trusted RPCs
-  directly in-database (no HTTP, no secret in migration); regression tests covering the full
-  P3-06 test matrix plus P3-05/P3-R1 non-regression (supplement version cycle, delivery-mode
-  safety, source entity persistence).
-- **Giới hạn:** Không thay `EMAIL_DELIVERY_MODE`, không lịch cho `process-email-queue`, không
-  thêm Edge Function mới, không deploy production, không bật LIVE, không merge PR.
+### P3-08 — Email Worker Scheduling & End-to-End Delivery Rehearsal
+- **Base:** `master@63d1b7a` (P3-06 merged via PR #20, confirmed clean baseline).
+- **Branch:** `claude/phase-3-email-worker-scheduling-825108`.
+- **Trạng thái:** Implementation done (migration + pgTAP), local frontend validation pending,
+  live Supabase rehearsal (Gate 1/2 trên `znexculhbdjiflkczpyu`) chưa chạy — cần xác nhận
+  quyền truy cập Supabase CLI/credentials trước khi thực hiện (không có Docker/Deno/Supabase
+  auth trong sandbox hiện tại). Xem `docs/phase-3/08-email-worker-scheduling.md`.
+- **Phạm vi:** một `pg_cron` job `email_queue_worker` (mỗi 10 phút) gọi `process-email-queue`
+  qua `pg_net`/`net.http_post`, xác thực bằng `x-cron-secret` (không đổi, P3-03), URL và secret
+  đọc từ Supabase Vault tại thời điểm chạy (không có literal secret trong migration). Không đổi
+  `EMAIL_DELIVERY_MODE`, không thêm worker/queue thứ hai, không bật `LIVE`.
+- **Giới hạn:** Không deploy production, không merge PR, không bật `EMAIL_DELIVERY_MODE=LIVE`.
 
 ### Phase 3 Stack Consolidation through P3-05 (PASS)
 - **Master:** `2a68f20` — merged integration PR #17 from `integrate/phase-3-through-p3-05`.
@@ -56,12 +51,11 @@
 - **Liên quan:** `supabase/functions/*`.
 - **Ưu tiên:** Trung bình (sau luồng báo cáo).
 
-### Phase 3 — Next: P3-06 Final Acceptance & Merge PR #20
-- **Mô tả:** P3-06 technical CI và P3-07B live scheduler rehearsal đã PASS. Chỉ rà soát evidence,
-  CI final và merge Draft PR #20 theo authority riêng; không bắt đầu P3-08 trong phase này.
+### Phase 3 — Done: P3-06 Final Acceptance & Merge PR #20
+- **Mô tả:** P3-06 technical CI và P3-07B live scheduler rehearsal đã PASS; PR #20 đã **merged**
+  vào `master@63d1b7a`. P3-08 (xem "Đang làm" ở trên) là task hiện tại kế tiếp.
 - **Báo cáo:** `docs/phase-3/06-cron-overdue-automation.md`,
   `docs/phase-3/07-live-cron-rehearsal.md`.
-- **Ưu tiên:** Cao sau approval merge riêng.
 
 ---
 
@@ -76,6 +70,10 @@
 
 ## Đã hoàn thành gần đây
 
+- [2026-08-14] P3-06: Cron & Overdue Automation merged via PR #20 (`63d1b7a`). `P3_06_PASS`; CI
+  run `31811349804` xanh (pgTAP `Files=18, Tests=450`, Deno `42 passed`, frontend 45/45 + lint +
+  build); P3-07B live rehearsal PASS trên project tách biệt. Xem
+  `docs/phase-3/06-cron-overdue-automation.md`, `docs/phase-3/07-live-cron-rehearsal.md`.
 - [2026-08-14] P3-R1: Email delivery safety gate & reminder cycle fix merged via PR #19 (`5665dc4`).
 - [2026-08-11] P3-01: Notification Foundation PASS; CI 31491748132 xanh với migration reset, 267 pgTAP, Edge Function và frontend gates.
 

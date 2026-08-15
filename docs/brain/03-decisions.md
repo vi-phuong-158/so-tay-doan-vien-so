@@ -369,3 +369,33 @@
   when someone manually invokes `process-email-queue` (or wires an external scheduler to it).
   This is the same operational state the repo was already in before P3-06.
 - **Người quyết định:** Claude (Sonnet), theo yêu cầu P3-06 (giữ đúng phạm vi, không tự mở rộng).
+
+## [2026-08-15] P3-08 schedules the email worker via pg_cron → pg_net → existing Edge Function
+
+- **Quyết định:** Add exactly one new `pg_cron` job, `email_queue_worker` (`*/10 * * * *`), whose
+  body calls `net.http_post` (Supabase `pg_net` extension) against the existing
+  `process-email-queue` Edge Function URL, sending the same `x-cron-secret` header that function
+  already validates with `hasTrustedWorkerSecret()` (P3-03, unchanged). Both the target URL and
+  the secret value are read at execution time from Supabase Vault
+  (`vault.decrypted_secrets`, names `email_queue_worker_url` / `email_queue_worker_cron_secret`)
+  — never a literal in the migration. No new Edge Function, no second worker, no second queue, no
+  change to `EMAIL_DELIVERY_MODE`/claim/retry/provider code from P3-02/P3-03/P3-R1.
+- **Lý do:** `process-email-queue` is the only component holding the provider secret and enforcing
+  the P3-R1 delivery-mode gate; pg_cron cannot call it directly like it calls the two pure-SQL
+  P3-06 RPCs (`mark_overdue_assignments`, `scan_report_reminders`), because an Edge Function
+  invocation is an HTTP call, not a database function call. Reimplementing queue-claim + provider
+  call as a second in-database worker (to keep pg_cron's "call a DB function" pattern from P3-06)
+  would duplicate the safety gate and risk it drifting from the one already reviewed and shipped.
+  `pg_net` + Vault is the pattern Supabase's own docs recommend for exactly this case (cron → Edge
+  Function, secret never in the migration), and it keeps the trusted-header auth model P3-03
+  already implemented instead of inventing a second auth mechanism.
+- **Đánh đổi:** `net.http_post` is fire-and-forget/async — pg_cron's `cron.job_run_details` proves
+  the scheduling tick fired, not that the HTTP call or the downstream send succeeded; that requires
+  `net._http_response`, the Edge Function's own logs, or `email_queue`/`email_logs` state (existing
+  P3-02 tables; no new observability code added). The two Vault secrets must be provisioned once
+  per environment via a manual, non-committed SQL step (`vault.create_secret(...)`) run directly
+  against that environment's database — CI/local dev/db reset run with those secrets unset, so the
+  job body resolves a NULL URL and the async call fails harmlessly (it cannot fail a migration,
+  `db reset`, or a test run) until an operator provisions them. Batch size, retry backoff and max
+  attempts are unchanged (P3-02 defaults, already bounded); this migration does not tune them.
+- **Người quyết định:** Claude (Sonnet), theo yêu cầu P3-08.

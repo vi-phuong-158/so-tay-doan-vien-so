@@ -94,7 +94,7 @@ supabase/
 | `functions/download-report-bundle` | ZIP latest submission/file trong scope, private Storage, giới hạn 100 file/50 MB, audit | `AdminReportDashboard` qua `reportAdminService` | dashboard RPC, service-role Storage, `fflate`, `_shared/*` |
 | `functions/ask-ai` | RAG: scope tài liệu → Gemini → chuẩn hóa nguồn → lưu lịch sử | client | `_shared/*`, `match_document_chunks` |
 | `functions/process-document` | Trích xuất → chunk → embedding → chờ duyệt | admin | `_shared/*`, Gemini |
-| `functions/send-reminder` / `process-email-queue` | Gọi reminder scan trusted / gửi email theo batch | trusted caller manual/external (không nằm trong pg_cron path của P3-06) | `_shared/*`, reminder RPC, email_queue |
+| `functions/send-reminder` / `process-email-queue` | Gọi reminder scan trusted / gửi email theo batch | `send-reminder`: trusted caller manual/external. `process-email-queue`: manual/external **và** `pg_cron` job `email_queue_worker` mỗi 10 phút qua `pg_net`+Vault (P3-08) | `_shared/*`, reminder RPC, email_queue |
 
 ### Luồng xử lý chính
 
@@ -174,8 +174,30 @@ pg_cron (installed by migration, no HTTP/secret) → two daily in-database jobs:
              → `scan_report_reminders()` (unchanged P3-05/P3-R1 engine, called directly)
 Neither cron job calls an Edge Function, HTTP endpoint or email provider; `send-reminder`
 (CRON_SECRET-gated Edge Function) remains an untouched manual/external-trigger fallback, not
-part of the pg_cron path. `process-email-queue` (the email worker) is still NOT scheduled by
-any cron job — EMAIL_DELIVERY_MODE-gated sending stays a manually/externally triggered step.
+part of the pg_cron path. `process-email-queue` (the email worker) was NOT scheduled by any cron
+job as of P3-06 — EMAIL_DELIVERY_MODE-gated sending was a manually/externally triggered step
+only. **P3-08 changes this** (see below): `process-email-queue` now also has a `pg_cron` job.
+
+# Email worker scheduling (P3-08)
+pg_cron job `email_queue_worker` @ `*/10 * * * *` (every 10 minutes, no technical reason to go
+faster than the worker's own batch/retry cadence)
+             → `net.http_post` (pg_net extension) → `process-email-queue` Edge Function over HTTPS
+             → URL and `x-cron-secret` header value both read from Supabase Vault
+               (`vault.decrypted_secrets`) at execution time — zero secret literal in the
+               migration (`202608150001_phase_3_email_worker_scheduling.sql`); the two Vault
+               secrets (`email_queue_worker_url`, `email_queue_worker_cron_secret`) are
+               provisioned once per environment via a manual `vault.create_secret(...)` SQL step,
+               never committed
+             → `process-email-queue/index.ts` `hasTrustedWorkerSecret()` (unchanged, P3-03) →
+               `EMAIL_DELIVERY_MODE` gate (unchanged, P3-R1) → `claim_email_queue` (unchanged,
+               P3-02, `FOR UPDATE SKIP LOCKED` + claim token + lease) → provider adapter
+               (unchanged, P3-03, Resend `Idempotency-Key: email:{queue_id}`)
+This is scheduling infrastructure only: no second worker, no second queue, no provider call
+moved into the database, no change to `EMAIL_DELIVERY_MODE`/claim/retry/provider code. pg_cron
+cannot call an Edge Function directly (unlike the two in-database P3-06 jobs above), so `pg_net`
+is the Supabase-documented bridge. `net.http_post` is async/fire-and-forget from pg_cron's
+perspective — see `docs/phase-3/08-email-worker-scheduling.md` for observability (how to confirm
+a tick actually fired and reached the provider) and residual risk notes.
 
 # Lịch sử/nộp lại báo cáo (P2-11)
 Assignment detail → reportService.getSubmissionHistory (RLS, version desc, profile-safe fields)

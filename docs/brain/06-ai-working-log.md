@@ -1,5 +1,31 @@
 # 06 — AI Working Log
 
+## [2026-08-15] P3-08 — Email Worker Scheduling (implementation phase)
+
+- **Agent:** Claude (Sonnet)
+- **Thay đổi:** Thêm đúng một `pg_cron` job mới, `email_queue_worker` (`*/10 * * * *`), gọi
+  `process-email-queue` (Edge Function không đổi) qua `pg_net`/`net.http_post`, xác thực bằng
+  header `x-cron-secret` (không đổi so với P3-03). URL đích và giá trị secret đều đọc từ
+  Supabase Vault (`vault.decrypted_secrets`) tại thời điểm chạy — migration không chứa literal
+  secret nào; hai Vault secret (`email_queue_worker_url`, `email_queue_worker_cron_secret`) phải
+  được tạo thủ công trên từng environment (không commit). Đăng ký job idempotent theo đúng mẫu
+  P3-06 (`unschedule` nếu tồn tại rồi `schedule` lại). Không đổi `EMAIL_DELIVERY_MODE`, không
+  thêm worker/queue thứ hai, không đổi `claim_email_queue`/`mark_email_sent`/`mark_email_retry`,
+  không bật `LIVE`, không sửa migration P3-06 đã merge.
+- **File đã sửa/tạo:** `supabase/migrations/202608150001_phase_3_email_worker_scheduling.sql`,
+  `supabase/tests/email_worker_scheduling.sql`, `docs/phase-3/08-email-worker-scheduling.md`,
+  `docs/brain/01-architecture.md`, `docs/brain/03-decisions.md`, `docs/brain/04-current-tasks.md`,
+  `docs/brain/06-ai-working-log.md`.
+- **Lý do:** P3-06 để lại `process-email-queue` chưa lịch hóa có chủ đích (quyết định lớn hơn,
+  ảnh hưởng gửi email thật). P3-08 hoàn thiện phần này: chọn kiến trúc trusted invocation
+  (`pg_net`+Vault) thay vì HTTP với secret cứng, hoặc xây worker/queue thứ hai trong database.
+- **Kiểm tra:** Supabase CLI/Docker/Deno không có trong môi trường thi công (như mọi task Phase
+  2/3 trước) nên `supabase db reset`/pgTAP/Deno được xác nhận qua GitHub Actions CI trên Draft PR
+  mới (`.github/workflows/ci.yml`, job `test-db`), chưa chạy tại thời điểm ghi entry này — xem
+  `docs/phase-3/08-email-worker-scheduling.md` để cập nhật kết quả CI/rehearsal khi có. Live
+  rehearsal (Gate 1/2 trên `znexculhbdjiflkczpyu`) tạm dừng chờ xác nhận quyền truy cập Supabase
+  CLI/credentials từ người dùng trước khi thực hiện gửi email thật.
+
 ## [2026-08-14] P3-06 — Cron & Overdue Automation
 
 - **Agent:** Claude (Sonnet)
