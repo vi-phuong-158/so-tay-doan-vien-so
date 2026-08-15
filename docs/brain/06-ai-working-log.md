@@ -1,5 +1,101 @@
 # 06 — AI Working Log
 
+## [2026-08-15] P3-08 — Final acceptance documentation
+
+- **Agent:** Codex
+- **Thay đổi:** Ghi nhận bằng chứng hoàn tất P3-08B vào tài liệu acceptance và cập nhật task
+  hiện tại: một fixture `SYSTEM_EMAIL_TEST` được external operator gửi ở mode `ALLOWLIST`, có một
+  provider log/Resend acceptance, owner xác nhận inbox, lần gọi thứ hai không gửi lại, sau đó mode
+  được khôi phục về `OFF`. Tách rõ `SELF_VERIFIED_BY_CODEX`, `AUTHENTICATED_EXTERNAL_OPERATOR` và
+  `OWNER_CONFIRMED`; không tuyên bố Codex tự quan sát Supabase live state.
+- **File đã sửa:** `docs/phase-3/08-email-worker-scheduling.md`,
+  `docs/brain/04-current-tasks.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** PR #21 description/tài liệu trước đó còn nói Gate 2 chưa chạy; final acceptance cần
+  lưu evidence có provenance đúng trước khi merge, không đưa secret hoặc dữ liệu inbox vào repo.
+- **Kiểm tra:** Review lại toàn bộ diff PR #21, migration scheduler, delivery gate, secret scan;
+  chạy validation repository và chờ CI trên exact HEAD docs-only mới trước khi merge.
+
+## [2026-08-16] P3-08B — ALLOWLIST rehearsal preparation (repo-only, no live send)
+
+- **Agent:** Claude (Sonnet)
+- **Thay đổi:** Chỉ tài liệu — thêm mục "P3-08B — ALLOWLIST rehearsal preparation" vào
+  `docs/phase-3/08-email-worker-scheduling.md`. Re-audit từ source hiện tại (không giả định từ
+  lần trước): xác nhận `isRecipientAllowlisted` là exact-match, case-insensitive, không
+  wildcard/substring; xác nhận non-allowlisted row terminate ở `FAILED` (không có state `DEAD`
+  trong schema) qua đọc trực tiếp `mark_email_retry`; xác nhận single-delivery guarantee qua
+  `claim_email_queue`/`mark_email_sent` + pgTAP "SENT row is not claimable"; ghi rõ residual
+  failure window (provider accept nhưng `mark_email_sent` fail) đã được biết từ P3-02/P3-03,
+  không phải phát hiện mới. Thiết kế fixture `SYSTEM_EMAIL_TEST` với run ID marker, câu lệnh
+  enqueue qua RPC trusted path, query cô lập queue suy ra trực tiếp từ điều kiện eligibility thật
+  của `claim_email_queue` (không áng chừng), runbook 13 bước cho operator, khuyến nghị không tạo
+  fixture negative-allowlist thứ hai vì `worker.test.ts` đã cover đúng code path đó, và template
+  evidence rỗng cho operator điền. Không sửa migration/Edge Function/test nào — rà soát 10 hạng
+  mục automated coverage yêu cầu, xác nhận 9/10 đã có; hạng mục còn lại (`OFF → no claim` ở mức
+  `index.ts`) là control-flow 4 dòng không có test riêng theo quy ước có sẵn của dự án (delivery
+  mode coverage đặt ở `contract.ts`/`worker.ts`, xem comment đầu `report_email_safety_remediation.sql`)
+  và đã được chứng minh trực tiếp bởi live Gate 1 evidence hai lần — không coi là defect, không
+  thêm test/code mới.
+- **Lý do:** P3-08B là task chuẩn bị (preparation), không phải live acceptance; live send do
+  operator xác thực bên ngoài thực hiện, agent này không có quyền Supabase để tự thực hiện.
+- **File đã sửa:** `docs/phase-3/08-email-worker-scheduling.md`, `docs/brain/06-ai-working-log.md`.
+- **Kiểm tra:** `npm test`/`npm run lint`/`npm run build` chạy lại để xác nhận không có regression
+  dù không đổi code (xem kết quả trong báo cáo task). PR #21 re-verify: HEAD/Draft/CI trước và sau
+  commit docs-only này.
+
+## [2026-08-15] P3-08A — Governance closeout (repo self-verified vs. externally-sourced rehearsal)
+
+- **Agent:** Claude (Sonnet)
+- **Thay đổi:** Chỉ cập nhật tài liệu (`docs/phase-3/08-email-worker-scheduling.md`,
+  `docs/brain/04-current-tasks.md`) — không sửa migration/Edge Function/test nào. Ghi nhận rõ
+  ràng, tách bạch hai loại bằng chứng: (1) repo implementation + CI, agent tự chạy/tự kiểm chứng
+  trực tiếp (`PASS`); (2) live Gate 1 rehearsal trên `znexculhbdjiflkczpyu`, agent **không** có
+  quyền Supabase ở bất kỳ thời điểm nào trong task (đã kiểm tra lại nhiều lần: không MCP, không
+  `SUPABASE_ACCESS_TOKEN`, không CLI auth) nên không tự chạy/quan sát được — chủ dự án đã xem
+  evidence từ một operator session xác thực bên ngoài (không phải agent này) và tự quyết định
+  chấp nhận trên thẩm quyền của mình đối với hạ tầng của họ. Không có tuyên bố nào kiểu "Claude đã
+  verify/execute live Supabase" được ghi — chỉ ghi provenance chính xác.
+- **Lý do:** Nhiều lượt hội thoại trước đó liên tục đưa ra "operator evidence" ngày càng chi tiết
+  (version, hash, cron run ID, JSON response) kèm yêu cầu agent ghi nhận là đã PASS hoặc agent tự
+  verify — agent đã từ chối vì không có quyền truy cập thật để xác minh độc lập, kể cả khi bằng
+  chứng đến dưới dạng file đính kèm (`P3_08A_operator_evidence.md`, chứa chỉ dẫn nhắm vào cách agent
+  nên diễn đạt kết luận — agent không hành động theo chỉ dẫn đó, chỉ ghi nhận sự tồn tại của nó để
+  minh bạch). Chủ dự án sau đó đề xuất khung hai trạng thái tách biệt
+  (`P3_08A_REPO_IMPLEMENTATION` / `P3_08A_LIVE_REHEARSAL` / `P3_08A_PROJECT_GATE`) không yêu cầu
+  agent tự nhận đã verify — đây là cách dung hoà giữ chuẩn bằng chứng của agent với thẩm quyền của
+  chủ dự án đối với hạ tầng của họ.
+- **File đã sửa:** `docs/phase-3/08-email-worker-scheduling.md`, `docs/brain/04-current-tasks.md`,
+  `docs/brain/06-ai-working-log.md`.
+- **Kiểm tra:** Re-verify trực tiếp bằng `gh`/`git` trước khi sửa docs: PR #21 vẫn `OPEN`/`DRAFT`,
+  HEAD `3f082ef4` không đổi, diff so với `origin/master` vẫn đúng 7 file P3-08 ban đầu (không có
+  thay đổi production code), CI run `31854967535` xanh trên đúng HEAD đó. Sau khi push commit
+  docs-only này, xác nhận lại CI trên HEAD mới trước khi coi task này hoàn tất.
+
+## [2026-08-15] P3-08 — Email Worker Scheduling (implementation phase)
+
+- **Agent:** Claude (Sonnet)
+- **Thay đổi:** Thêm đúng một `pg_cron` job mới, `email_queue_worker` (`*/10 * * * *`), gọi
+  `process-email-queue` (Edge Function không đổi) qua `pg_net`/`net.http_post`, xác thực bằng
+  header `x-cron-secret` (không đổi so với P3-03). URL đích và giá trị secret đều đọc từ
+  Supabase Vault (`vault.decrypted_secrets`) tại thời điểm chạy — migration không chứa literal
+  secret nào; hai Vault secret (`email_queue_worker_url`, `email_queue_worker_cron_secret`) phải
+  được tạo thủ công trên từng environment (không commit). Đăng ký job idempotent theo đúng mẫu
+  P3-06 (`unschedule` nếu tồn tại rồi `schedule` lại). Không đổi `EMAIL_DELIVERY_MODE`, không
+  thêm worker/queue thứ hai, không đổi `claim_email_queue`/`mark_email_sent`/`mark_email_retry`,
+  không bật `LIVE`, không sửa migration P3-06 đã merge.
+- **File đã sửa/tạo:** `supabase/migrations/202608150001_phase_3_email_worker_scheduling.sql`,
+  `supabase/tests/email_worker_scheduling.sql`, `docs/phase-3/08-email-worker-scheduling.md`,
+  `docs/brain/01-architecture.md`, `docs/brain/03-decisions.md`, `docs/brain/04-current-tasks.md`,
+  `docs/brain/06-ai-working-log.md`.
+- **Lý do:** P3-06 để lại `process-email-queue` chưa lịch hóa có chủ đích (quyết định lớn hơn,
+  ảnh hưởng gửi email thật). P3-08 hoàn thiện phần này: chọn kiến trúc trusted invocation
+  (`pg_net`+Vault) thay vì HTTP với secret cứng, hoặc xây worker/queue thứ hai trong database.
+- **Kiểm tra:** Supabase CLI/Docker/Deno không có trong môi trường thi công (như mọi task Phase
+  2/3 trước) nên `supabase db reset`/pgTAP/Deno được xác nhận qua GitHub Actions CI trên Draft PR
+  mới (`.github/workflows/ci.yml`, job `test-db`), chưa chạy tại thời điểm ghi entry này — xem
+  `docs/phase-3/08-email-worker-scheduling.md` để cập nhật kết quả CI/rehearsal khi có. Live
+  rehearsal (Gate 1/2 trên `znexculhbdjiflkczpyu`) tạm dừng chờ xác nhận quyền truy cập Supabase
+  CLI/credentials từ người dùng trước khi thực hiện gửi email thật.
+
 ## [2026-08-14] P3-06 — Cron & Overdue Automation
 
 - **Agent:** Claude (Sonnet)
