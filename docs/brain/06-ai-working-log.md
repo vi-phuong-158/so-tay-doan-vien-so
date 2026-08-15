@@ -1,5 +1,32 @@
 # 06 — AI Working Log
 
+## [2026-08-16] P3-08B — ALLOWLIST rehearsal preparation (repo-only, no live send)
+
+- **Agent:** Claude (Sonnet)
+- **Thay đổi:** Chỉ tài liệu — thêm mục "P3-08B — ALLOWLIST rehearsal preparation" vào
+  `docs/phase-3/08-email-worker-scheduling.md`. Re-audit từ source hiện tại (không giả định từ
+  lần trước): xác nhận `isRecipientAllowlisted` là exact-match, case-insensitive, không
+  wildcard/substring; xác nhận non-allowlisted row terminate ở `FAILED` (không có state `DEAD`
+  trong schema) qua đọc trực tiếp `mark_email_retry`; xác nhận single-delivery guarantee qua
+  `claim_email_queue`/`mark_email_sent` + pgTAP "SENT row is not claimable"; ghi rõ residual
+  failure window (provider accept nhưng `mark_email_sent` fail) đã được biết từ P3-02/P3-03,
+  không phải phát hiện mới. Thiết kế fixture `SYSTEM_EMAIL_TEST` với run ID marker, câu lệnh
+  enqueue qua RPC trusted path, query cô lập queue suy ra trực tiếp từ điều kiện eligibility thật
+  của `claim_email_queue` (không áng chừng), runbook 13 bước cho operator, khuyến nghị không tạo
+  fixture negative-allowlist thứ hai vì `worker.test.ts` đã cover đúng code path đó, và template
+  evidence rỗng cho operator điền. Không sửa migration/Edge Function/test nào — rà soát 10 hạng
+  mục automated coverage yêu cầu, xác nhận 9/10 đã có; hạng mục còn lại (`OFF → no claim` ở mức
+  `index.ts`) là control-flow 4 dòng không có test riêng theo quy ước có sẵn của dự án (delivery
+  mode coverage đặt ở `contract.ts`/`worker.ts`, xem comment đầu `report_email_safety_remediation.sql`)
+  và đã được chứng minh trực tiếp bởi live Gate 1 evidence hai lần — không coi là defect, không
+  thêm test/code mới.
+- **Lý do:** P3-08B là task chuẩn bị (preparation), không phải live acceptance; live send do
+  operator xác thực bên ngoài thực hiện, agent này không có quyền Supabase để tự thực hiện.
+- **File đã sửa:** `docs/phase-3/08-email-worker-scheduling.md`, `docs/brain/06-ai-working-log.md`.
+- **Kiểm tra:** `npm test`/`npm run lint`/`npm run build` chạy lại để xác nhận không có regression
+  dù không đổi code (xem kết quả trong báo cáo task). PR #21 re-verify: HEAD/Draft/CI trước và sau
+  commit docs-only này.
+
 ## [2026-08-15] P3-08A — Governance closeout (repo self-verified vs. externally-sourced rehearsal)
 
 - **Agent:** Claude (Sonnet)

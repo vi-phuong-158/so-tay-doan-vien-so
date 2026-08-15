@@ -252,3 +252,265 @@ reported). This agent did not itself read or set `EMAIL_DELIVERY_MODE` on
 
 `P3-08B — ALLOWLIST Single-Email Delivery Rehearsal`, per the project owner's stated intent — not
 started, and the same access/provenance constraints described above will apply to it.
+
+---
+
+# P3-08B — ALLOWLIST rehearsal preparation
+
+This section is **preparation only**: repo audit, fixture/query design, and an operator runbook.
+No live send was performed or attempted by this agent. Verdict: `P3_08B_READY_FOR_OPERATOR_REHEARSAL`.
+
+## ALLOWLIST contract (re-audited fresh from current source)
+
+- `getEmailDeliveryConfig()` (`contract.ts`): mode resolves to `OFF` for anything other than the
+  exact literals `ALLOWLIST` or `LIVE` (missing, empty, wrong case, trailing garbage all → `OFF`).
+  `EMAIL_TEST_RECIPIENTS` is parsed by `parseAllowlist()`: split on `,`, each entry
+  trimmed+lowercased, validated against a basic email shape, deduplicated via a `Set`. Malformed
+  entries are silently dropped (not an error) — confirmed by `contract.test.ts`
+  ("rejects malformed entries").
+- `isRecipientAllowlisted(email, allowlist)`: normalizes the candidate the same way
+  (trim+lowercase) and checks **exact array membership** — `Array.includes`, not
+  `startsWith`/`endsWith`/regex/domain matching. Confirmed directly by
+  `contract.test.ts` ("allowlist match is exact and case-insensitive with no
+  wildcard/substring behavior"): `user1@example.com.evil.test` and `other.user1@example.com` are
+  both explicitly asserted `false` against `user1@example.com`.
+- Empty allowlist (`EMAIL_TEST_RECIPIENTS` unset/empty) → `isRecipientAllowlisted` always `false`
+  for any input (`allowlist.includes` on `[]`) — fail-closed, not fail-open.
+- Duplicate entries in `EMAIL_TEST_RECIPIENTS` collapse to one via the `Set` in `parseAllowlist`;
+  duplicates do not create multiple allowlist "slots" or change matching behavior.
+- Wiring (`index.ts` → `worker.ts`): `isRecipientAllowed` is constructed **only** when
+  `delivery.mode === 'ALLOWLIST'` and is applied to every claimed row **before** `renderQueueEmail`
+  or `provider.send()` — confirmed by `worker.test.ts` ("recipient outside the allowlist is
+  rejected before the provider is ever called": `providerCalls` stays `0`).
+
+## Non-allowlisted row terminal state (from actual SQL, not assumed)
+
+`worker.ts` calls `mark_email_retry(p_error_code='RECIPIENT_NOT_ALLOWLISTED', p_retryable=false)`
+for a rejected row. In `mark_email_retry` (`202608110002_phase_3_email_queue_state_machine.sql`):
+
+```sql
+if coalesce(p_retryable, true) and v_attempt < v_max_attempts then
+  v_status := 'RETRY'; ...
+else
+  v_status := 'FAILED'; v_next_attempt_at := null;
+end if;
+```
+
+`p_retryable=false` makes `coalesce(p_retryable, true)` evaluate `false`, so the row goes straight
+to the `else` branch regardless of `attempt_count`/`max_attempts`. **Terminal state: `FAILED`**
+(not a separate `DEAD` state — this schema has no `DEAD` status;
+`email_queue_status_check` only allows `PENDING/PROCESSING/RETRY/SENT/FAILED/CANCELLED`),
+`next_attempt_at = null`, `claim_token/worker_id/lease_expires_at` cleared. A `FAILED` row is never
+re-claimed (`claim_email_queue`'s eligibility only selects `PENDING`/`RETRY`, or a lease-expired
+`PROCESSING` row with attempts remaining) — confirmed by the pgTAP assertion "SENT row is not
+claimable" applying the same mechanism to the terminal-state family. This means: **the negative
+fixture, if created, self-terminates in one worker pass and needs no special cleanup beyond the
+normal fixture cleanup** (it won't linger as `PENDING`/`RETRY`).
+
+## Delivery / idempotency guarantee
+
+Normal path: `PENDING/RETRY` (eligible: `scheduled_at <= now()` and
+`coalesce(next_attempt_at, scheduled_at) <= now()`) → `claim_email_queue` (`FOR UPDATE SKIP
+LOCKED`, sets `status=PROCESSING`, `claim_token`, `worker_id`, `lease_expires_at`, increments
+`attempt_count`) → provider `send()` with `Idempotency-Key: email:{queue_id}` (confirmed header
+value in `provider.test.ts`) → `mark_email_sent` requires the exact `claim_token` still on the row
+→ `status=SENT`, `claim_token`/`worker_id`/`lease_expires_at` cleared. Second invocation: a `SENT`
+row matches neither claim branch (`status in ('PENDING','RETRY')` nor `status='PROCESSING'`), so
+`claim_email_queue` returns 0 rows for it — pgTAP: "SENT row is not claimable" — no second provider
+call is possible because the row is never handed to the worker loop again.
+
+**Residual failure window (documented, not newly discovered):** if the provider accepts the send
+but the subsequent `mark_email_sent` RPC call fails to complete (network drop between the two, or
+a DB-side failure) before the lease expires, the row remains `PROCESSING` until
+`lease_expires_at`, then becomes reclaimable and gets retried — which would call the provider a
+second time for a row it already physically sent. This is bounded, not eliminated, by the
+provider's own `Idempotency-Key: email:{queue_id}` (Resend deduplicates identical idempotency keys
+within its retention window). This is the same trade-off already recorded in
+`docs/brain/03-decisions.md` for P3-02/P3-03 ("provider timeout ambiguity/exactly-once delivery
+waits for the provider adapter") — P3-08B does not change or newly discover this; it is stated here
+so the rehearsal's duplicate-test step is understood as testing the *common* path (worker rerun
+against an already-`SENT` row), not this rarer race, which has no live rehearsal safe enough to
+trigger on purpose.
+
+## Rehearsal fixture
+
+- **Template:** `SYSTEM_EMAIL_TEST` — the only template with zero business/report data
+  dependency, purpose-built for controlled rehearsal since P3-03.
+- **Run ID:** operator-generated, format `P3_08B_<UTC_TIMESTAMP_OR_UUID>` (e.g.
+  `P3_08B_20260816T0900Z_<4-hex>`), used as both the human-readable marker and the RPC's
+  `p_event_revision` (so the enqueue's idempotency key is unique to this run and re-running the
+  same enqueue call is a safe no-op, not a duplicate).
+- **Payload** (matches `renderSystemEmailTest`'s exact expected shape — `title` required,
+  `message` optional/bounded, no `action_path` so the fixture has zero dependency on `APP_URL`
+  configuration):
+  ```json
+  {
+    "title": "[P3-08B REHEARSAL] <run_id>",
+    "message": "P3-08B controlled email delivery rehearsal.\nNo action required.\nRun ID: <run_id>"
+  }
+  ```
+- **Enqueue call** (the trusted path — `enqueue_email_for_user_event`, `service_role` only, the
+  same RPC every prior Phase 3 rehearsal has used; recipient email is always server-resolved from
+  `auth.users`/`profiles`, never client-supplied):
+  ```sql
+  select * from public.enqueue_email_for_user_event(
+    'SYSTEM_EMAIL_TEST',
+    '<rehearsal recipient profile id>'::uuid,   -- ACTIVE profile whose auth.users.email
+                                                  -- (lower/trimmed) exactly equals the
+                                                  -- EMAIL_TEST_RECIPIENTS value below
+    'p3_08b_rehearsal',
+    gen_random_uuid(),
+    '<run_id>',
+    '{"title": "[P3-08B REHEARSAL] <run_id>", "message": "P3-08B controlled email delivery rehearsal.\nNo action required.\nRun ID: <run_id>"}'::jsonb,
+    now(),
+    1                                             -- max_attempts=1: a genuine transient failure
+                                                    -- should not silently retry-send twice during
+                                                    -- a live rehearsal window
+  );
+  ```
+  **Precondition the operator must satisfy first:** an `ACTIVE` profile must exist in the
+  rehearsal project whose linked `auth.users.email` is exactly the one controlled inbox that will
+  be set in `EMAIL_TEST_RECIPIENTS` — the RPC resolves the recipient address itself; it cannot be
+  overridden by the caller.
+
+## Pre-flight queue isolation query
+
+Derived directly from `claim_email_queue`'s actual eligibility predicate
+(`202608110002_phase_3_email_queue_state_machine.sql`), not approximated:
+
+```sql
+select count(*)::int as eligible_rows
+from public.email_queue
+where (
+  status in ('PENDING','RETRY')
+  and scheduled_at <= now()
+  and coalesce(next_attempt_at, scheduled_at) <= now()
+)
+or (
+  status = 'PROCESSING'
+  and lease_expires_at is not null
+  and lease_expires_at <= now()
+  and attempt_count < max_attempts
+);
+```
+
+Must return `0` **before** the fixture is enqueued. After enqueueing exactly the one fixture row
+above, it must return exactly `1` (only the fixture) before switching to `ALLOWLIST` mode.
+
+## Operator runbook (P3-08B — to be executed by the authenticated operator, not this agent)
+
+1. Confirm project: `so-tay-doan-vien-rehearsal` / `znexculhbdjiflkczpyu`.
+2. Confirm `email_queue_worker` is `active`, schedule `*/10 * * * *` (already established in Gate
+   1's record above).
+3. Run the isolation query — must be `0`. If not `0`, stop; do not proceed until isolated.
+4. Set `EMAIL_DELIVERY_MODE=ALLOWLIST` on the Edge Function's secrets.
+5. Set `EMAIL_TEST_RECIPIENTS=<one controlled inbox>` — cardinality 1, no wildcard, no
+   domain-wide entry.
+6. Run the enqueue call above. Record `queue_id`, `run_id`, recipient (redact in any shared
+   report), initial `status` (`PENDING`), `attempt_count` (`0`), `idempotency_key`.
+7. Let the official worker fire naturally, or create a temporary rehearsal-only job on the exact
+   same invocation path (mirroring Gate 1's `rehearsal_p3_08a_worker` pattern — e.g.
+   `rehearsal_p3_08b_worker` on `* * * * *`, using the same `net.http_post` body shape already in
+   `202608150001_phase_3_email_worker_scheduling.sql`) for faster evidence turnaround. Remove any
+   temporary job immediately after use.
+8. Capture: cron run row, `net._http_response` row, Edge Function JSON body
+   (`delivery_mode=ALLOWLIST`, `claimed`, `sent`), final `email_queue.status` (`SENT`),
+   `email_logs` row (`provider`, `provider_message_id`), `attempt_count`.
+9. Manually check the controlled inbox. Record `received: YES/NO`, `received_at`, and that the
+   subject contains the run ID marker — do not paste the rest of the inbox content into any repo
+   doc.
+10. Invoke the worker again (official schedule or same temporary job). Expect: fixture row not
+    reclaimed (`SENT` is terminal, per "Delivery / idempotency guarantee" above), 0 additional
+    provider calls, 0 additional `email_logs` rows, 0 additional inbox copies.
+11. Restore `EMAIL_DELIVERY_MODE=OFF`. Verify.
+12. Remove any temporary cron job created in step 7. Confirm 0 remain.
+13. Clean the fixture per retention rules — same approach as Gate 1's cleanup (immutable
+    `email_logs` evidence may remain, clearly recognizable as rehearsal; queue/notification/user
+    fixtures created purely for this run may be removed).
+
+### Negative allowlist test — recommendation
+
+**Do not create a second live-address fixture.** `worker.test.ts` ("recipient outside the
+allowlist is rejected before the provider is ever called") already proves, at the exact same code
+path the live rehearsal exercises, that a non-allowlisted `recipient_email` results in zero
+provider calls and a `RECIPIENT_NOT_ALLOWLISTED`/`retryable=false` transition — this is unit-level
+coverage of the identical `isRecipientAllowed` gate the live row will pass through, not a
+different mechanism. Adding a second real address (even a "safe"/non-deliverable one) to a live
+rehearsal buys no additional evidence over the existing automated test and adds avoidable fixture
+surface. If the operator wants live confidence anyway, the safest option is a syntactically-valid
+but non-existent address at a domain the operator controls (e.g. a subdomain that bounces), never
+a real third party's address.
+
+## Operator evidence template (empty — for the operator to fill in during P3-08B)
+
+```
+## Environment
+
+
+## Run ID
+
+
+## Delivery configuration
+
+EMAIL_DELIVERY_MODE:
+EMAIL_TEST_RECIPIENTS cardinality:
+
+## Pre-flight queue
+
+eligible unrelated rows:
+
+## Test queue row
+
+queue_id:
+template_code:
+initial status:
+attempt_count:
+
+## Worker execution 1
+
+cron:
+HTTP:
+delivery_mode:
+claimed:
+sent:
+
+## Provider evidence
+
+provider:
+provider_message_id:
+email_logs count:
+
+## Inbox confirmation
+
+received:
+received_at:
+subject marker:
+
+## Worker execution 2
+
+additional provider calls:
+additional email_logs:
+additional inbox copies:
+
+## Negative allowlist evidence
+
+automated/live:
+provider calls:
+
+## Cleanup
+
+temporary cron:
+fixture:
+final eligible queue:
+
+## Final delivery mode
+
+EMAIL_DELIVERY_MODE=OFF
+
+## Provenance
+
+AUTHENTICATED_EXTERNAL_OPERATOR
+
+Agent independent live verification:
+NOT AVAILABLE
+```
