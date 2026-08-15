@@ -2,8 +2,8 @@
 
 ## Status
 
-`IMPLEMENTATION_COMPLETE` — CI not yet run on this branch's head; live Supabase rehearsal
-(Gate 1/2) not started. See "Rehearsal status" below for why.
+`IMPLEMENTATION_COMPLETE_CI_GREEN` — CI run `31853922597` on Draft PR #21 head `03a883d` is
+green. Live Supabase rehearsal (Gate 1/2) not started. See "Rehearsal status" below for why.
 
 ## Baseline
 
@@ -163,9 +163,9 @@ No new monitoring code — reusing what already exists, per task scope:
 | `npm test` | PASS, 45/45 |
 | `npm run lint` | PASS, 0 errors, 3 pre-existing Fast Refresh warnings (unchanged) |
 | `npm run build` | PASS |
-| `supabase db reset` / pgTAP | not runnable locally (no Docker in this sandbox); confirmed via CI on Draft PR |
-| `deno check` / `deno test` | not runnable locally (no Deno in this sandbox); confirmed via CI on Draft PR |
-| CI run | pending — filled in once the Draft PR's GitHub Actions run completes |
+| `supabase db reset` / pgTAP | PASS via CI — `Files=19, Tests=476` (up from P3-06 baseline `Files=18, Tests=450`; includes new `email_worker_scheduling.sql`) |
+| `deno check` / `deno test` | PASS via CI — `42 passed, 0 failed` (unchanged count; no Edge Function code was modified) |
+| CI run | [`31853922597`](https://github.com/vi-phuong-158/so-tay-doan-vien-so/actions/runs/31853922597) — PASS (`build` job: frontend 45/45 + lint + build; `test-db` job: pgTAP + Deno as above). Draft [PR #21](https://github.com/vi-phuong-158/so-tay-doan-vien-so/pull/21). |
 
 ## Rehearsal status
 
