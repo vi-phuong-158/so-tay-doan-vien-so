@@ -7,30 +7,39 @@
 
 ## Đang làm
 
-### P3-08 — Email Worker Scheduling & End-to-End Delivery Rehearsal
-- **Base:** `master@63d1b7a` (P3-06 merged via PR #20, confirmed clean baseline).
-- **Branch:** `claude/phase-3-email-worker-scheduling-825108`.
-- **Trạng thái:** `P3_08_FINAL_ACCEPTANCE_READY_FOR_MERGE`. Repository implementation,
-  scheduler migration, P3-R1 safety gate, full diff và secret audit do Codex tự kiểm chứng;
-  P3-08A (OFF) do `AUTHENTICATED_EXTERNAL_OPERATOR` thực hiện và `OWNER_ACCEPTED`; P3-08B
-  (ALLOWLIST một người nhận) do `AUTHENTICATED_EXTERNAL_OPERATOR` thực hiện, có đúng một provider
-  send và `OWNER_CONFIRMED` inbox receipt. Lần gọi thứ hai gửi `0`; trạng thái delivery cuối là
-  `OFF`. Codex không có truy cập Supabase xác thực nên không tuyên bố tự quan sát live state.
-  Production không bị thay đổi. Chi tiết/provenance: `docs/phase-3/08-email-worker-scheduling.md`.
+### P3-09 — Phase 3 Final Acceptance & Production Readiness Audit
+- **Base:** `master@ae679da` (PR #21 merged, P3-08 done; confirmed clean baseline, CI xanh trên
+  đúng HEAD, run `31894178113`).
+- **Branch:** `claude/phase-3-final-audit-d18279`.
+- **Phạm vi:** audit/tài liệu — không phải task tính năng mới. Rà soát toàn bộ P3-00 → P3-08 trên
+  `master` hiện tại, sửa tài liệu lỗi thời (`docs/04-implementation-status.md`,
+  `docs/brain/04-current-tasks.md`), audit bảo mật cuối kỳ (email delivery gate, queue, provider,
+  scheduler), audit secret, review DB/RLS, chạy validation frontend/Edge Function, và dựng ma trận
+  production-readiness tại `docs/phase-3/09-phase-3-final-acceptance.md`.
+- **Giới hạn:** Không deploy Production Supabase, không bật `EMAIL_DELIVERY_MODE=LIVE`, không gửi
+  live email mới, không redesign kiến trúc email, không bắt đầu Phase 4, không thêm tính năng
+  ngoài scope.
+
+## Đã hoàn thành gần đây (Phase 3, tới P3-08)
+
+### P3-08 — Email Worker Scheduling & End-to-End Delivery Rehearsal (merged)
+- **Trạng thái:** `P3_08_FINAL_ACCEPTANCE_READY_FOR_MERGE` → **merged** vào `master` qua PR #21
+  (`ae679da`, 2026-08-15). Repository implementation, scheduler migration, P3-R1 safety gate, full
+  diff và secret audit do Codex tự kiểm chứng; P3-08A (OFF) do `AUTHENTICATED_EXTERNAL_OPERATOR`
+  thực hiện và `OWNER_ACCEPTED`; P3-08B (ALLOWLIST một người nhận) do
+  `AUTHENTICATED_EXTERNAL_OPERATOR` thực hiện, có đúng một provider send và `OWNER_CONFIRMED`
+  inbox receipt. Lần gọi thứ hai gửi `0`; trạng thái delivery cuối là `OFF`. Production không bị
+  thay đổi. Chi tiết/provenance: `docs/phase-3/08-email-worker-scheduling.md`.
 - **Phạm vi:** một `pg_cron` job `email_queue_worker` (mỗi 10 phút) gọi `process-email-queue`
   qua `pg_net`/`net.http_post`, xác thực bằng `x-cron-secret` (không đổi, P3-03), URL và secret
   đọc từ Supabase Vault tại thời điểm chạy (không có literal secret trong migration). Không đổi
   `EMAIL_DELIVERY_MODE`, không thêm worker/queue thứ hai, không bật `LIVE`.
-- **Giới hạn:** Không deploy production, không bật `EMAIL_DELIVERY_MODE=LIVE`; chỉ merge PR #21
-  sau khi CI xanh trên đúng HEAD cuối.
 
 ### Phase 3 Stack Consolidation through P3-05 (PASS)
 - **Master:** `2a68f20` — merged integration PR #17 from `integrate/phase-3-through-p3-05`.
 - **Trạng thái:** P3-00 → P3-05 đã nằm trên `master`; final merged-master CI `31783521687` xanh.
 - **Validation:** frontend 45/45, lint 0 errors/3 existing warnings, build PASS, 21 migrations,
   16 pgTAP suites, Deno 37/37 PASS.
-- **Giới hạn:** Không triển khai P3-06/P3-07/P3-08, không bật cron/scheduler, không deploy production,
-  không gửi live email mới.
 
 ---
 
@@ -57,9 +66,16 @@
 
 ### Phase 3 — Done: P3-06 Final Acceptance & Merge PR #20
 - **Mô tả:** P3-06 technical CI và P3-07B live scheduler rehearsal đã PASS; PR #20 đã **merged**
-  vào `master@63d1b7a`. P3-08 (xem "Đang làm" ở trên) là task hiện tại kế tiếp.
+  vào `master@63d1b7a`.
 - **Báo cáo:** `docs/phase-3/06-cron-overdue-automation.md`,
   `docs/phase-3/07-live-cron-rehearsal.md`.
+
+### Phase 3 — Done: P3-08 Final Acceptance & Merge PR #21
+- **Mô tả:** P3-08 email worker scheduling technical CI, P3-08A (OFF) và P3-08B (ALLOWLIST) live
+  rehearsal đã PASS; PR #21 đã **merged** vào `master@ae679da`. P3-09 (xem "Đang làm" ở trên) là
+  task hiện tại — final audit/closure cho toàn bộ Phase 3, không phải task tính năng.
+- **Báo cáo:** `docs/phase-3/08-email-worker-scheduling.md`,
+  `docs/phase-3/09-phase-3-final-acceptance.md` (khi hoàn thành).
 
 ---
 
