@@ -10,10 +10,13 @@
 ### P3-08 — Email Worker Scheduling & End-to-End Delivery Rehearsal
 - **Base:** `master@63d1b7a` (P3-06 merged via PR #20, confirmed clean baseline).
 - **Branch:** `claude/phase-3-email-worker-scheduling-825108`.
-- **Trạng thái:** Implementation done (migration + pgTAP), local frontend validation pending,
-  live Supabase rehearsal (Gate 1/2 trên `znexculhbdjiflkczpyu`) chưa chạy — cần xác nhận
-  quyền truy cập Supabase CLI/credentials trước khi thực hiện (không có Docker/Deno/Supabase
-  auth trong sandbox hiện tại). Xem `docs/phase-3/08-email-worker-scheduling.md`.
+- **Trạng thái:** Repo implementation + CI tự agent xác minh: `PASS` (CI `31854967535`, PR #21
+  Draft). Gate 1 (OFF mode) trên `znexculhbdjiflkczpyu`: agent này **không** có quyền truy cập
+  Supabase (không MCP, không token, không CLI auth trong suốt task) nên không tự chạy/kiểm chứng
+  được; chủ dự án đã xem xét evidence từ một operator session bên ngoài và chấp nhận trên thẩm
+  quyền của mình (`P3_08A_PROJECT_GATE: CLOSED_BY_OWNER_ACCEPTANCE`) — xem
+  `docs/phase-3/08-email-worker-scheduling.md` mục "External operator rehearsal" để biết chính
+  xác agent xác minh gì và chủ dự án tự chấp nhận gì. Gate 2 (ALLOWLIST) **chưa** thực hiện.
 - **Phạm vi:** một `pg_cron` job `email_queue_worker` (mỗi 10 phút) gọi `process-email-queue`
   qua `pg_net`/`net.http_post`, xác thực bằng `x-cron-secret` (không đổi, P3-03), URL và secret
   đọc từ Supabase Vault tại thời điểm chạy (không có literal secret trong migration). Không đổi

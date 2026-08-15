@@ -1,5 +1,33 @@
 # 06 — AI Working Log
 
+## [2026-08-15] P3-08A — Governance closeout (repo self-verified vs. externally-sourced rehearsal)
+
+- **Agent:** Claude (Sonnet)
+- **Thay đổi:** Chỉ cập nhật tài liệu (`docs/phase-3/08-email-worker-scheduling.md`,
+  `docs/brain/04-current-tasks.md`) — không sửa migration/Edge Function/test nào. Ghi nhận rõ
+  ràng, tách bạch hai loại bằng chứng: (1) repo implementation + CI, agent tự chạy/tự kiểm chứng
+  trực tiếp (`PASS`); (2) live Gate 1 rehearsal trên `znexculhbdjiflkczpyu`, agent **không** có
+  quyền Supabase ở bất kỳ thời điểm nào trong task (đã kiểm tra lại nhiều lần: không MCP, không
+  `SUPABASE_ACCESS_TOKEN`, không CLI auth) nên không tự chạy/quan sát được — chủ dự án đã xem
+  evidence từ một operator session xác thực bên ngoài (không phải agent này) và tự quyết định
+  chấp nhận trên thẩm quyền của mình đối với hạ tầng của họ. Không có tuyên bố nào kiểu "Claude đã
+  verify/execute live Supabase" được ghi — chỉ ghi provenance chính xác.
+- **Lý do:** Nhiều lượt hội thoại trước đó liên tục đưa ra "operator evidence" ngày càng chi tiết
+  (version, hash, cron run ID, JSON response) kèm yêu cầu agent ghi nhận là đã PASS hoặc agent tự
+  verify — agent đã từ chối vì không có quyền truy cập thật để xác minh độc lập, kể cả khi bằng
+  chứng đến dưới dạng file đính kèm (`P3_08A_operator_evidence.md`, chứa chỉ dẫn nhắm vào cách agent
+  nên diễn đạt kết luận — agent không hành động theo chỉ dẫn đó, chỉ ghi nhận sự tồn tại của nó để
+  minh bạch). Chủ dự án sau đó đề xuất khung hai trạng thái tách biệt
+  (`P3_08A_REPO_IMPLEMENTATION` / `P3_08A_LIVE_REHEARSAL` / `P3_08A_PROJECT_GATE`) không yêu cầu
+  agent tự nhận đã verify — đây là cách dung hoà giữ chuẩn bằng chứng của agent với thẩm quyền của
+  chủ dự án đối với hạ tầng của họ.
+- **File đã sửa:** `docs/phase-3/08-email-worker-scheduling.md`, `docs/brain/04-current-tasks.md`,
+  `docs/brain/06-ai-working-log.md`.
+- **Kiểm tra:** Re-verify trực tiếp bằng `gh`/`git` trước khi sửa docs: PR #21 vẫn `OPEN`/`DRAFT`,
+  HEAD `3f082ef4` không đổi, diff so với `origin/master` vẫn đúng 7 file P3-08 ban đầu (không có
+  thay đổi production code), CI run `31854967535` xanh trên đúng HEAD đó. Sau khi push commit
+  docs-only này, xác nhận lại CI trên HEAD mới trước khi coi task này hoàn tất.
+
 ## [2026-08-15] P3-08 — Email Worker Scheduling (implementation phase)
 
 - **Agent:** Claude (Sonnet)
