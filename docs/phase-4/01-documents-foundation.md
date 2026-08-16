@@ -31,7 +31,7 @@ Forward-only, non-destructive: no table dropped, no column removed, no historica
 | --- | --- | --- |
 | 1 | CHECK on `documents.visibility_level` (4 spec levels) and on `document_relations.relation_type` (`AMENDS/REPLACES/GUIDES/RELATED`), plus a no-self-relation CHECK | Both columns previously accepted any string |
 | 2 | SELECT policy on `document_relations` requiring `can_access_document()` on **both** endpoints; admin manage policy | The table had RLS enabled and **zero policies** → deny-all for everyone, so relations were unreadable even by admins |
-| 3 | Revoke `INSERT/UPDATE/DELETE` on `documents`, `document_relations`, `document_chunks` from `authenticated`; keep `SELECT` | Defense in depth, matching the P2-06 precedent; writes now only via RPC |
+| 3 | Revoke `INSERT/UPDATE/DELETE` on **`documents` only** from `authenticated`; keep `SELECT` | Defense in depth, matching the P2-06 precedent; writes now only via RPC. `document_relations`/`document_chunks` keep their grants — see below |
 | 4 | Replace the `documents-private` Storage SELECT policy with a `uuid_or_null`-based form | The old policy cast the first path segment with a raw `::uuid`, which **raises** on a malformed path instead of denying |
 | 5 | Indexes for the list read model | `(status, issued_date desc, id desc)` matches the list query's filter+sort |
 | 6 | Admin RPCs: `can_manage_document`, `create_document_draft`, `update_document_metadata`, `publish_document`, `withdraw_document`, `attach_document_source_file` | No server-validated write path existed |
@@ -42,6 +42,25 @@ RLS *did* already deny an end user's write: the only write policy on `documents`
 `YOUTH_ADMIN`-in-scope or `SYSTEM_ADMIN` in its `WITH CHECK`. So this was not a live exploit. It was
 an unnecessarily broad grant of the same shape the project already eliminated in P2-06, and closing
 it makes the RPC the single write path rather than one of two.
+
+### Why only `documents` was closed
+
+An earlier revision of this migration also revoked writes on `document_relations` and
+`document_chunks`. CI caught the consequence, and it was the right catch: P4-01 provides **no**
+replacement RPC for either (relation curation is not part of this task's admin write path, and
+chunk management belongs to the out-of-scope AI/RAG pipeline), so revoking there would have removed
+a capability with nothing to put in its place. Both tables keep their grants and remain protected
+by their admin-only RLS write policies — which the pgTAP suite now asserts directly, by proving a
+member's relation INSERT is rejected with `42501`, rather than by asserting the absence of a grant.
+
+### One existing test's fixture setup changed (no assertion changed)
+
+`supabase/tests/rls_acceptance.sql` seeded document rows by switching to an authenticated sysadmin
+session and inserting directly. With the `documents` write path moved to RPCs, that seeding no
+longer works. The fixture now seeds as `postgres` via `reset_auth()` — the convention that same
+file already uses for its storage-object fixtures. **No assertion was modified, weakened, or
+skipped**: tests 14/15/16/26 still read exactly the same rows through exactly the same RLS path,
+and they still pass.
 
 ## Security invariants
 

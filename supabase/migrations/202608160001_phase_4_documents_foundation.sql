@@ -74,9 +74,15 @@ for all using (
 -- It follows the precedent set by P2-06, which closed the equivalent direct-write surface on the
 -- report submission path: the trusted write path is an RPC that validates the transition
 -- server-side, not a table grant plus a policy.
+--
+-- Scope note: only `documents` is closed here, because only `documents` gets a full replacement
+-- write path in this migration (create/update/publish/withdraw/attach below). `document_relations`
+-- and `document_chunks` deliberately KEEP their existing grants -- revoking them would remove a
+-- capability with nothing to replace it: relation curation has no RPC in P4-01 (not part of this
+-- task's admin write path), and chunk management belongs to the AI/RAG pipeline, which is
+-- explicitly out of scope. Both remain protected by their admin-only RLS policies, so an end user
+-- still cannot write to them.
 revoke insert, update, delete on table public.documents from authenticated;
-revoke insert, update, delete on table public.document_relations from authenticated;
-revoke insert, update, delete on table public.document_chunks from authenticated;
 
 -- SELECT stays: RLS (can_access_document / admin policies) is the enforcement layer for reads.
 grant select on table public.documents to authenticated;

@@ -44,6 +44,19 @@ SYSTEM_ADMIN ở `WITH CHECK`), nên đây **không phải lỗ hổng đang m�
 với luồng nộp báo cáo. State transition (publish/withdraw) được validate trong RPC, không phụ thuộc
 việc frontend ẩn nút.
 
+**Chỉ đóng `documents`, KHÔNG đóng `document_relations`/`document_chunks`.** Bản migration đầu tiên
+đóng cả ba; CI bắt được hậu quả và đó là cảnh báo đúng: P4-01 không có RPC thay thế cho hai bảng kia
+(quản lý relation không nằm trong admin write path của task này; chunk thuộc pipeline AI/RAG ngoài
+scope), nên đóng grant là **xóa năng lực mà không có gì thay thế**. Hai bảng đó giữ grant và vẫn
+được bảo vệ bằng policy RLS chỉ-admin — pgTAP chứng minh trực tiếp bằng cách assert member INSERT
+relation bị từ chối `42501`, thay vì assert sự vắng mặt của grant.
+
+**Hệ quả lên test cũ:** `rls_acceptance.sql` trước đây seed document bằng cách đăng nhập sysadmin rồi
+INSERT thẳng. Khi write path chuyển sang RPC, cách seed đó hỏng. Đã đổi sang seed bằng `postgres`
+qua `reset_auth()` — đúng convention mà chính file đó đang dùng cho fixture storage. **Không sửa,
+không nới, không skip bất kỳ assertion nào**; test 14/15/16/26 vẫn đọc đúng các dòng đó qua đúng
+đường RLS cũ.
+
 ## [2026-07-30] Tách khỏi runtime Apps Script cũ, chuyển sang Supabase
 
 - **Quyết định:** Dựng dự án mới trên React/Vite + Supabase (Auth/Postgres/RLS/Storage/Edge

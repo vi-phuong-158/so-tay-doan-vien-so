@@ -148,13 +148,15 @@ select is(
   0,
   'G: authenticated holds no INSERT/UPDATE/DELETE grant on documents'
 );
-select is(
-  (select count(*)::integer
-   from information_schema.role_table_grants
-   where table_schema = 'public' and table_name = 'document_relations'
-     and grantee = 'authenticated' and privilege_type in ('INSERT', 'UPDATE', 'DELETE')),
-  0,
-  'G: authenticated holds no INSERT/UPDATE/DELETE grant on document_relations'
+-- document_relations keeps its grants on purpose (P4-01 adds no relation-management RPC, so
+-- revoking would remove a capability with no replacement). End users are still blocked by the
+-- admin-only RLS write policy rather than by the grant, which is asserted directly below.
+select throws_ok(
+  $$insert into public.document_relations (source_document_id, target_document_id, relation_type)
+    values ('d0000001-0000-0000-0000-000000000001', 'd0000002-0000-0000-0000-000000000002', 'RELATED')$$,
+  '42501',
+  null,
+  'G: a member cannot insert a document relation (admin-only RLS write policy)'
 );
 select ok(
   (select count(*)::integer
@@ -265,12 +267,16 @@ select isnt(
   null,
   'publishing stamps approved_by'
 );
+-- audit_logs is not granted to `authenticated` (it is a trusted, append-only trail), so the audit
+-- assertion drops to postgres to read it, then restores the admin session.
+select reset_auth();
 select is(
   (select count(*)::integer from public.audit_logs
    where action = 'DOCUMENT_PUBLISHED' and entity_id = 'd0000003-0000-0000-0000-000000000003'),
   1,
   'publishing writes exactly one audit row'
 );
+select set_auth_user('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb');
 
 -- Re-publishing an already-PUBLISHED document is rejected, not silently accepted.
 select throws_ok(
@@ -332,6 +338,7 @@ select lives_ok(
       'd0000001-0000-0000-0000-000000000001/source/valid-guide.pdf', 1024)$$,
   'a valid source file under the document prefix is accepted'
 );
+select reset_auth();
 select is(
   (select count(*)::integer from public.audit_logs
    where action in ('DOCUMENT_SOURCE_ATTACHED', 'DOCUMENT_SOURCE_REPLACED')
