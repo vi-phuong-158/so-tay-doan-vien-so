@@ -27,6 +27,21 @@ chạy: `202608160005` đóng race resume và biến malformed/duplicate JSON th
 end user chỉ thấy quiz PUBLISHED dưới topic accessible và còn trong availability window. P4-04 chỉ
 thêm bounded admin table policy, không xây admin authoring UI lớn; phần đó để P4-05.
 
+## [2026-08-16] P4-05: Admin authoring là trusted RPC boundary, answer key chỉ trả trong scoped read
+
+Learning/Quiz admin không dùng direct table DML hoặc broad authenticated SELECT. Topic/resource
+reads and writes, quiz metadata, question/option authoring, ordering, status transitions and audit
+all pass through SECURITY DEFINER functions that re-check active account and organization scope.
+`get_admin_quiz_authoring` may return `is_correct` only after that scope check; end-user paths
+continue to use safe quiz/attempt RPCs and never receive the answer key before submission.
+
+## [2026-08-16] P4-05: Submitted attempts freeze scoring semantics
+
+Once a quiz has a submitted attempt, question/option rows and scoring-affecting settings
+(pass score, time limit, max attempts, shuffle flags) are immutable. Cosmetic title/description
+edits remain allowed for operational correction. A content correction creates a new quiz, preserving
+the answer-key interpretation and auditability of historical attempts.
+
 ## [2026-08-16] P4-02: `documents-private` không có UPDATE policy — object không bao giờ ghi đè
 
 Mỗi lần upload tạo một object path MỚI (`{uuid}-{tên}`), và bucket cố ý **không** có UPDATE policy.

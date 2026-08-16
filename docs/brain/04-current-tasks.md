@@ -7,10 +7,25 @@
 
 ## Đang làm
 
-### P4-04 — Quiz Engine & Attempts
-- **Base:** `master@6b1960a` — P4-03 merged qua PR #25; branch `feat/phase-4-quiz-engine`.
-- **Trạng thái:** implementation đã commit tại `61989d4`, branch hiện push tại `88781e8`; Draft PR chưa mở được vì GitHub
-  connector trả HTTP 403 `Resource not accessible by integration`; exact-final-HEAD CI chưa chạy.
+### P4-05 — Learning & Quiz Admin Workflow
+- **Base:** P4-04 merge commit `3ddfeaede1b7a22acb36c34d3847a394a7cb2f1d`; branch
+  `feat/phase-4-learning-quiz-admin`.
+- **Trạng thái:** `P4_05_TECHNICAL_ACCEPTANCE_PASS`; PR #27 đang Draft trên branch riêng,
+  chưa merge. Exact-head CI `31958908805` PASS trên `89964eb`. Scope là topic/resource/quiz
+  admin workflow, trusted RPC/read model, publication validation, historical-attempt protection,
+  audit, pgTAP and frontend gates.
+- **Routes:** `/admin/chuyen-de`, `/admin/chuyen-de/:topicId`,
+  `/admin/chuyen-de/:topicId/trac-nghiem/:quizId`.
+
+### P4-04R2 — Quiz two-session concurrency rehearsal (PENDING)
+- **Trạng thái:** **PENDING** — chưa thực hiện real two-session concurrency. CI/pgTAP structural
+  advisory-lock coverage không được ghi nhận thay cho gate này.
+
+### P4-04 — Quiz Engine & Attempts (merged)
+- **Base/merge:** P4-03 `master@6b1960a`; merged via PR #26 at
+  `master@3ddfeaede1b7a22acb36c34d3847a394a7cb2f1d`.
+- **Trạng thái:** `P4_04_TECHNICAL_ACCEPTANCE_PASS_CONCURRENCY_REHEARSAL_PENDING`; exact HEAD CI
+  run `31956104175` PASS (build, test-db/full pgTAP+Deno, Vercel). P4-04R2 remains PENDING.
 - **Phát hiện chính:** năm bảng Quiz đã tồn tại từ initial schema. Hai defect thật là quiz/question
   đọc không xét visibility của topic cha và `authenticated` có đường INSERT/UPDATE attempt để tự
   ghi score/passed. `is_correct` đã được bảo vệ bởi RLS, nhưng P4-04 giữ defense-in-depth bằng
@@ -19,8 +34,8 @@
   access, trusted start/resume/submit/result RPC; `202608160005` forward-fix concurrency resume và
   malformed payload; pgTAP A–Z; `quizService`; route `/tri-thuc/trac-nghiem/:quizId`; intro/attempt/result
   UI và link từ topic detail.
-- **Giới hạn:** Không admin authoring UI lớn, không AI/RAG, không leaderboard/gamification, không
-  Production. P4-02R vẫn PENDING. Chi tiết: `docs/phase-4/04-quiz-engine-attempts.md`.
+- **Giới hạn:** Không AI/RAG, không leaderboard/gamification, không Production. Chi tiết:
+  `docs/phase-4/04-quiz-engine-attempts.md`.
 
 ### P4-02R — Documents Storage Actor-Based Runtime Rehearsal (PENDING)
 - **Trạng thái:** **PENDING** — chưa bắt đầu. Đây là **cổng production-readiness**, **không chặn**

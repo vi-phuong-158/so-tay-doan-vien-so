@@ -808,3 +808,34 @@
 - **File đã sửa:** `docs/phase-3/07-live-cron-rehearsal.md`, `docs/brain/04-current-tasks.md`, `docs/brain/06-ai-working-log.md`.
 - **Lý do:** Chứng minh `pg_cron` thật thực thi P3-06 end-to-end mà không schedule worker email, gửi email hoặc ảnh hưởng production.
 - **Kiểm tra:** `cron.job_run_details` ghi overdue job 3 và reminder job 4 đều succeeded; Fixture A chỉ tạo 1 history/audit và 1 reminder/notification/queue qua lần chạy lặp; B/C không đổi; queue PENDING, source identity đúng; cleanup và official schedules đều được xác nhận bằng SQL đọc lại.
+
+## [2026-08-16] P4-04R — Merge closure and P4-05 takeover
+
+- **Agent:** Codex
+- **Thay đổi:** Xác minh exact HEAD `171e8b27`, CI `31956104175` xanh, merge PR #26 vào master
+  với merge commit `3ddfeaede1b7a22acb36c34d3847a394a7cb2f1d`; tạo branch P4-05 từ baseline mới.
+- **File đã sửa:** `docs/brain/04-current-tasks.md`, `docs/04-implementation-status.md`,
+  `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Đóng P4-04 theo đúng acceptance evidence mà không làm giả gate concurrency; giữ
+  P4-04R2 và P4-02R ở trạng thái PENDING.
+- **Kiểm tra:** PR #26 merged; build, test-db/full pgTAP+Deno và Vercel đã PASS trên exact HEAD.
+
+## [2026-08-16] P4-05 — Learning & Quiz Admin Workflow
+
+- **Agent:** Codex
+- **Thay đổi:** Thêm trusted admin read/mutation RPCs cho topic/resource/quiz/question/option,
+  server-side publication validation, historical-attempt freeze, audit, direct DML closure,
+  admin services, routes/UI, pgTAP và service/UI regression tests.
+- **File đã sửa:** `supabase/migrations/202608160006_phase_4_learning_quiz_admin.sql`,
+  `supabase/tests/learning_quiz_admin.sql`, `supabase/tests/quiz_engine_attempts.sql`,
+  `src/services/learningAdminService.js`, `src/services/quizAdminService.js`,
+  `src/pages/AdminLearningTopics.jsx`, `src/pages/AdminLearningTopicDetail.jsx`,
+  `src/pages/AdminQuizEditor.jsx`, `src/App.jsx`, `src/pages/Admin.jsx`, `src/index.css`,
+  `tests/learning_quiz_admin_service.test.mjs`, `tests/learning_quiz_admin_ui.test.mjs`,
+  `docs/phase-4/05-learning-quiz-admin.md`, `docs/brain/01-architecture.md`,
+  `docs/brain/03-decisions.md`, `docs/brain/04-current-tasks.md`, `docs/04-implementation-status.md`.
+- **Lý do:** Cung cấp workflow admin tối thiểu mà không mở answer key cho end user, không cho
+  client ghi bảng quiz trực tiếp, và bảo toàn ý nghĩa các attempt lịch sử.
+- **Kiểm tra:** `npm test` 136/136 PASS; `npm run lint` 0 errors/3 existing warnings;
+  `npm run build` PASS; `git diff --check` PASS. Exact-head CI run `31958908805` trên
+  `89964eb` PASS: build 17s và test-db/full pgTAP+Deno 3m04s; PR #27 vẫn Draft.
