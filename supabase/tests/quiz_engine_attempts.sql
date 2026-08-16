@@ -442,11 +442,12 @@ select is(
 -- =====================================================================================
 select set_auth_user('11112222-3333-4444-5555-666677778888'); -- YOUTH_ADMIN scoped to CĐA only
 select lives_ok(
-  $$update public.quizzes set description = 'edited' where id = '2f000001-0000-4000-8000-000000000001'$$,
-  'Y: CĐA-scoped admin can edit a quiz owned by CĐA'
+  $$select public.update_quiz_metadata('2f000001-0000-4000-8000-000000000001', 'P4 Quiz A', 'edited', 50, null, 5, false, false)$$,
+  'Y: CĐA-scoped admin can edit a quiz through the trusted admin path'
 );
-select lives_ok(
-  $$update public.quizzes set description = 'hostile edit' where id = '2f000004-0000-4000-8000-000000000004'$$,
+select throws_ok(
+  $$select public.update_quiz_metadata('2f000004-0000-4000-8000-000000000004', 'P4 Quiz B', 'hostile edit', 70, null, 2, false, false)$$,
+  'QUIZ_SCOPE_DENIED',
   'Y: CĐA-scoped admin cannot edit a quiz owned by CĐB'
 );
 select is(
@@ -455,9 +456,10 @@ select is(
   'Y: the rejected cross-org edit did not change anything'
 );
 select set_auth_user('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee');
-select lives_ok(
+select throws_ok(
   $$update public.quizzes set description = 'member edit' where id = '2f000001-0000-4000-8000-000000000001'$$,
-  'Y: a normal member cannot edit quiz content at all'
+  null,
+  'Y: a normal member cannot edit quiz content directly'
 );
 select is(
   (select description from public.quizzes where id = '2f000001-0000-4000-8000-000000000001'),

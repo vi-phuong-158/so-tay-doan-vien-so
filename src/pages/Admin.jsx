@@ -98,6 +98,7 @@ export function AdminDashboard() {
         <div className="campaign-form-actions" style={{ marginBottom: '16px' }}>
           <Link className="button button-primary" to="/admin/bao-cao">Quản lý đợt báo cáo</Link>
           <Link className="button button-secondary" to="/admin/van-ban">Quản trị văn bản</Link>
+          <Link className="button button-secondary" to="/admin/chuyen-de">Quản trị chuyên đề & trắc nghiệm</Link>
         </div>
 
         <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>

@@ -43,11 +43,21 @@
   `docs/phase-3/09-phase-3-final-acceptance.md`. It does not implement new features and does not
   change delivery mode or deploy production.
 
-## Phase 4 — Quiz Engine & Attempts (P4-04, in review)
+## Phase 4 — Learning & Quiz Admin (P4-05, in progress)
+
+- Branch `feat/phase-4-learning-quiz-admin` starts from merged P4-04 baseline
+  `master@3ddfeaede1b7a22acb36c34d3847a394a7cb2f1d`.
+- Implements the minimal Topic → Resource → Quiz → Questions → Options → Publish workflow.
+  Admin reads use bounded RPCs; all quiz authoring writes use trusted RPCs; direct authenticated
+  quiz/question/option DML and question/option SELECT are revoked.
+- Historical policy: submitted attempts freeze answer-key rows and scoring-affecting metadata;
+  cosmetic title/description edits remain allowed and corrections require a new quiz.
+- Validation and exact CI are pending until the branch is pushed. P4-02R and P4-04R2 remain open.
+
+## Phase 4 — Quiz Engine & Attempts (P4-04, merged)
 
 - Branch `feat/phase-4-quiz-engine`, created from verified P4-03 merged baseline `master@6b1960a`
-  (PR #25). This takeover inherited Claude's uncommitted migration/test work in the dedicated
-  worktree; no reset or discard was performed.
+  (PR #25), merged through PR #26 at `master@3ddfeaede1b7a22acb36c34d3847a394a7cb2f1d`.
 - Survey confirmed `quizzes`, `quiz_questions`, `quiz_options`, `quiz_attempts`, and `quiz_answers`
   already existed. P4-04 closes the visibility-blind quiz/question policies by delegating to the
   canonical parent-topic access helper, revokes direct attempt/answer writes from `authenticated`,
@@ -59,13 +69,10 @@
   `202608160005` rechecks active attempts after locking and rejects malformed/duplicate payloads.
 - Frontend vertical slice: `quizService`, `/tri-thuc/trac-nghiem/:quizId`, intro/attempt/result states,
   server-owned score/pass/attempt number and topic-detail quiz links. No quiz admin authoring UI.
-- Validation so far: rehearsal project `znexculhbdjiflkczpyu` identity and migration parity verified;
-  P4-04 pgTAP `1..65` PASS; frontend `131/131`, lint 0 errors/3 existing warnings, build PASS.
-  Full SQL regression found one pre-existing rehearsal-fixture gap: `report_export.sql` expects
-  seeded campaign `5555…`, which is absent from the project; the suite passes `1..7` when that
-  fixture is inserted inside a rollback-bounded transaction. The other 22 suites pass as-is.
-  Supabase CLI/Deno are unavailable locally; exact final CI is still required before PASS.
-- Not included: AI/RAG, certificates, leaderboard/gamification, production deployment, or P4-02R.
+- Exact acceptance CI run `31956104175` PASS on the PR HEAD (build, test-db/full pgTAP+Deno,
+  Vercel). P4-04R2 real two-session concurrency remains PENDING.
+- Not included: AI/RAG, certificates, leaderboard/gamification, production deployment, P4-02R or
+  P4-04R2.
 - See `docs/phase-4/04-quiz-engine-attempts.md`.
 
 ## Phase 4 — Learning Foundation (P4-03, merged)

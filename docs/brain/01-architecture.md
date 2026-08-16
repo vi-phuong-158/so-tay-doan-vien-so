@@ -48,7 +48,12 @@ src/
 ├── services/supabaseClient.js  # khởi tạo supabase client từ VITE_SUPABASE_*
 ├── services/reportAdminService.js # quản trị campaign + dashboard/export qua RPC/Edge Function
 ├── services/notificationService.js # read-only inbox/count + mark-read RPC boundary
-└── services/quizService.js # safe metadata + trusted attempt lifecycle RPC boundary
+├── services/quizService.js # safe metadata + trusted attempt lifecycle RPC boundary
+├── services/learningAdminService.js # scoped topic/resource admin RPC + private Storage boundary
+├── services/quizAdminService.js # scoped quiz/question/option authoring RPC boundary
+├── pages/AdminLearningTopics.jsx # /admin/chuyen-de list + draft creation
+├── pages/AdminLearningTopicDetail.jsx # topic metadata/resources/quizzes
+└── pages/AdminQuizEditor.jsx # quiz/question/option authoring + publish
 
 supabase/
 ├── migrations/              # ordered schema/RLS/RPC migrations
@@ -85,6 +90,11 @@ supabase/
 | `src/pages/AdminReportDashboard.jsx` | Aggregate, filter/search và tải CSV/ZIP theo filter hiện tại | route `/admin/bao-cao/:campaignId/dashboard` | `reportAdminService`, dashboard helpers, Blob download |
 | `src/services/quizService.js` | Safe quiz metadata, safe question mapper, trusted attempt/result RPC boundary; không yêu cầu answer key trước submit | `Quiz`, `LearningTopicDetail` | Supabase RPC/RLS, UUID/business-error validation |
 | `src/pages/Quiz.jsx` | Intro → attempt → result UI, loading/error/limit/expiry/double-submit states | route `/tri-thuc/trac-nghiem/:quizId` | `quizService`, `Icon`, `common`, `Skeleton` |
+| `src/services/learningAdminService.js` | Scoped topic/resource admin reads, RPC mutations, upload compensation | `AdminLearningTopics`, `AdminLearningTopicDetail` | Supabase RPC + private Storage |
+| `src/services/quizAdminService.js` | Scoped quiz metadata/authoring reads and all quiz/question/option mutations | `AdminLearningTopicDetail`, `AdminQuizEditor` | Supabase RPC/RLS; answer key only admin-scoped |
+| `src/pages/AdminLearningTopics.jsx` | Admin topic list/filter/create with loading/error/empty states | route `/admin/chuyen-de` | `learningAdminService`, `RoleGuard`, `common` |
+| `src/pages/AdminLearningTopicDetail.jsx` | Topic edit/publish, resource CRUD/upload/reorder, quiz list/create | route `/admin/chuyen-de/:topicId` | learning/quiz admin services, private Storage |
+| `src/pages/AdminQuizEditor.jsx` | Quiz metadata, SINGLE/MULTIPLE questions/options and publish/close | route `/admin/chuyen-de/:topicId/trac-nghiem/:quizId` | `quizAdminService`, `RoleGuard`, `common` |
 
 ### Backend (Edge Functions) — module then chốt
 
@@ -269,6 +279,19 @@ exact-set scoring, answer rows + final score atomically) → `get_attempt_result
 `quiz_attempts`/`quiz_answers` không có direct write grant cho `authenticated`; start dùng advisory
 lock trước khi đọc active attempt, unique `(quiz_id,user_id,attempt_number)` là backstop. `is_correct`
 chỉ xuất hiện trong result sau submit của chính user hoặc admin trong scope.
+
+# Learning + Quiz admin (P4-05)
+Admin flow: `/admin/chuyen-de` → `get_admin_learning_topics`; topic detail →
+`get_admin_learning_topic` + `get_admin_learning_resources` + `get_admin_quizzes`; quiz editor →
+`get_admin_quiz_authoring` and trusted create/update/status/question/option/reorder RPCs. Every
+function re-checks active account and topic organization scope server-side. Only the scoped admin
+read model returns `quiz_options.is_correct`; end-user `quizService` remains safe and direct
+authenticated DML/select on authoring tables is revoked.
+
+After the first submitted attempt, question/option rows and scoring-affecting quiz metadata are
+immutable. Title/description may be cosmetically edited; a corrected assessment is created as a
+new quiz. Publication validates scoring bounds, at least one question, at least two options per
+question, and correct-answer cardinality for SINGLE/MULTIPLE.
 
 # Quản trị văn bản & quyền ghi Storage (P4-02)
 Gap P4-01 để lại: `documents-private` **không có policy INSERT/UPDATE/DELETE nào** → deny-by-default
