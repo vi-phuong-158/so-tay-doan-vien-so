@@ -48,8 +48,8 @@ select ok((select option_is_correct from public.get_admin_quiz_authoring('5f0000
   'trusted admin authoring read returns is_correct after scope validation');
 
 -- Publishing validates the complete question/option contract server-side.
-select throws_ok($$select public.set_quiz_status('5f000001-0000-4000-8000-000000000001', 'PUBLISHED')$$,
-  null, 'a quiz with a single correct answer and two options passes publication validation');
+select lives_ok($$select public.set_quiz_status('5f000001-0000-4000-8000-000000000001', 'PUBLISHED')$$,
+  'a quiz with a single correct answer and two options passes publication validation');
 
 -- A member sees neither authoring rows nor answer keys and cannot mutate tables directly.
 select set_auth_user('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee');
