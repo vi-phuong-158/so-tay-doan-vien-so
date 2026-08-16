@@ -2,8 +2,8 @@
 
 ## VERDICT
 
-The final exact-head CI is green on audit HEAD `69096639eb6c88e2d5a51e65045844e4f8c15501`.
-The technical verdict is:
+The implementation and integrated database evidence are green, and the final documentation head
+is validated by the exact-head checks shown on Draft PR #28. The technical verdict is:
 
 `PHASE_4_TECHNICAL_ACCEPTANCE_PASS_RUNTIME_GATES_PENDING`
 
@@ -105,8 +105,8 @@ Local frontend validation from the merged P4-05 baseline and audit branch:
 - `git diff --check`: passed for the tracked audit changes
 
 The local environment does not provide the Supabase CLI, Docker, or Deno. Database reset, pgTAP,
-Deno, and Vercel evidence therefore comes from GitHub Actions exact-head CI. Final run
-`31960895746` on `69096639eb6c88e2d5a51e65045844e4f8c15501` reports:
+Deno, and Vercel evidence therefore comes from GitHub Actions exact-head CI. Acceptance run
+`31960895746` on implementation head `69096639eb6c88e2d5a51e65045844e4f8c15501` reports:
 
 - pgTAP: `Files=25, Tests=727, Result: PASS`
 - Deno/Edge Functions: `42 passed, 0 failed`
@@ -114,7 +114,8 @@ Deno, and Vercel evidence therefore comes from GitHub Actions exact-head CI. Fin
 - Vercel preview: passed
 
 The first audit run `31960673000` failed only on the over-specific assertion documented under
-Defects Found; the replacement run above is the accepted exact-head evidence.
+Defects Found; the replacement run above is the accepted implementation evidence. The final
+documentation-only head is separately required to remain green in PR #28 before handoff.
 
 ## RUNTIME READINESS GATES
 
@@ -150,8 +151,7 @@ issue in four files was fixed before PR #27 merge in commit `1706f06` and had no
 - Base: fresh `origin/master@3761dcc1be4fd6aebc1e91e78426076feead5e31`
 - Audit branch: `audit/phase-4-final-acceptance`
 - P4-06 PR: Draft, targeting `master`, not to be merged automatically
-- Exact final audit HEAD: `69096639eb6c88e2d5a51e65045844e4f8c15501`
-- Exact final audit CI: `31960895746` (green)
+- Exact final audit HEAD and CI: the final commit SHA and green check run are shown on Draft PR #28
 - Draft PR #28: https://github.com/vi-phuong-158/so-tay-doan-vien-so/pull/28
 - `.agents/`, `.claude/`, `.mcp.json`, and `skills-lock.json` remain excluded from commit/push
 
