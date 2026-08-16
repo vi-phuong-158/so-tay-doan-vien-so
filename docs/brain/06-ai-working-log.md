@@ -1,5 +1,35 @@
 # 06 — AI Working Log
 
+## [2026-08-16] P3-09 — Phase 3 final acceptance & production readiness audit
+
+- **Agent:** Claude (Sonnet 5)
+- **Thay đổi:** Audit-only, không có thay đổi migration/Edge Function/business logic. Xác minh độc
+  lập từ `master` hiện tại (không giả định giá trị đã cho trong brief): PR #21 `MERGED` vào
+  `master@ae679da`, CI xanh trên đúng merge commit đó (run `31894178113`), toàn bộ 21 PR trong
+  lineage đã merge. Đọc trực tiếp source của mọi migration/Edge Function Phase 3 (P3-01 → P3-08) để
+  xác nhận: `EMAIL_DELIVERY_MODE` fail-closed và OFF trả về trước khi claim/provider-init; queue có
+  idempotency key, `SKIP LOCKED`, lease/reclaim, `SENT` terminal, backoff; provider có idempotency
+  key, renderer allowlist + escape HTML, không trust raw HTML; scheduler đúng 3 job
+  (`report_mark_overdue_daily`, `report_reminder_scan_daily`, `email_queue_worker`) và
+  `email_queue_worker` đi qua `pg_net`→`process-email-queue` với Vault, không secret literal.
+  Secret audit qua `git grep` không phát hiện credential thật. Chạy `npm test`/`npm run lint`/
+  `npm run build` cục bộ (45/45, 0 lỗi/3 warning cũ, build PASS). Không có Docker/Supabase CLI/Deno
+  cục bộ (giống mọi task Phase 2/3 trước) nên `supabase db reset`/pgTAP/`deno check`/`deno test`
+  dựa vào CI run nêu trên, không chạy lại cục bộ. Sửa hai tài liệu lỗi thời
+  (`docs/04-implementation-status.md` từng nói P3-06/07/08 "unimplemented";
+  `docs/brain/04-current-tasks.md` từng để P3-08 ở mục "Đang làm" với base cũ) và tạo
+  `docs/phase-3/09-phase-3-final-acceptance.md` với ma trận production-readiness đầy đủ, phân biệt
+  rõ technical acceptance và production ready.
+- **File đã sửa:** `docs/04-implementation-status.md`, `docs/brain/04-current-tasks.md`,
+  `docs/phase-3/09-phase-3-final-acceptance.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Đóng Phase 3 bằng một audit cuối kỳ độc lập, không tin tưởng mù quáng giá trị đã cho
+  trong task brief mà tự xác minh lại toàn bộ; tách bạch rõ "đã accept về mặt kỹ thuật" và "đã sẵn
+  sàng production" để không ai hiểu nhầm PASS ở đây là được phép deploy production.
+- **Kiểm tra:** `npm test` 45/45 PASS; `npm run lint` 0 lỗi/3 warning có sẵn; `npm run build` PASS;
+  `gh pr view 21`/`gh pr list --state all`/`gh run list` xác nhận merge + CI trực tiếp qua GitHub
+  API, không suy diễn từ tài liệu. Không đổi `EMAIL_DELIVERY_MODE`, không deploy production, không
+  gửi email thật, không bắt đầu Phase 4.
+
 ## [2026-08-15] P3-08 — Final acceptance documentation
 
 - **Agent:** Codex

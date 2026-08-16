@@ -15,17 +15,33 @@
 - Phase 2 report vertical slice đã có production path cho assignment, submit/review/resubmit,
   campaign/template/publish, dashboard, scoped CSV và latest bundle.
 
-## Phase 3 through P3-05 merged to master
+## Phase 3 through P3-08 merged to master (P3-09 audit current)
 
-- P3-00 through P3-05 (including P3-03R live rehearsal evidence) are consolidated in `master`
-  through integration PR #17, merge commit `2a68f20`.
-- The cumulative acceptance lineage remains traceable from P3-00 HEAD `1377265` through
-  P3-05 HEAD `df7b9d0`; no feature or business-logic changes were introduced by consolidation.
-- Final merged-master CI `31783521687` passed: frontend 45/45, lint 0 errors with 3 existing
-  warnings, build PASS, 21 migrations applied by `supabase db reset`, 16 pgTAP suites PASS,
-  and Deno 37/37 PASS.
-- P3-06, P3-07 and P3-08 remain unimplemented. No scheduler, production deploy, cron enablement,
-  or new physical live email send was performed by consolidation.
+- P3-00 through P3-08 are consolidated in `master`, HEAD `ae679da93cb45fcaa2b562cea8792261b63bc202`
+  (merge of PR #21). P3-00 → P3-05 landed via integration PR #17 (`2a68f20`); P3-R1 via PR #19
+  (`5665dc4`); P3-06 (cron & overdue automation) via PR #20 (`63d1b7a`); P3-07 (live cron
+  rehearsal) is documentation/evidence only, recorded in
+  `docs/phase-3/07-live-cron-rehearsal.md`; P3-08 (email worker scheduling + E2E delivery
+  rehearsal) via PR #21 (`ae679da`).
+- P3-06 installed two trusted in-database `pg_cron` jobs — `report_mark_overdue_daily`
+  (`5 17 * * *` UTC) and `report_reminder_scan_daily` (`0 0 * * *` UTC) — calling
+  `mark_overdue_assignments()`/`scan_report_reminders()` directly, no HTTP, no secret.
+- P3-08 added exactly one further job, `email_queue_worker` (`*/10 * * * *`), which invokes the
+  existing `process-email-queue` Edge Function through `pg_net`/`net.http_post`, authenticated
+  with the existing `x-cron-secret` header, with the target URL and secret read from Supabase
+  Vault at execution time (no secret literal in any migration). No second worker/queue was built.
+- CI on the exact merge commit `ae679da` (run `31894178113`) is green. Local environment has no
+  Docker/Supabase CLI/Deno (same constraint as every prior Phase 2/3 task), so
+  `supabase db reset`/pgTAP/`deno check`/`deno test` results are sourced from that CI run, not
+  reproduced locally in this audit.
+- `EMAIL_DELIVERY_MODE` remains `OFF` by default and fail-closed (missing/invalid/wrong-case all
+  resolve to `OFF`); Production Supabase was not deployed, configured, or touched by any Phase 3
+  task, including this audit. Live rehearsal evidence (P3-07B, P3-08A, P3-08B) ran only against a
+  separate non-production rehearsal project (`znexculhbdjiflkczpyu`).
+- **P3-09 (this audit)** is the current task: final Phase 3 technical acceptance, documentation
+  reconciliation, and a production-readiness gap analysis — see
+  `docs/phase-3/09-phase-3-final-acceptance.md`. It does not implement new features and does not
+  change delivery mode or deploy production.
 
 ## Phase 2 technical acceptance
 
