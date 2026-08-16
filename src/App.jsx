@@ -19,6 +19,7 @@ import { Profile } from './pages/Profile';
 import { Notifications } from './pages/Notifications';
 import { AdminDashboard } from './pages/Admin';
 import { AdminReports } from './pages/AdminReports';
+import { AdminDocuments } from './pages/AdminDocuments';
 import { AdminReportDashboard } from './pages/AdminReportDashboard';
 
 import { EmptyState } from './components/common';
@@ -62,6 +63,11 @@ export default function App() {
             <Route path="admin" element={
               <RoleGuard allowedRoles={['YOUTH_ADMIN']}>
                 <AdminDashboard />
+              </RoleGuard>
+            } />
+            <Route path="admin/van-ban" element={
+              <RoleGuard allowedRoles={['YOUTH_ADMIN']}>
+                <AdminDocuments />
               </RoleGuard>
             } />
             <Route path="admin/bao-cao" element={

@@ -95,8 +95,11 @@ export function AdminDashboard() {
       <PageHeader title="Bảng điều hành" subtitle="Quản trị hệ thống" />
       <div style={{ padding: '16px' }}>
         <p style={{ marginBottom: '24px' }}>Chào mừng <strong>{profile?.full_name}</strong>. Đây là khu vực quản trị.</p>
-        <Link className="button button-primary" to="/admin/bao-cao">Quản lý đợt báo cáo</Link>
-        
+        <div className="campaign-form-actions" style={{ marginBottom: '16px' }}>
+          <Link className="button button-primary" to="/admin/bao-cao">Quản lý đợt báo cáo</Link>
+          <Link className="button button-secondary" to="/admin/van-ban">Quản trị văn bản</Link>
+        </div>
+
         <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>
           <button className={`btn ${tab === 'users' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setTab('users')}>Người dùng</button>
           <button className={`btn ${tab === 'orgs' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setTab('orgs')}>Đơn vị trực thuộc</button>
