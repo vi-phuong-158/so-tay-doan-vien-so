@@ -134,8 +134,11 @@ remains pending.
 ## DEFECTS FOUND
 
 No material P4-05 or P4-06 behavior, security, scope, or integration defect was found during this
-audit. The only acceptance issue found was trailing blank-line hygiene in four P4-05 files; it was
-fixed before PR #27 merge in commit `1706f06` and had no runtime effect.
+audit. The first exact-head CI run exposed one over-specific integrated-test expectation: the
+question authoring RPC checks the published-state guard before its submitted-attempt guard and
+therefore correctly returns `QUIZ_NOT_DRAFT`. The acceptance assertion was corrected to the
+stable denial code; production code was not changed. The earlier P4-05 trailing blank-line hygiene
+issue in four files was fixed before PR #27 merge in commit `1706f06` and had no runtime effect.
 
 ## GIT STATE
 

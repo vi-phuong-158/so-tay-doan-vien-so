@@ -853,4 +853,7 @@
   và private buckets trước khi đánh giá Phase 4; không thay thế hai runtime gate bằng test giả.
 - **Kiểm tra:** `npm test` 136/136 PASS; `npm run lint` 0 errors/3 existing Fast Refresh warnings;
   `npm run build` PASS; `git diff --check` PASS. P4-05 exact-head CI `31959883659` PASS và PR #27
-  merged at `3761dcc1be4fd6aebc1e91e78426076feead5e31`; P4-06 exact-head CI pending.
+  merged at `3761dcc1be4fd6aebc1e91e78426076feead5e31`. First P4-06 exact-head CI
+  `31960673000` correctly reset the database and found one over-specific assertion in the new
+  suite (`QUIZ_NOT_DRAFT` is the RPC's first stable guard); the assertion is corrected and awaits
+  the replacement exact-head CI.

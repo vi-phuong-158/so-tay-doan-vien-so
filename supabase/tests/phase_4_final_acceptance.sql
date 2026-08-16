@@ -133,8 +133,8 @@ select lives_ok($$select public.update_quiz_metadata((select id from p4_quiz), '
 select throws_ok($$select public.update_quiz_metadata((select id from p4_quiz), 'Renamed quiz', 'Cosmetic correction', 80, null, 1, false, false)$$,
   'QUIZ_HAS_ATTEMPTS_IMMUTABLE', 'admin cannot change pass score after submission');
 select throws_ok(format($$select public.upsert_quiz_question('%s', 'SINGLE', 'Changed', null, 1, 0, '%s')$$,
-    (select id from p4_quiz), (select id from p4_question)), 'QUIZ_HAS_ATTEMPTS_IMMUTABLE',
-  'admin cannot change question text after submission');
+    (select id from p4_quiz), (select id from p4_question)), 'QUIZ_NOT_DRAFT',
+  'admin cannot change question text after publication and submission');
 select throws_ok(format($$select public.upsert_quiz_option('%s', 'Changed', false, 0, '%s')$$,
     (select id from p4_question), (select id from p4_correct_option)), 'QUIZ_CONTENT_NOT_EDITABLE',
   'admin cannot change the correct option after submission');
