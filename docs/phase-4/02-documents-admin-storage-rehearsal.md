@@ -115,6 +115,13 @@ read the result directly. `NOT_EXECUTED`: not run; reason stated.
 | **H** | Published flow | admin → member | DRAFT → PUBLISHED, then readable in scope | — | NOT_EXECUTED | needs test identities |
 | **I** | Withdraw | admin → member | access lost immediately | — | NOT_EXECUTED | needs test identities |
 
+### Disposition
+
+The project owner reviewed this gap and **accepted the partial rehearsal** for P4-02, on the basis
+that the behaviours involved are covered by pgTAP against the same schema and that the outstanding
+item (a real Storage byte round-trip) is carried forward as a named risk rather than silently
+closed. The scenarios below remain recorded as NOT EXECUTED — they were not re-labelled as passed.
+
 ### Why A–D and F–I were not executed
 
 Every one of those scenarios needs authenticated actors with distinct roles and organizations
@@ -139,9 +146,49 @@ What pgTAP cannot substitute for, and what therefore genuinely remains open, is 
 authenticated HTTP round-trip through Supabase Storage: an actual byte upload, an actual signed-URL
 fetch, and an actual 403 from the storage API for an unauthorized caller. That is the residual gap.
 
+## A regression CI caught before merge
+
+The first CI run on this branch (`31927919182`, HEAD `bd16b04`) failed `test-db`, and one of the
+two failures was a genuine, security-relevant regression rather than a test artefact:
+
+**The new `documents-private` policies call `can_manage_document`, but P4-01 had granted that
+function to `authenticated` only.** PostgreSQL evaluates every policy on a table for whichever role
+is current — including `anon`. So an anonymous read of *any object in any bucket* raised
+`permission denied for function can_manage_document` instead of returning zero rows: a hard error
+where a silent deny is required, and it broke the unrelated `report_storage_authorization` and
+`report_staging_cleanup` suites.
+
+This is the same failure `202608090006_phase_2_storage_policy_privilege_fix.sql` fixed for
+`can_read_report_template`; every other helper used inside a storage policy (`is_active_user`,
+`current_org_id`, `has_role`, `has_role_in_scope`, `can_access_document`, `uuid_or_null`) is already
+granted to both roles for precisely this reason. The fix grants `anon` EXECUTE, which is safe by
+construction: `can_manage_document` resolves through `has_role`/`has_role_in_scope`, both of which
+require `is_active_user()`, so an anonymous caller always gets `false`. It turns *raise* into
+*deny*, never *deny* into *allow*.
+
+A regression guard was added (`documents_admin_storage.sql` §9): read `documents-private` as
+`anon`, assert zero rows **and** no exception, plus assert the grant itself exists.
+
+The second failure was my own assertion: `pg_policies` renders the stored expression normalized, so
+`IS DISTINCT FROM` comes back upper-cased; the match is now case-insensitive.
+
+Neither was worked around by relaxing an assertion.
+
 ## CI evidence
 
-Recorded in the "Validation" section of the PR and updated on the exact final HEAD once green.
+| Gate | Result |
+| --- | --- |
+| `npm test` | **98/98 PASS** (66 existing unchanged + 32 new) |
+| `npm run lint` | PASS — 0 errors, 3 pre-existing Fast Refresh warnings |
+| `npm run build` | PASS |
+| `git diff --check` | PASS |
+| `supabase db reset` + pgTAP | PASS via CI — **`Files=21, Tests=558, Result: PASS`** (P4-01 baseline was `Files=20, Tests=524`; the +34 are this task's `documents_admin_storage.sql`). No assertion-count regression. |
+| `deno check` / `deno test` | PASS via CI — `42 passed, 0 failed` (unchanged; no Edge Function touched) |
+| CI run | [`31928125405`](https://github.com/vi-phuong-158/so-tay-doan-vien-so/actions/runs/31928125405) — **success** on exact HEAD `f4ee4a561ba20c1c4482508ec132fae2da32b07f` |
+
+Local `supabase db reset` / pgTAP / Deno are not runnable in this environment (no Docker, no
+Supabase CLI, no Deno) — the same constraint recorded for every Phase 2/3/4 task; CI is
+authoritative for those gates.
 
 ## Residual risks
 
