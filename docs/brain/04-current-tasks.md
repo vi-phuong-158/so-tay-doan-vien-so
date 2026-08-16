@@ -9,7 +9,8 @@
 
 ### P4-04 — Quiz Engine & Attempts
 - **Base:** `master@6b1960a` — P4-03 merged qua PR #25; branch `feat/phase-4-quiz-engine`.
-- **Trạng thái:** đang hoàn thiện technical acceptance; PR chưa mở/push trong takeover này.
+- **Trạng thái:** implementation đã commit/push tại `61989d4`; Draft PR chưa mở được vì GitHub
+  connector trả HTTP 403 `Resource not accessible by integration`; exact-final-HEAD CI chưa chạy.
 - **Phát hiện chính:** năm bảng Quiz đã tồn tại từ initial schema. Hai defect thật là quiz/question
   đọc không xét visibility của topic cha và `authenticated` có đường INSERT/UPDATE attempt để tự
   ghi score/passed. `is_correct` đã được bảo vệ bởi RLS, nhưng P4-04 giữ defense-in-depth bằng

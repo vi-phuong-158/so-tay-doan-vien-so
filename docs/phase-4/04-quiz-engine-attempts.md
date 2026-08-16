@@ -102,6 +102,8 @@ PostgreSQL 17; production not used):
 - `git diff --check`: PASS.
 - Supabase CLI and Deno are not installed locally; full migration reset, Deno gates, and exact final
   CI remain required before declaring PASS.
+- Branch `feat/phase-4-quiz-engine` is pushed at commit `61989d4`; Draft PR creation was attempted
+  through the connected GitHub integration and rejected with HTTP 403, so no PR/CI status is claimed.
 
 ## Risks and follow-up
 
