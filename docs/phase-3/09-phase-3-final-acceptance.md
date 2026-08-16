@@ -208,10 +208,12 @@ Run directly in this session (`npm ci` succeeded, 0 vulnerabilities):
 - **HEAD:** `ae679da93cb45fcaa2b562cea8792261b63bc202` (the actual post-merge master commit, not a
   pre-merge PR-branch HEAD)
 - **Result:** `success`
-- This audit's own docs-only commit is pushed on a dedicated branch and a Draft PR is opened per
-  §14; that PR's own CI run on its exact HEAD is the acceptance gate for *this* task's changes (see
-  the PR section of the final report) — it is additional to, not a replacement for, the
-  already-green `ae679da` evidence above, which covers the full P3-00→P3-08 implementation.
+- This audit's own docs-only commit is on branch `claude/phase-3-final-audit-d18279`, Draft PR
+  [#22](https://github.com/vi-phuong-158/so-tay-doan-vien-so/pull/22). CI run
+  [`31915317697`](https://github.com/vi-phuong-158/so-tay-doan-vien-so/actions/runs/31915317697) on
+  the exact PR HEAD `6518857665540520e27c7de7c84bcd02092fd59a` is `success` (`build` and `test-db`
+  both `pass`; Vercel preview deploy also `pass`) — this is additional to, not a replacement for,
+  the already-green `ae679da` evidence above, which covers the full P3-00→P3-08 implementation.
 
 ## Production readiness matrix
 
