@@ -138,15 +138,15 @@ select throws_ok(
 -- =====================================================================================
 select set_auth_user('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee');
 
-select is(
-  (select count(*)::integer from public.quiz_options),
-  0,
-  'F: quiz_options is not directly readable by an authenticated user at all (RLS, no end-user policy)'
+select throws_ok(
+  $$select count(*) from public.quiz_options$$,
+  null,
+  'F: quiz_options has no direct authenticated SELECT privilege'
 );
-select is(
-  (select count(*)::integer from public.quiz_questions),
-  0,
-  'F: quiz_questions is not directly readable either -- explanation cannot leak pre-attempt'
+select throws_ok(
+  $$select count(*) from public.quiz_questions$$,
+  null,
+  'F: quiz_questions has no direct authenticated SELECT privilege'
 );
 select is(
   (select count(*)::integer from information_schema.role_table_grants

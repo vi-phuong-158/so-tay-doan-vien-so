@@ -38,14 +38,13 @@ select lives_ok($$select * from public.get_admin_learning_topic('5e000001-0000-4
 select lives_ok($$select public.create_quiz_draft('5e000001-0000-4000-8000-000000000001', 'Created quiz', null, 60, null, null, false, false)$$,
   'scoped admin creates a quiz draft through the trusted RPC');
 
-select public.upsert_quiz_question('5f000001-0000-4000-8000-000000000001', 'SINGLE', 'Câu 1', 'Giải thích', 1, 0,
-  '60000001-0000-4000-8000-000000000001');
-select public.upsert_quiz_option('60000001-0000-4000-8000-000000000001', 'Đáp án đúng', true, 0,
-  '61000001-0000-4000-8000-000000000001');
-select public.upsert_quiz_option('60000001-0000-4000-8000-000000000001', 'Đáp án sai', false, 1,
-  '61000002-0000-4000-8000-000000000002');
+create temp table p405_question on commit drop as
+  select public.upsert_quiz_question('5f000001-0000-4000-8000-000000000001', 'SINGLE', 'Câu 1', 'Giải thích', 1, 0, null) as id;
+create temp table p405_correct_option on commit drop as
+  select public.upsert_quiz_option((select id from p405_question), 'Đáp án đúng', true, 0, null) as id;
+select public.upsert_quiz_option((select id from p405_question), 'Đáp án sai', false, 1, null);
 select ok((select option_is_correct from public.get_admin_quiz_authoring('5f000001-0000-4000-8000-000000000001')
-  where option_id = '61000001-0000-4000-8000-000000000001'),
+  where option_id = (select id from p405_correct_option)),
   'trusted admin authoring read returns is_correct after scope validation');
 
 -- Publishing validates the complete question/option contract server-side.
@@ -54,10 +53,10 @@ select throws_ok($$select public.set_quiz_status('5f000001-0000-4000-8000-000000
 
 -- A member sees neither authoring rows nor answer keys and cannot mutate tables directly.
 select set_auth_user('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee');
-select is((select count(*)::integer from public.quiz_options), 0,
+select throws_ok($$select count(*) from public.quiz_options$$, null,
   'member direct quiz_options read remains closed');
 select throws_ok($$insert into public.quiz_options(question_id, option_text, is_correct)
-  values ('60000001-0000-4000-8000-000000000001', 'hostile', true)$$, null,
+  values ((select id from p405_question), 'hostile', true)$$, null,
   'member cannot plant an answer key through direct insert');
 select throws_ok($$update public.quizzes set title = 'hostile' where id = '5f000001-0000-4000-8000-000000000001'$$,
   null, 'member cannot update quiz metadata directly');
@@ -67,15 +66,15 @@ select reset_auth();
 update public.learning_topics set status = 'PUBLISHED' where id = '5e000001-0000-4000-8000-000000000001';
 select set_auth_user('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee');
 create temp table p405_attempt as select * from public.start_quiz_attempt('5f000001-0000-4000-8000-000000000001');
-select public.submit_quiz_attempt((select attempt_id from p405_attempt),
-  '[{"question_id":"60000001-0000-4000-8000-000000000001","selected_option_ids":["61000001-0000-4000-8000-000000000001"]}]'::jsonb);
+select public.submit_quiz_attempt((select attempt_id from p405_attempt), format('[{"question_id":"%s","selected_option_ids":["%s"]}]',
+  (select id from p405_question), (select id from p405_correct_option))::jsonb);
 select set_auth_user('11112222-3333-4444-5555-666677778888');
 select lives_ok($$select public.update_quiz_metadata('5f000001-0000-4000-8000-000000000001', 'Renamed', 'cosmetic', 50, null, null, false, false)$$,
   'submitted quiz still permits cosmetic title/description edits');
 select throws_ok($$select public.update_quiz_metadata('5f000001-0000-4000-8000-000000000001', 'Renamed', 'cosmetic', 70, null, null, false, false)$$,
   'QUIZ_HAS_ATTEMPTS_IMMUTABLE', 'submitted quiz blocks scoring-affecting metadata changes');
-select throws_ok($$select public.upsert_quiz_option('60000001-0000-4000-8000-000000000001', 'changed', false, 0,
-  '61000001-0000-4000-8000-000000000001')$$, 'QUIZ_CONTENT_NOT_EDITABLE',
+select throws_ok(format($$select public.upsert_quiz_option('%s', 'changed', false, 0, '%s')$$,
+  (select id from p405_question), (select id from p405_correct_option)), 'QUIZ_CONTENT_NOT_EDITABLE',
   'submitted quiz blocks answer-key changes');
 
 select is((select count(*)::integer from information_schema.role_table_grants
@@ -100,4 +99,3 @@ select is((select count(*)::integer from pg_proc p
 select reset_auth();
 select * from finish();
 rollback;
-
