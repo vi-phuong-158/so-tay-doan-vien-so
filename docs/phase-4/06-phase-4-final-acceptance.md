@@ -2,11 +2,8 @@
 
 ## VERDICT
 
-At audit branch cut, the repository and integrated database evidence are technically ready for
-exact-head CI. The final verdict is intentionally held until that CI run completes. The runtime
-gates below remain separate and are not inferred from structural tests.
-
-Expected technical verdict when the final exact-head CI is green:
+The final exact-head CI is green on audit HEAD `69096639eb6c88e2d5a51e65045844e4f8c15501`.
+The technical verdict is:
 
 `PHASE_4_TECHNICAL_ACCEPTANCE_PASS_RUNTIME_GATES_PENDING`
 
@@ -108,8 +105,16 @@ Local frontend validation from the merged P4-05 baseline and audit branch:
 - `git diff --check`: passed for the tracked audit changes
 
 The local environment does not provide the Supabase CLI, Docker, or Deno. Database reset, pgTAP,
-Deno, and Vercel evidence therefore comes from GitHub Actions exact-head CI. The final audit PR
-must report the run ID and exact head in its handoff; no green result from an older head is reused.
+Deno, and Vercel evidence therefore comes from GitHub Actions exact-head CI. Final run
+`31960895746` on `69096639eb6c88e2d5a51e65045844e4f8c15501` reports:
+
+- pgTAP: `Files=25, Tests=727, Result: PASS`
+- Deno/Edge Functions: `42 passed, 0 failed`
+- Frontend build job: lint, 136 frontend tests, and build all passed
+- Vercel preview: passed
+
+The first audit run `31960673000` failed only on the over-specific assertion documented under
+Defects Found; the replacement run above is the accepted exact-head evidence.
 
 ## RUNTIME READINESS GATES
 
@@ -145,7 +150,9 @@ issue in four files was fixed before PR #27 merge in commit `1706f06` and had no
 - Base: fresh `origin/master@3761dcc1be4fd6aebc1e91e78426076feead5e31`
 - Audit branch: `audit/phase-4-final-acceptance`
 - P4-06 PR: Draft, targeting `master`, not to be merged automatically
-- Exact final audit HEAD and CI run: recorded in the PR handoff after push
+- Exact final audit HEAD: `69096639eb6c88e2d5a51e65045844e4f8c15501`
+- Exact final audit CI: `31960895746` (green)
+- Draft PR #28: https://github.com/vi-phuong-158/so-tay-doan-vien-so/pull/28
 - `.agents/`, `.claude/`, `.mcp.json`, and `skills-lock.json` remain excluded from commit/push
 
 ## PRODUCTION READINESS

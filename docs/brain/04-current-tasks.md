@@ -10,10 +10,10 @@
 ### P4-06 — Phase 4 Integrated Final Acceptance
 - **Base:** fresh `origin/master@3761dcc1be4fd6aebc1e91e78426076feead5e31`, merge of P4-05 PR #27.
 - **Branch:** `audit/phase-4-final-acceptance`.
-- **Trạng thái:** `P4_06_TECHNICAL_ACCEPTANCE_PENDING_EXACT_HEAD_CI`. The branch adds only the
-  rollback-bounded integrated acceptance suite and acceptance/traceability documentation. If its
-  exact-head CI is green, the verdict is `PHASE_4_TECHNICAL_ACCEPTANCE_PASS_RUNTIME_GATES_PENDING`.
-  P4-02R and P4-04R2 remain pending and production remains not ready. Do not merge this PR.
+- **Trạng thái:** `PHASE_4_TECHNICAL_ACCEPTANCE_PASS_RUNTIME_GATES_PENDING`. Exact-head CI
+  `31960895746` is green on `69096639eb6c88e2d5a51e65045844e4f8c15501` (pgTAP `25/727`, Deno
+  `42 passed`, frontend/Vercel pass). P4-02R and P4-04R2 remain pending and production remains
+  not ready. Do not merge this PR.
 - **Report:** `docs/phase-4/06-phase-4-final-acceptance.md`.
 
 ### P4-05 — Learning & Quiz Admin Workflow (merged)

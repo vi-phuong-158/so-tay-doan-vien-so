@@ -855,5 +855,8 @@
   `npm run build` PASS; `git diff --check` PASS. P4-05 exact-head CI `31959883659` PASS và PR #27
   merged at `3761dcc1be4fd6aebc1e91e78426076feead5e31`. First P4-06 exact-head CI
   `31960673000` correctly reset the database and found one over-specific assertion in the new
-  suite (`QUIZ_NOT_DRAFT` is the RPC's first stable guard); the assertion is corrected and awaits
-  the replacement exact-head CI.
+  suite (`QUIZ_NOT_DRAFT` is the RPC's first stable guard); the assertion was corrected without
+  changing production code. Replacement exact-head CI `31960895746` is green on
+  `69096639eb6c88e2d5a51e65045844e4f8c15501`: pgTAP `Files=25, Tests=727`, Deno `42 passed`,
+  frontend gates and Vercel pass. Final verdict is
+  `PHASE_4_TECHNICAL_ACCEPTANCE_PASS_RUNTIME_GATES_PENDING`; P4-02R/P4-04R2 remain pending.
