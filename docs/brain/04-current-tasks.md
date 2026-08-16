@@ -10,7 +10,8 @@
 ### P4-05 — Learning & Quiz Admin Workflow
 - **Base:** P4-04 merge commit `3ddfeaede1b7a22acb36c34d3847a394a7cb2f1d`; branch
   `feat/phase-4-learning-quiz-admin`.
-- **Trạng thái:** đang triển khai trên branch riêng; chưa merge. Scope là topic/resource/quiz
+- **Trạng thái:** `P4_05_TECHNICAL_ACCEPTANCE_PASS`; PR #27 đang Draft trên branch riêng,
+  chưa merge. Exact-head CI `31958908805` PASS trên `89964eb`. Scope là topic/resource/quiz
   admin workflow, trusted RPC/read model, publication validation, historical-attempt protection,
   audit, pgTAP and frontend gates.
 - **Routes:** `/admin/chuyen-de`, `/admin/chuyen-de/:topicId`,

@@ -43,7 +43,7 @@
   `docs/phase-3/09-phase-3-final-acceptance.md`. It does not implement new features and does not
   change delivery mode or deploy production.
 
-## Phase 4 — Learning & Quiz Admin (P4-05, in progress)
+## Phase 4 — Learning & Quiz Admin (P4-05, technical acceptance passed)
 
 - Branch `feat/phase-4-learning-quiz-admin` starts from merged P4-04 baseline
   `master@3ddfeaede1b7a22acb36c34d3847a394a7cb2f1d`.
@@ -52,7 +52,8 @@
   quiz/question/option DML and question/option SELECT are revoked.
 - Historical policy: submitted attempts freeze answer-key rows and scoring-affecting metadata;
   cosmetic title/description edits remain allowed and corrections require a new quiz.
-- Validation and exact CI are pending until the branch is pushed. P4-02R and P4-04R2 remain open.
+- Exact-head CI run `31958908805` passed on implementation HEAD `89964eb` (frontend build/lint/test,
+  Supabase reset + full pgTAP/Deno). Draft PR #27 remains unmerged; P4-02R and P4-04R2 remain open.
 
 ## Phase 4 — Quiz Engine & Attempts (P4-04, merged)
 

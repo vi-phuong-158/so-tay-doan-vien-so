@@ -837,4 +837,5 @@
 - **Lý do:** Cung cấp workflow admin tối thiểu mà không mở answer key cho end user, không cho
   client ghi bảng quiz trực tiếp, và bảo toàn ý nghĩa các attempt lịch sử.
 - **Kiểm tra:** `npm test` 136/136 PASS; `npm run lint` 0 errors/3 existing warnings;
-  `npm run build` PASS; `git diff --check` PASS. Exact Supabase reset/pgTAP/Deno CI còn chờ.
+  `npm run build` PASS; `git diff --check` PASS. Exact-head CI run `31958908805` trên
+  `89964eb` PASS: build 17s và test-db/full pgTAP+Deno 3m04s; PR #27 vẫn Draft.
