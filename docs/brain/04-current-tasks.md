@@ -7,13 +7,23 @@
 
 ## Đang làm
 
-### P4-05 — Learning & Quiz Admin Workflow
+### P4-06 — Phase 4 Integrated Final Acceptance
+- **Base:** fresh `origin/master@3761dcc1be4fd6aebc1e91e78426076feead5e31`, merge of P4-05 PR #27.
+- **Branch:** `audit/phase-4-final-acceptance`.
+- **Trạng thái:** `P4_06_TECHNICAL_ACCEPTANCE_PENDING_EXACT_HEAD_CI`. The branch adds only the
+  rollback-bounded integrated acceptance suite and acceptance/traceability documentation. If its
+  exact-head CI is green, the verdict is `PHASE_4_TECHNICAL_ACCEPTANCE_PASS_RUNTIME_GATES_PENDING`.
+  P4-02R and P4-04R2 remain pending and production remains not ready. Do not merge this PR.
+- **Report:** `docs/phase-4/06-phase-4-final-acceptance.md`.
+
+### P4-05 — Learning & Quiz Admin Workflow (merged)
 - **Base:** P4-04 merge commit `3ddfeaede1b7a22acb36c34d3847a394a7cb2f1d`; branch
   `feat/phase-4-learning-quiz-admin`.
-- **Trạng thái:** `P4_05_TECHNICAL_ACCEPTANCE_PASS`; PR #27 đang Draft trên branch riêng,
-  chưa merge. Exact-head CI `31958908805` PASS trên `89964eb`. Scope là topic/resource/quiz
-  admin workflow, trusted RPC/read model, publication validation, historical-attempt protection,
-  audit, pgTAP and frontend gates.
+- **Trạng thái:** `P4_05_TECHNICAL_ACCEPTANCE_PASS`; PR #27 đã merge vào
+  `master@3761dcc1be4fd6aebc1e91e78426076feead5e31` after exact-head CI `31959883659` PASS on
+  `1706f064980ffe73150a71649b91d66807d25f71`. Scope is topic/resource/quiz admin workflow,
+  trusted RPC/read model, publication validation, historical-attempt protection, audit, pgTAP,
+  and frontend gates.
 - **Routes:** `/admin/chuyen-de`, `/admin/chuyen-de/:topicId`,
   `/admin/chuyen-de/:topicId/trac-nghiem/:quizId`.
 
