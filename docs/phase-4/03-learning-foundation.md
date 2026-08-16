@@ -105,6 +105,45 @@ Quiz tables/workflow/UI · quiz answers · scoring · certificates · AI/RAG · 
 `document_chunks` processing · Innovation · production deployment · production credentials · any
 P4-02R workaround · app-wide redesign.
 
+## Validation / CI
+
+| Gate | Result |
+| --- | --- |
+| `npm test` | **125/125 PASS** (98 baseline unchanged + 27 new) |
+| `npm run lint` | PASS — 0 errors, 3 pre-existing Fast Refresh warnings |
+| `npm run build` | PASS |
+| `git diff --check` | PASS |
+| `supabase db reset` + pgTAP | PASS via CI — **`Files=22, Tests=615, Result: PASS`** (P4-02 baseline was `Files=21, Tests=558`; the +57 are this task's `learning_foundation.sql`). No assertion-count regression. |
+| `deno check` / `deno test` | PASS via CI — `42 passed, 0 failed` (unchanged; no Edge Function touched) |
+| CI run | [`31946128558`](https://github.com/vi-phuong-158/so-tay-doan-vien-so/actions/runs/31946128558) — **success** on exact HEAD `079513ad8b095fb5a749f900d63c1cb798ca65cf` |
+
+Local `supabase db reset` / pgTAP / Deno are not runnable in this environment (no Docker, no
+Supabase CLI, no Deno) — the constraint recorded for every Phase 2/3/4 task; CI is authoritative.
+
+### One existing assertion intentionally replaced
+
+`tests/document_ui.test.mjs` asserted that `Knowledge.jsx` still imported mock `topics`. That was
+correct for P4-01, where wiring Learning was explicitly out of scope. P4-03 wires it for real, so
+the assertion is replaced with a **strictly stronger** one: the Knowledge page must import no mock
+data at all. This is an intentional behaviour change, recorded here and in the PR rather than
+buried; no assertion was relaxed, skipped, or deleted.
+
+## Remaining risks
+
+1. **P4-02R is still open** — the actor-based Storage runtime rehearsal for Documents remains a
+   production-readiness gate (`docs/phase-4/02R-documents-storage-runtime-rehearsal.md`).
+2. **Learning Storage inherits the same untested-runtime gap.** The `learning-resources-private`
+   policies are proven at predicate level and by pgTAP, but no real authenticated byte
+   upload/download has been exercised. A future rehearsal should cover both buckets together.
+3. **No learning admin UI.** Topics and resources are managed through RPCs only — the same
+   sequencing Documents had between P4-01 and P4-02.
+4. **`RESTRICTED` resolves to scoped-admins-only**, inherited from the Documents posture; there is
+   no per-user grant table.
+5. **Home "Chuyên đề nổi bật" is not rewired** — deliberately left out to avoid broadening P4-03.
+6. **Pre-existing learning rows** (if any exist in a deployed environment) had their
+   `owner_organization_id` backfilled from the creator's organization; rows with no creator remain
+   NULL and are treated as admin-only by the access helper, which is fail-closed but worth knowing.
+
 ## Test matrix
 
 | ID | Case | Expect |

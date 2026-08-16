@@ -1,5 +1,48 @@
 # 06 — AI Working Log
 
+## [2026-08-16] P4-03 — Learning Topics & Resources Foundation
+
+- **Agent:** Claude (Opus 5)
+- **Thay đổi:** Khảo sát trước khi code (không giả định Learning là greenfield) và phát hiện
+  **lỗ hổng thật trong RLS đang chạy**: `learning_topics`/`learning_resources` đã tồn tại đủ field
+  spec, nhưng policy `active users read published topics` chỉ kiểm `status='PUBLISHED'` và **bỏ
+  qua hoàn toàn `visibility_level`** → topic ORGANIZATION_ONLY hoặc RESTRICTED đọc được bởi **bất
+  kỳ** active user nào; policy resource cùng dạng, cùng lỗi. Thêm nữa `learning_topics` **không có
+  cột organization** nên ORGANIZATION_ONLY không thể enforce dù policy có muốn. Đây đúng lớp lỗi mà
+  `202607300003_fix_phase_1_security.sql` đã đóng cho `documents`.
+  `202608160003` đóng cho learning theo cùng khuôn: thêm `owner_organization_id` (+ backfill từ
+  creator), `updated_by`, timestamps/`created_by` cho resource; CHECK cho visibility, window,
+  resource_type, sort_order, payload, **`external_url` chỉ https** (chặn `javascript:`/`data:`/
+  `http:`/`//host` ngay tại DB — frontend không phải lớp kiểm soát), và `storage_path` **neo theo
+  chính `topic_id` của dòng đó** + chặn traversal; helper `can_access_learning_topic` (fail-closed:
+  admin thấy mọi trạng thái để duyệt DRAFT, người thường chỉ PUBLISHED + đúng visibility) và
+  `can_manage_learning_topic`; **grant EXECUTE cho `anon`** ngay từ đầu vì hai helper này được gọi
+  trong storage policy — đúng bài học P4-02 (thiếu grant thì đọc ẩn danh **bất kỳ bucket nào** sẽ
+  raise `permission denied` thay vì deny); thay 2 read policy mù visibility; policy admin cho cả hai
+  bảng; policy cho bucket `learning-resources-private` (trước đó **không có policy nào** → deny-all,
+  resource không ai tải được): read theo quyền topic, admin insert dưới `{topic_id}/resources/`,
+  **không có UPDATE policy**, delete chỉ cho object không còn resource row nào trỏ tới; 5 RPC
+  trusted (`create_learning_topic_draft`, `update_learning_topic`, `set_learning_topic_status` với
+  bảng transition tường minh, `upsert_learning_resource`, `delete_learning_resource`) đều SECURITY
+  DEFINER pin `search_path`, revoke-then-grant, kiểm role/scope bên trong, ghi audit.
+  Frontend: `learningService`, `/tri-thuc/chuyen-de` + `/tri-thuc/chuyen-de/:topicId`, tab Chuyên đề
+  trong Knowledge đọc dữ liệu thật (mock Quiz/AI/Innovation giữ nguyên).
+- **File đã sửa/tạo:** `supabase/migrations/202608160003_phase_4_learning_foundation.sql`,
+  `supabase/tests/learning_foundation.sql`, `src/services/learningService.js`,
+  `src/lib/learningDisplay.mjs`, `src/pages/LearningTopics.jsx`,
+  `src/pages/LearningTopicDetail.jsx`, `src/pages/Knowledge.jsx`, `src/App.jsx`,
+  `tests/learning_service.test.mjs`, `tests/learning_ui.test.mjs`, `tests/document_ui.test.mjs`,
+  `docs/phase-4/03-learning-foundation.md`, `docs/brain/04-current-tasks.md`,
+  `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Đưa Learning từ mock sang dữ liệu thật, và đóng lỗ hổng visibility đang tồn tại trước
+  khi có dữ liệu thật chạy trên đó.
+- **Kiểm tra:** `npm test` **125/125 PASS** (98 baseline + 27 mới); lint 0 lỗi/3 warning có sẵn;
+  build PASS; `git diff --check` PASS. pgTAP/Deno chờ CI (không có Docker/Supabase CLI cục bộ).
+  **Một assertion cũ bị thay có chủ đích (không phải nới lỏng):** `document_ui.test.mjs` từng
+  assert Knowledge vẫn import mock `topics` — đúng ở P4-01 khi Learning ngoài scope; P4-03 nối thật
+  nên assertion đó được thay bằng điều kiện **chặt hơn**: Knowledge không được import mock nào cả.
+  Đã ghi rõ trong PR thay vì giấu.
+
 ## [2026-08-16] P4-02 — Documents Admin Workflow & Runtime Storage Rehearsal
 
 - **Agent:** Claude (Opus 5)
