@@ -2,13 +2,20 @@
 
 ## Status
 
-`P4_02_REPO_PASS_REHEARSAL_BLOCKED` — Draft PR, not merged.
+`P4_02_TECHNICAL_ACCEPTANCE_PASS_RUNTIME_REHEARSAL_PENDING` — merged to `master`.
 
-All repository-side work is complete and CI-verified. The runtime rehearsal was executed **as far
-as this session was permitted**: schema parity, policy deployment and fail-closed path handling
-were confirmed live on the non-production project, but the actor-based scenarios (A–D, F–I) could
-not be run because creating the required test identities was denied by this environment's
-permission control. Nothing is recorded below as passed that was not actually observed.
+This label is deliberately precise and means exactly three things:
+
+1. **The repository implementation is accepted.** Migration, policies, RPCs, service and UI were
+   reviewed and are green on the exact merged HEAD.
+2. **The actor-based runtime Storage rehearsal remains open**, tracked as **P4-02R**. Scenarios
+   A–D and F–I were never executed and are *not* relabelled as passed anywhere in this document.
+3. **This is not production readiness.** No production environment exists, and a real
+   authenticated byte round-trip through the Storage HTTP API has still not been demonstrated.
+
+The runtime work that *was* performed — schema parity, bucket privacy, deployed policy predicates,
+fail-closed path handling — was executed live on the non-production rehearsal project and is
+recorded below with `AGENT_OBSERVED_LIVE` provenance. Nothing else is claimed.
 
 ## Baseline
 
