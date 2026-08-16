@@ -230,6 +230,31 @@ Ghi:  chỉ qua RPC SECURITY DEFINER (`create_document_draft`, `update_document_
       MIME do browser khai báo KHÔNG được tin.
 Chưa làm ở P4-01: AI/RAG, embedding, `document_chunks` processing, admin UI, rehearsal Storage runtime.
 
+# Chuyên đề học tập (P4-03)
+LƯU Ý AN NINH: policy gốc `active users read published topics` (202607300001) chỉ kiểm
+`status='PUBLISHED'` và **bỏ qua `visibility_level`** → topic ORGANIZATION_ONLY/RESTRICTED lộ cho
+mọi active user; `learning_topics` cũng không có cột organization. `202608160003` đóng gap này.
+
+Đọc:  `/tri-thuc/chuyen-de` → `LearningTopics.jsx` → `learningService.listTopics()`
+      → select `learning_topics` dưới RLS `can_access_learning_topic(id)`
+        (admin thấy mọi trạng thái để duyệt DRAFT; người thường chỉ PUBLISHED + đúng visibility;
+         ORGANIZATION_ONLY so `owner_organization_id` với `current_org_id()`; RESTRICTED chỉ admin)
+      `/tri-thuc/chuyen-de/:topicId` → `LearningTopicDetail.jsx` → `getTopic` + `listResources`
+      → resource gate **hoàn toàn theo topic cha**: đọc thẳng theo resource id cũng không vượt được.
+Tải:  bấm nút → `getResourceDownloadUrl` → signed URL 60s trên `learning-resources-private`
+      → storage policy suy `topic_id` từ segment đầu bằng `uuid_or_null` rồi gọi
+        `can_access_learning_topic`. Không prefetch, không ghi log/DB signed URL.
+Link: `external_url` bị CHECK ở DB **chỉ cho https** (chặn `javascript:`/`data:`/`http:`/`//host`);
+      service còn lọc lần hai nên URL xấu không bao giờ thành `href`.
+Ghi:  chỉ qua RPC (`create_learning_topic_draft`, `update_learning_topic`,
+      `set_learning_topic_status` — bảng transition tường minh, `upsert_learning_resource`,
+      `delete_learning_resource`), tất cả SECURITY DEFINER + `search_path`, kiểm role/scope, ghi
+      audit. `anon`/`authenticated` không có quyền ghi bảng.
+Storage: bucket `learning-resources-private` trước đó **không có policy nào** (deny-all). Nay:
+      read theo quyền topic, admin insert dưới `{topic_id}/resources/`, **không có UPDATE policy**,
+      delete chỉ cho object không còn resource row nào trỏ tới.
+Chưa làm: Quiz, AI/RAG, admin UI learning, rehearsal runtime Storage (chung gap với P4-02R).
+
 # Quản trị văn bản & quyền ghi Storage (P4-02)
 Gap P4-01 để lại: `documents-private` **không có policy INSERT/UPDATE/DELETE nào** → deny-by-default
 → không ai upload được tệp gốc, `attach_document_source_file` chỉ ghi nhận path đặt sẵn từ ngoài.

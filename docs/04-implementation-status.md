@@ -43,7 +43,25 @@
   `docs/phase-3/09-phase-3-final-acceptance.md`. It does not implement new features and does not
   change delivery mode or deploy production.
 
-## Phase 4 — Documents Admin & Storage (P4-02, in review)
+## Phase 4 — Learning Foundation (P4-03, in review)
+
+- Branch `feat/phase-4-learning-foundation` from `master@1ceb9e6`; **Draft PR #25, not merged**.
+- Survey found `learning_topics`/`learning_resources` already present with the full spec field set
+  **and an unsafe read policy**: it checked `status='PUBLISHED'` only and ignored `visibility_level`
+  entirely, so `ORGANIZATION_ONLY`/`RESTRICTED` topics were readable by any active user. The table
+  also had no organization column, so that level could not be enforced at all. `202608160003`
+  closes this the same way `202607300003` did for documents.
+- Adds: `owner_organization_id` + backfill, https-only `external_url` CHECK, topic-anchored
+  `storage_path` CHECK, `can_access_learning_topic`/`can_manage_learning_topic` (fail-closed, both
+  granted to `anon` so storage policies deny rather than raise), replacement read policies, admin
+  policies, policies for the previously policy-less `learning-resources-private` bucket (no UPDATE
+  policy; delete only for unreferenced objects), five audited trusted mutations, `learningService`,
+  and the `/tri-thuc/chuyen-de` list + detail routes. Knowledge's topics tab now reads real data.
+- Validation: frontend 125/125, lint 0 errors/3 existing warnings, build PASS. pgTAP/Deno in CI.
+- Not included: Quiz, AI/RAG, learning admin UI, production deployment.
+- See `docs/phase-4/03-learning-foundation.md`.
+
+## Phase 4 — Documents Admin & Storage (P4-02, merged)
 
 - P4-01 merged into `master@4488755` via PR #23.
 - P4-02 (branch `feat/phase-4-documents-admin`, **Draft PR #24, not merged**) closes the two gaps

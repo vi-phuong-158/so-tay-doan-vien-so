@@ -14,6 +14,8 @@ import { ReportAssignmentDetail } from './pages/ReportAssignmentDetail';
 import { Knowledge } from './pages/Knowledge';
 import { Documents } from './pages/Documents';
 import { DocumentDetail } from './pages/DocumentDetail';
+import { LearningTopics } from './pages/LearningTopics';
+import { LearningTopicDetail } from './pages/LearningTopicDetail';
 import { Innovation } from './pages/Innovation';
 import { Profile } from './pages/Profile';
 import { Notifications } from './pages/Notifications';
@@ -52,6 +54,8 @@ export default function App() {
             <Route path="tri-thuc" element={<Knowledge />} />
             <Route path="tri-thuc/van-ban" element={<Documents />} />
             <Route path="tri-thuc/van-ban/:documentId" element={<DocumentDetail />} />
+            <Route path="tri-thuc/chuyen-de" element={<LearningTopics />} />
+            <Route path="tri-thuc/chuyen-de/:topicId" element={<LearningTopicDetail />} />
             <Route path="doi-moi-sang-tao" element={<Innovation />} />
             <Route path="ca-nhan" element={<Profile />} />
 
