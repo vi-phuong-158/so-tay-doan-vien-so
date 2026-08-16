@@ -5,6 +5,45 @@
 
 ---
 
+## [2026-08-16] P4-01 tái sử dụng model `documents` sẵn có thay vì dựng lại
+
+**Bối cảnh.** `docs/01-product-spec.md` mô tả phân hệ Văn bản như việc cần làm mới. Khảo sát P4-00
+trên source thật cho thấy ngược lại: `202607300001_initial_schema.sql` đã tạo `documents` với đủ
+field spec và đúng 7 giá trị `status`, cùng `document_relations`/`document_chunks`; và
+`202607300003_fix_phase_1_security.sql` đã thêm `owner_organization_id`, helper fail-closed
+`can_access_document(uuid)` (đủ 4 mức visibility), policy admin, bucket private `documents-private`
+và policy đọc Storage.
+
+**Quyết định.** P4-01 **không** tạo bảng/model mới và **không** dựng hệ quyền song song. Chỉ đóng
+gap: constraint thiếu, policy `document_relations` thiếu, grant ghi quá rộng, policy Storage cast
+không an toàn, và bổ sung write path có validate server-side.
+
+**Vì sao.** Dựng lại sẽ tạo hai nguồn sự thật cho cùng một khái niệm, phá dữ liệu/tham chiếu sẵn có
+(`document_chunks` trỏ vào `documents`), và làm lệch model quyền mà Phase 1 đã kiểm chứng. Đọc spec
+mà không đọc migration là cách chắc chắn nhất để xây trùng.
+
+## [2026-08-16] `document_relations` yêu cầu quyền đọc ở CẢ HAI đầu quan hệ
+
+Bảng này trước P4-01 bật RLS nhưng **không có policy nào** → deny-all, không ai đọc được kể cả
+admin. Khi thêm policy, điều kiện là `can_access_document()` đúng cho **cả** source lẫn target,
+không chỉ source: tiết lộ "văn bản A thay thế văn bản B" tự nó đã là tiết lộ về sự tồn tại và quan
+hệ của B — nếu người dùng không được đọc B thì cũng không được biết điều đó qua trang của A.
+
+## [2026-08-16] Storage policy dùng `uuid_or_null` thay cho cast `::uuid` thô
+
+Policy cũ của `documents-private` cast `(string_to_array(name,'/'))[1]::uuid` trực tiếp, nên với
+object có segment đầu không phải UUID (path dị dạng, traversal) PostgreSQL **raise lỗi** thay vì từ
+chối. Chuyển sang `public.uuid_or_null` (helper đã có từ P2, dùng trong `can_read_report_template`)
+để trả `null` → policy false → **fail closed**, im lặng, không lộ bề mặt lỗi.
+
+## [2026-08-16] Ghi `documents` chỉ qua RPC; đóng grant bảng cho `authenticated`
+
+RLS vốn đã chặn end user ghi (`content admins manage documents` yêu cầu YOUTH_ADMIN-in-scope hoặc
+SYSTEM_ADMIN ở `WITH CHECK`), nên đây **không phải lỗ hổng đang mở** mà là defense-in-depth: bỏ
+`INSERT/UPDATE/DELETE` khỏi `authenticated` để RPC là đường ghi duy nhất, đúng tiền lệ P2-06 đã làm
+với luồng nộp báo cáo. State transition (publish/withdraw) được validate trong RPC, không phụ thuộc
+việc frontend ẩn nút.
+
 ## [2026-07-30] Tách khỏi runtime Apps Script cũ, chuyển sang Supabase
 
 - **Quyết định:** Dựng dự án mới trên React/Vite + Supabase (Auth/Postgres/RLS/Storage/Edge

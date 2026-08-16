@@ -7,20 +7,28 @@
 
 ## Đang làm
 
-### P3-09 — Phase 3 Final Acceptance & Production Readiness Audit
-- **Base:** `master@ae679da` (PR #21 merged, P3-08 done; confirmed clean baseline, CI xanh trên
-  đúng HEAD, run `31894178113`).
-- **Branch:** `claude/phase-3-final-audit-d18279`.
-- **Phạm vi:** audit/tài liệu — không phải task tính năng mới. Rà soát toàn bộ P3-00 → P3-08 trên
-  `master` hiện tại, sửa tài liệu lỗi thời (`docs/04-implementation-status.md`,
-  `docs/brain/04-current-tasks.md`), audit bảo mật cuối kỳ (email delivery gate, queue, provider,
-  scheduler), audit secret, review DB/RLS, chạy validation frontend/Edge Function, và dựng ma trận
-  production-readiness tại `docs/phase-3/09-phase-3-final-acceptance.md`.
-- **Giới hạn:** Không deploy Production Supabase, không bật `EMAIL_DELIVERY_MODE=LIVE`, không gửi
-  live email mới, không redesign kiến trúc email, không bắt đầu Phase 4, không thêm tính năng
-  ngoài scope.
+### P4-01 — Documents Foundation (Phase 4)
+- **Base:** `master@814b824` (P3-09 merged qua PR #22 — Phase 3 đã đóng).
+- **Branch:** `feat/phase-4-documents-foundation`. Draft PR, **chưa merge**.
+- **Phạm vi:** vertical slice thật cho phân hệ Văn bản: constraint + RLS cho
+  `documents`/`document_relations`, đóng grant ghi trực tiếp, vá policy Storage
+  `documents-private` (dùng `uuid_or_null` để fail closed), 5 RPC admin có validate transition +
+  audit, `src/services/documentService.js`, route `/tri-thuc/van-ban` và
+  `/tri-thuc/van-ban/:documentId`, thay mock bằng dữ liệu Supabase thật.
+- **Quan trọng:** schema `documents` **đã tồn tại** từ `202607300001` + `202607300003` (đủ field,
+  đủ 7 status, đã có `can_access_document`, bucket `documents-private`). P4-01 **không** dựng lại
+  model — chỉ đóng gap. Xem `docs/phase-4/00-baseline-documents-plan.md`.
+- **Giới hạn:** Không AI/RAG, không embedding, không `document_chunks` processing, không
+  Learning/Quiz, không admin UI, không deploy production. Chi tiết:
+  `docs/phase-4/01-documents-foundation.md`.
 
-## Đã hoàn thành gần đây (Phase 3, tới P3-08)
+## Đã hoàn thành gần đây
+
+### P3-09 — Phase 3 Final Acceptance & Production Readiness Audit (merged)
+- **Trạng thái:** `P3_09_PHASE_3_TECHNICAL_ACCEPTANCE_PASS` → **merged** vào `master@814b824` qua
+  PR #22 (CI xanh trên đúng HEAD `b5418e9`, run `31916185019`). Phase 3 đóng về mặt kỹ thuật;
+  production **chưa** được phép deploy. Ma trận production-readiness và các blocker còn lại:
+  `docs/phase-3/09-phase-3-final-acceptance.md`.
 
 ### P3-08 — Email Worker Scheduling & End-to-End Delivery Rehearsal (merged)
 - **Trạng thái:** `P3_08_FINAL_ACCEPTANCE_READY_FOR_MERGE` → **merged** vào `master` qua PR #21

@@ -43,6 +43,23 @@
   `docs/phase-3/09-phase-3-final-acceptance.md`. It does not implement new features and does not
   change delivery mode or deploy production.
 
+## Phase 4 — Documents Foundation (P4-01, in review)
+
+- Phase 3 closed and merged at `master@814b824` (P3-09 via PR #22).
+- P4-00 baseline established that the `documents` model already existed from the initial schema and
+  the Phase 1 security fix — P4-01 closes gaps rather than rebuilding it. See
+  `docs/phase-4/00-baseline-documents-plan.md`.
+- P4-01 (branch `feat/phase-4-documents-foundation`, **Draft PR, not merged**) delivers the Văn bản
+  vertical slice: constraints + `document_relations` RLS (previously deny-all with zero policies),
+  closed direct write grants, a fail-closed `documents-private` Storage policy, five audited admin
+  RPCs, `documentService`, and the `/tri-thuc/van-ban` list + detail routes reading real Supabase
+  data instead of `src/data/mock.js`.
+- Validation: frontend 66/66, lint 0 errors/3 existing warnings, build PASS. `supabase db reset` +
+  pgTAP run in CI only (no Docker/Supabase CLI locally). Runtime Storage upload/download rehearsal
+  is **not** performed and is recorded as an open gap.
+- Not included: Learning Topics, Quiz, AI/RAG, embeddings, `document_chunks` processing, documents
+  admin UI, production deployment.
+
 ## Phase 2 technical acceptance
 
 - Baseline P2-14 `bdf0156`: CI PASS (40 frontend, 220 pgTAP, 16 Deno tests).

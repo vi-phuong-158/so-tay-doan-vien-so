@@ -1,5 +1,45 @@
 # 06 — AI Working Log
 
+## [2026-08-16] P4-00 / P4-01 — Phase 4 baseline & Documents Foundation
+
+- **Agent:** Claude (Opus 5)
+- **Thay đổi:** P4-00 khảo sát baseline Phase 4 từ source thật (không tin task summary cũ) và phát
+  hiện điều quan trọng: schema `documents` **không phải greenfield** — `202607300001` đã tạo
+  `documents` (đủ field spec, đủ 7 status CHECK), `document_relations`, `document_chunks`; và
+  `202607300003` đã thêm `owner_organization_id`, `can_access_document(uuid)` fail-closed, policy
+  admin, bucket private `documents-private` + policy đọc. Vì vậy P4-01 **không dựng lại model** mà
+  đóng đúng các gap tìm được. Migration `202608160001_phase_4_documents_foundation.sql` (forward-only,
+  không destructive): (1) CHECK cho `visibility_level` và `relation_type` + chặn self-relation;
+  (2) **policy SELECT cho `document_relations`** — bảng này bật RLS nhưng **không có policy nào**,
+  tức deny-all, khiến phần "văn bản liên quan" không ai đọc được, kể cả admin; policy mới yêu cầu
+  `can_access_document()` đúng **cả hai** đầu quan hệ vì tiết lộ "A thay thế B" cũng là tiết lộ về B;
+  (3) revoke `INSERT/UPDATE/DELETE` khỏi `authenticated` trên 3 bảng (RLS vốn đã chặn — đây là
+  defense-in-depth theo tiền lệ P2-06); (4) **vá policy Storage**: policy cũ cast
+  `(string_to_array(name,'/'))[1]::uuid` thô nên **raise lỗi** với path không phải UUID thay vì từ
+  chối — thay bằng `uuid_or_null` (helper Phase 2) để fail **closed**; (5) index cho read model;
+  (6) 5 RPC admin (`create_document_draft`, `update_document_metadata`, `publish_document`,
+  `withdraw_document`, `attach_document_source_file`) + `can_manage_document`, tất cả SECURITY
+  DEFINER có `search_path`, validate role/scope/state transition server-side, ghi audit, chặn path
+  traversal/extension nguy hiểm/oversize, và neo path theo đúng `{document_id}/source/...`.
+  Frontend: `documentService.js` theo đúng pattern factory của `reportService`, hai route mới
+  `/tri-thuc/van-ban` + `/tri-thuc/van-ban/:documentId`, `Knowledge.jsx` bỏ mock documents (topics
+  vẫn demo — Learning là slice sau). Signed URL chỉ tạo khi người dùng bấm, không prefetch.
+- **File đã sửa/tạo:** `supabase/migrations/202608160001_phase_4_documents_foundation.sql`,
+  `supabase/tests/documents_foundation.sql`, `src/services/documentService.js`,
+  `src/lib/documentDisplay.mjs`, `src/pages/Documents.jsx`, `src/pages/DocumentDetail.jsx`,
+  `src/pages/Knowledge.jsx`, `src/App.jsx`, `src/index.css`, `tests/document_service.test.mjs`,
+  `tests/document_ui.test.mjs`, `docs/phase-4/00-baseline-documents-plan.md`,
+  `docs/phase-4/01-documents-foundation.md`, `docs/04-implementation-status.md`,
+  `docs/brain/04-current-tasks.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Thay dữ liệu mock của phân hệ Văn bản bằng dữ liệu Supabase thật với enforcement ở
+  tầng DB/RLS, không mở đường bypass và không dựng hệ quyền song song với model đã có.
+- **Kiểm tra:** `npm test` **66/66 PASS** (45 cũ không đổi + 21 mới); `npm run lint` 0 lỗi/3 warning
+  có sẵn; `npm run build` PASS; `git diff --check` PASS. Một test tự viết đã bắt được lỗi thật của
+  chính mình: `listDocuments` validate `year` **sau** khi đã dựng query builder, nên request lỗi vẫn
+  được phát đi — đã sửa để validate toàn bộ input trước khi chạm query. Không có Docker/Supabase CLI
+  cục bộ (như mọi task Phase 2/3) nên `supabase db reset`/pgTAP chờ CI trên Draft PR. Không sửa/bỏ
+  test cũ, không nới RLS, không dùng service role ở frontend, không secret trong Git.
+
 ## [2026-08-16] P3-09 — Phase 3 final acceptance & production readiness audit
 
 - **Agent:** Claude (Sonnet 5)

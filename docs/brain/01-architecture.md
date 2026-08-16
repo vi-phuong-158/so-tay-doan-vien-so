@@ -35,7 +35,11 @@ src/
 │   ├── ErrorBoundary.jsx / Skeleton.jsx
 ├── pages/
 │   ├── auth/                # Login, ForgotPassword, ResetPassword, ChangePassword (dùng Supabase)
-│   ├── Home/Work/Knowledge/Innovation/Profile.jsx  # 5 khu vực — HIỆN DÙNG MOCK
+│   ├── Home/Innovation/Profile.jsx  # HIỆN DÙNG MOCK
+│   ├── Work.jsx             # đã nối reportService (Phase 2)
+│   ├── Knowledge.jsx        # tab Văn bản đã nối documentService (P4-01); tab Chuyên đề vẫn MOCK
+│   ├── Documents.jsx        # /tri-thuc/van-ban — list thật: search/filter/paginate (P4-01)
+│   ├── DocumentDetail.jsx   # /tri-thuc/van-ban/:documentId — metadata, relations, signed download (P4-01)
 │   ├── Notifications.jsx    # inbox/read state, safe deep-link, bounded pagination
 │   └── Admin.jsx            # dashboard quản trị (dùng Supabase)
 ├── data/mock.js             # dữ liệu demo (campaigns, documents, topics, projects, problems)
@@ -87,6 +91,8 @@ supabase/
 | `functions/_shared/http.ts` | `corsHeaders`, `json`, `errorResponse`, `readJson` | mọi Edge Function | — |
 | `functions/_shared/validation.ts` | `assertUuid`, `fileExtension`, `safeText` | các function nhận input | — |
 | `src/services/reportService.js` | Factory `createReportService(supabase)`; mapper assignment/submission history; query RLS, upload/remove Storage private, invoke `submit-report`/`review-report` | P2-08/P2-09/P2-10/P2-11 | `src/lib/status.mjs`, Supabase client được caller truyền vào |
+| `src/services/documentService.js` | Factory `createDocumentService(supabase)`; list phân trang/filter server-side, detail, relations, signed URL ngắn hạn theo yêu cầu (P4-01). Validate toàn bộ input **trước** khi dựng query | `Documents`, `DocumentDetail`, `Knowledge` | `src/lib/documentDisplay.mjs`, RLS `can_access_document`, bucket `documents-private` |
+| `src/lib/documentDisplay.mjs` | Format ngày, nhãn quan hệ, tone trạng thái hiệu lực, thông điệp lỗi (thuần, có test) | `Documents`, `DocumentDetail`, `Knowledge` | — |
 | `functions/submit-report` | Xác minh object staging thật + quyền/tệp → move sang namespace `vN` → RPC expected-version; RPC xác minh lại object/size/mime ở Storage trước atomic metadata/history/notification | client (khi đã nối) | `_shared/*`, Storage, RPC, bảng report_* |
 | `functions/review-report` | Xác thực request rồi gọi RPC review; RPC atomic hóa transition, review metadata, history, audit và notification | client admin | `_shared/*`, `review_report_assignment`, RLS |
 | `functions/finalize-campaign-template` | Đọc metadata thật từ Storage, chuẩn hóa tên, move template và đăng ký metadata | `reportAdminService` | `_shared/*`, service-role Storage, `register_report_campaign_template` |
@@ -198,6 +204,31 @@ cannot call an Edge Function directly (unlike the two in-database P3-06 jobs abo
 is the Supabase-documented bridge. `net.http_post` is async/fire-and-forget from pg_cron's
 perspective — see `docs/phase-3/08-email-worker-scheduling.md` for observability (how to confirm
 a tick actually fired and reached the provider) and residual risk notes.
+
+# Văn bản — Documents Foundation (P4-01)
+LƯU Ý: model `documents` đã có sẵn từ `202607300001` (đủ field + 7 status) và `202607300003`
+(`owner_organization_id`, `can_access_document(uuid)`, bucket private `documents-private`,
+policy đọc Storage). P4-01 **không dựng lại** model — chỉ đóng gap
+(`202608160001_phase_4_documents_foundation.sql`).
+
+Đọc:  `/tri-thuc/van-ban` → `Documents.jsx` → `documentService.listDocuments()`
+      → select `documents` dưới RLS `can_access_document(id)` — filter/search/paginate đều
+        server-side, order `(issued_date desc, id desc)` để keyset ổn định
+      `/tri-thuc/van-ban/:id` → `DocumentDetail.jsx` → `getDocument` + `getDocumentRelations`
+      → relations chỉ hiện khi **cả hai** đầu quan hệ đọc được (policy mới; trước P4-01 bảng
+        `document_relations` bật RLS nhưng KHÔNG có policy nào → deny-all)
+Tải:  người dùng bấm → `getDocumentDownloadUrl` → signed URL 60s trên `documents-private`
+      → Storage policy suy lại document id từ segment đầu của path bằng `uuid_or_null`
+        (fail closed, không raise) rồi gọi lại `can_access_document` — biết `storage_path`
+        KHÔNG đồng nghĩa tải được. Không prefetch signed URL, không log/ghi DB signed URL.
+Ghi:  chỉ qua RPC SECURITY DEFINER (`create_document_draft`, `update_document_metadata`,
+      `publish_document`, `withdraw_document`, `attach_document_source_file`) — validate
+      role/scope qua `can_manage_document`, validate state transition, ghi `audit_logs`.
+      `authenticated` đã bị revoke INSERT/UPDATE/DELETE trên `documents`/`document_relations`/
+      `document_chunks` (chỉ còn SELECT). `attach_document_source_file` neo path theo đúng
+      `{document_id}/source/...`, chặn traversal, chặn extension nguy hiểm, chặn oversize;
+      MIME do browser khai báo KHÔNG được tin.
+Chưa làm: AI/RAG, embedding, `document_chunks` processing, admin UI, rehearsal Storage runtime.
 
 # Lịch sử/nộp lại báo cáo (P2-11)
 Assignment detail → reportService.getSubmissionHistory (RLS, version desc, profile-safe fields)
