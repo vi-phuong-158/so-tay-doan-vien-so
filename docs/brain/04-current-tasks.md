@@ -7,9 +7,39 @@
 
 ## Đang làm
 
-### P4-01 — Documents Foundation (Phase 4)
+### P4-02R — Documents Storage Actor-Based Runtime Rehearsal (PENDING)
+- **Trạng thái:** **PENDING** — chưa bắt đầu. Đây là **cổng production-readiness**, **không chặn**
+  P4-03 hay các task Phase 4 sau.
+- **Vì sao tồn tại:** P4-02 đã verify runtime được schema parity, bucket private, policy predicate
+  và fail-closed path; nhưng **không** chạy được kịch bản theo actor thật vì tạo
+  `auth.users`/`profiles`/`user_roles` trong project live bị permission control của môi trường chặn
+  (không lách). Cần chứng minh: upload byte thật, attach, signed URL tải được thật, từ chối
+  cross-scope/DRAFT, chặn extension/size, publish/withdraw đổi quyền tức thì, và cleanup.
+- **Yêu cầu:** chỉ non-production, chỉ dữ liệu tổng hợp, không secret trong repo/log.
+  Chi tiết: `docs/phase-4/02R-documents-storage-runtime-rehearsal.md`.
+
+## Đã hoàn thành gần đây
+
+### P4-02 — Documents Admin Workflow & Storage Write Authorization (merged)
+- **Base:** `master@4488755` (P4-01 merged qua PR #23).
+- **Trạng thái:** `P4_02_TECHNICAL_ACCEPTANCE_PASS_RUNTIME_REHEARSAL_PENDING` — **merged** qua
+  PR #24. Nghĩa là: repo implementation được chấp nhận; rehearsal runtime theo actor vẫn mở
+  (P4-02R); **chưa phải production-ready**.
+- **Phạm vi:** đóng 2 gap của P4-01. (1) Mở đúng mức tối thiểu quyền ghi Storage cho
+  `documents-private` — trước đó bucket **không có policy INSERT/UPDATE/DELETE nào**, nên không
+  phiên đăng nhập nào upload được tệp gốc; (2) dựng admin UI `/admin/van-ban`.
+  Migration `202608160002`: INSERT policy (chỉ admin của đúng document đó, dưới `{id}/source/`),
+  DELETE policy chỉ để bù trừ + chặn xóa tệp đang gắn (`storage_path is distinct from name`),
+  **không có UPDATE policy** (không ghi đè tại chỗ), admin SELECT để duyệt DRAFT trước khi phát
+  hành, `detach_document_source_file` (xóa con trỏ trước, bytes sau), `get_admin_documents`.
+- **Giới hạn:** rehearsal runtime chỉ chạy được phần schema/policy/fail-closed path; các kịch bản
+  cần tạo user test (A–D, F–I) bị chặn bởi permission control của môi trường, **không giả lập**.
+  Chi tiết: `docs/phase-4/02-documents-admin-storage-rehearsal.md`.
+
+### P4-01 — Documents Foundation (merged)
 - **Base:** `master@814b824` (P3-09 merged qua PR #22 — Phase 3 đã đóng).
-- **Branch:** `feat/phase-4-documents-foundation`. Draft PR, **chưa merge**.
+- **Trạng thái:** `P4_01_DOCUMENTS_FOUNDATION_PASS` → **merged** vào `master@4488755` qua PR #23
+  (CI xanh trên đúng HEAD `3014b9c`, run `31920030948`).
 - **Phạm vi:** vertical slice thật cho phân hệ Văn bản: constraint + RLS cho
   `documents`/`document_relations`, đóng grant ghi trực tiếp, vá policy Storage
   `documents-private` (dùng `uuid_or_null` để fail closed), 5 RPC admin có validate transition +
@@ -21,8 +51,6 @@
 - **Giới hạn:** Không AI/RAG, không embedding, không `document_chunks` processing, không
   Learning/Quiz, không admin UI, không deploy production. Chi tiết:
   `docs/phase-4/01-documents-foundation.md`.
-
-## Đã hoàn thành gần đây
 
 ### P3-09 — Phase 3 Final Acceptance & Production Readiness Audit (merged)
 - **Trạng thái:** `P3_09_PHASE_3_TECHNICAL_ACCEPTANCE_PASS` → **merged** vào `master@814b824` qua
