@@ -228,7 +228,30 @@ Ghi:  chỉ qua RPC SECURITY DEFINER (`create_document_draft`, `update_document_
       `document_chunks` (chỉ còn SELECT). `attach_document_source_file` neo path theo đúng
       `{document_id}/source/...`, chặn traversal, chặn extension nguy hiểm, chặn oversize;
       MIME do browser khai báo KHÔNG được tin.
-Chưa làm: AI/RAG, embedding, `document_chunks` processing, admin UI, rehearsal Storage runtime.
+Chưa làm ở P4-01: AI/RAG, embedding, `document_chunks` processing, admin UI, rehearsal Storage runtime.
+
+# Quản trị văn bản & quyền ghi Storage (P4-02)
+Gap P4-01 để lại: `documents-private` **không có policy INSERT/UPDATE/DELETE nào** → deny-by-default
+→ không ai upload được tệp gốc, `attach_document_source_file` chỉ ghi nhận path đặt sẵn từ ngoài.
+`202608160002` mở đúng mức tối thiểu (khuôn P2-03 của bucket báo cáo):
+
+Upload: admin chọn tệp → `validateSourceFile` (extension + size, KHÔNG tin MIME browser)
+      → `buildSourceStoragePath` = `{document_id}/source/{uuid}-{safe_name}` (mỗi lần upload một
+        object MỚI → thay thế không bao giờ ghi đè tệp cũ)
+      → upload (INSERT policy: `can_manage_document` suy từ dòng `documents` theo segment[1] qua
+        `uuid_or_null`; segment[2] phải là `source`; path dị dạng → NULL → deny, không raise)
+      → `attach_document_source_file` (RPC, validate lại toàn bộ + audit)
+      → nếu attach FAIL: service xóa đúng object vừa tạo (bù trừ) rồi ném lại lỗi GỐC.
+Xóa:  KHÔNG có UPDATE policy. DELETE policy chỉ dùng để bù trừ và có chặn
+      `d.storage_path is distinct from storage.objects.name` → **tệp đang gắn không thể bị xóa**.
+      Gỡ tệp có chủ đích = `detach_document_source_file`: xóa con trỏ DB TRƯỚC, trả path để xóa
+      bytes SAU (crash ở giữa → orphan vô hại, không phải document trỏ vào tệp mất); từ chối khi
+      `PUBLISHED`.
+Đọc:  admin có SELECT policy riêng để duyệt tệp của DRAFT trước khi phát hành (policy OR nhau nên
+      end user không được thêm quyền gì).
+UI:   `/admin/van-ban` (`AdminDocuments.jsx`, RoleGuard YOUTH_ADMIN) → `documentAdminService`
+      → `get_admin_documents` (read model scoped, total count, validate filter server-side) và các
+      RPC P4-01. Trang không ghi bảng trực tiếp.
 
 # Lịch sử/nộp lại báo cáo (P2-11)
 Assignment detail → reportService.getSubmissionHistory (RLS, version desc, profile-safe fields)

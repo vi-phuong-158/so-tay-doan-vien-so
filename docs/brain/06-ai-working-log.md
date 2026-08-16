@@ -1,5 +1,46 @@
 # 06 — AI Working Log
 
+## [2026-08-16] P4-02 — Documents Admin Workflow & Runtime Storage Rehearsal
+
+- **Agent:** Claude (Opus 5)
+- **Thay đổi:** Đóng 2 gap P4-01 để lại. **Phát hiện chính:** bucket `documents-private`
+  **không có policy INSERT/UPDATE/DELETE nào** — RLS trên `storage.objects` deny-by-default nên
+  không phiên đăng nhập nào upload được tệp gốc; `attach_document_source_file` chỉ có thể ghi nhận
+  path do quy trình ngoài luồng đặt sẵn, tức admin workflow chưa từng chạy được end-to-end.
+  Migration `202608160002` mở đúng mức tối thiểu theo đúng khuôn P2-03 đã dùng cho bucket báo cáo:
+  (1) INSERT policy — chỉ admin của **đúng document đó** (`can_manage_document` suy ra từ dòng
+  `documents`, không tin request), path phải dưới `{document_id}/source/`, `uuid_or_null` khiến
+  segment dị dạng/traversal **deny chứ không raise**; (2) **không có UPDATE policy** — không bao giờ
+  ghi đè tại chỗ, nên một lần thay thế hỏng không thể phá tệp cũ; (3) DELETE policy chỉ để bù trừ,
+  kèm chặn `d.storage_path is distinct from storage.objects.name` nên **tệp đang gắn không thể bị
+  xóa** dù cleanup có bug hay retry nhầm; (4) admin SELECT policy hẹp để duyệt tệp của DRAFT trước
+  khi phát hành (`can_access_document` publish-gated là đúng cho end user); (5)
+  `detach_document_source_file` xóa con trỏ DB **trước**, trả path để xóa bytes sau — crash ở giữa
+  để lại orphan vô hại thay vì document trỏ vào tệp không tồn tại, và từ chối khi đang `PUBLISHED`;
+  (6) `get_admin_documents` read model scoped + total count + validate filter server-side.
+  Frontend: `documentAdminService` (upload → attach → bù trừ xóa đúng object vừa tạo nếu attach
+  fail, rethrow lỗi gốc chứ không che bằng lỗi cleanup), `/admin/van-ban` với list/filter/tạo/sửa/
+  upload/phát hành/thu hồi, confirm cho hành động nguy hiểm, chặn double-submit, `RoleGuard`.
+- **File đã sửa/tạo:** `supabase/migrations/202608160002_phase_4_documents_admin_storage.sql`,
+  `supabase/tests/documents_admin_storage.sql`, `src/services/documentAdminService.js`,
+  `src/lib/documentAdminDisplay.mjs`, `src/pages/AdminDocuments.jsx`, `src/pages/Admin.jsx`,
+  `src/App.jsx`, `tests/document_admin_service.test.mjs`, `tests/document_admin_ui.test.mjs`,
+  `docs/phase-4/02-documents-admin-storage-rehearsal.md`, `docs/brain/04-current-tasks.md`,
+  `docs/brain/06-ai-working-log.md`.
+- **Lý do:** P4-01 có RPC attach nhưng không có đường upload hợp lệ, và không có UI quản trị — hai
+  gap đã ghi rõ trong `docs/phase-4/01-documents-foundation.md`.
+- **Kiểm tra:** `npm test` **98/98 PASS** (66 cũ không đổi + 32 mới); lint 0 lỗi/3 warning có sẵn;
+  build PASS; `git diff --check` PASS. **Rehearsal runtime trên project non-production
+  `znexculhbdjiflkczpyu`** (không đụng production — production chưa tồn tại): đã đưa schema lên
+  parity bằng đúng migration của repo (P4-01 + P4-02 apply `success`), xác nhận live: bucket
+  `public=false`, 4 policy deploy đúng predicate (INSERT có `can_manage_document`+`uuid_or_null`,
+  DELETE có chặn tệp đang gắn), `authenticated` có 0 quyền ghi trên `documents`, 8/8 SECURITY
+  DEFINER pin `search_path`, và `uuid_or_null` trả NULL cho `..`/`../../etc`/rỗng/`%2e%2e`/hex sai
+  (Scenario E PASS, không raise). **Các kịch bản A–D, F–I KHÔNG chạy được** vì cần tạo
+  `auth.users`/`profiles`/`user_roles` fixture trong project live, và thao tác này **bị permission
+  control của môi trường chặn** — đã không tìm cách lách. Không ghi PASS cho những gì chưa quan sát;
+  gap còn lại (round-trip byte thật qua Storage HTTP API) ghi rõ trong tài liệu.
+
 ## [2026-08-16] P4-00 / P4-01 — Phase 4 baseline & Documents Foundation
 
 - **Agent:** Claude (Opus 5)

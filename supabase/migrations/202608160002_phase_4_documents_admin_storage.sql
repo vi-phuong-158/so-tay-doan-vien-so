@@ -13,6 +13,24 @@
 -- Out of scope, unchanged: document_chunks, embeddings, AI/RAG, learning, quiz.
 
 -- =====================================================================================
+-- 0. can_manage_document must be executable by `anon` (privilege fix)
+-- =====================================================================================
+-- P4-01 granted this only to `authenticated`, which was correct while it was called from RPCs.
+-- The policies below put it inside `storage.objects`, and PostgreSQL evaluates every policy on a
+-- table for whichever role is current -- including `anon`. Without EXECUTE, an anonymous read of
+-- ANY object in ANY bucket raises `permission denied for function can_manage_document` instead of
+-- simply returning no rows: a hard error where a silent deny is required, and it would break
+-- unrelated buckets. This is the same failure `202608090006_phase_2_storage_policy_privilege_fix`
+-- fixed for can_read_report_template, and every other helper used inside a storage policy
+-- (is_active_user, current_org_id, has_role, has_role_in_scope, can_access_document,
+-- uuid_or_null) is already granted to both roles for exactly this reason.
+--
+-- Granting this is safe: can_manage_document resolves through has_role/has_role_in_scope, which
+-- both require is_active_user(), so an anonymous caller always gets false. The grant changes the
+-- outcome from "raise" to "deny", not from "deny" to "allow".
+grant execute on function public.can_manage_document(uuid) to anon;
+
+-- =====================================================================================
 -- 1. documents-private INSERT — only a document's own administrator, only under its prefix
 -- =====================================================================================
 -- Path contract (fixed by P4-01's attach RPC and its SELECT policy):

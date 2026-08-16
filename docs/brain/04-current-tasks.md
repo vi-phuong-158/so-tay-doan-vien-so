@@ -7,9 +7,27 @@
 
 ## Đang làm
 
-### P4-01 — Documents Foundation (Phase 4)
+### P4-02 — Documents Admin Workflow & Runtime Storage Rehearsal
+- **Base:** `master@4488755` (P4-01 merged qua PR #23).
+- **Branch:** `feat/phase-4-documents-admin`. Draft PR #24, **chưa merge**.
+- **Trạng thái:** `P4_02_REPO_PASS_REHEARSAL_BLOCKED`.
+- **Phạm vi:** đóng 2 gap của P4-01. (1) Mở đúng mức tối thiểu quyền ghi Storage cho
+  `documents-private` — trước đó bucket **không có policy INSERT/UPDATE/DELETE nào**, nên không
+  phiên đăng nhập nào upload được tệp gốc; (2) dựng admin UI `/admin/van-ban`.
+  Migration `202608160002`: INSERT policy (chỉ admin của đúng document đó, dưới `{id}/source/`),
+  DELETE policy chỉ để bù trừ + chặn xóa tệp đang gắn (`storage_path is distinct from name`),
+  **không có UPDATE policy** (không ghi đè tại chỗ), admin SELECT để duyệt DRAFT trước khi phát
+  hành, `detach_document_source_file` (xóa con trỏ trước, bytes sau), `get_admin_documents`.
+- **Giới hạn:** rehearsal runtime chỉ chạy được phần schema/policy/fail-closed path; các kịch bản
+  cần tạo user test (A–D, F–I) bị chặn bởi permission control của môi trường, **không giả lập**.
+  Chi tiết: `docs/phase-4/02-documents-admin-storage-rehearsal.md`.
+
+## Đã hoàn thành gần đây
+
+### P4-01 — Documents Foundation (merged)
 - **Base:** `master@814b824` (P3-09 merged qua PR #22 — Phase 3 đã đóng).
-- **Branch:** `feat/phase-4-documents-foundation`. Draft PR, **chưa merge**.
+- **Trạng thái:** `P4_01_DOCUMENTS_FOUNDATION_PASS` → **merged** vào `master@4488755` qua PR #23
+  (CI xanh trên đúng HEAD `3014b9c`, run `31920030948`).
 - **Phạm vi:** vertical slice thật cho phân hệ Văn bản: constraint + RLS cho
   `documents`/`document_relations`, đóng grant ghi trực tiếp, vá policy Storage
   `documents-private` (dùng `uuid_or_null` để fail closed), 5 RPC admin có validate transition +

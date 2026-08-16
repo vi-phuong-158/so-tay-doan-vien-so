@@ -5,6 +5,31 @@
 
 ---
 
+## [2026-08-16] P4-02: `documents-private` không có UPDATE policy — object không bao giờ ghi đè
+
+Mỗi lần upload tạo một object path MỚI (`{uuid}-{tên}`), và bucket cố ý **không** có UPDATE policy.
+Hệ quả: một lần thay thế tệp thất bại giữa chừng không thể phá tệp đang dùng, vì nó chưa bao giờ
+chạm vào tệp đó. Đây đúng bất biến P2-03 đã đặt cho bucket báo cáo (RPT-F05), không phải phát minh
+mới.
+
+## [2026-08-16] P4-02: DELETE trên `documents-private` chỉ để bù trừ, và không được xóa tệp đang gắn
+
+Policy DELETE có điều kiện `d.storage_path is distinct from storage.objects.name`. Nghĩa là object
+mà `documents.storage_path` đang trỏ tới **không thể bị xóa qua policy này** — một bug cleanup, một
+UI cũ, hay một retry nhầm đều không thể phá tệp gốc của văn bản đã phát hành. Muốn gỡ tệp thật thì
+phải qua `detach_document_source_file` (xóa con trỏ trước), tức là hai bước có chủ đích, không phải
+một cú xóa lỡ tay.
+
+Thứ tự trong `detach` cũng cố ý: **xóa con trỏ DB trước, xóa bytes sau**. Crash ở giữa để lại orphan
+vô hại (dọn được) thay vì một document trỏ vào tệp không còn tồn tại.
+
+## [2026-08-16] P4-02 KHÔNG revoke grant của `document_relations`/`document_chunks`
+
+Giữ nguyên quyết định đã ghi ở P4-01: chỉ đóng grant khi có RPC thay thế. P4-02 không xây relation
+editor (ngoài phạm vi task), nên không đóng grant `document_relations`. Việc này để lại rủi ro đã
+ghi rõ trong `docs/phase-4/02-documents-admin-storage-rehearsal.md` mục "Residual risks", kèm khuyến
+nghị task sau làm đúng khuôn P4-01: thêm RPC trước, đóng grant sau.
+
 ## [2026-08-16] P4-01 tái sử dụng model `documents` sẵn có thay vì dựng lại
 
 **Bối cảnh.** `docs/01-product-spec.md` mô tả phân hệ Văn bản như việc cần làm mới. Khảo sát P4-00

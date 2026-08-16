@@ -262,12 +262,43 @@ select ok(
 
 -- The cleanup policy must refuse to delete whatever storage_path currently points at. This is the
 -- invariant that keeps a cleanup bug or a stale retry from destroying a live source file.
+-- pg_policies renders the stored expression in PostgreSQL's own normalized form, which upper-cases
+-- operators, so this match is deliberately case-insensitive rather than assuming source casing.
 select ok(
   (select qual from pg_policies
    where schemaname = 'storage' and tablename = 'objects'
-     and policyname = 'document admins clean up unattached source files') like '%storage_path is distinct from%',
+     and policyname = 'document admins clean up unattached source files') ~* 'storage_path is distinct from',
   'cleanup policy cannot delete the currently attached file'
 );
+
+-- =====================================================================================
+-- 9. Privilege regression: anon must be able to EVALUATE the document policies
+-- =====================================================================================
+-- Every helper called inside a storage.objects policy has to be executable by `anon`, because
+-- PostgreSQL evaluates all of a table's policies for whichever role is current. If it is not,
+-- an anonymous read of any object in ANY bucket raises `permission denied for function` instead
+-- of returning zero rows -- a hard error where a silent deny is required, and it breaks unrelated
+-- buckets. This is the exact failure 202608090006 fixed for can_read_report_template.
+select is(
+  (select count(*)::integer from information_schema.role_routine_grants
+   where routine_schema = 'public' and routine_name = 'can_manage_document' and grantee = 'anon'),
+  1,
+  'anon can execute can_manage_document, so document storage policies deny instead of raising'
+);
+
+-- Prove it end to end: as anon, reading the bucket must return 0 rows and raise nothing.
+select set_config('role', 'anon', true);
+select set_config('request.jwt.claims', '{}', true);
+select lives_ok(
+  $$select count(*) from storage.objects where bucket_id = 'documents-private'$$,
+  'anon can evaluate the documents-private policies without an exception'
+);
+select is(
+  (select count(*)::integer from storage.objects where bucket_id = 'documents-private'),
+  0,
+  'anon reads zero objects from documents-private (fail closed, silently)'
+);
+select reset_auth();
 
 select * from finish();
 rollback;

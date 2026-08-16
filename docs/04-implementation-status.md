@@ -43,7 +43,25 @@
   `docs/phase-3/09-phase-3-final-acceptance.md`. It does not implement new features and does not
   change delivery mode or deploy production.
 
-## Phase 4 — Documents Foundation (P4-01, in review)
+## Phase 4 — Documents Admin & Storage (P4-02, in review)
+
+- P4-01 merged into `master@4488755` via PR #23.
+- P4-02 (branch `feat/phase-4-documents-admin`, **Draft PR #24, not merged**) closes the two gaps
+  P4-01 recorded: it opens the minimum Storage **write** authorization for `documents-private`
+  (which previously had no INSERT/UPDATE/DELETE policy at all, making the admin upload path
+  inoperable), and adds the `/admin/van-ban` administration UI.
+- Key invariants: no UPDATE policy (objects are never overwritten in place); DELETE is compensation
+  only and cannot remove the currently attached file; `detach_document_source_file` clears the row
+  pointer before any bytes are deleted; every mutation goes through a SECURITY DEFINER RPC.
+- Validation: frontend 98/98, lint 0 errors/3 existing warnings, build PASS. pgTAP/Deno in CI.
+- Runtime rehearsal on the non-production project `znexculhbdjiflkczpyu` confirmed migration
+  parity, bucket privacy, deployed policy predicates and fail-closed path handling. The
+  actor-based scenarios could not be run (creating test identities was blocked by environment
+  permissions) and are recorded as **not executed**, not as passed. A real end-to-end Storage byte
+  round-trip therefore remains an open gap.
+- See `docs/phase-4/02-documents-admin-storage-rehearsal.md`.
+
+## Phase 4 — Documents Foundation (P4-01, merged)
 
 - Phase 3 closed and merged at `master@814b824` (P3-09 via PR #22).
 - P4-00 baseline established that the `documents` model already existed from the initial schema and
