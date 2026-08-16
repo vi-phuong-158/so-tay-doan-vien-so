@@ -142,8 +142,20 @@ weakened, or skipped.
 | `npm run lint` | PASS — 0 errors, 3 pre-existing Fast Refresh warnings (unchanged) |
 | `npm run build` | PASS |
 | `git diff --check` | PASS |
-| `supabase db reset` / `supabase test db` | **Not run locally** — no Docker/Supabase CLI in this environment (same constraint as every Phase 2/3 task). Authoritative result is CI `test-db` on the Draft PR. |
-| `deno check` / `deno test` | Not applicable — no Edge Function was added or changed by P4-01. Still exercised by CI. |
+| `supabase db reset` / `supabase test db` | PASS via CI — `Files=20, Tests=524, Result: PASS` (up from the P3-08 baseline `Files=19, Tests=476`; the delta is this task's 27 new `documents_foundation.sql` assertions). Not runnable locally: no Docker/Supabase CLI in this environment, same constraint as every Phase 2/3 task. |
+| `deno check` / `deno test` | PASS via CI — `42 passed, 0 failed` (unchanged count; no Edge Function was added or changed by P4-01) |
+| CI run | [`31919039590`](https://github.com/vi-phuong-158/so-tay-doan-vien-so/actions/runs/31919039590) — **success** on exact HEAD `effaf033bb8482d2c1218e6534a6957e328ad184` (`build` + `test-db` both pass) |
+
+### CI caught two real defects before merge
+
+The first CI run (`31917891357`, HEAD `a2899eb`) failed `test-db`, and both failures were genuine:
+
+1. The migration revoked writes on `document_relations`/`document_chunks` without providing any
+   replacement RPC — see "Why only `documents` was closed" above. Narrowed the revoke.
+2. The new suite read `audit_logs` while authenticated; that table is not granted to
+   `authenticated`. The audit assertions now drop to `postgres` via `reset_auth()`.
+
+Neither was worked around by relaxing an assertion.
 
 ## Remaining risks / gaps
 

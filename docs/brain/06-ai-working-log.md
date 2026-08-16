@@ -37,8 +37,20 @@
   có sẵn; `npm run build` PASS; `git diff --check` PASS. Một test tự viết đã bắt được lỗi thật của
   chính mình: `listDocuments` validate `year` **sau** khi đã dựng query builder, nên request lỗi vẫn
   được phát đi — đã sửa để validate toàn bộ input trước khi chạm query. Không có Docker/Supabase CLI
-  cục bộ (như mọi task Phase 2/3) nên `supabase db reset`/pgTAP chờ CI trên Draft PR. Không sửa/bỏ
-  test cũ, không nới RLS, không dùng service role ở frontend, không secret trong Git.
+  cục bộ (như mọi task Phase 2/3) nên `supabase db reset`/pgTAP chạy trên CI.
+  **CI bắt được 2 lỗi thật ở vòng đầu (run `31917891357`) và cả hai đều được sửa tận gốc, không né:**
+  (a) migration revoke luôn quyền ghi trên `document_relations`/`document_chunks` trong khi P4-01
+  **không** có RPC thay thế cho hai bảng đó → thu hẹp revoke chỉ còn `documents` (bảng duy nhất có
+  đủ RPC thay thế); hai bảng kia giữ grant và vẫn được chặn bằng policy RLS chỉ-admin, pgTAP chứng
+  minh trực tiếp bằng assert member INSERT relation bị `42501`. (b) test đọc `audit_logs` khi đang
+  authenticated, mà bảng này không grant cho `authenticated` → đọc bằng `postgres` qua `reset_auth()`.
+  Hệ quả: `rls_acceptance.sql` seed document bằng session sysadmin + INSERT thẳng nên hỏng; đã đổi
+  **chỉ phần fixture** sang seed bằng `postgres` (`reset_auth()`) — đúng convention file đó đang dùng
+  cho fixture storage. **Không sửa/nới/skip bất kỳ assertion cũ nào**; test 14/15/16/26 vẫn đọc đúng
+  các dòng đó qua đúng đường RLS.
+  **CI xanh trên đúng HEAD `effaf03` (run `31919039590`): pgTAP `Files=20, Tests=524, Result: PASS`
+  (tăng từ baseline P3-08 `Files=19, Tests=476`), Deno `42 passed`, build/lint/test frontend PASS.**
+  Không nới RLS, không dùng service role ở frontend, không secret trong Git, không deploy production.
 
 ## [2026-08-16] P3-09 — Phase 3 final acceptance & production readiness audit
 
