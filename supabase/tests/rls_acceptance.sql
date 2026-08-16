@@ -137,7 +137,12 @@ update public.profiles set account_status = 'ACTIVE' where id = 'eeeeeeee-eeee-e
 
 -- Document visibility test (ORGANIZATION_ONLY & RESTRICTED)
 -- Create ORGANIZATION_ONLY doc created by Officer A (Org A)
-select set_auth_user('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid); -- Use privileged setup
+-- Fixture setup only. P4-01 moved the documents write path to SECURITY DEFINER RPCs and revoked
+-- direct INSERT/UPDATE/DELETE on public.documents from `authenticated`, so seeding rows as an
+-- authenticated sysadmin no longer works. Seed as postgres instead -- the same convention this
+-- file already uses for the storage-object fixtures further down. No assertion below is changed:
+-- tests 14/15/16 still read exactly the same rows through exactly the same RLS path.
+select reset_auth();
 insert into public.documents (id, title, status, visibility_level, created_by, owner_organization_id) values ('88888888-8888-8888-8888-888888888888', 'Org Doc', 'PUBLISHED', 'ORGANIZATION_ONLY', 'cccccccc-cccc-cccc-cccc-cccccccccccc', '22222222-2222-2222-2222-222222222222');
 insert into public.document_chunks (id, document_id, chunk_index, content, content_hash, embedding, review_status) 
 values ('77777777-7777-7777-7777-777777777777', '88888888-8888-8888-8888-888888888888', 1, 'Chunk', 'hash', array_fill(0, ARRAY[768])::real[]::vector(768), 'APPROVED');
@@ -250,8 +255,9 @@ select throws_ok(
 );
 
 -- 26. YOUTH_ADMIN Org A CANNOT read ORGANIZATION_ONLY doc of Org B
--- First, Sysadmin creates a doc for Org B
-select set_auth_user('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid);
+-- First, seed a doc for Org B as postgres (see the P4-01 note above: direct authenticated writes
+-- to public.documents were revoked in favour of the admin RPCs). The assertion is unchanged.
+select reset_auth();
 insert into public.documents (id, title, status, visibility_level, created_by, owner_organization_id) values ('55555555-5555-5555-5555-555555555555', 'Org B Doc', 'PUBLISHED', 'ORGANIZATION_ONLY', 'dddddddd-dddd-dddd-dddd-dddddddddddd', '33333333-3333-3333-3333-333333333333');
 
 -- Youth Admin A tries to read it
