@@ -56,4 +56,3 @@ test('quiz admin authoring maps the answer key only on the admin service boundar
   assert.equal(fixture.calls.some(([kind]) => kind === 'from'), false);
   assert.equal(mapAdminQuizAuthoringRows([]), null);
 });
-

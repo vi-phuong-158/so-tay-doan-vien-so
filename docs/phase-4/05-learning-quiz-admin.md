@@ -72,4 +72,3 @@ The branch must pass:
 
 Open gates carried forward: P4-02R Documents Storage actor rehearsal and P4-04R2 real two-session
 quiz concurrency rehearsal. Neither is substituted by structural SQL assertions.
-
