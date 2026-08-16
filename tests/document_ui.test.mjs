@@ -103,7 +103,11 @@ test('detail handles missing/unauthorized documents and keeps relations non-fata
 test('the Knowledge documents tab no longer renders mock documents', () => {
   assert.match(knowledgeSource, /createDocumentService/);
   assert.doesNotMatch(knowledgeSource, /documents\s*\}\s*from '\.\.\/data\/mock'/);
-  // Learning topics stay on demo data on purpose — that slice is not part of P4-01.
-  assert.match(knowledgeSource, /topics \} from '\.\.\/data\/mock'/);
   assert.match(knowledgeSource, /to="\/tri-thuc\/van-ban"/);
+
+  // P4-01 asserted here that Learning topics were still on demo data, because wiring them was
+  // out of that task's scope. P4-03 wires them for real, so that assertion is replaced with a
+  // strictly stronger one: the Knowledge page must import NO mock data at all. This is an
+  // intentional behaviour change, not a relaxed check.
+  assert.doesNotMatch(knowledgeSource, /from '\.\.\/data\/mock'/);
 });
