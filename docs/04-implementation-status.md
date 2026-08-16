@@ -43,9 +43,35 @@
   `docs/phase-3/09-phase-3-final-acceptance.md`. It does not implement new features and does not
   change delivery mode or deploy production.
 
-## Phase 4 — Learning Foundation (P4-03, in review)
+## Phase 4 — Quiz Engine & Attempts (P4-04, in review)
 
-- Branch `feat/phase-4-learning-foundation` from `master@1ceb9e6`; **Draft PR #25, not merged**.
+- Branch `feat/phase-4-quiz-engine`, created from verified P4-03 merged baseline `master@6b1960a`
+  (PR #25). This takeover inherited Claude's uncommitted migration/test work in the dedicated
+  worktree; no reset or discard was performed.
+- Survey confirmed `quizzes`, `quiz_questions`, `quiz_options`, `quiz_attempts`, and `quiz_answers`
+  already existed. P4-04 closes the visibility-blind quiz/question policies by delegating to the
+  canonical parent-topic access helper, revokes direct attempt/answer writes from `authenticated`,
+  and adds trusted `get_quiz_intro`, `start_quiz_attempt`, `get_attempt_questions`,
+  `submit_quiz_attempt`, and `get_attempt_result` RPCs.
+- Answer-key invariant: normal users cannot SELECT `quiz_options`; the pre-submit RPC payload has
+  no `is_correct`; scoring reads the key only inside the trusted submit function. Start numbering
+  is protected by an advisory lock plus the existing unique constraint. Forward migration
+  `202608160005` rechecks active attempts after locking and rejects malformed/duplicate payloads.
+- Frontend vertical slice: `quizService`, `/tri-thuc/trac-nghiem/:quizId`, intro/attempt/result states,
+  server-owned score/pass/attempt number and topic-detail quiz links. No quiz admin authoring UI.
+- Validation so far: rehearsal project `znexculhbdjiflkczpyu` identity and migration parity verified;
+  P4-04 pgTAP `1..65` PASS; frontend `131/131`, lint 0 errors/3 existing warnings, build PASS.
+  Full SQL regression found one pre-existing rehearsal-fixture gap: `report_export.sql` expects
+  seeded campaign `5555…`, which is absent from the project; the suite passes `1..7` when that
+  fixture is inserted inside a rollback-bounded transaction. The other 22 suites pass as-is.
+  Supabase CLI/Deno are unavailable locally; exact final CI is still required before PASS.
+- Not included: AI/RAG, certificates, leaderboard/gamification, production deployment, or P4-02R.
+- See `docs/phase-4/04-quiz-engine-attempts.md`.
+
+## Phase 4 — Learning Foundation (P4-03, merged)
+
+- Branch `feat/phase-4-learning-foundation` from `master@1ceb9e6`; merged into `master@6b1960a` via
+  PR #25 before P4-04 started.
 - Survey found `learning_topics`/`learning_resources` already present with the full spec field set
   **and an unsafe read policy**: it checked `status='PUBLISHED'` only and ignored `visibility_level`
   entirely, so `ORGANIZATION_ONLY`/`RESTRICTED` topics were readable by any active user. The table

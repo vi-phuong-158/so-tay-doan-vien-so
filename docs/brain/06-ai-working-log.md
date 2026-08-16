@@ -1,5 +1,32 @@
 # 06 — AI Working Log
 
+## [2026-08-16] P4-04 — Quiz Engine & Attempts takeover and vertical slice
+
+- **Agent:** Codex
+- **Thay đổi:** Tiếp quản branch `feat/phase-4-quiz-engine` tại P4-03 baseline `6b1960a` trong
+  worktree Claude để lại, không reset/discard. Review migration/test kế thừa; xác nhận hai defect
+  thật: quiz visibility không đi qua parent topic và direct attempt write cho phép client tự ghi
+  score/passed. Giữ answer-key protection hiện có, bổ sung trusted Quiz RPC lifecycle, revoke direct
+  attempt/answer writes, parent-topic RLS, deterministic safe payload, server scoring và atomic submit.
+  Forward migration `202608160005` sửa race start/resume sau advisory lock và harden malformed,
+  duplicate, foreign-ID payloads.
+- **File đã sửa/tạo:** `supabase/migrations/202608160004_phase_4_quiz_engine_attempts.sql`,
+  `supabase/migrations/202608160005_phase_4_quiz_submission_hardening.sql`,
+  `supabase/tests/quiz_engine_attempts.sql`, `src/services/quizService.js`, `src/pages/Quiz.jsx`,
+  `src/pages/LearningTopicDetail.jsx`, `src/App.jsx`, `src/index.css`, `tests/quiz_service.test.mjs`,
+  `tests/learning_ui.test.mjs`, `docs/phase-4/04-quiz-engine-attempts.md`,
+  `docs/04-implementation-status.md`, `docs/brain/01-architecture.md`,
+  `docs/brain/03-decisions.md`, `docs/brain/04-current-tasks.md`,
+  `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Hoàn thiện vertical slice Quiz mà không tin client về user/attempt/score/pass hoặc để
+  biết answer key trước submit; giữ P4-02R pending và không mở rộng sang admin authoring/AI.
+- **Kiểm tra:** Đã xác minh rehearsal `znexculhbdjiflkczpyu` là non-production healthy và migration
+  parity; apply forward migration thành công; pgTAP P4-04 `1..65` PASS; frontend `131/131` PASS;
+  lint 0 errors/3 existing warnings; build PASS; full SQL regression 22 suites PASS as-is. Suite
+  cũ `report_export.sql` thiếu fixture campaign `5555…` trên rehearsal và chỉ pass `1..7` khi
+  fixture được tạo trong transaction rollback-bounded; không ghi seed/auth data lâu dài. `git
+  diff --check` PASS. Supabase CLI/Deno không có local nên chưa claim db reset/Deno/exact-final-HEAD CI.
+
 ## [2026-08-16] P4-03 — Learning Topics & Resources Foundation
 
 - **Agent:** Claude (Opus 5)

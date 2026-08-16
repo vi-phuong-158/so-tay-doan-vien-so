@@ -4,6 +4,7 @@ import { Icon } from '../components/Icon';
 import { Button, PageHeader } from '../components/common';
 import Skeleton from '../components/Skeleton';
 import { createLearningService, topicAvailability } from '../services/learningService';
+import { createQuizService } from '../services/quizService';
 import { supabase } from '../services/supabaseClient';
 import {
   AVAILABILITY_LABELS,
@@ -16,6 +17,7 @@ import {
 } from '../lib/learningDisplay.mjs';
 
 const learningService = createLearningService(supabase);
+const quizService = createQuizService(supabase);
 const LIST_PATH = '/tri-thuc/chuyen-de';
 
 function ResourceItem({ resource, onDownload, downloadingId }) {
@@ -62,6 +64,7 @@ export function LearningTopicDetail() {
 
   const [topic, setTopic] = useState(null);
   const [resources, setResources] = useState([]);
+  const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [downloadingId, setDownloadingId] = useState(null);
@@ -78,14 +81,14 @@ export function LearningTopicDetail() {
         if (!mounted) return undefined;
         setTopic(result);
         // Resources are secondary: a failure here must not hide a topic the user may read.
-        return learningService
-          .listResources(topicId)
-          .then((rows) => {
-            if (mounted) setResources(rows);
-          })
-          .catch(() => {
-            if (mounted) setResources([]);
-          });
+        return Promise.all([
+          learningService.listResources(topicId).catch(() => []),
+          quizService.listQuizzes(topicId).catch(() => [])
+        ]).then(([resourceRows, quizRows]) => {
+          if (!mounted) return;
+          setResources(resourceRows);
+          setQuizzes(quizRows);
+        });
       })
       .catch((requestError) => {
         if (mounted) setError(requestError);
@@ -188,6 +191,24 @@ export function LearningTopicDetail() {
           </>
         )}
       </div>
+
+      {quizzes.length > 0 && (
+        <>
+          <div className="section-header"><h2>Trắc nghiệm</h2></div>
+          <div className="document-list">
+            {quizzes.map((quiz) => (
+              <Link className="quiz-cta" to={`/tri-thuc/trac-nghiem/${quiz.id}`} key={quiz.id}>
+                <span><Icon name="check" size={20} /></span>
+                <div>
+                  <h3>{quiz.title}</h3>
+                  <p>Điểm đạt {quiz.passScore}% · {quiz.maxAttempts ?? 'Không giới hạn'} lượt</p>
+                </div>
+                <Icon name="arrow" size={18} />
+              </Link>
+            ))}
+          </div>
+        </>
+      )}
 
       <div className="section-header">
         <h2>Học liệu ({resources.length})</h2>

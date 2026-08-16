@@ -7,24 +7,19 @@
 
 ## Đang làm
 
-### P4-03 — Learning Topics & Resources Foundation
-- **Base:** `master@1ceb9e6` (P4-02 merged qua PR #24).
-- **Branch:** `feat/phase-4-learning-foundation`. Draft PR #25, **chưa merge**.
-- **Phát hiện chính:** `learning_topics`/`learning_resources` **đã tồn tại** đủ field, nhưng RLS
-  đang **KHÔNG an toàn**: policy `active users read published topics` chỉ kiểm `status='PUBLISHED'`
-  và **bỏ qua hoàn toàn `visibility_level`**, nên một topic ORGANIZATION_ONLY/RESTRICTED bất kỳ
-  active user đều đọc được; policy resource cũng lỗi y hệt. `learning_topics` lại **không có cột
-  organization** nên ORGANIZATION_ONLY không thể enforce. Đây đúng gap mà `202607300003` đã đóng
-  cho documents — `202608160003` đóng cho learning theo cùng cách.
-- **Phạm vi:** thêm `owner_organization_id` (+ backfill), CHECK constraints (https-only
-  `external_url`, storage_path neo theo topic, payload, type, window), helper
-  `can_access_learning_topic`/`can_manage_learning_topic` (fail-closed, **grant anon** để storage
-  policy deny thay vì raise — bài học từ P4-02), thay 2 read policy mù visibility, policy admin,
-  policy cho bucket `learning-resources-private` (trước đó **không có policy nào**), 5 RPC trusted
-  có audit, `learningService`, route `/tri-thuc/chuyen-de` + detail, Knowledge tab chuyên đề đọc
-  dữ liệu thật.
-- **Giới hạn:** Không Quiz, không AI/RAG, không admin UI learning, không deploy production.
-  Chi tiết: `docs/phase-4/03-learning-foundation.md`.
+### P4-04 — Quiz Engine & Attempts
+- **Base:** `master@6b1960a` — P4-03 merged qua PR #25; branch `feat/phase-4-quiz-engine`.
+- **Trạng thái:** đang hoàn thiện technical acceptance; PR chưa mở/push trong takeover này.
+- **Phát hiện chính:** năm bảng Quiz đã tồn tại từ initial schema. Hai defect thật là quiz/question
+  đọc không xét visibility của topic cha và `authenticated` có đường INSERT/UPDATE attempt để tự
+  ghi score/passed. `is_correct` đã được bảo vệ bởi RLS, nhưng P4-04 giữ defense-in-depth bằng
+  safe RPC payload không chọn answer key.
+- **Phạm vi:** migration `202608160004` đóng direct attempt writes, thay read policy bằng parent-topic
+  access, trusted start/resume/submit/result RPC; `202608160005` forward-fix concurrency resume và
+  malformed payload; pgTAP A–Z; `quizService`; route `/tri-thuc/trac-nghiem/:quizId`; intro/attempt/result
+  UI và link từ topic detail.
+- **Giới hạn:** Không admin authoring UI lớn, không AI/RAG, không leaderboard/gamification, không
+  Production. P4-02R vẫn PENDING. Chi tiết: `docs/phase-4/04-quiz-engine-attempts.md`.
 
 ### P4-02R — Documents Storage Actor-Based Runtime Rehearsal (PENDING)
 - **Trạng thái:** **PENDING** — chưa bắt đầu. Đây là **cổng production-readiness**, **không chặn**
@@ -38,6 +33,11 @@
   Chi tiết: `docs/phase-4/02R-documents-storage-runtime-rehearsal.md`.
 
 ## Đã hoàn thành gần đây
+
+### P4-03 — Learning Topics & Resources Foundation (merged)
+- **Base/merge:** `master@6b1960a` via PR #25; parent-topic visibility and organization scoping are
+  now the canonical access model for Quiz.
+- **Validation:** CI acceptance was recorded before this branch was created; P4-02R remains open.
 
 ### P4-02 — Documents Admin Workflow & Storage Write Authorization (merged)
 - **Base:** `master@4488755` (P4-01 merged qua PR #23).

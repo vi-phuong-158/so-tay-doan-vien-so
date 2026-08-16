@@ -37,7 +37,7 @@ src/
 │   ├── auth/                # Login, ForgotPassword, ResetPassword, ChangePassword (dùng Supabase)
 │   ├── Home/Innovation/Profile.jsx  # HIỆN DÙNG MOCK
 │   ├── Work.jsx             # đã nối reportService (Phase 2)
-│   ├── Knowledge.jsx        # tab Văn bản đã nối documentService (P4-01); tab Chuyên đề vẫn MOCK
+│   ├── Knowledge.jsx        # tab Văn bản + Chuyên đề đã nối service thật (P4-01/P4-03)
 │   ├── Documents.jsx        # /tri-thuc/van-ban — list thật: search/filter/paginate (P4-01)
 │   ├── DocumentDetail.jsx   # /tri-thuc/van-ban/:documentId — metadata, relations, signed download (P4-01)
 │   ├── Notifications.jsx    # inbox/read state, safe deep-link, bounded pagination
@@ -47,7 +47,8 @@ src/
 ├── lib/markdown.js          # render markdown an toàn (DOMPurify)
 ├── services/supabaseClient.js  # khởi tạo supabase client từ VITE_SUPABASE_*
 ├── services/reportAdminService.js # quản trị campaign + dashboard/export qua RPC/Edge Function
-└── services/notificationService.js # read-only inbox/count + mark-read RPC boundary
+├── services/notificationService.js # read-only inbox/count + mark-read RPC boundary
+└── services/quizService.js # safe metadata + trusted attempt lifecycle RPC boundary
 
 supabase/
 ├── migrations/              # ordered schema/RLS/RPC migrations
@@ -82,6 +83,8 @@ supabase/
 | `src/services/reportAdminService.js` | Đọc campaign trong scope; tạo/sửa draft, upload/finalize template và publish | `AdminReports` | Supabase RPC + Storage private + `finalize-campaign-template` |
 | `src/pages/AdminReports.jsx` | Danh sách/form quản trị đợt báo cáo, chọn đơn vị, xác nhận phát hành | routes `/admin/bao-cao*` | `reportAdminService`, `reportAdmin.mjs`, `Auth`/`RoleGuard` |
 | `src/pages/AdminReportDashboard.jsx` | Aggregate, filter/search và tải CSV/ZIP theo filter hiện tại | route `/admin/bao-cao/:campaignId/dashboard` | `reportAdminService`, dashboard helpers, Blob download |
+| `src/services/quizService.js` | Safe quiz metadata, safe question mapper, trusted attempt/result RPC boundary; không yêu cầu answer key trước submit | `Quiz`, `LearningTopicDetail` | Supabase RPC/RLS, UUID/business-error validation |
+| `src/pages/Quiz.jsx` | Intro → attempt → result UI, loading/error/limit/expiry/double-submit states | route `/tri-thuc/trac-nghiem/:quizId` | `quizService`, `Icon`, `common`, `Skeleton` |
 
 ### Backend (Edge Functions) — module then chốt
 
@@ -253,7 +256,19 @@ Ghi:  chỉ qua RPC (`create_learning_topic_draft`, `update_learning_topic`,
 Storage: bucket `learning-resources-private` trước đó **không có policy nào** (deny-all). Nay:
       read theo quyền topic, admin insert dưới `{topic_id}/resources/`, **không có UPDATE policy**,
       delete chỉ cho object không còn resource row nào trỏ tới.
-Chưa làm: Quiz, AI/RAG, admin UI learning, rehearsal runtime Storage (chung gap với P4-02R).
+Chưa làm: AI/RAG, admin UI learning, rehearsal runtime Storage (chung gap với P4-02R).
+
+# Quiz engine & attempts (P4-04)
+Đọc metadata: topic detail → `quizService.listQuizzes(topic_id)` → select quiz-level fields dưới
+RLS `can_access_quiz(quiz_id)`; không chọn question/option hoặc `is_correct`.
+Làm bài: `/tri-thuc/trac-nghiem/:quizId` → `quizService.getQuiz()` (`get_quiz_intro`) →
+`start_quiz_attempt(auth.uid())` → `get_attempt_questions(attempt_id)` (safe question/option
+payload, deterministic shuffle by attempt id) → client gửi selected IDs →
+`submit_quiz_attempt(attempt_id, answers)` (ownership, expiry, ID validation, server answer key,
+exact-set scoring, answer rows + final score atomically) → `get_attempt_result` sau submit.
+`quiz_attempts`/`quiz_answers` không có direct write grant cho `authenticated`; start dùng advisory
+lock trước khi đọc active attempt, unique `(quiz_id,user_id,attempt_number)` là backstop. `is_correct`
+chỉ xuất hiện trong result sau submit của chính user hoặc admin trong scope.
 
 # Quản trị văn bản & quyền ghi Storage (P4-02)
 Gap P4-01 để lại: `documents-private` **không có policy INSERT/UPDATE/DELETE nào** → deny-by-default

@@ -21,6 +21,7 @@ const appSource = fs.readFileSync(new URL('../src/App.jsx', import.meta.url), 'u
 test('learning routes are registered under Tri thức', () => {
   assert.match(appSource, /path="tri-thuc\/chuyen-de"/);
   assert.match(appSource, /path="tri-thuc\/chuyen-de\/:topicId"/);
+  assert.match(appSource, /path="tri-thuc\/trac-nghiem\/:quizId"/);
   assert.match(appSource, /import \{ LearningTopics \} from '\.\/pages\/LearningTopics'/);
   assert.match(appSource, /import \{ LearningTopicDetail \} from '\.\/pages\/LearningTopicDetail'/);
 });
@@ -110,7 +111,7 @@ test('detail renders resources in server order and handles the not-found case', 
   assert.match(detailSource, /Về danh sách/);
   assert.match(detailSource, /Thử lại/);
   // A resources failure must not blank out a topic the user may read.
-  assert.match(detailSource, /listResources[\s\S]*?\.catch\(\(\) => \{[\s\S]*?setResources\(\[\]\)/);
+  assert.match(detailSource, /listResources\(topicId\)\.catch\(\(\) => \[\]\)/);
 });
 
 test('detail requests a signed URL only from an explicit click, with a double-click guard', () => {
@@ -146,8 +147,9 @@ test('the Knowledge topics tab now reads real data instead of the mock', () => {
   assert.match(knowledgeSource, /learningErrorMessage\(topicsError\)/);
 });
 
-test('no quiz controls were introduced by this slice', () => {
-  for (const source of [listSource, detailSource]) {
-    assert.doesNotMatch(source, /quiz|Quiz|trac-nghiem|attempt/i);
-  }
+test('topic detail links published quizzes through the real quiz service', () => {
+  assert.match(detailSource, /createQuizService/);
+  assert.match(detailSource, /listQuizzes\(topicId\)/);
+  assert.match(detailSource, /tri-thuc\/trac-nghiem\//);
+  assert.match(detailSource, /quizzes\.map/);
 });

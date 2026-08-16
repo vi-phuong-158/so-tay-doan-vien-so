@@ -16,6 +16,7 @@ import { Documents } from './pages/Documents';
 import { DocumentDetail } from './pages/DocumentDetail';
 import { LearningTopics } from './pages/LearningTopics';
 import { LearningTopicDetail } from './pages/LearningTopicDetail';
+import { Quiz } from './pages/Quiz';
 import { Innovation } from './pages/Innovation';
 import { Profile } from './pages/Profile';
 import { Notifications } from './pages/Notifications';
@@ -56,6 +57,7 @@ export default function App() {
             <Route path="tri-thuc/van-ban/:documentId" element={<DocumentDetail />} />
             <Route path="tri-thuc/chuyen-de" element={<LearningTopics />} />
             <Route path="tri-thuc/chuyen-de/:topicId" element={<LearningTopicDetail />} />
+            <Route path="tri-thuc/trac-nghiem/:quizId" element={<Quiz />} />
             <Route path="doi-moi-sang-tao" element={<Innovation />} />
             <Route path="ca-nhan" element={<Profile />} />
 

@@ -5,6 +5,28 @@
 
 ---
 
+## [2026-08-16] P4-04: Quiz chỉ ghi/chấm qua trusted RPC, answer key không nằm trong payload trước submit
+
+Khảo sát cho thấy schema năm bảng Quiz đã tồn tại. P4-04 giữ model đó, nhưng thay policy đọc quiz/
+question bằng `can_access_quiz()` delegating vào quyền topic cha, đồng thời revoke INSERT/UPDATE/
+DELETE trực tiếp trên `quiz_attempts` và `quiz_answers` cho `authenticated`. `start_quiz_attempt`,
+`submit_quiz_attempt` và các RPC đọc safe/result là contract duy nhất của frontend.
+
+`get_attempt_questions` có column list tường minh, không chọn `is_correct`; answer key chỉ được đọc
+trong transaction submit và result sau khi attempt đã finalized. Scoring là exact-set: SINGLE phải
+có đúng một lựa chọn, MULTIPLE phải có tập lựa chọn bằng tập đáp án đúng; score = earned/total * 100,
+làm tròn 2 chữ số; server quyết định `score`, `passed`, `attempt_number`, `user_id`.
+
+Start lấy advisory transaction lock trước khi đọc active attempt, re-check sau lock, và dùng unique
+`(quiz_id,user_id,attempt_number)` làm backstop. Các migration forward-fix không sửa migration đã
+chạy: `202608160005` đóng race resume và biến malformed/duplicate JSON thành business error.
+
+## [2026-08-16] P4-04: Draft/admin preview không phải end-user access
+
+`can_access_quiz` cho phép content admin đúng scope xem content ở trạng thái DRAFT để authoring/review;
+end user chỉ thấy quiz PUBLISHED dưới topic accessible và còn trong availability window. P4-04 chỉ
+thêm bounded admin table policy, không xây admin authoring UI lớn; phần đó để P4-05.
+
 ## [2026-08-16] P4-02: `documents-private` không có UPDATE policy — object không bao giờ ghi đè
 
 Mỗi lần upload tạo một object path MỚI (`{uuid}-{tên}`), và bucket cố ý **không** có UPDATE policy.
