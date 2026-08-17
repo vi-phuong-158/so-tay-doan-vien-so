@@ -886,3 +886,83 @@
   `69096639eb6c88e2d5a51e65045844e4f8c15501`: pgTAP `Files=25, Tests=727`, Deno `42 passed`,
   frontend gates and Vercel pass. Final verdict is
   `PHASE_4_TECHNICAL_ACCEPTANCE_PASS_RUNTIME_GATES_PENDING`; P4-02R/P4-04R2 remain pending.
+
+## [2026-08-17] P5-00 — AI/RAG Architecture & Existing Worktree Audit
+
+- **Agent:** Claude Code
+- **Thay đổi:** Task kiến trúc/audit, không sửa code runtime. (1) Audit toàn bộ hiện trạng Phase 5:
+  ghi nhận worktree **sạch** — không có uncommitted work như task giả định; phần đó đã merge qua
+  PR #30 và chỉ là một file docs. Phát hiện code Phase 5 thật (`ask-ai`, `process-document`) đã nằm
+  trên `master` từ initial commit, chưa từng review, và tìm ra 10 vấn đề trong đó 3 nghiêm trọng:
+  ghi xuyên hội thoại người khác qua service role, privilege escalation xuyên tổ chức, giả mạo nội
+  dung nguồn. (2) Chốt kiến trúc ba lớp Canonical Source → Wiki đã duyệt → Evidence chọn lọc, thay
+  cho chunk-everything. (3) Trả lời D1–D10. (4) Chia Phase 5 thành P5-01…P5-10 có acceptance gate.
+- **File đã sửa:**
+  - Tạo: `docs/phase-5/01-existing-work-audit.md`, `02-ai-rag-architecture.md`,
+    `03-knowledge-data-model.md`, `04-ingestion-and-review-workflow.md`,
+    `05-retrieval-source-policy.md`, `06-security-threat-model.md`,
+    `07-phase-5-implementation-plan.md`
+  - Sửa: `docs/phase-5/00-ai-rag-architecture-proposal.md` (banner "đã thay thế một phần"),
+    `docs/brain/01-architecture.md` (Code Graph + luồng RAG), `docs/brain/03-decisions.md`
+    (4 quyết định mới), `docs/brain/04-current-tasks.md`, `docs/08-working-log.md`
+- **Lý do:** Mô hình chunk-everything khiến quyết định đã chốt [2026-07-30] *"AI chỉ dùng chunk
+  APPROVED"* không thể thực thi (không ai duyệt nổi 400 chunk/tài liệu), và chunk thô không mang
+  thông tin hiệu lực nên vector search sẽ trả về văn bản đã hết hiệu lực. Ngoài ra Code Graph đang
+  mô tả `ask-ai`/`process-document` như thành phần bình thường, khiến agent sau có thể dùng chúng
+  làm mẫu — Code Graph lỗi thời nguy hiểm hơn không có.
+- **Kiểm tra:** `NO_RUNTIME_CODE_CHANGED` — không file nào trong `src/`, `supabase/` hay
+  `package.json` bị sửa. Xác minh bằng `git diff --stat` (chỉ có `docs/`). Vẫn chạy
+  `npm run lint`, `npm test`, `npm run build` để chứng minh baseline không bị ảnh hưởng.
+
+## [2026-08-17] P5-01 — Knowledge Schema + RLS
+
+- **Agent:** Claude Code
+- **Thay đổi:** Hiện thực tầng dữ liệu + RLS cho kiến trúc P5-00. Migration
+  `202608170001_phase_5_knowledge_foundation.sql`: 8 bảng mới (canonical version history, source
+  snapshot, Wiki + Wiki version, embeddings tách riêng có model/dimension, ingestion job/event,
+  AI quota); 5 cột mới trên `documents` trong đó `ingestion_status` là trục **tách hẳn** khỏi
+  `documents.status` của Phase 4 (trigger cấm hai trục đổi cùng statement); refactor
+  `document_chunks` thành selective evidence và **xóa cột chết `visibility_level`**; sửa PK
+  `ai_message_sources` để trích dẫn được ở mức document/version/Wiki; 7 trigger bất biến; helper
+  `can_manage_document_knowledge(uuid)`; RLS fail-closed + least-privilege grants; 18 index.
+- **File đã sửa:**
+  - Tạo: `supabase/migrations/202608170001_phase_5_knowledge_foundation.sql`,
+    `supabase/tests/knowledge_foundation.sql`, `docs/phase-5/08-p5-01-knowledge-schema.md`
+  - Sửa: `docs/brain/01-architecture.md`, `docs/brain/03-decisions.md`,
+    `docs/brain/04-current-tasks.md`, `docs/08-working-log.md`
+- **Lý do:** Không có tầng lưu trữ nào cho canonical version, Wiki, provenance hay review state —
+  P5-00 xác định đó là khoảng trống lớn nhất của schema hiện tại. Hai defect thật được đóng: cột
+  `visibility_level` trông như biện pháp bảo mật nhưng không policy nào đọc; PK của
+  `ai_message_sources` chứa `chunk_id` nullable nên Postgres buộc mọi citation phải có chunk, khiến
+  trích dẫn ở mức Wiki là bất khả thi. Ngoài ra đóng over-grant INSERT/UPDATE/DELETE mà
+  `202607300001` cấp cho `authenticated` trên `document_chunks`/`ai_messages`/`ai_message_sources`.
+- **Kiểm tra:** Không có Supabase CLI/Docker trong môi trường này, nên đã dựng harness Postgres 16
+  cục bộ (pgvector 0.6.0 + pgTAP 1.3.2 + emulation cho auth/storage/vault/cron/net) và chạy
+  `db reset` thật: **31 migration + seed OK**, migration **idempotent** khi áp lại. pgTAP toàn bộ:
+  **26 file / 828 assertion**, so với baseline trước khi sửa (25 file / 727 assertion) chỉ khác đúng
+  một dòng — file mới `knowledge_foundation.sql` PASS 101 assertion; **không có hồi quy Phase 4**.
+  Frontend 136/136, lint 0 error / 3 warning cũ, build PASS. Deno không chạy được ở đây
+  (deno.land bị proxy chặn) và P5-01 không sửa TypeScript nào; CI là bằng chứng có thẩm quyền.
+
+## [2026-08-17] P5-01R — CI / PR Acceptance Closure
+
+- **Agent:** Claude Code
+- **Thay đổi:** Mở Draft PR #31 (`claude/phase-5-rag-audit-0sfm7y` → `master`) cho P5-01. CI thật
+  trên exact HEAD `1e3a42b` (run `32078710561`) **FAIL** — 3/101 assertion của
+  `knowledge_foundation.sql` (test 62–64) sai vì Supabase thật cấp
+  `REFERENCES`/`TRIGGER`/`TRUNCATE` cho `authenticated` theo mặc định nền tảng trên mọi bảng
+  `public`, điều mà harness cục bộ không mô phỏng và migration cũng chưa xử lý đúng cho ba bảng
+  legacy (`document_chunks`, `ai_messages`, `ai_message_sources`) — migration chỉ
+  `revoke insert, update, delete` thay vì `revoke all` + `grant select` (mẫu mà chính repo đã dùng
+  cho `audit_logs`/`email_queue`). Sửa 1 file, 1 commit (`45a588b`), push lại. CI thật trên exact
+  HEAD mới `45a588b` (run `32079167755`): **PASS**.
+- **File đã sửa:** `supabase/migrations/202608170001_phase_5_knowledge_foundation.sql` (13 dòng
+  thêm, 4 dòng sửa — chỉ đổi cách revoke/grant cho 3 bảng, không đổi ý nghĩa bảo mật).
+- **Lý do:** CI thật là bằng chứng có thẩm quyền mà môi trường sandbox không tái lập được chính
+  xác (default privilege của platform Supabase). Không sửa test để "cho qua" — sửa migration để
+  khớp đúng ý định ban đầu (SELECT-only), đúng mẫu đã có sẵn trong repo.
+- **Kiểm tra:** Exact-HEAD CI PASS trên run `32079167755` (SHA `45a588bc8a877a1f1f32b301d1858a2de18d925e`),
+  gồm `test-db` (migration reset + 26 file pgTAP 828 assertion, tất cả PASS trừ 1 file cũ đã biết
+  từ trước Phase 5) và `build` job. PR #31 `mergeable_state: clean`, 0 unresolved review thread.
+  Không merge (không được yêu cầu). `ask-ai`/`process-document` vẫn không deploy, không cấu hình,
+  không gọi.

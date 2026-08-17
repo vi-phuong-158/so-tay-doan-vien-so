@@ -5,6 +5,138 @@
 
 ---
 
+## [2026-08-17] P5-01: Trục ingestion tách hẳn khỏi trạng thái xuất bản Phase 4, cưỡng chế bằng trigger
+
+- **Quyết định:** `documents.ingestion_status` (+ `retrieval_enabled`) là trục riêng, không dùng lại
+  `documents.status`. Trigger `trg_documents_state_axis_separation` raise exception nếu một statement
+  đổi cả trục ingestion lẫn `documents.status`.
+- **Lý do:** Legacy `process-document` ghi thẳng `documents.status='PROCESSING'` rồi `'PENDING_REVIEW'`,
+  nên một tài liệu đang `PUBLISHED` bị kéo ngược và **biến mất khỏi mọi người dùng cuối** (vì
+  `can_access_document` yêu cầu `status='PUBLISHED'`) — im lặng, không audit. Một pipeline AI thất bại
+  không được phép thay đổi phạm vi hiển thị của văn bản.
+- **Đánh đổi:** Một RPC muốn đổi cả hai trục phải làm hai statement. Đây là cái giá có chủ đích: nó
+  buộc người viết phải nói rõ đang đổi trục nào.
+
+## [2026-08-17] P5-01: `document_chunks` tiến hóa tại chỗ, không tạo bảng evidence song song
+
+- **Quyết định:** Giữ bảng `document_chunks`, đổi ngữ nghĩa sang selective evidence (thêm
+  `document_version_id`, `evidence_kind`, `selected_by`, `selected_reason`, `locator`,
+  `approved_by/at`; xóa `visibility_level`; đổi unique key). Không tạo `knowledge_evidence` mới.
+- **Lý do:** Bảng ở 0 hàng nên tiến hóa không tốn migration dữ liệu, còn tạo bảng song song sẽ để lại
+  một bảng chết mà agent sau hợp lý mà tin là schema sống. `visibility_level` bị xóa vì **không policy
+  hay hàm nào từng đọc nó** — một cột trông như biện pháp bảo mật nhưng không phải thì tệ hơn không có.
+- **Đánh đổi:** Tên bảng `document_chunks` nay gợi sai ngữ nghĩa. Đã bù bằng `COMMENT ON` và Code
+  Graph; đổi tên gộp vào P5-05 cùng lần xóa legacy, để chỉ vỡ **một** lần thay vì hai.
+
+## [2026-08-17] P5-01: Giữ tạm `document_chunks.embedding` và `match_document_chunks` thay vì xóa theo D1
+
+- **Quyết định:** Hoãn việc xóa cột `embedding` và hàm `match_document_chunks()` sang P5-05, đánh dấu
+  DEPRECATED bằng `COMMENT ON` ngay bây giờ. `knowledge_embeddings` là đường chính thức từ P5-01.
+- **Lý do:** `supabase/tests/rls_acceptance.sql` (coverage đã nghiệm thu từ Phase 1/4) insert cột
+  `embedding` và gọi `match_document_chunks()` ở assertion 16/17. Xóa ngay = phá kiểm thử cũ để làm
+  migration pass, đúng thứ `CLAUDE.md` quy tắc cứng #7 cấm. P5-05 thay hàm retrieval và cập nhật test
+  trong cùng một branch.
+- **Đánh đổi:** Tồn tại hai chỗ chứa embedding cho tới P5-05. Rủi ro nhận thức, đã ghi vào
+  `docs/phase-5/08-p5-01-knowledge-schema.md` §10.
+
+## [2026-08-17] P5-01: Không siết CHECK cho `effect_status`, thêm cột `effect_state` riêng
+
+- **Quyết định:** `documents.effect_status` giữ nguyên là free text. Thêm `documents.effect_state`
+  có CHECK (`CON_HIEU_LUC`/`HET_HIEU_LUC`/`BI_THAY_THE`/`SUA_DOI_BO_SUNG`/`CHUA_XAC_DINH`) cho
+  retrieval policy Class E.
+- **Lý do:** `effect_status` được UI admin P4-02 ghi thẳng từ một `<input>` trơn
+  (`src/pages/AdminDocuments.jsx`), và `src/lib/documentDisplay.mjs` phân loại nó bằng so khớp chuỗi
+  tiếng Việt. Siết CHECK sẽ phá hành vi Phase 4 đã nghiệm thu — bị cấm bởi STRICT NON-GOALS của P5-01.
+  Đây là deviation có chủ đích so với `docs/phase-5/03-knowledge-data-model.md` §3.1.
+- **Đánh đổi:** Hai cột cùng nói về hiệu lực. Cột người đọc và cột máy đọc tách nhau, và chỉ cột máy
+  đọc được ràng buộc — chấp nhận được, nhưng P5-05 phải quyết ai điền `effect_state`.
+
+## [2026-08-17] P5-01: Cổng duyệt và phạm vi truy hồi cưỡng chế ở database, không ở code
+
+- **Quyết định:** Trigger `trg_knowledge_embeddings_publication_gate` chặn mọi hàng
+  `knowledge_embeddings` trỏ tới nội dung chưa `APPROVED`/`PUBLISHED`, hoặc tới tài liệu có
+  `retrieval_enabled = false`. `knowledge_embeddings` bật RLS **không có policy nào** và **không có
+  grant nào** cho `anon`/`authenticated`.
+- **Lý do:** Đặt cổng ở DB là khác biệt giữa "có quy trình duyệt" và "không thể bỏ qua bước duyệt":
+  không worker nào, dù viết thế nào, index được nội dung chưa duyệt. Với embeddings, từ chối bằng
+  cấu trúc (không policy + không grant) mạnh hơn từ chối bằng lọc sau khi đã lấy dữ liệu.
+- **Đánh đổi:** Retrieval buộc phải đi qua hàm `SECURITY DEFINER` ở P5-05; không có đường đọc trực
+  tiếp cho client, kể cả cho việc gỡ lỗi.
+
+## [2026-08-17] P5-01: Đóng grant ghi trên `document_chunks`, `ai_messages`, `ai_message_sources`
+
+- **Quyết định:** `revoke insert, update, delete` khỏi `authenticated` trên ba bảng này. Bảng Phase 5
+  mới: `revoke all` trước, rồi chỉ `grant select`. `knowledge_embeddings` không grant gì.
+  **Giữ nguyên** quyền ghi của `ai_conversations` và `ai_feedback`.
+- **Lý do:** Ba bảng kia mang bản ghi do server tạo. Client ghi được nghĩa là bịa được nội dung một
+  văn bản chính thức hoặc giả mạo câu trả lời của trợ lý — chính là lớp lỗi audit §3.1/§3.3. Grant
+  rộng chỉ được RLS chặn thì cách rò rỉ đúng một lần sửa nhầm. Ngược lại `ai_conversations`/
+  `ai_feedback` là dữ liệu của chính người dùng và policy `user_id = auth.uid()` đã đúng — gỡ đi là
+  bỏ khả năng thật mà không có gì thay thế (cùng lập luận P4-02 giữ grant `document_relations`).
+- **Đánh đổi:** Khi P5-06 viết lại `ask-ai`, mọi ghi phải qua service role hoặc RPC. Đó là ý đồ.
+
+## [2026-08-17] P5-00: Kiến trúc AI/RAG chuyển sang Wiki-first, embedding chọn lọc
+
+- **Quyết định:** Bác bỏ mô hình `upload → extract → chunk toàn bộ → embed toàn bộ → pgvector` của
+  spec ban đầu. Thay bằng ba lớp: **Canonical Source** (bất biến, có version + checksum) →
+  **Knowledge Wiki** (AI soạn, người duyệt, là đơn vị truy hồi chính) → **Evidence** (trích đoạn
+  chọn lọc), với embedding là **chỉ mục thứ cấp** chỉ sinh cho nội dung đã `PUBLISHED`.
+- **Lý do:** (1) 400 chunk/tài liệu không thể kiểm duyệt, khiến quyết định [2026-07-30]
+  *"AI chỉ dùng chunk APPROVED"* không thể thực thi trên thực tế. (2) Chunk thô không mang thông
+  tin hiệu lực/phiên bản nên vector search sẽ trả về văn bản đã hết hiệu lực — kiểu sai nguy hiểm
+  nhất với người dùng của dự án. (3) Chi phí embedding cao hơn 3–4 lần và context/câu cao hơn ~2
+  lần mà precision thấp hơn. (4) Câu hỏi phổ biến nhất có dạng định danh ("Công văn 123 quy định
+  gì") — đó là truy vấn structured của Postgres, không phải vector.
+- **Đánh đổi:** Recall thấp hơn ở phần tài liệu chưa được chọn làm evidence; người duyệt trở thành
+  nút cổ chai. Giảm thiểu: `zero-source answers` là metric hàng đầu, evidence bổ sung được theo nhu
+  cầu truy vấn thật, và hệ thống **từ chối** thay vì đoán.
+- **Chi tiết:** `docs/phase-5/02-ai-rag-architecture.md`, quyết định D1–D10 ở
+  `docs/phase-5/07-phase-5-implementation-plan.md`.
+
+## [2026-08-17] P5-00: Không fetch Internet lúc trả lời; nguồn công khai phải có snapshot
+
+- **Quyết định:** Không có đường nào từ `ask-ai` ra Internet. Tài liệu công khai (Class A) lưu URL
+  chính thức **và** bản chụp đã sanitize trong Storage private, cộng Wiki đã duyệt. Cập nhật qua
+  `pg_cron` staleness check (so `ETag`/`Last-Modified`/hash) — phát hiện thay đổi thì **hạ cấp** về
+  `NEEDS_REPROCESS`, không bao giờ tự sinh và tự publish Wiki mới.
+- **Lý do:** Runtime fetch đưa nội dung do bên thứ ba kiểm soát thẳng vào prompt mà không có bước
+  người duyệt — đây là kênh prompt injection trực tiếp, và một website bị chiếm trở thành đường tấn
+  công vào hệ thống. Ngoài ra không chứng minh được *"tại thời điểm đó hệ thống dựa trên nội dung
+  nào"*, trong khi đây là yêu cầu audit bắt buộc với một cơ quan.
+- **Đánh đổi:** Nội dung công khai trễ tối đa một chu kỳ check + thời gian duyệt. Chấp nhận được vì
+  văn bản quy phạm đổi theo tuần/tháng; UI hiển thị mốc đối chiếu kèm link nguồn.
+- **Ghi chú:** Điều này bác bỏ khuyến nghị Class A trong
+  `docs/phase-5/00-ai-rag-architecture-proposal.md` (merged qua PR #30) — file đó đã được gắn banner
+  "đã thay thế một phần".
+
+## [2026-08-17] P5-00: Human review gate cưỡng chế ở database, không ở Edge Function
+
+- **Quyết định:** Không đơn vị tri thức nào có embedding hoặc vào retrieval trước khi một người có
+  `can_manage_document(owner_organization_id)` publish nó. Cưỡng chế bằng **trigger trên
+  `knowledge_embeddings`**, không bằng điều kiện trong code. Service role **không** publish được;
+  transition yêu cầu `auth.uid()` hợp lệ và ghi `audit_logs`.
+- **Lý do:** Đặt gate ở DB là khác biệt giữa "có quy trình duyệt" và "không thể bỏ qua bước duyệt".
+  Đúng nguyên tắc ưu tiên ràng buộc DB/RLS thay vì code của `02-coding-rules.md`.
+- **Đánh đổi:** Người duyệt là nút cổ chai; đo bằng metric "Wiki approval time". Nếu nghẽn thì mở
+  rộng số người duyệt, **không** bỏ cửa duyệt.
+
+## [2026-08-17] P5-00: Hai Edge Function AI đang có trên master bị kết luận DROP
+
+- **Quyết định:** `supabase/functions/ask-ai/index.ts` và
+  `supabase/functions/process-document/index.ts` (tồn tại từ `9f01b37 chore: initial commit`, chưa
+  từng review/deploy/test) sẽ bị **xóa và viết lại**, không refactor tại chỗ. Việc xóa thuộc
+  P5-06/P5-02–03, **không** thực hiện trong P5-00.
+- **Lý do:** Mỗi file chứa ít nhất một lỗi *kiến trúc*, không chỉ lỗi cài đặt. `ask-ai` tin
+  `conversation_id` do client gửi trên đường service role ⇒ ghi được vào hội thoại người khác.
+  `process-document` dùng `requireGlobalRole` thay vì kiểm scope tổ chức ⇒ admin org A xử lý được
+  tài liệu org B; nhận `extracted_text` từ client và ghi dưới danh nghĩa văn bản chính thức ⇒ giả
+  mạo nội dung nguồn; ghi thẳng `documents.status` bỏ qua RPC + audit của Phase 4 ⇒ kéo được tài
+  liệu `PUBLISHED` về `PENDING_REVIEW` không dấu vết. Cả hai còn được viết dồn thành một dòng
+  ~4000 ký tự nên bản sửa sẽ không review được theo dòng.
+- **Đánh đổi:** Mất prompt tiếng Việt và mẫu gọi Gemini — đã ghi lại ở tầng thiết kế
+  (`docs/phase-5/05-retrieval-source-policy.md` PART E, `07-...` PART O) nên không mất tri thức.
+- **Chi tiết:** `docs/phase-5/01-existing-work-audit.md` §3.
+
 ## [2026-08-16] P4-04: Quiz chỉ ghi/chấm qua trusted RPC, answer key không nằm trong payload trước submit
 
 Khảo sát cho thấy schema năm bảng Quiz đã tồn tại. P4-04 giữ model đó, nhưng thay policy đọc quiz/

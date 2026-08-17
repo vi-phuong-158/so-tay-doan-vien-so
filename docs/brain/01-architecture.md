@@ -111,8 +111,8 @@ supabase/
 | `functions/finalize-campaign-template` | Đọc metadata thật từ Storage, chuẩn hóa tên, move template và đăng ký metadata | `reportAdminService` | `_shared/*`, service-role Storage, `register_report_campaign_template` |
 | `functions/export-report-status` | CSV UTF-8/BOM scoped, formula-neutralized, audit bắt buộc | `AdminReportDashboard` qua `reportAdminService` | dashboard RPC, `_shared/*`, `audit_logs` |
 | `functions/download-report-bundle` | ZIP latest submission/file trong scope, private Storage, giới hạn 100 file/50 MB, audit | `AdminReportDashboard` qua `reportAdminService` | dashboard RPC, service-role Storage, `fflate`, `_shared/*` |
-| `functions/ask-ai` | RAG: scope tài liệu → Gemini → chuẩn hóa nguồn → lưu lịch sử | client | `_shared/*`, `match_document_chunks` |
-| `functions/process-document` | Trích xuất → chunk → embedding → chờ duyệt | admin | `_shared/*`, Gemini |
+| `functions/ask-ai` | ⚠️ **KHUNG CHƯA REVIEW — P5-00 kết luận DROP.** Chưa từng deploy/chạy, 0 test. Có lỗi ghi xuyên hội thoại (không kiểm sở hữu `conversation_id` trên đường service role), không kiểm `account_status`, không quota/rate limit, không phòng thủ prompt injection. **Không dùng làm mẫu.** Viết lại ở P5-06. | (không ai gọi) | `_shared/*`, `match_document_chunks`, Gemini |
+| `functions/process-document` | ⚠️ **KHUNG CHƯA REVIEW — P5-00 kết luận DROP.** Chunk toàn văn + embed tất cả (kiến trúc đã bị bác bỏ). Kiểm quyền toàn cục thay vì theo scope tổ chức; nhận `extracted_text` từ client ghi dưới danh nghĩa văn bản chính thức; ghi thẳng `documents.status` bỏ qua RPC + `audit_logs` của Phase 4; chỉ đọc `.txt`; chắc chắn timeout. **Không dùng làm mẫu.** Thay bằng job pipeline ở P5-02/P5-03. | (không ai gọi) | `_shared/*`, Gemini |
 | `functions/send-reminder` / `process-email-queue` | Gọi reminder scan trusted / gửi email theo batch | `send-reminder`: trusted caller manual/external. `process-email-queue`: manual/external **và** `pg_cron` job `email_queue_worker` mỗi 10 phút qua `pg_net`+Vault (P3-08) | `_shared/*`, reminder RPC, email_queue |
 
 ### Luồng xử lý chính
@@ -336,11 +336,21 @@ AdminReportDashboard → reportAdminService → export-report-status / download-
                      → ZIP chỉ đọc bucket report-submissions-private, kiểm size/object/path/trùng tên
                      → audit actor/campaign/filter/count/bytes; trả file private với cache-control no-store
 
-# RAG hỏi AI
-Page trợ lý AI → invoke ask-ai → requireUser + quota → xác định scope tài liệu
-         → embedding câu hỏi → match_document_chunks (chỉ chunk APPROVED)
-         → Gemini → trả lời + nguồn → lưu ai_messages/ai_message_sources
+# RAG hỏi AI — CHƯA TỒN TẠI. Luồng dưới đây là KIẾN TRÚC MỤC TIÊU (P5-00), chưa implement.
+# Luồng cũ trong khung `ask-ai` (embedding câu hỏi → match_document_chunks → Gemini) đã bị bác bỏ.
+Câu hỏi → ask-ai (viết lại ở P5-06) → requireUser + account ACTIVE + quota
+     → (0) tính scope quyền TRONG Postgres bằng auth.uid()   ← trước mọi bước khác
+     → (1) phân loại ý định: số hiệu? điều/khoản? metadata? ngữ nghĩa?
+     → (2) exact/metadata search (trigram + btree + tsvector)   ← vector KHÔNG phải bước đầu
+     → (3) Wiki đã duyệt (full-text ∪ vector)
+     → (4) evidence vector, chỉ trong tài liệu đã lọt qua (2)/(3)
+     → (5) kiểm hiệu lực/phiên bản/ngưỡng; KHÔNG đủ nguồn ⇒ TỪ CHỐI, không gọi model sinh
+     → (6) sinh câu trả lời + nguồn → ai_messages/ai_message_sources (trỏ version cụ thể)
 ```
+
+Chi tiết và lý do: `docs/phase-5/02-ai-rag-architecture.md`,
+`docs/phase-5/05-retrieval-source-policy.md`. Bất biến bắt buộc:
+`RETRIEVAL AUTHORIZATION MUST HAPPEN BEFORE CONTEXT LEAVES SUPABASE`.
 
 ## Mô hình dữ liệu / API
 
@@ -349,6 +359,30 @@ Schema đầy đủ (~30 bảng) ở `docs/01-product-spec.md` mục 8. Nhóm ch
 `report_assignments`, `report_submissions` (versioned), `report_submission_files`,
 `report_status_history`), văn bản + RAG (`documents`, `document_chunks` có `embedding`),
 học tập/quiz, trợ lý AI, đổi mới sáng tạo, email, `audit_logs`.
+
+**Nhóm tri thức Phase 5 (P5-01, migration `202608170001`):** `document_versions` (bất biến,
+có checksum) → `document_sources` (file/URL/snapshot) → `knowledge_wikis` +
+`knowledge_wiki_versions` (bất biến sau khi duyệt, neo vào đúng một `document_version_id`) →
+`document_chunks` **nay là selective evidence** → `knowledge_embeddings` (tách riêng, có
+`embedding_model`/`embedding_dimension`, RLS bật và **không có policy nào** — chỉ trusted retrieval).
+Cộng `ingestion_jobs`/`ingestion_events` (nền tảng job, chưa có worker) và `ai_usage_quota`.
+Quyền của mọi bảng trên suy từ `can_access_document(document_id)` qua helper
+`can_manage_document_knowledge(uuid)`; **không có mô hình phân quyền thứ hai**.
+`documents.ingestion_status` là trục **tách hẳn** khỏi `documents.status` của Phase 4 — trigger
+`trg_documents_state_axis_separation` cấm hai trục đổi trong cùng một statement. Chi tiết:
+`docs/phase-5/08-p5-01-knowledge-schema.md`.
+
+**Lưu ý về nhóm AI/RAG:** `document_chunks` (có `embedding vector(768)`, index ivfflat),
+`ai_conversations`, `ai_messages`, `ai_message_sources`, `ai_feedback` và RPC
+`match_document_chunks` đã tồn tại từ `202607300001` nhưng **đang ở 0 hàng và chưa có pipeline
+nào ghi vào**. Phase 4 cố ý không đụng tới. **P5-01 đã thực hiện:** `document_chunks` thành evidence chọn lọc
+(`visibility_level` — cột chết không policy nào đọc — **đã xóa**; thêm `document_version_id`,
+`evidence_kind`, `selected_by`, `locator`); `ai_message_sources` **đã sửa PK** sang surrogate `id`
+(PK cũ chứa `chunk_id` nullable nên Postgres buộc mọi citation phải có chunk ⇒ không trích dẫn
+được ở mức Wiki/tài liệu). Cột `document_chunks.embedding` và `match_document_chunks()`
+**vẫn còn nhưng DEPRECATED**, chỉ vì `supabase/tests/rls_acceptance.sql` đã nghiệm thu còn dùng —
+P5-05 xóa chúng cùng bản cập nhật test. Mô hình đích:
+`docs/phase-5/03-knowledge-data-model.md`; hiện trạng: `docs/phase-5/08-p5-01-knowledge-schema.md`.
 
 RPC then chốt: `create_report_submission`, `create_report_submission_with_files` (expected-version overload),
 `create_report_assignments`, `review_report_assignment`, `get_report_dashboard`,

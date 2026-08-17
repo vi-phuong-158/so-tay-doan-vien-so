@@ -7,6 +7,39 @@
 
 ## Đang làm
 
+### P5-01 — Knowledge Schema + RLS
+- **Base:** P5-00 trên branch `claude/phase-5-rag-audit-0sfm7y`.
+- **Trạng thái:** `P5_01_PASS` (technical acceptance). Không production, không AI provider.
+- **Phạm vi:** migration `202608170001_phase_5_knowledge_foundation.sql` — 8 bảng mới
+  (`document_versions`, `document_sources`, `knowledge_wikis`, `knowledge_wiki_versions`,
+  `knowledge_embeddings`, `ingestion_jobs`, `ingestion_events`, `ai_usage_quota`), 5 cột mới trên
+  `documents`, refactor `document_chunks` thành selective evidence, sửa PK `ai_message_sources`,
+  7 trigger bất biến, helper `can_manage_document_knowledge`, RLS + least-privilege grants,
+  18 index. Test `supabase/tests/knowledge_foundation.sql` — 101 assertion.
+- **Bất biến then chốt:** `documents.ingestion_status` tách hẳn khỏi `documents.status` (trigger cấm
+  đổi cùng statement) — một ingestion thất bại **không** làm văn bản biến mất khỏi người dùng.
+- **Chưa làm (đúng scope):** extraction, Gemini, embedding, sinh Wiki, retrieval, ask-ai, UI.
+- **Báo cáo:** `docs/phase-5/08-p5-01-knowledge-schema.md`.
+- **Được phép làm tiếp:** chỉ **P5-02** (Ingestion Job Foundation).
+
+## Đã hoàn thành gần đây
+
+### P5-00 — AI/RAG Architecture & Existing Worktree Audit
+- **Base:** `master@343547cb5a81d5e1e69cea26a6a232c990e8c92b` (merge PR #30).
+- **Branch:** `claude/phase-5-rag-audit-0sfm7y`.
+- **Loại:** architecture + audit + decision. **Không** implementation. `NO_RUNTIME_CODE_CHANGED`.
+- **Trạng thái:** `P5_00_ARCHITECTURE_READY`.
+- **Phát hiện quan trọng:** worktree **sạch** — không có uncommitted Phase 5 work như task giả
+  định; phần đó đã được commit + merge qua PR #30 và **chỉ gồm một file tài liệu**. Code Phase 5
+  thật (`ask-ai`, `process-document`) đã nằm trên `master` từ `9f01b37 chore: initial commit`, chưa
+  từng review/test/deploy, và chứa 3 lỗi nghiêm trọng ⇒ kết luận **DROP** cả hai.
+- **Quyết định D1–D10:** `docs/phase-5/07-phase-5-implementation-plan.md` §4. Cốt lõi: KHÔNG
+  embedding toàn văn; Wiki đã duyệt là retrieval layer chính; KHÔNG runtime fetch Internet; human
+  review gate cưỡng chế ở DB.
+- **Báo cáo:** `docs/phase-5/01-existing-work-audit.md` → `07-phase-5-implementation-plan.md`.
+- **Được phép làm tiếp:** chỉ **P5-01** (Knowledge schema + RLS). Không task P5-0x nào khác được
+  bắt đầu trước khi P5-01 merge. **Đã hoàn thành — xem P5-01 ở trên.**
+
 ### P4-R — Phase 4 Runtime Readiness Closure
 - **Base:** fresh `origin/master@72b627a9c407f304f3bd3453fb0a00797fc7239b` (P4-06 merge).
 - **Branch:** `rehearsal/phase-4-runtime-readiness`.
@@ -149,10 +182,13 @@
 - **Ưu tiên:** Cao.
 
 ### Hoàn thiện Edge Functions còn khung
-- **Mô tả:** Rà soát và hoàn thiện `ask-ai`, `process-document`, email queue, export/ZIP, bài toán
-  đổi mới theo spec mục 11.
-- **Liên quan:** `supabase/functions/*`.
-- **Ưu tiên:** Trung bình (sau luồng báo cáo).
+- **Mô tả:** Rà soát bài toán đổi mới theo spec mục 11. Email queue và export/ZIP đã hoàn thành ở
+  Phase 2–3.
+- **⚠️ `ask-ai` và `process-document` KHÔNG thuộc mục này nữa.** P5-00 kết luận **DROP** cả hai
+  (3 lỗi nghiêm trọng + kiến trúc chunk-everything đã bị bác bỏ). Không "hoàn thiện" chúng — viết
+  lại theo `docs/phase-5/`. Xem `docs/phase-5/01-existing-work-audit.md` §3.
+- **Liên quan:** `supabase/functions/submit-innovation-problem`, `update-innovation-problem`.
+- **Ưu tiên:** Trung bình.
 
 ### Phase 3 — Done: P3-06 Final Acceptance & Merge PR #20
 - **Mô tả:** P3-06 technical CI và P3-07B live scheduler rehearsal đã PASS; PR #20 đã **merged**
