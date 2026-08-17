@@ -360,14 +360,29 @@ Schema đầy đủ (~30 bảng) ở `docs/01-product-spec.md` mục 8. Nhóm ch
 `report_status_history`), văn bản + RAG (`documents`, `document_chunks` có `embedding`),
 học tập/quiz, trợ lý AI, đổi mới sáng tạo, email, `audit_logs`.
 
+**Nhóm tri thức Phase 5 (P5-01, migration `202608170001`):** `document_versions` (bất biến,
+có checksum) → `document_sources` (file/URL/snapshot) → `knowledge_wikis` +
+`knowledge_wiki_versions` (bất biến sau khi duyệt, neo vào đúng một `document_version_id`) →
+`document_chunks` **nay là selective evidence** → `knowledge_embeddings` (tách riêng, có
+`embedding_model`/`embedding_dimension`, RLS bật và **không có policy nào** — chỉ trusted retrieval).
+Cộng `ingestion_jobs`/`ingestion_events` (nền tảng job, chưa có worker) và `ai_usage_quota`.
+Quyền của mọi bảng trên suy từ `can_access_document(document_id)` qua helper
+`can_manage_document_knowledge(uuid)`; **không có mô hình phân quyền thứ hai**.
+`documents.ingestion_status` là trục **tách hẳn** khỏi `documents.status` của Phase 4 — trigger
+`trg_documents_state_axis_separation` cấm hai trục đổi trong cùng một statement. Chi tiết:
+`docs/phase-5/08-p5-01-knowledge-schema.md`.
+
 **Lưu ý về nhóm AI/RAG:** `document_chunks` (có `embedding vector(768)`, index ivfflat),
 `ai_conversations`, `ai_messages`, `ai_message_sources`, `ai_feedback` và RPC
 `match_document_chunks` đã tồn tại từ `202607300001` nhưng **đang ở 0 hàng và chưa có pipeline
-nào ghi vào**. Phase 4 cố ý không đụng tới. P5-00 kết luận: `document_chunks` sẽ được
-REFACTOR thành evidence chọn lọc (bỏ `visibility_level` — cột chết không policy nào đọc; tách
-`embedding` sang bảng riêng để không khóa dimension); `ai_message_sources` phải sửa PK
-(`chunk_id` nullable nằm trong PK ⇒ Postgres cấm NULL ⇒ hiện không trích dẫn được ở mức
-Wiki/tài liệu). Mô hình đích: `docs/phase-5/03-knowledge-data-model.md`.
+nào ghi vào**. Phase 4 cố ý không đụng tới. **P5-01 đã thực hiện:** `document_chunks` thành evidence chọn lọc
+(`visibility_level` — cột chết không policy nào đọc — **đã xóa**; thêm `document_version_id`,
+`evidence_kind`, `selected_by`, `locator`); `ai_message_sources` **đã sửa PK** sang surrogate `id`
+(PK cũ chứa `chunk_id` nullable nên Postgres buộc mọi citation phải có chunk ⇒ không trích dẫn
+được ở mức Wiki/tài liệu). Cột `document_chunks.embedding` và `match_document_chunks()`
+**vẫn còn nhưng DEPRECATED**, chỉ vì `supabase/tests/rls_acceptance.sql` đã nghiệm thu còn dùng —
+P5-05 xóa chúng cùng bản cập nhật test. Mô hình đích:
+`docs/phase-5/03-knowledge-data-model.md`; hiện trạng: `docs/phase-5/08-p5-01-knowledge-schema.md`.
 
 RPC then chốt: `create_report_submission`, `create_report_submission_with_files` (expected-version overload),
 `create_report_assignments`, `review_report_assignment`, `get_report_dashboard`,

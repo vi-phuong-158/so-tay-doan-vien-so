@@ -7,6 +7,23 @@
 
 ## Đang làm
 
+### P5-01 — Knowledge Schema + RLS
+- **Base:** P5-00 trên branch `claude/phase-5-rag-audit-0sfm7y`.
+- **Trạng thái:** `P5_01_PASS` (technical acceptance). Không production, không AI provider.
+- **Phạm vi:** migration `202608170001_phase_5_knowledge_foundation.sql` — 8 bảng mới
+  (`document_versions`, `document_sources`, `knowledge_wikis`, `knowledge_wiki_versions`,
+  `knowledge_embeddings`, `ingestion_jobs`, `ingestion_events`, `ai_usage_quota`), 5 cột mới trên
+  `documents`, refactor `document_chunks` thành selective evidence, sửa PK `ai_message_sources`,
+  7 trigger bất biến, helper `can_manage_document_knowledge`, RLS + least-privilege grants,
+  18 index. Test `supabase/tests/knowledge_foundation.sql` — 101 assertion.
+- **Bất biến then chốt:** `documents.ingestion_status` tách hẳn khỏi `documents.status` (trigger cấm
+  đổi cùng statement) — một ingestion thất bại **không** làm văn bản biến mất khỏi người dùng.
+- **Chưa làm (đúng scope):** extraction, Gemini, embedding, sinh Wiki, retrieval, ask-ai, UI.
+- **Báo cáo:** `docs/phase-5/08-p5-01-knowledge-schema.md`.
+- **Được phép làm tiếp:** chỉ **P5-02** (Ingestion Job Foundation).
+
+## Đã hoàn thành gần đây
+
 ### P5-00 — AI/RAG Architecture & Existing Worktree Audit
 - **Base:** `master@343547cb5a81d5e1e69cea26a6a232c990e8c92b` (merge PR #30).
 - **Branch:** `claude/phase-5-rag-audit-0sfm7y`.
@@ -21,9 +38,7 @@
   review gate cưỡng chế ở DB.
 - **Báo cáo:** `docs/phase-5/01-existing-work-audit.md` → `07-phase-5-implementation-plan.md`.
 - **Được phép làm tiếp:** chỉ **P5-01** (Knowledge schema + RLS). Không task P5-0x nào khác được
-  bắt đầu trước khi P5-01 merge.
-
-## Đã hoàn thành gần đây
+  bắt đầu trước khi P5-01 merge. **Đã hoàn thành — xem P5-01 ở trên.**
 
 ### P4-R — Phase 4 Runtime Readiness Closure
 - **Base:** fresh `origin/master@72b627a9c407f304f3bd3453fb0a00797fc7239b` (P4-06 merge).

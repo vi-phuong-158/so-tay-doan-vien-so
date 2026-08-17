@@ -5,6 +5,76 @@
 
 ---
 
+## [2026-08-17] P5-01: Trục ingestion tách hẳn khỏi trạng thái xuất bản Phase 4, cưỡng chế bằng trigger
+
+- **Quyết định:** `documents.ingestion_status` (+ `retrieval_enabled`) là trục riêng, không dùng lại
+  `documents.status`. Trigger `trg_documents_state_axis_separation` raise exception nếu một statement
+  đổi cả trục ingestion lẫn `documents.status`.
+- **Lý do:** Legacy `process-document` ghi thẳng `documents.status='PROCESSING'` rồi `'PENDING_REVIEW'`,
+  nên một tài liệu đang `PUBLISHED` bị kéo ngược và **biến mất khỏi mọi người dùng cuối** (vì
+  `can_access_document` yêu cầu `status='PUBLISHED'`) — im lặng, không audit. Một pipeline AI thất bại
+  không được phép thay đổi phạm vi hiển thị của văn bản.
+- **Đánh đổi:** Một RPC muốn đổi cả hai trục phải làm hai statement. Đây là cái giá có chủ đích: nó
+  buộc người viết phải nói rõ đang đổi trục nào.
+
+## [2026-08-17] P5-01: `document_chunks` tiến hóa tại chỗ, không tạo bảng evidence song song
+
+- **Quyết định:** Giữ bảng `document_chunks`, đổi ngữ nghĩa sang selective evidence (thêm
+  `document_version_id`, `evidence_kind`, `selected_by`, `selected_reason`, `locator`,
+  `approved_by/at`; xóa `visibility_level`; đổi unique key). Không tạo `knowledge_evidence` mới.
+- **Lý do:** Bảng ở 0 hàng nên tiến hóa không tốn migration dữ liệu, còn tạo bảng song song sẽ để lại
+  một bảng chết mà agent sau hợp lý mà tin là schema sống. `visibility_level` bị xóa vì **không policy
+  hay hàm nào từng đọc nó** — một cột trông như biện pháp bảo mật nhưng không phải thì tệ hơn không có.
+- **Đánh đổi:** Tên bảng `document_chunks` nay gợi sai ngữ nghĩa. Đã bù bằng `COMMENT ON` và Code
+  Graph; đổi tên gộp vào P5-05 cùng lần xóa legacy, để chỉ vỡ **một** lần thay vì hai.
+
+## [2026-08-17] P5-01: Giữ tạm `document_chunks.embedding` và `match_document_chunks` thay vì xóa theo D1
+
+- **Quyết định:** Hoãn việc xóa cột `embedding` và hàm `match_document_chunks()` sang P5-05, đánh dấu
+  DEPRECATED bằng `COMMENT ON` ngay bây giờ. `knowledge_embeddings` là đường chính thức từ P5-01.
+- **Lý do:** `supabase/tests/rls_acceptance.sql` (coverage đã nghiệm thu từ Phase 1/4) insert cột
+  `embedding` và gọi `match_document_chunks()` ở assertion 16/17. Xóa ngay = phá kiểm thử cũ để làm
+  migration pass, đúng thứ `CLAUDE.md` quy tắc cứng #7 cấm. P5-05 thay hàm retrieval và cập nhật test
+  trong cùng một branch.
+- **Đánh đổi:** Tồn tại hai chỗ chứa embedding cho tới P5-05. Rủi ro nhận thức, đã ghi vào
+  `docs/phase-5/08-p5-01-knowledge-schema.md` §10.
+
+## [2026-08-17] P5-01: Không siết CHECK cho `effect_status`, thêm cột `effect_state` riêng
+
+- **Quyết định:** `documents.effect_status` giữ nguyên là free text. Thêm `documents.effect_state`
+  có CHECK (`CON_HIEU_LUC`/`HET_HIEU_LUC`/`BI_THAY_THE`/`SUA_DOI_BO_SUNG`/`CHUA_XAC_DINH`) cho
+  retrieval policy Class E.
+- **Lý do:** `effect_status` được UI admin P4-02 ghi thẳng từ một `<input>` trơn
+  (`src/pages/AdminDocuments.jsx`), và `src/lib/documentDisplay.mjs` phân loại nó bằng so khớp chuỗi
+  tiếng Việt. Siết CHECK sẽ phá hành vi Phase 4 đã nghiệm thu — bị cấm bởi STRICT NON-GOALS của P5-01.
+  Đây là deviation có chủ đích so với `docs/phase-5/03-knowledge-data-model.md` §3.1.
+- **Đánh đổi:** Hai cột cùng nói về hiệu lực. Cột người đọc và cột máy đọc tách nhau, và chỉ cột máy
+  đọc được ràng buộc — chấp nhận được, nhưng P5-05 phải quyết ai điền `effect_state`.
+
+## [2026-08-17] P5-01: Cổng duyệt và phạm vi truy hồi cưỡng chế ở database, không ở code
+
+- **Quyết định:** Trigger `trg_knowledge_embeddings_publication_gate` chặn mọi hàng
+  `knowledge_embeddings` trỏ tới nội dung chưa `APPROVED`/`PUBLISHED`, hoặc tới tài liệu có
+  `retrieval_enabled = false`. `knowledge_embeddings` bật RLS **không có policy nào** và **không có
+  grant nào** cho `anon`/`authenticated`.
+- **Lý do:** Đặt cổng ở DB là khác biệt giữa "có quy trình duyệt" và "không thể bỏ qua bước duyệt":
+  không worker nào, dù viết thế nào, index được nội dung chưa duyệt. Với embeddings, từ chối bằng
+  cấu trúc (không policy + không grant) mạnh hơn từ chối bằng lọc sau khi đã lấy dữ liệu.
+- **Đánh đổi:** Retrieval buộc phải đi qua hàm `SECURITY DEFINER` ở P5-05; không có đường đọc trực
+  tiếp cho client, kể cả cho việc gỡ lỗi.
+
+## [2026-08-17] P5-01: Đóng grant ghi trên `document_chunks`, `ai_messages`, `ai_message_sources`
+
+- **Quyết định:** `revoke insert, update, delete` khỏi `authenticated` trên ba bảng này. Bảng Phase 5
+  mới: `revoke all` trước, rồi chỉ `grant select`. `knowledge_embeddings` không grant gì.
+  **Giữ nguyên** quyền ghi của `ai_conversations` và `ai_feedback`.
+- **Lý do:** Ba bảng kia mang bản ghi do server tạo. Client ghi được nghĩa là bịa được nội dung một
+  văn bản chính thức hoặc giả mạo câu trả lời của trợ lý — chính là lớp lỗi audit §3.1/§3.3. Grant
+  rộng chỉ được RLS chặn thì cách rò rỉ đúng một lần sửa nhầm. Ngược lại `ai_conversations`/
+  `ai_feedback` là dữ liệu của chính người dùng và policy `user_id = auth.uid()` đã đúng — gỡ đi là
+  bỏ khả năng thật mà không có gì thay thế (cùng lập luận P4-02 giữ grant `document_relations`).
+- **Đánh đổi:** Khi P5-06 viết lại `ask-ai`, mọi ghi phải qua service role hoặc RPC. Đó là ý đồ.
+
 ## [2026-08-17] P5-00: Kiến trúc AI/RAG chuyển sang Wiki-first, embedding chọn lọc
 
 - **Quyết định:** Bác bỏ mô hình `upload → extract → chunk toàn bộ → embed toàn bộ → pgvector` của
