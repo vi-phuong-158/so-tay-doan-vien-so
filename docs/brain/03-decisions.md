@@ -5,6 +5,68 @@
 
 ---
 
+## [2026-08-17] P5-00: Kiến trúc AI/RAG chuyển sang Wiki-first, embedding chọn lọc
+
+- **Quyết định:** Bác bỏ mô hình `upload → extract → chunk toàn bộ → embed toàn bộ → pgvector` của
+  spec ban đầu. Thay bằng ba lớp: **Canonical Source** (bất biến, có version + checksum) →
+  **Knowledge Wiki** (AI soạn, người duyệt, là đơn vị truy hồi chính) → **Evidence** (trích đoạn
+  chọn lọc), với embedding là **chỉ mục thứ cấp** chỉ sinh cho nội dung đã `PUBLISHED`.
+- **Lý do:** (1) 400 chunk/tài liệu không thể kiểm duyệt, khiến quyết định [2026-07-30]
+  *"AI chỉ dùng chunk APPROVED"* không thể thực thi trên thực tế. (2) Chunk thô không mang thông
+  tin hiệu lực/phiên bản nên vector search sẽ trả về văn bản đã hết hiệu lực — kiểu sai nguy hiểm
+  nhất với người dùng của dự án. (3) Chi phí embedding cao hơn 3–4 lần và context/câu cao hơn ~2
+  lần mà precision thấp hơn. (4) Câu hỏi phổ biến nhất có dạng định danh ("Công văn 123 quy định
+  gì") — đó là truy vấn structured của Postgres, không phải vector.
+- **Đánh đổi:** Recall thấp hơn ở phần tài liệu chưa được chọn làm evidence; người duyệt trở thành
+  nút cổ chai. Giảm thiểu: `zero-source answers` là metric hàng đầu, evidence bổ sung được theo nhu
+  cầu truy vấn thật, và hệ thống **từ chối** thay vì đoán.
+- **Chi tiết:** `docs/phase-5/02-ai-rag-architecture.md`, quyết định D1–D10 ở
+  `docs/phase-5/07-phase-5-implementation-plan.md`.
+
+## [2026-08-17] P5-00: Không fetch Internet lúc trả lời; nguồn công khai phải có snapshot
+
+- **Quyết định:** Không có đường nào từ `ask-ai` ra Internet. Tài liệu công khai (Class A) lưu URL
+  chính thức **và** bản chụp đã sanitize trong Storage private, cộng Wiki đã duyệt. Cập nhật qua
+  `pg_cron` staleness check (so `ETag`/`Last-Modified`/hash) — phát hiện thay đổi thì **hạ cấp** về
+  `NEEDS_REPROCESS`, không bao giờ tự sinh và tự publish Wiki mới.
+- **Lý do:** Runtime fetch đưa nội dung do bên thứ ba kiểm soát thẳng vào prompt mà không có bước
+  người duyệt — đây là kênh prompt injection trực tiếp, và một website bị chiếm trở thành đường tấn
+  công vào hệ thống. Ngoài ra không chứng minh được *"tại thời điểm đó hệ thống dựa trên nội dung
+  nào"*, trong khi đây là yêu cầu audit bắt buộc với một cơ quan.
+- **Đánh đổi:** Nội dung công khai trễ tối đa một chu kỳ check + thời gian duyệt. Chấp nhận được vì
+  văn bản quy phạm đổi theo tuần/tháng; UI hiển thị mốc đối chiếu kèm link nguồn.
+- **Ghi chú:** Điều này bác bỏ khuyến nghị Class A trong
+  `docs/phase-5/00-ai-rag-architecture-proposal.md` (merged qua PR #30) — file đó đã được gắn banner
+  "đã thay thế một phần".
+
+## [2026-08-17] P5-00: Human review gate cưỡng chế ở database, không ở Edge Function
+
+- **Quyết định:** Không đơn vị tri thức nào có embedding hoặc vào retrieval trước khi một người có
+  `can_manage_document(owner_organization_id)` publish nó. Cưỡng chế bằng **trigger trên
+  `knowledge_embeddings`**, không bằng điều kiện trong code. Service role **không** publish được;
+  transition yêu cầu `auth.uid()` hợp lệ và ghi `audit_logs`.
+- **Lý do:** Đặt gate ở DB là khác biệt giữa "có quy trình duyệt" và "không thể bỏ qua bước duyệt".
+  Đúng nguyên tắc ưu tiên ràng buộc DB/RLS thay vì code của `02-coding-rules.md`.
+- **Đánh đổi:** Người duyệt là nút cổ chai; đo bằng metric "Wiki approval time". Nếu nghẽn thì mở
+  rộng số người duyệt, **không** bỏ cửa duyệt.
+
+## [2026-08-17] P5-00: Hai Edge Function AI đang có trên master bị kết luận DROP
+
+- **Quyết định:** `supabase/functions/ask-ai/index.ts` và
+  `supabase/functions/process-document/index.ts` (tồn tại từ `9f01b37 chore: initial commit`, chưa
+  từng review/deploy/test) sẽ bị **xóa và viết lại**, không refactor tại chỗ. Việc xóa thuộc
+  P5-06/P5-02–03, **không** thực hiện trong P5-00.
+- **Lý do:** Mỗi file chứa ít nhất một lỗi *kiến trúc*, không chỉ lỗi cài đặt. `ask-ai` tin
+  `conversation_id` do client gửi trên đường service role ⇒ ghi được vào hội thoại người khác.
+  `process-document` dùng `requireGlobalRole` thay vì kiểm scope tổ chức ⇒ admin org A xử lý được
+  tài liệu org B; nhận `extracted_text` từ client và ghi dưới danh nghĩa văn bản chính thức ⇒ giả
+  mạo nội dung nguồn; ghi thẳng `documents.status` bỏ qua RPC + audit của Phase 4 ⇒ kéo được tài
+  liệu `PUBLISHED` về `PENDING_REVIEW` không dấu vết. Cả hai còn được viết dồn thành một dòng
+  ~4000 ký tự nên bản sửa sẽ không review được theo dòng.
+- **Đánh đổi:** Mất prompt tiếng Việt và mẫu gọi Gemini — đã ghi lại ở tầng thiết kế
+  (`docs/phase-5/05-retrieval-source-policy.md` PART E, `07-...` PART O) nên không mất tri thức.
+- **Chi tiết:** `docs/phase-5/01-existing-work-audit.md` §3.
+
 ## [2026-08-16] P4-04: Quiz chỉ ghi/chấm qua trusted RPC, answer key không nằm trong payload trước submit
 
 Khảo sát cho thấy schema năm bảng Quiz đã tồn tại. P4-04 giữ model đó, nhưng thay policy đọc quiz/

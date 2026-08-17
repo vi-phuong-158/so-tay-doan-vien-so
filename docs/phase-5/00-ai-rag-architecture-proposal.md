@@ -1,5 +1,24 @@
 # P5-00 — AI/RAG Architecture Proposal (read-only, not implemented)
 
+> **⚠️ ĐÃ ĐƯỢC THAY THẾ MỘT PHẦN — đọc kèm `02-ai-rag-architecture.md` trở đi.**
+>
+> Tài liệu này là bản đề xuất đầu tiên của P5-00 (merged qua PR #30, `ecb5dbf`). Định hướng tổng
+> thể — Wiki-first, embedding chọn lọc, human review, Option C — **được giữ nguyên và xác nhận**.
+>
+> Hai điểm **bị bác bỏ** bởi vòng audit sau, vì lý do bảo mật:
+>
+> 1. **Class A không được fetch/verify canonical source tại answer time.** Runtime fetch đưa nội
+>    dung do bên thứ ba kiểm soát vào prompt mà không qua người duyệt, và làm mất khả năng chứng
+>    minh hệ thống đã đọc gì. Thay bằng: URL + **snapshot bắt buộc** + Wiki đã duyệt, cập nhật qua
+>    `pg_cron` staleness check. Xem `05-retrieval-source-policy.md` PART F và quyết định **D6**.
+> 2. **Không dùng `document_chunks` nguyên trạng làm nơi chứa embedding.** Xem **D1** và
+>    `03-knowledge-data-model.md` §5.
+>
+> Bản đề xuất này cũng chưa audit code Phase 5 đang có trên `master` (`ask-ai`,
+> `process-document`) — phần đó ở `01-existing-work-audit.md`, và kết luận là **DROP** cả hai.
+> Chỉ số task P5-0x trong tài liệu này đã được đánh lại ở `07-phase-5-implementation-plan.md`.
+
+
 ## Status
 
 **PROPOSAL ONLY.** No migration, no Edge Function, no embedding, no AI API call, and no vector

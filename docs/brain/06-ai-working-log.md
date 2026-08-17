@@ -886,3 +886,30 @@
   `69096639eb6c88e2d5a51e65045844e4f8c15501`: pgTAP `Files=25, Tests=727`, Deno `42 passed`,
   frontend gates and Vercel pass. Final verdict is
   `PHASE_4_TECHNICAL_ACCEPTANCE_PASS_RUNTIME_GATES_PENDING`; P4-02R/P4-04R2 remain pending.
+
+## [2026-08-17] P5-00 — AI/RAG Architecture & Existing Worktree Audit
+
+- **Agent:** Claude Code
+- **Thay đổi:** Task kiến trúc/audit, không sửa code runtime. (1) Audit toàn bộ hiện trạng Phase 5:
+  ghi nhận worktree **sạch** — không có uncommitted work như task giả định; phần đó đã merge qua
+  PR #30 và chỉ là một file docs. Phát hiện code Phase 5 thật (`ask-ai`, `process-document`) đã nằm
+  trên `master` từ initial commit, chưa từng review, và tìm ra 10 vấn đề trong đó 3 nghiêm trọng:
+  ghi xuyên hội thoại người khác qua service role, privilege escalation xuyên tổ chức, giả mạo nội
+  dung nguồn. (2) Chốt kiến trúc ba lớp Canonical Source → Wiki đã duyệt → Evidence chọn lọc, thay
+  cho chunk-everything. (3) Trả lời D1–D10. (4) Chia Phase 5 thành P5-01…P5-10 có acceptance gate.
+- **File đã sửa:**
+  - Tạo: `docs/phase-5/01-existing-work-audit.md`, `02-ai-rag-architecture.md`,
+    `03-knowledge-data-model.md`, `04-ingestion-and-review-workflow.md`,
+    `05-retrieval-source-policy.md`, `06-security-threat-model.md`,
+    `07-phase-5-implementation-plan.md`
+  - Sửa: `docs/phase-5/00-ai-rag-architecture-proposal.md` (banner "đã thay thế một phần"),
+    `docs/brain/01-architecture.md` (Code Graph + luồng RAG), `docs/brain/03-decisions.md`
+    (4 quyết định mới), `docs/brain/04-current-tasks.md`, `docs/08-working-log.md`
+- **Lý do:** Mô hình chunk-everything khiến quyết định đã chốt [2026-07-30] *"AI chỉ dùng chunk
+  APPROVED"* không thể thực thi (không ai duyệt nổi 400 chunk/tài liệu), và chunk thô không mang
+  thông tin hiệu lực nên vector search sẽ trả về văn bản đã hết hiệu lực. Ngoài ra Code Graph đang
+  mô tả `ask-ai`/`process-document` như thành phần bình thường, khiến agent sau có thể dùng chúng
+  làm mẫu — Code Graph lỗi thời nguy hiểm hơn không có.
+- **Kiểm tra:** `NO_RUNTIME_CODE_CHANGED` — không file nào trong `src/`, `supabase/` hay
+  `package.json` bị sửa. Xác minh bằng `git diff --stat` (chỉ có `docs/`). Vẫn chạy
+  `npm run lint`, `npm test`, `npm run build` để chứng minh baseline không bị ảnh hưởng.
