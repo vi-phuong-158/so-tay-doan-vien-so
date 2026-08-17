@@ -7,13 +7,21 @@
 
 ## Đang làm
 
-### P4-06 — Phase 4 Integrated Final Acceptance
+### P4-R — Phase 4 Runtime Readiness Closure
+- **Base:** fresh `origin/master@72b627a9c407f304f3bd3453fb0a00797fc7239b` (P4-06 merge).
+- **Branch:** `rehearsal/phase-4-runtime-readiness`.
+- **Trạng thái:** `PHASE_4_RUNTIME_GATES_PASSED`. P4-02R và P4-04R2 cả hai đã PASS bằng actor thật
+  qua HTTP thật trên project rehearsal `znexculhbdjiflkczpyu`. Không phải production-ready — xem
+  `docs/phase-4/07-runtime-readiness-closure.md`.
+- **Report:** `docs/phase-4/07-runtime-readiness-closure.md`.
+
+## Đã hoàn thành gần đây
+
+### P4-06 — Phase 4 Integrated Final Acceptance (merged)
 - **Base:** fresh `origin/master@3761dcc1be4fd6aebc1e91e78426076feead5e31`, merge of P4-05 PR #27.
-- **Branch:** `audit/phase-4-final-acceptance`.
-- **Trạng thái:** `PHASE_4_TECHNICAL_ACCEPTANCE_PASS_RUNTIME_GATES_PENDING`. Exact-head CI
-  `31960895746` is green on `69096639eb6c88e2d5a51e65045844e4f8c15501` (pgTAP `25/727`, Deno
-  `42 passed`, frontend/Vercel pass). P4-02R and P4-04R2 remain pending and production remains
-  not ready. Do not merge this PR.
+- **Trạng thái:** `PHASE_4_TECHNICAL_ACCEPTANCE_PASS_RUNTIME_GATES_PENDING` tại thời điểm merge.
+  PR #28 merged vào `master@72b627a9c407f304f3bd3453fb0a00797fc7239b`, exact-head CI `31961352441`
+  PASS. P4-02R/P4-04R2 sau đó đã đóng bởi P4-R (xem trên).
 - **Report:** `docs/phase-4/06-phase-4-final-acceptance.md`.
 
 ### P4-05 — Learning & Quiz Admin Workflow (merged)
@@ -27,9 +35,10 @@
 - **Routes:** `/admin/chuyen-de`, `/admin/chuyen-de/:topicId`,
   `/admin/chuyen-de/:topicId/trac-nghiem/:quizId`.
 
-### P4-04R2 — Quiz two-session concurrency rehearsal (PENDING)
-- **Trạng thái:** **PENDING** — chưa thực hiện real two-session concurrency. CI/pgTAP structural
-  advisory-lock coverage không được ghi nhận thay cho gate này.
+### P4-04R2 — Quiz two-session concurrency rehearsal (PASS)
+- **Trạng thái:** **PASS** — real two-session concurrency đã chạy (1 lần + 10 vòng stress + edge
+  case max_attempts), không duplicate attempt, không bypass max_attempts. Chi tiết:
+  `docs/phase-4/07-runtime-readiness-closure.md`.
 
 ### P4-04 — Quiz Engine & Attempts (merged)
 - **Base/merge:** P4-03 `master@6b1960a`; merged via PR #26 at
@@ -47,9 +56,9 @@
 - **Giới hạn:** Không AI/RAG, không leaderboard/gamification, không Production. Chi tiết:
   `docs/phase-4/04-quiz-engine-attempts.md`.
 
-### P4-02R — Documents Storage Actor-Based Runtime Rehearsal (PENDING)
-- **Trạng thái:** **PENDING** — chưa bắt đầu. Đây là **cổng production-readiness**, **không chặn**
-  P4-03 hay các task Phase 4 sau.
+### P4-02R — Documents Storage Actor-Based Runtime Rehearsal (PASS)
+- **Trạng thái:** **PASS** — actor thật (admin/member 2 org + suspended) qua HTTP thật, scenario
+  A-I đều chạy trên project rehearsal. Chi tiết: `docs/phase-4/07-runtime-readiness-closure.md`.
 - **Vì sao tồn tại:** P4-02 đã verify runtime được schema parity, bucket private, policy predicate
   và fail-closed path; nhưng **không** chạy được kịch bản theo actor thật vì tạo
   `auth.users`/`profiles`/`user_roles` trong project live bị permission control của môi trường chặn

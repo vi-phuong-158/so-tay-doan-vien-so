@@ -2,7 +2,9 @@
 
 ## Status
 
-**PENDING.** Not started, not scheduled by P4-02.
+**PASS.** Executed on `rehearsal/phase-4-runtime-readiness` with real authenticated actor sessions
+against the non-production rehearsal project. Full scenario-by-scenario evidence:
+`docs/phase-4/07-runtime-readiness-closure.md`.
 
 ## What this is
 
