@@ -1,5 +1,31 @@
 # 06 — AI Working Log
 
+## [2026-08-17] P4-06 merge + P4-R — Runtime readiness closure (P4-02R, P4-04R2)
+
+- **Agent:** Claude Code
+- **Thay đổi:**
+  1. Reverified PR #28 (P4-06) at exact HEAD `3bf6914`: CI green (`31961352441`), diff docs/tests
+     only, no unresolved review threads, no secret, no Phase 5 content, doc correctly states
+     `NOT_PRODUCTION_READY` with both runtime gates pending. Marked ready, merged into `master`
+     (merge commit `72b627a9c407f304f3bd3453fb0a00797fc7239b`).
+  2. Created `rehearsal/phase-4-runtime-readiness` from fresh master. Brought rehearsal project
+     `znexculhbdjiflkczpyu` to migration parity (applied `202608160006`, previously missing).
+     Provisioned the two missing Org B test actors (`p4r-admin-b`, `p4r-member-b`); reused
+     pre-existing Org A/suspended actors from earlier rehearsals (`supabase/seed.sql` pattern).
+  3. Executed P4-02R (Storage scenarios A–I) and P4-04R2 (quiz concurrency: 1 simultaneous test +
+     10-round stress + max-attempts edge + DB integrity check) with real authenticated HTTP calls
+     against the rehearsal project. Both gates **PASS**. One non-security observation recorded
+     (Storage bulk-remove endpoint returns 404 for objects the caller owns; single-object DELETE
+     works) — not treated as a fix-now defect; app's own cleanup is already best-effort by design.
+     All rehearsal fixtures/objects cleaned up after evidence capture.
+- **File đã sửa/tạo:** `docs/phase-4/07-runtime-readiness-closure.md` (new),
+  `docs/phase-4/02R-documents-storage-runtime-rehearsal.md`, `docs/brain/04-current-tasks.md`,
+  `docs/phase-5/00-ai-rag-architecture-proposal.md` (new, proposal only — no implementation).
+- **Lý do:** Đóng hai runtime-readiness gate còn treo từ P4-02/P4-06 trước khi chuẩn bị Phase 5.
+- **Kiểm tra:** Xem bảng scenario/test kết quả trong `docs/phase-4/07-runtime-readiness-closure.md`;
+  không có thay đổi code/migration nội dung trong repo (migration `202608160006` đã có sẵn trên
+  `master`, chỉ được apply lên project rehearsal qua Supabase MCP).
+
 ## [2026-08-16] P4-04 — Quiz Engine & Attempts takeover and vertical slice
 
 - **Agent:** Codex
