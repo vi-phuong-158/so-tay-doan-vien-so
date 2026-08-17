@@ -943,3 +943,26 @@
   một dòng — file mới `knowledge_foundation.sql` PASS 101 assertion; **không có hồi quy Phase 4**.
   Frontend 136/136, lint 0 error / 3 warning cũ, build PASS. Deno không chạy được ở đây
   (deno.land bị proxy chặn) và P5-01 không sửa TypeScript nào; CI là bằng chứng có thẩm quyền.
+
+## [2026-08-17] P5-01R — CI / PR Acceptance Closure
+
+- **Agent:** Claude Code
+- **Thay đổi:** Mở Draft PR #31 (`claude/phase-5-rag-audit-0sfm7y` → `master`) cho P5-01. CI thật
+  trên exact HEAD `1e3a42b` (run `32078710561`) **FAIL** — 3/101 assertion của
+  `knowledge_foundation.sql` (test 62–64) sai vì Supabase thật cấp
+  `REFERENCES`/`TRIGGER`/`TRUNCATE` cho `authenticated` theo mặc định nền tảng trên mọi bảng
+  `public`, điều mà harness cục bộ không mô phỏng và migration cũng chưa xử lý đúng cho ba bảng
+  legacy (`document_chunks`, `ai_messages`, `ai_message_sources`) — migration chỉ
+  `revoke insert, update, delete` thay vì `revoke all` + `grant select` (mẫu mà chính repo đã dùng
+  cho `audit_logs`/`email_queue`). Sửa 1 file, 1 commit (`45a588b`), push lại. CI thật trên exact
+  HEAD mới `45a588b` (run `32079167755`): **PASS**.
+- **File đã sửa:** `supabase/migrations/202608170001_phase_5_knowledge_foundation.sql` (13 dòng
+  thêm, 4 dòng sửa — chỉ đổi cách revoke/grant cho 3 bảng, không đổi ý nghĩa bảo mật).
+- **Lý do:** CI thật là bằng chứng có thẩm quyền mà môi trường sandbox không tái lập được chính
+  xác (default privilege của platform Supabase). Không sửa test để "cho qua" — sửa migration để
+  khớp đúng ý định ban đầu (SELECT-only), đúng mẫu đã có sẵn trong repo.
+- **Kiểm tra:** Exact-HEAD CI PASS trên run `32079167755` (SHA `45a588bc8a877a1f1f32b301d1858a2de18d925e`),
+  gồm `test-db` (migration reset + 26 file pgTAP 828 assertion, tất cả PASS trừ 1 file cũ đã biết
+  từ trước Phase 5) và `build` job. PR #31 `mergeable_state: clean`, 0 unresolved review thread.
+  Không merge (không được yêu cầu). `ask-ai`/`process-document` vẫn không deploy, không cấu hình,
+  không gọi.
