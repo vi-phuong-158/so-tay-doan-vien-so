@@ -43,7 +43,22 @@
   `docs/phase-3/09-phase-3-final-acceptance.md`. It does not implement new features and does not
   change delivery mode or deploy production.
 
-## Phase 4 — Learning & Quiz Admin (P4-05, technical acceptance passed)
+## Phase 4 — Integrated final acceptance (P4-06, technical acceptance passed; runtime gates pending)
+
+- P4-05 was reverified on exact implementation HEAD `1706f064980ffe73150a71649b91d66807d25f71`;
+  replacement CI `31959883659` passed, and PR #27 was merged into `master` at
+  `3761dcc1be4fd6aebc1e91e78426076feead5e31`. Fresh `origin/master` matches that merge SHA.
+- Audit branch `audit/phase-4-final-acceptance` adds the rollback-bounded integrated database
+  acceptance suite `supabase/tests/phase_4_final_acceptance.sql` and the Phase 4 traceability,
+  security, journey, runtime-gate, and production-readiness report
+  `docs/phase-4/06-phase-4-final-acceptance.md`.
+- Final verdict: `PHASE_4_TECHNICAL_ACCEPTANCE_PASS_RUNTIME_GATES_PENDING`. Exact-head CI
+  `31960895746` is green on `69096639eb6c88e2d5a51e65045844e4f8c15501`: pgTAP `Files=25,
+  Tests=727`, Deno `42 passed`, frontend gates and Vercel pass. P4-02R and P4-04R2 remain
+  pending; production readiness remains `NOT_PRODUCTION_READY`.
+- P4-06 is not to be merged automatically and no Phase 5 work is included.
+
+## Phase 4 — Learning & Quiz Admin (P4-05, merged; technical acceptance passed)
 
 - Branch `feat/phase-4-learning-quiz-admin` starts from merged P4-04 baseline
   `master@3ddfeaede1b7a22acb36c34d3847a394a7cb2f1d`.
@@ -52,8 +67,10 @@
   quiz/question/option DML and question/option SELECT are revoked.
 - Historical policy: submitted attempts freeze answer-key rows and scoring-affecting metadata;
   cosmetic title/description edits remain allowed and corrections require a new quiz.
-- Exact-head CI run `31958908805` passed on implementation HEAD `89964eb` (frontend build/lint/test,
-  Supabase reset + full pgTAP/Deno). Draft PR #27 remains unmerged; P4-02R and P4-04R2 remain open.
+- Exact-head CI run `31959883659` passed on implementation HEAD
+  `1706f064980ffe73150a71649b91d66807d25f71` (frontend build/lint/test, Supabase reset + full
+  pgTAP/Deno). PR #27 was merged at `master@3761dcc1be4fd6aebc1e91e78426076feead5e31`.
+  P4-02R and P4-04R2 remain open.
 
 ## Phase 4 — Quiz Engine & Attempts (P4-04, merged)
 

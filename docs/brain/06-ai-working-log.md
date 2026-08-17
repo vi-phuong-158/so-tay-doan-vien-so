@@ -839,3 +839,24 @@
 - **Kiểm tra:** `npm test` 136/136 PASS; `npm run lint` 0 errors/3 existing warnings;
   `npm run build` PASS; `git diff --check` PASS. Exact-head CI run `31958908805` trên
   `89964eb` PASS: build 17s và test-db/full pgTAP+Deno 3m04s; PR #27 vẫn Draft.
+
+## [2026-08-17] P4-06 — Phase 4 Integrated Final Acceptance
+- **Agent:** Codex
+- **Thay đổi:** Đóng PR #27 sau khi reverify exact-head CI, tạo branch audit từ fresh master, thêm
+  bộ kiểm thử pgTAP rollback-bounded cho hành trình Documents → Learning → Quiz, và ghi nhận
+  traceability/security/runtime-gate audit cho toàn Phase 4.
+- **File đã sửa:** `supabase/tests/phase_4_final_acceptance.sql`,
+  `docs/phase-4/06-phase-4-final-acceptance.md`, `docs/04-implementation-status.md`,
+  `docs/brain/04-current-tasks.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Xác minh các boundary liên phân hệ, cross-organization direct-ID bypass, suspended
+  account fail-closed, answer-key isolation, historical-attempt immutability, direct grants,
+  và private buckets trước khi đánh giá Phase 4; không thay thế hai runtime gate bằng test giả.
+- **Kiểm tra:** `npm test` 136/136 PASS; `npm run lint` 0 errors/3 existing Fast Refresh warnings;
+  `npm run build` PASS; `git diff --check` PASS. P4-05 exact-head CI `31959883659` PASS và PR #27
+  merged at `3761dcc1be4fd6aebc1e91e78426076feead5e31`. First P4-06 exact-head CI
+  `31960673000` correctly reset the database and found one over-specific assertion in the new
+  suite (`QUIZ_NOT_DRAFT` is the RPC's first stable guard); the assertion was corrected without
+  changing production code. Replacement exact-head CI `31960895746` is green on
+  `69096639eb6c88e2d5a51e65045844e4f8c15501`: pgTAP `Files=25, Tests=727`, Deno `42 passed`,
+  frontend gates and Vercel pass. Final verdict is
+  `PHASE_4_TECHNICAL_ACCEPTANCE_PASS_RUNTIME_GATES_PENDING`; P4-02R/P4-04R2 remain pending.
