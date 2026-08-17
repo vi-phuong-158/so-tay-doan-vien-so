@@ -772,13 +772,22 @@ grant all on table public.document_versions, public.document_sources,
                   public.ingestion_events, public.ai_usage_quota
   to service_role;
 
--- Legacy over-grants confirmed by the P5-00 audit: these four tables were created in
+-- Legacy over-grants confirmed by the P5-00 audit: these three tables were created in
 -- 202607300001 with INSERT/UPDATE/DELETE for `authenticated` and have been held back by RLS alone
 -- ever since. Evidence and citations are server-authored records; a client that can write them can
 -- fabricate what an official document says, or forge an assistant answer.
-revoke insert, update, delete on table public.document_chunks    from authenticated;
-revoke insert, update, delete on table public.ai_messages        from authenticated;
-revoke insert, update, delete on table public.ai_message_sources from authenticated;
+--
+-- Revoked with `all`, not a partial `revoke insert, update, delete`: on a real Supabase project
+-- `authenticated` also carries REFERENCES/TRIGGER/TRUNCATE by platform default on every table in
+-- `public`, which a partial revoke leaves untouched. `revoke all` + an explicit `grant select` is
+-- the pattern this repo already uses everywhere else for SELECT-only tables (audit_logs,
+-- email_queue) -- follow it here too instead of reintroducing a narrower one.
+revoke all on table public.document_chunks    from authenticated;
+revoke all on table public.ai_messages        from authenticated;
+revoke all on table public.ai_message_sources from authenticated;
+grant select on table public.document_chunks    to authenticated;
+grant select on table public.ai_messages        to authenticated;
+grant select on table public.ai_message_sources to authenticated;
 
 -- ai_conversations and ai_feedback keep their client write grants on purpose: those rows are the
 -- user's own (renaming or deleting one's own conversation, rating an answer), and their existing
