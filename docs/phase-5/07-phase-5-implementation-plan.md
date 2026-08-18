@@ -72,6 +72,14 @@ non-goals tường minh.
 
 ### P5-02 — Ingestion job foundation
 
+**Amended implementation (2026-08-18):** P5-02 is limited to provider-neutral source locators,
+database-triggered idempotent jobs, service-role claim/lease/retry/reclaim RPCs, append-only
+operational events, `pg_cron`/`pg_net` scheduling and the authenticated NO_OP worker. It does not
+extract bytes, call Google Drive or Gemini, or create Wiki/evidence/embedding content. Before P5-03
+uses a real source, complete Google My Drive OAuth bootstrap, secure refresh-token provisioning,
+app-managed root-folder rehearsal and a `GoogleDriveStorageProvider` read rehearsal behind a runtime
+gate. The preferred scope is `drive.file`; no broad `drive` scope without documented necessity.
+
 - **Scope:** trigger Postgres đẩy job; RPC claim/lease/retry/reclaim theo mẫu `email_queue`;
   `pg_cron` + `pg_net` gọi Edge Function `run-ingestion-jobs` (xác thực `x-cron-secret`, secret từ
   Vault — đúng mẫu P3-08); khung job **chưa gọi AI**, chỉ chạy được job no-op để chứng minh vòng đời.

@@ -58,3 +58,20 @@
   assertion PASS) ⇒ không hồi quy Phase 4. Frontend 136/136, lint 0 error, build PASS. Deno không
   chạy được (deno.land bị proxy chặn); P5-01 không sửa TypeScript.
 - **Báo cáo đầy đủ:** `docs/phase-5/08-p5-01-knowledge-schema.md`.
+
+---
+
+# Working log — 18/08/2026 — P5-02 Ingestion Foundation + Storage Provider Amendment
+
+- **Baseline:** PR #31 remains Draft/Open at accepted `84ba48e`; implementation is stacked in
+  `codex/phase-5-02-ingestion-foundation`, keeping the original dirty workspace untouched.
+- **Storage:** Phase 5 pilot sources gain a provider-neutral locator. Google My Drive is only an
+  external private blob provider; Supabase keeps identity/RLS/provenance. P4 `documents-private`
+  remains unchanged, and no OAuth credential or public Drive link was added.
+- **Implementation:** forward migration `202608180001` adds source provider fields, atomic source
+  trigger/idempotency, service-role claim/lease/retry/reclaim functions, append-only safe events and
+  Vault-named `pg_cron` schedule. `run-ingestion-jobs` is an authenticated NO_OP lifecycle worker.
+- **Deferred:** Google OAuth, real Drive read, extraction, Gemini, Wiki, evidence and embeddings;
+  P5-03 is blocked on a backend-only My Drive runtime rehearsal.
+- **Validation:** exact-head GitHub Actions `32112910299` PASS on `9d5d5e3`: Supabase reset/full
+  pgTAP, Deno Edge tests, frontend lint/test/build. Vault and My Drive OAuth remain runtime gates.

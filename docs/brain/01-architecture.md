@@ -12,7 +12,7 @@
 | Backend | Supabase Edge Functions (Deno + TypeScript) |
 | Database | Supabase PostgreSQL + RLS + pgvector; RPC `security definer` |
 | Auth | Supabase Auth (GoTrue) |
-| Storage | Supabase Storage (bucket private + signed URL + SECURITY DEFINER access helpers where RLS policy needs protected table lookup) |
+| Storage | Supabase Storage remains the accepted provider for Phase 1–4 private flows. Phase 5 canonical sources use a provider-neutral locator; pilot bytes are planned for personal Google My Drive through a trusted backend, never public Drive links. |
 | AI | Gemini (embedding + trả lời) qua Edge Function `ask-ai` |
 | Email | Brevo/Resend/SMTP qua `email_queue` + `process-email-queue` |
 | Hosting | Vercel (hoặc Mắt Bão) với SPA rewrite; xem `vercel.json` |
@@ -113,6 +113,7 @@ supabase/
 | `functions/download-report-bundle` | ZIP latest submission/file trong scope, private Storage, giới hạn 100 file/50 MB, audit | `AdminReportDashboard` qua `reportAdminService` | dashboard RPC, service-role Storage, `fflate`, `_shared/*` |
 | `functions/ask-ai` | ⚠️ **KHUNG CHƯA REVIEW — P5-00 kết luận DROP.** Chưa từng deploy/chạy, 0 test. Có lỗi ghi xuyên hội thoại (không kiểm sở hữu `conversation_id` trên đường service role), không kiểm `account_status`, không quota/rate limit, không phòng thủ prompt injection. **Không dùng làm mẫu.** Viết lại ở P5-06. | (không ai gọi) | `_shared/*`, `match_document_chunks`, Gemini |
 | `functions/process-document` | ⚠️ **KHUNG CHƯA REVIEW — P5-00 kết luận DROP.** Chunk toàn văn + embed tất cả (kiến trúc đã bị bác bỏ). Kiểm quyền toàn cục thay vì theo scope tổ chức; nhận `extracted_text` từ client ghi dưới danh nghĩa văn bản chính thức; ghi thẳng `documents.status` bỏ qua RPC + `audit_logs` của Phase 4; chỉ đọc `.txt`; chắc chắn timeout. **Không dùng làm mẫu.** Thay bằng job pipeline ở P5-02/P5-03. | (không ai gọi) | `_shared/*`, Gemini |
+| `functions/run-ingestion-jobs` | P5-02 cron-only NO_OP worker: exact `x-cron-secret` before service client/claim; claims a bounded leased batch and completes it without Drive/AI/file calls | `pg_cron` → `pg_net`, trusted operator | service-role RPC `claim_ingestion_jobs` / `complete_ingestion_job` / `fail_ingestion_job` |
 | `functions/send-reminder` / `process-email-queue` | Gọi reminder scan trusted / gửi email theo batch | `send-reminder`: trusted caller manual/external. `process-email-queue`: manual/external **và** `pg_cron` job `email_queue_worker` mỗi 10 phút qua `pg_net`+Vault (P3-08) | `_shared/*`, reminder RPC, email_queue |
 
 ### Luồng xử lý chính
@@ -371,6 +372,14 @@ Quyền của mọi bảng trên suy từ `can_access_document(document_id)` qua
 `documents.ingestion_status` là trục **tách hẳn** khỏi `documents.status` của Phase 4 — trigger
 `trg_documents_state_axis_separation` cấm hai trục đổi trong cùng một statement. Chi tiết:
 `docs/phase-5/08-p5-01-knowledge-schema.md`.
+
+**P5-02 ingestion foundation (migration `202608180001`):** `document_sources` giữ nguyên
+`storage_path` cho Phase 4/Supabase Storage và thêm `file_provider` + opaque external locator cho
+nguồn Phase 5. Trigger từ canonical source (và khi published/current version được reconciling) tạo
+`EXTRACT` idempotent cùng transaction, chỉ đổi `documents.ingestion_status`. `ingestion_jobs` dùng
+claim token, `FOR UPDATE SKIP LOCKED`, lease, retry/backoff, reclaim và terminal failure qua RPC chỉ
+`service_role`; `ingestion_events` append-only, chặn document text. `run-ingestion-jobs` là NO_OP
+cron worker; P5-03 mới được dùng Google Drive OAuth/StorageProvider sau runtime gate.
 
 **Lưu ý về nhóm AI/RAG:** `document_chunks` (có `embedding vector(768)`, index ivfflat),
 `ai_conversations`, `ai_messages`, `ai_message_sources`, `ai_feedback` và RPC

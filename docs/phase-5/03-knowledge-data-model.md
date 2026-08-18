@@ -1,5 +1,10 @@
 # P5-00 Part N — Mô hình dữ liệu tri thức (đề xuất)
 
+> **P5-02 amendment (2026-08-18):** The accepted P5-01 `storage_path` remains a legacy-compatible
+> Supabase locator. P5-02 adds `file_provider`, opaque `external_file_id`, optional
+> `external_parent_id` and bounded non-secret `provider_metadata`; provider resolution belongs to a
+> trusted backend. No OAuth credential is stored in this model.
+
 > **Không migration nào được viết hay chạy trong P5-00.** Đây là đặc tả để P5-01 hiện thực hóa.
 > Tên bảng/cột có thể điều chỉnh khi viết migration; các **bất biến** thì không.
 
@@ -89,7 +94,8 @@ Một version có 1..n nguồn (ví dụ: URL công khai + bản chụp PDF đã
 | `id` | `uuid pk` | |
 | `document_version_id` | `uuid not null →` | |
 | `source_kind` | `text` CHECK ∈ {`STORAGE_FILE`, `OFFICIAL_URL`, `URL_SNAPSHOT`} | |
-| `storage_path` | `text` | bucket `documents-private`, dùng lại policy Phase 4 nguyên vẹn |
+| `storage_path` | `text` | locator Supabase Storage legacy/P4, giữ nguyên ngữ nghĩa |
+| `file_provider`, `external_file_id`, `external_parent_id`, `provider_metadata` | | provider-neutral external locator; Google Drive ID is opaque, never a frontend URL |
 | `official_url` | `text` | |
 | `fetched_at`, `http_etag`, `http_last_modified` | | phục vụ staleness re-check |
 | `snapshot_storage_path` | `text` | **bản chụp bắt buộc cho Class A** — xem `05-retrieval-source-policy.md` PART F |

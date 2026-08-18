@@ -1,5 +1,9 @@
 # P5-00 Part D/G/H/I — Phân loại tài liệu, ingestion, review, versioning
 
+> **P5-02 amendment (2026-08-18):** For Phase 5 Class B, “private file” means a private source
+> through `StorageProvider`, not necessarily the Supabase bucket. Google My Drive is pilot-only;
+> the frontend never receives a Drive sharing URL. Phase 4 Storage remains unaffected.
+
 ---
 
 ## 1. PART D — Phân loại tài liệu và chiến lược ingestion
@@ -27,7 +31,7 @@ metadata + official_url + SNAPSHOT bắt buộc + Wiki đã duyệt + evidence c
 *Ví dụ: công văn, hướng dẫn, kế hoạch của Đoàn/đơn vị.*
 
 ```
-file gốc private (Storage) + extraction + Wiki đã duyệt + evidence chunks + vector khi cần
+file gốc private (StorageProvider) + extraction + Wiki đã duyệt + evidence chunks + vector khi cần
 ```
 
 - Đường upload dùng lại **nguyên vẹn** P4-02 (`attach_document_source_file`, bucket
@@ -83,6 +87,16 @@ Không phải một pipeline riêng mà là một **retrieval policy**:
 ---
 
 ## 2. PART G — Trigger tự động hóa ingestion
+
+### P5-02 job foundation
+
+`document_sources` registration and publication/current-version reconciliation call a database
+trigger in the same transaction. The trigger adds an idempotent `EXTRACT` job keyed by source, sets
+only `documents.ingestion_status = 'QUEUED'`, and appends a content-free event. A service-role-only
+claim RPC uses `FOR UPDATE SKIP LOCKED`, a lease and bounded attempts; expired leases are reclaimed,
+and exhausted rows become terminal `FAILED`. `run-ingestion-jobs` currently completes each claimed
+job with a NO_OP handler. Extraction, Google Drive calls, Gemini, Wiki creation and embeddings remain
+out of scope until P5-03 after the storage runtime gate is closed.
 
 ### Các lựa chọn đã cân nhắc
 
