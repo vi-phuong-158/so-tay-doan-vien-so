@@ -1,5 +1,10 @@
 # P5-00 Part C — Kiến trúc AI/RAG mục tiêu
 
+> **P5-02 amendment (2026-08-18):** Layer 1 source bytes are provider-neutral. During the pilot,
+> Google My Drive is the external blob provider; it is not a database, authorization source,
+> metadata store or public-link delivery path. Phase 4 `documents-private` remains accepted and
+> unchanged for its own document flow.
+
 > Tài liệu kiến trúc. Không có code runtime nào được viết để tạo ra nó.
 > Thay thế mô hình `upload → extract → chunk toàn bộ → embed toàn bộ → pgvector` trong
 > `docs/01-product-spec.md`.
@@ -120,7 +125,7 @@ Chunk-everything hỏng ở bốn điểm trong bối cảnh dự án này:
 ### Layer 1 — Canonical Source
 
 Nguồn chính thức, bất biến. Gồm bản ghi tài liệu (`documents`), **phiên bản** của nó
-(`document_versions`: checksum, tệp trong Storage private hoặc URL công khai + snapshot), và quan hệ
+(`document_versions`: checksum, tệp qua provider private hoặc URL công khai + snapshot), và quan hệ
 với văn bản khác (`document_relations` được siết thành enum).
 
 Nguyên tắc: **AI-generated content không bao giờ thay thế canonical source.** Khi người dùng hỏi

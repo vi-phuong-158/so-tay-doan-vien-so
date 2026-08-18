@@ -1,5 +1,11 @@
 # P5-00 — AI/RAG Architecture Proposal (read-only, not implemented)
 
+> **P5-02 amendment (2026-08-18):** This historical proposal predates the pilot storage decision.
+> For Phase 5 knowledge sources only, `documents-private` is no longer the required file/blob
+> provider: `document_sources` now resolves a provider-neutral locator. Google My Drive is the
+> pilot provider, but Supabase/Postgres remains the authority for identity, RLS, provenance and
+> publication. This does not change or remove accepted Phase 4 `documents-private` behavior.
+
 > **⚠️ ĐÃ ĐƯỢC THAY THẾ MỘT PHẦN — đọc kèm `02-ai-rag-architecture.md` trở đi.**
 >
 > Tài liệu này là bản đề xuất đầu tiên của P5-00 (merged qua PR #30, `ecb5dbf`). Định hướng tổng
@@ -186,7 +192,7 @@ access-control model, no reintroduction of Pinecone or Google Apps Script.
 | --- | --- |
 | P5-00 | This document — architecture decision only (current task) |
 | P5-01 | `knowledge_articles` schema + RLS (reusing the existing visibility ladder), no ingestion yet |
-| P5-02 | Ingestion pipeline: Database Webhook → Edge Function → Gemini extraction/summary → `PENDING_REVIEW` draft |
+| P5-02 | Provider-neutral ingestion foundation: canonical-source trigger → leased job → NO_OP Edge worker; no Drive/API/AI call |
 | P5-03 | Summarization/review workflow UI (admin), publish/withdraw/`NEEDS_REVIEW` transitions, audit |
 | P5-04 | Selective retrieval/indexing — FAQ-worthy flag, embedding generation for approved units only, `match_document_chunks`-equivalent over `knowledge_articles` |
 | P5-05 | Ask AI with provenance — wires `ai_conversations`/`ai_messages`/`ai_message_sources` (extended with `knowledge_article_id`) to the P5-04 retrieval, always surfaces source + "Thông tin này lấy từ đâu?" |

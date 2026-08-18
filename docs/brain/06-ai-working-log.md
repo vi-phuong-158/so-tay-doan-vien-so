@@ -1,5 +1,23 @@
 # 06 — AI Working Log
 
+## [2026-08-18] P5-02 — Ingestion Job Foundation + Storage Provider Architecture Amendment
+
+- **Agent:** Codex
+- **Thay đổi:** Thêm forward migration `202608180001` cho locator nguồn provider-neutral, trigger
+  tạo job idempotent, RPC service-role claim/complete/fail với lease/retry/reclaim, event append-only
+  và lịch `pg_cron`/`pg_net` đọc Vault. Tạo Edge Function `run-ingestion-jobs` NO_OP có cron-secret
+  fail-closed và test Deno/pgTAP; cập nhật tài liệu Phase 5/brain cho quyết định Google My Drive.
+- **File đã sửa:** `supabase/migrations/202608180001_phase_5_ingestion_foundation.sql`,
+  `supabase/tests/ingestion_foundation.sql`, `supabase/functions/run-ingestion-jobs/*`,
+  `docs/phase-5/00-ai-rag-architecture-proposal.md` → `09-p5-02-ingestion-foundation.md`,
+  `docs/brain/01-architecture.md`, `03-decisions.md`, `04-current-tasks.md`, `06-ai-working-log.md`,
+  `docs/08-working-log.md`.
+- **Lý do:** Bắt đầu P5-02 trên P5-01 đã nghiệm thu mà không khóa RAG/business logic vào Drive, không
+  sửa migration P5-01, không làm thay đổi Phase 4 Storage và không mở rộng sang P5-03.
+- **Kiểm tra:** pgTAP/Deno tests mới bao phủ idempotency, claim/lease/reclaim, retry/terminal,
+  append-only, RLS, source-provider gate và cron-secret. Local Supabase CLI/Deno chưa có; exact-head
+  CI và runtime Vault/OAuth rehearsal vẫn là authority cho các gate chưa thể chứng minh cục bộ.
+
 ## [2026-08-17] P4-06 merge + P4-R — Runtime readiness closure (P4-02R, P4-04R2)
 
 - **Agent:** Claude Code

@@ -1,5 +1,10 @@
 # P5-00 Part J/K/P — Mô hình đe dọa, phòng thủ prompt injection, observability
 
+> **P5-02 amendment (2026-08-18):** Google My Drive is a personal My Drive, never a shared public
+> link. OAuth credentials live only in backend secret configuration, not `document_sources`, logs or
+> `VITE_*`. Missing/revoked credentials, deleted files and Drive outage must fail closed without
+> changing publication metadata or falling back to “anyone with the link”.
+
 ---
 
 ## 0. Bất biến số một

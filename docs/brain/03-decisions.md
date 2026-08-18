@@ -1,5 +1,29 @@
 # 03 — Technical Decisions
 
+## [2026-08-18] P5 storage decision: Google My Drive is a replaceable Phase 5 blob provider
+
+- **Quyết định:** Demo/pilot Phase 5 dùng `GOOGLE_DRIVE` trên My Drive cá nhân cho file nguồn.
+  Supabase/Postgres vẫn là source of truth cho metadata, RLS, provenance, publication và ingestion.
+  `document_sources` dùng locator provider-neutral; trusted backend kiểm `can_access_document` rồi
+  mới resolve/read bytes. Không public Drive link, không token OAuth trong database/frontend/log.
+- **Lý do:** Tách file/blob provider khỏi business/RAG model để tương lai thay bằng Supabase Storage,
+  S3 hoặc R2 không viết lại Documents/RAG/AI, đồng thời không phá `documents-private` đã nghiệm thu
+  ở Phase 4.
+- **Đánh đổi:** P5-03 bị chặn runtime gate OAuth/My Drive: refresh token backend-only, root folder
+  app-managed, synthetic read rehearsal và xử lý revoke/delete/outage fail-closed. `drive.file` là
+  scope ưu tiên nếu luồng app-managed đáp ứng được.
+
+## [2026-08-18] P5-02: database-owned ingestion queue, not frontend/webhook polling
+
+- **Quyết định:** Source registration queues `EXTRACT` idempotently in the same database
+  transaction. Claim/complete/fail RPCs are `service_role` only; claim uses `SKIP LOCKED`, token,
+  lease and capped retry. `documents.ingestion_status` changes independently of publication.
+- **Lý do:** A browser, personal polling process or GitHub Action cannot be the authority for a
+  durable, race-safe knowledge job. This reuses the proven P3 email queue lifecycle without
+  copying its provider code.
+- **Đánh đổi:** P5-02 worker is intentionally NO_OP and cron requires Vault URL/secret provisioning
+  before runtime proof. No Drive, Gemini, extraction, Wiki or embedding work starts here.
+
 > Ghi lại quyết định kỹ thuật quan trọng để agent sau không "phát minh lại" hoặc đảo ngược
 > mà không biết lý do. Nguồn gốc: `docs/07-decisions.md`, README, lịch sử git, `docs/phase-2/`.
 

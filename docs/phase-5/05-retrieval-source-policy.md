@@ -1,5 +1,10 @@
 # P5-00 Part D/E/F/M — Retrieval, source policy, chiến lược nguồn công khai
 
+> **P5-02 amendment (2026-08-18):** Retrieval authorization remains `can_access_document` in
+> Supabase. Provider metadata or an opaque Google Drive ID never grants access and is not a
+> downloadable URL. A future trusted download gateway resolves an authorized source through a
+> StorageProvider; it must fail closed on provider outage, deletion or credential revocation.
+
 ---
 
 ## 1. PART D — Kiến trúc retrieval
