@@ -10,6 +10,8 @@
 ### P5-02 — Ingestion Job Foundation + Storage Provider Amendment
 - **Base:** stacked worktree `codex/phase-5-02-ingestion-foundation` from accepted P5-01
   `84ba48ea7f05f16f048771b42faa169088db7f11` (PR #31 remains Draft/Open).
+- **Trạng thái:** `P5_02_TECHNICAL_ACCEPTANCE_PASS_RUNTIME_GATE_PENDING`; exact-head CI
+  `32112910299` PASS (Supabase reset/full pgTAP, Deno Edge tests, frontend lint/test/build).
 - **Phạm vi:** forward migration provider-neutral `document_sources`, atomic trigger-to-job,
   service-role lease/retry/reclaim RPCs, NO_OP Edge worker and Vault-backed schedule. No Drive API,
   OAuth credential, extraction, Gemini, Wiki, embedding or production deployment.

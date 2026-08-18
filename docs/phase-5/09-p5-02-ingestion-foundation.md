@@ -41,3 +41,9 @@ Until runtime Vault values are provisioned, no real invocation is considered pro
    `GoogleDriveStorageProvider`.
 4. Confirm deleted external files, revoked credentials and Drive outage surface as source unavailable
    while `documents.status` and accepted Phase 4 storage flows remain unchanged.
+
+## Technical validation
+
+Exact-head CI run `32112910299` passed on `9d5d5e38795d1b66c3fffa23d64efb837ef204fd`: Supabase DB
+reset/full pgTAP, Deno Edge Function check/tests and frontend lint/test/build. The remaining gate is
+runtime-only: provision Vault schedule values and the backend-only Google My Drive OAuth rehearsal.

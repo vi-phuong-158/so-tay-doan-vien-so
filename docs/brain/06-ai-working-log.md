@@ -14,9 +14,9 @@
   `docs/08-working-log.md`.
 - **Lý do:** Bắt đầu P5-02 trên P5-01 đã nghiệm thu mà không khóa RAG/business logic vào Drive, không
   sửa migration P5-01, không làm thay đổi Phase 4 Storage và không mở rộng sang P5-03.
-- **Kiểm tra:** pgTAP/Deno tests mới bao phủ idempotency, claim/lease/reclaim, retry/terminal,
-  append-only, RLS, source-provider gate và cron-secret. Local Supabase CLI/Deno chưa có; exact-head
-  CI và runtime Vault/OAuth rehearsal vẫn là authority cho các gate chưa thể chứng minh cục bộ.
+- **Kiểm tra:** `npm test` 136/136 PASS; lint 0 error/3 warnings cũ; build PASS. Exact-head CI
+  `32112910299` trên `9d5d5e38795d1b66c3fffa23d64efb837ef204fd` PASS: Supabase reset/full pgTAP,
+  Deno Edge tests và frontend gates. Runtime Vault/OAuth rehearsal vẫn là authority cho gate My Drive.
 
 ## [2026-08-17] P4-06 merge + P4-R — Runtime readiness closure (P4-02R, P4-04R2)
 

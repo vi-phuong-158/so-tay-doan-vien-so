@@ -73,3 +73,5 @@
   Vault-named `pg_cron` schedule. `run-ingestion-jobs` is an authenticated NO_OP lifecycle worker.
 - **Deferred:** Google OAuth, real Drive read, extraction, Gemini, Wiki, evidence and embeddings;
   P5-03 is blocked on a backend-only My Drive runtime rehearsal.
+- **Validation:** exact-head GitHub Actions `32112910299` PASS on `9d5d5e3`: Supabase reset/full
+  pgTAP, Deno Edge tests, frontend lint/test/build. Vault and My Drive OAuth remain runtime gates.
