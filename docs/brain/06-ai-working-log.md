@@ -671,6 +671,7 @@
 ## Format entry
 
 ```
+
 ## [YYYY-MM-DD] [Tên task ngắn gọn]
 - **Agent:** Claude Code | Codex
 - **Thay đổi:** <mô tả ngắn những gì đã làm>
@@ -984,3 +985,11 @@
   từ trước Phase 5) và `build` job. PR #31 `mergeable_state: clean`, 0 unresolved review thread.
   Không merge (không được yêu cầu). `ask-ai`/`process-document` vẫn không deploy, không cấu hình,
   không gọi.
+
+## [2026-08-18] P5-02R Google My Drive runtime gate technical closure
+
+- **Agent:** Codex
+- **Thay đổi:** Thêm StorageProvider tối thiểu, Google My Drive OAuth refresh/error mapping, gate authorization trước provider, bootstrap local app-managed folder, unit tests và hướng dẫn rehearsal/durability.
+- **File đã sửa:** `.env.example`, `.gitignore`, `scripts/google-drive-oauth-bootstrap.mjs`, `supabase/functions/_shared/storage/*`, `docs/phase-5/10-p5-02r-drive-runtime-gate.md`, `docs/brain/01-architecture.md`, `docs/brain/03-decisions.md`, `docs/brain/04-current-tasks.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Đóng phần kỹ thuật runtime gate My Drive mà không đưa credential vào frontend/DB/Git, không dùng public link và không bắt đầu extraction/Gemini/Wiki/embedding.
+- **Kiểm tra:** Node syntax check; Deno provider/gateway unit tests 9/9 PASS; full Edge Function type-check PASS with Deno 2 + local Node dependency resolution; frontend 136/136 PASS, lint 0 error/3 warning cũ, build PASS; secret scan reviewed. OAuth/Supabase rehearsal chỉ được báo sau khi owner thực hiện trên project rehearsal.
