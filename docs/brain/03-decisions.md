@@ -301,6 +301,23 @@ không nới, không skip bất kỳ assertion nào**; test 14/15/16/26 vẫn đ
 - **Đánh đổi:** Mọi thao tác đặc quyền phải đi qua Edge Function/RPC, không gọi trực tiếp từ FE.
 - **Người quyết định:** user (nguyên tắc bảo mật).
 
+## [2026-08-18] P5-02R: Personal My Drive is a backend-only, app-managed StorageProvider
+
+- **Quyết định:** Phase 5 pilot uses the personal My Drive owner through OAuth 2.0 with the single
+  non-sensitive `https://www.googleapis.com/auth/drive.file` scope. `GoogleDriveStorageProvider`
+  accepts opaque IDs only and exposes a small `getMetadata/read/put/delete` contract; it never
+  produces Drive URLs, changes permissions or acts as an authorization system. Supabase document
+  authorization is evaluated before the provider receives a locator.
+- **Secret boundary:** `GOOGLE_DRIVE_CLIENT_ID`, `GOOGLE_DRIVE_CLIENT_SECRET`,
+  `GOOGLE_DRIVE_REFRESH_TOKEN` and `GOOGLE_DRIVE_ROOT_FOLDER_ID` are rehearsal backend secrets,
+  never `VITE_*`, DB business data, `provider_metadata`, logs, Git or PR text. Cron URL/secret stay
+  separate Vault values (`ingestion_jobs_worker_url`, `ingestion_jobs_worker_cron_secret`).
+- **Durability gate:** a Google OAuth consent screen in Testing is unacceptable because its Drive
+  refresh token expires after seven days. The gate remains pending until owner evidence confirms
+  `In production`, the exact narrow scope and successful refresh rehearsal.
+- **Đánh đổi:** `drive.file` can manage files the app creates or the user explicitly selects/shares;
+  it cannot silently ingest arbitrary existing My Drive content. This is intentional least privilege.
+
 ## [2026-07-30] Báo cáo nộp lại tạo phiên bản mới (versioned, immutable)
 
 - **Quyết định:** Mỗi lần nộp là một `report_submissions` với `version_number`; phiên bản cũ chỉ

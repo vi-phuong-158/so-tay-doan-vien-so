@@ -6,6 +6,7 @@ dist-ssr
 .env
 .env.*
 !.env.example
+google-drive-oauth-bootstrap.local.json
 .DS_Store
 .DS_Store?
 ._*

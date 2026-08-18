@@ -7,6 +7,19 @@
 
 ## Đang làm
 
+### P5-02R — Google My Drive Runtime Gate Closure
+- **Base:** isolated stacked worktree `codex/phase-5-02r-drive-runtime-gate` from P5-02 accepted
+  `572bfa9de0b4c01a32d9076331f255faafdc666f`; P5-01/P5-02 accepted migrations are unchanged.
+- **Trạng thái:** `P5_02R_TECHNICAL_READY_USER_OAUTH_ACTION_REQUIRED`. The hermetic provider,
+  authorization-gate and bootstrap implementation are ready; no OAuth owner consent, backend secret,
+  rehearsal Drive or Supabase project action has been fabricated.
+- **Phạm vi:** Google My Drive personal-account OAuth with only `drive.file`, app-managed root,
+  typed backend-only `StorageProvider`, synthetic-only rehearsal plan and cron runtime checklist.
+  No extraction, Gemini, Wiki, evidence, embedding, retrieval, UI or production deploy.
+- **Gate còn lại:** owner must verify OAuth is **In production** (not Testing, whose refresh tokens
+  expire after seven days), run the local bootstrap, provision rehearsal-only secrets/Vault values,
+  then supply only redacted runtime evidence. See `docs/phase-5/10-p5-02r-drive-runtime-gate.md`.
+
 ### P5-02 — Ingestion Job Foundation + Storage Provider Amendment
 - **Base:** stacked worktree `codex/phase-5-02-ingestion-foundation` from accepted P5-01
   `84ba48ea7f05f16f048771b42faa169088db7f11` (PR #31 remains Draft/Open).

@@ -114,6 +114,7 @@ supabase/
 | `functions/ask-ai` | ⚠️ **KHUNG CHƯA REVIEW — P5-00 kết luận DROP.** Chưa từng deploy/chạy, 0 test. Có lỗi ghi xuyên hội thoại (không kiểm sở hữu `conversation_id` trên đường service role), không kiểm `account_status`, không quota/rate limit, không phòng thủ prompt injection. **Không dùng làm mẫu.** Viết lại ở P5-06. | (không ai gọi) | `_shared/*`, `match_document_chunks`, Gemini |
 | `functions/process-document` | ⚠️ **KHUNG CHƯA REVIEW — P5-00 kết luận DROP.** Chunk toàn văn + embed tất cả (kiến trúc đã bị bác bỏ). Kiểm quyền toàn cục thay vì theo scope tổ chức; nhận `extracted_text` từ client ghi dưới danh nghĩa văn bản chính thức; ghi thẳng `documents.status` bỏ qua RPC + `audit_logs` của Phase 4; chỉ đọc `.txt`; chắc chắn timeout. **Không dùng làm mẫu.** Thay bằng job pipeline ở P5-02/P5-03. | (không ai gọi) | `_shared/*`, Gemini |
 | `functions/run-ingestion-jobs` | P5-02 cron-only NO_OP worker: exact `x-cron-secret` before service client/claim; claims a bounded leased batch and completes it without Drive/AI/file calls | `pg_cron` → `pg_net`, trusted operator | service-role RPC `claim_ingestion_jobs` / `complete_ingestion_job` / `fail_ingestion_job` |
+| `functions/_shared/storage/*` | P5-02R minimal `StorageProvider`: opaque locator validation, typed retry semantics and Google My Drive read/metadata/create/delete using a server-side refresh token | P5-02R synthetic rehearsal; P5-03 ingestion (not started) | Edge Function secrets, Google Drive API; `authorizedSourceGateway` requires Supabase authorization before provider call |
 | `functions/send-reminder` / `process-email-queue` | Gọi reminder scan trusted / gửi email theo batch | `send-reminder`: trusted caller manual/external. `process-email-queue`: manual/external **và** `pg_cron` job `email_queue_worker` mỗi 10 phút qua `pg_net`+Vault (P3-08) | `_shared/*`, reminder RPC, email_queue |
 
 ### Luồng xử lý chính
@@ -379,7 +380,12 @@ nguồn Phase 5. Trigger từ canonical source (và khi published/current versio
 `EXTRACT` idempotent cùng transaction, chỉ đổi `documents.ingestion_status`. `ingestion_jobs` dùng
 claim token, `FOR UPDATE SKIP LOCKED`, lease, retry/backoff, reclaim và terminal failure qua RPC chỉ
 `service_role`; `ingestion_events` append-only, chặn document text. `run-ingestion-jobs` là NO_OP
-cron worker; P5-03 mới được dùng Google Drive OAuth/StorageProvider sau runtime gate.
+cron worker. **P5-02R** thêm `functions/_shared/storage/`: contract nhỏ `getMetadata/read/put/delete`,
+`GoogleDriveStorageProvider` refresh OAuth chỉ phía backend và error typed (`AUTH_INVALID`,
+`SOURCE_NOT_FOUND`, `PERMISSION_DENIED`, `RATE_LIMITED`, `PROVIDER_UNAVAILABLE`,
+`INVALID_LOCATOR`, `MALFORMED_RESPONSE`). `authorizedSourceGateway` bắt buộc Supabase
+`can_access_document`-equivalent trước khi gửi Drive locator; không có Drive URL/public sharing và
+không có extraction. Runtime OAuth/cron rehearsal vẫn cần owner thực hiện trên project rehearsal.
 
 **Lưu ý về nhóm AI/RAG:** `document_chunks` (có `embedding vector(768)`, index ivfflat),
 `ai_conversations`, `ai_messages`, `ai_message_sources`, `ai_feedback` và RPC
@@ -424,6 +430,8 @@ SUPABASE_URL
 SUPABASE_ANON_KEY
 SUPABASE_SERVICE_ROLE_KEY   # (fallback: SERVICE_ROLE_KEY)
 # + Gemini API key, email provider key (theo function)
+# + GOOGLE_DRIVE_CLIENT_ID, GOOGLE_DRIVE_CLIENT_SECRET, GOOGLE_DRIVE_REFRESH_TOKEN,
+#   GOOGLE_DRIVE_ROOT_FOLDER_ID (P5-02R; personal My Drive OAuth, backend-only)
 ```
 
 ## Lưu ý kiến trúc quan trọng
