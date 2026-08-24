@@ -97,6 +97,21 @@ Vault cron names, missing cron job and missing `run-ingestion-jobs`, then stoppe
 Drive object or credential was created. A non-production rehearsal must be reset/synced to this
 exact baseline before provider/runtime claims are made.
 
+## Technical acceptance evidence
+
+- Exact-head CI run `32743048493` on implementation HEAD
+  `c464926778afaedb7a831cdbe8dd05aa625710f3` is green.
+- Database gate: `Files=26, Tests=772`; this baseline's Phase 5 suite is `45/45`.
+- Edge Function gate: `deno check **/*.ts` passed and `deno test --allow-all` reports
+  `58 passed, 0 failed`.
+- Frontend gate: `npm test` `45/45`, lint and build pass; `git diff --check` and secret
+  pattern audit pass.
+- The preceding failed CI runs were fixed by making terminal retry timestamps nullable,
+  revoking inherited citation-table privileges, and narrowing the OAuth `expires_in`
+  response before arithmetic. No test was removed or weakened.
+- This is technical acceptance only. The Google Drive OAuth/HTTP rehearsal remains
+  pending and is not replaced by mocks or unit tests.
+
 ## Old PR disposition
 
 Do not merge #31, #32 or #33. After the canonical PR reaches exact-head CI green, propose:
@@ -112,7 +127,8 @@ If GitHub mutations are unavailable, leave the PRs open and report
 
 ## Residual risks
 
-- Supabase/Deno runtime availability and exact-head CI remain authoritative gates.
+- Exact-head CI is green for the implementation; a separate non-production Drive rehearsal
+  remains the authoritative runtime gate.
 - Google OAuth owner consent, verified backend secrets and a non-production Drive rehearsal are
   intentionally not performed by P5-R0.
 - Retrieval API and AI answer provenance consumption remain future work; no vector query path is
