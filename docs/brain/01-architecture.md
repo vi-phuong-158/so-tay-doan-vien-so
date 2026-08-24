@@ -396,6 +396,49 @@ SUPABASE_SERVICE_ROLE_KEY   # (fallback: SERVICE_ROLE_KEY)
 - **AI:** chỉ truy hồi chunk `APPROVED`, luôn trả nguồn; lọc dữ liệu nhạy cảm trước khi gửi Gemini.
 - **GoTrue nhạy cảm với seed:** `supabase/seed.sql` phải điền đủ cột `auth.users`/`auth.identities`
   đúng cách (nhiều commit lịch sử sửa lỗi này) — cẩn thận khi đổi seed.
+
+## Phase 5 — canonical knowledge baseline (P5-R0)
+
+P5-R0 establishes the only accepted Phase 5 production shape:
+
+```text
+documents
+  -> document_versions (immutable checksum/version history)
+  -> document_sources (immutable provider-neutral locators)
+  -> ingestion_jobs / ingestion_events (backend-only queue)
+  -> knowledge_articles (reviewed revision rows)
+  -> document_chunks (selective evidence, evolved in place)
+  -> knowledge_embeddings (optional, model/dimension-aware secondary index)
+```
+
+`knowledge_wikis` and `knowledge_wiki_versions` are superseded and are not created by the
+canonical migrations. A single document version may produce multiple article keys/revisions;
+approved article content and approved evidence are immutable, and corrections create a new
+revision/evidence row. Visibility is always derived from the owning `documents` row and existing
+`can_access_document()`/`can_manage_document()` authorization helpers.
+
+The Phase 5 ingestion axis (`documents.ingestion_status`, `retrieval_enabled`) is separate from
+`documents.status`. The database rejects a statement that changes both axes together. Queue jobs
+use a unique idempotency key, `FOR UPDATE SKIP LOCKED`, bounded leases, stale reclaim, retry and
+append-only events. No extraction or AI work is performed by the P5-R0 no-op worker.
+
+Google Drive is an optional backend storage provider behind
+`supabase/functions/_shared/storage/contract.ts`. Authorization is evaluated by
+`authorizedSourceGateway.ts` before a provider receives a locator. OAuth values are backend-only;
+the database stores only provider-neutral source metadata and opaque locators. The provider never
+creates sharing permissions or public links.
+
+### Phase 5 Code Graph
+
+| Module / file | Vai trò | Được gọi bởi | Phụ thuộc vào |
+|---------------|---------|--------------|---------------|
+| `supabase/migrations/202608240001_phase_5_canonical_knowledge_foundation.sql` | source/version, article, evidence, embeddings, citation provenance, RLS | Supabase reset/CI | Phase 1–4 `documents` and auth helpers |
+| `supabase/migrations/202608240002_phase_5_ingestion_foundation.sql` | queue lifecycle, idempotency, claim/reclaim/complete/fail | `run-ingestion-jobs`, trusted triggers | document sources/versions |
+| `supabase/tests/phase_5_canonical_baseline.sql` | canonical/RLS/immutability/queue acceptance | `supabase test db` | both P5 migrations + seed |
+| `supabase/functions/_shared/storage/contract.ts` | provider-neutral storage contract and typed errors | gateway/providers | — |
+| `supabase/functions/_shared/storage/authorizedSourceGateway.ts` | authorization-before-provider boundary | future ingestion | storage contract |
+| `supabase/functions/_shared/storage/googleDriveStorageProvider.ts` | server-only My Drive adapter | future ingestion/rehearsal | storage contract, OAuth env |
+| `supabase/functions/run-ingestion-jobs/*` | trusted no-op queue worker and contract tests | future scheduler/manual call | queue RPCs, Supabase service role |
 # Email queue foundation (P3-02)
 
 Trusted producer (service role only)

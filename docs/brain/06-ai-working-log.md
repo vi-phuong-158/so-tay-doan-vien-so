@@ -886,3 +886,16 @@
   `69096639eb6c88e2d5a51e65045844e4f8c15501`: pgTAP `Files=25, Tests=727`, Deno `42 passed`,
   frontend gates and Vercel pass. Final verdict is
   `PHASE_4_TECHNICAL_ACCEPTANCE_PASS_RUNTIME_GATES_PENDING`; P4-02R/P4-04R2 remain pending.
+
+## [2026-08-24] P5-R0 — Consolidate Phase 5 canonical baseline
+
+- **Agent:** Codex
+- **Thay đổi:** Tạo baseline sạch từ exact `origin/master@343547cb5a81d5e1e69cea26a6a232c990e8c92b`; hợp nhất có chọn lọc source/version provenance, `knowledge_articles` revision model, selective evidence, backend-only embeddings, idempotent ingestion queue, no-op worker và provider-neutral Google Drive boundary. Loại bỏ `knowledge_wikis` khỏi schema canonical; không triển khai P5-03.
+- **File đã sửa:** `supabase/migrations/202608240001_phase_5_canonical_knowledge_foundation.sql`, `supabase/migrations/202608240002_phase_5_ingestion_foundation.sql`, `supabase/tests/phase_5_canonical_baseline.sql`, `supabase/functions/_shared/storage/*`, `supabase/functions/run-ingestion-jobs/*`, `scripts/google-drive-oauth-bootstrap.mjs`, `.env.example`, `.gitignore`, `docs/phase-5/11-p5-r0-canonical-baseline.md`, `docs/brain/01-architecture.md`, `docs/brain/03-decisions.md`, `docs/brain/04-current-tasks.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Tạo một Phase 5 production baseline duy nhất trên nền `master`, không phụ thuộc stacked PR #31/#32/#33 và không quay lại mô hình wiki đã bị supersede.
+- **Kiểm tra:** Frontend baseline gates chạy trên workspace tương đương: `npm test` 45/45 PASS, lint PASS,
+  build PASS; Node syntax check cho OAuth bootstrap PASS; secret audit không phát hiện credential pattern.
+  Exact-head CI `32743048493` trên `c464926778afaedb7a831cdbe8dd05aa625710f3` PASS: pgTAP
+  `Files=26, Tests=772` với Phase 5 `45/45`, `deno check **/*.ts` PASS, Deno `58 passed`, frontend
+  lint/test/build PASS. Runtime Google Drive rehearsal vẫn pending do không có credential/rehearsal
+  environment được ủy quyền.
