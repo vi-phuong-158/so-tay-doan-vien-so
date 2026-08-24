@@ -15,7 +15,7 @@ create table if not exists public.ingestion_jobs (
   max_attempts integer not null default 3 check (max_attempts between 1 and 10),
   idempotency_key text not null unique check (length(idempotency_key) between 1 and 500),
   scheduled_at timestamptz not null default now(),
-  next_attempt_at timestamptz not null default now(),
+  next_attempt_at timestamptz default now(),
   worker_id text,
   claim_token uuid,
   claimed_at timestamptz,
