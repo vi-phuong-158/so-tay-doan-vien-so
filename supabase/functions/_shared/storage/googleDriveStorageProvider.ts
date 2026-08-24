@@ -171,11 +171,12 @@ export class GoogleDriveStorageProvider implements StorageProvider {
       throw new StorageProviderError('AUTH_INVALID');
     }
     const data = await this.readJson<{ access_token?: string; expires_in?: number }>(response);
-    if (!data.access_token || !Number.isFinite(data.expires_in) || data.expires_in <= 0) {
+    const expiresIn = data.expires_in;
+    if (!data.access_token || typeof expiresIn !== 'number' || !Number.isFinite(expiresIn) || expiresIn <= 0) {
       throw new StorageProviderError('MALFORMED_RESPONSE');
     }
     this.#accessToken = data.access_token;
-    this.#accessTokenExpiresAt = this.#now() + data.expires_in * 1_000;
+    this.#accessTokenExpiresAt = this.#now() + expiresIn * 1_000;
     return this.#accessToken;
   }
 
