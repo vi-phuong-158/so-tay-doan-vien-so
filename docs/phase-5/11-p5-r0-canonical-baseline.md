@@ -112,23 +112,31 @@ exact baseline before provider/runtime claims are made.
 - This is technical acceptance only. The Google Drive OAuth/HTTP rehearsal remains
   pending and is not replaced by mocks or unit tests.
 
+## P5-R0C closure evidence
+
+- PR #34 was merged into `master` with merge commit
+  `f2b60de9b86532a3a26b48549be71a19b5851f17` at `2026-08-24T15:22:39Z`.
+- Merged-master CI run `32744476634` is green on that exact merge commit: database reset,
+  pgTAP, Phase 5 `45/45`, Deno, frontend tests, lint and build all pass.
+- PRs #31, #32 and #33 were closed as `SUPERSEDED_BY_P5_R0_PR_34`; their branches and the
+  P5-02R checkpoint `8d37f5c` remain available as historical evidence.
+- The technical baseline is closed. Google Drive OAuth/HTTP runtime rehearsal remains
+  `PENDING`; no production credential or deployment was used.
+- P5-03 must branch from the final `origin/master` after this closure and must not branch
+  from PR #34 or the superseded stacked branches.
+
 ## Old PR disposition
 
-Do not merge #31, #32 or #33. After the canonical PR reaches exact-head CI green, propose:
-
 ```text
-#31 SUPERSEDED
-#32 SUPERSEDED
-#33 SUPERSEDED
+#31 CLOSED — SUPERSEDED_BY_P5_R0_PR_34
+#32 CLOSED — SUPERSEDED_BY_P5_R0_PR_34
+#33 CLOSED — SUPERSEDED_BY_P5_R0_PR_34
 ```
-
-If GitHub mutations are unavailable, leave the PRs open and report
-`READY_TO_CLOSE_AS_SUPERSEDED`.
 
 ## Residual risks
 
-- Exact-head CI is green for the implementation; a separate non-production Drive rehearsal
-  remains the authoritative runtime gate.
+- Merged-master CI is green; a separate non-production Drive rehearsal remains the
+  authoritative runtime gate.
 - Google OAuth owner consent, verified backend secrets and a non-production Drive rehearsal are
   intentionally not performed by P5-R0.
 - Retrieval API and AI answer provenance consumption remain future work; no vector query path is
