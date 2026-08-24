@@ -993,3 +993,17 @@
 - **File đã sửa:** `.env.example`, `.gitignore`, `scripts/google-drive-oauth-bootstrap.mjs`, `supabase/functions/_shared/storage/*`, `docs/phase-5/10-p5-02r-drive-runtime-gate.md`, `docs/brain/01-architecture.md`, `docs/brain/03-decisions.md`, `docs/brain/04-current-tasks.md`, `docs/brain/06-ai-working-log.md`.
 - **Lý do:** Đóng phần kỹ thuật runtime gate My Drive mà không đưa credential vào frontend/DB/Git, không dùng public link và không bắt đầu extraction/Gemini/Wiki/embedding.
 - **Kiểm tra:** Node syntax check; Deno provider/gateway unit tests 9/9 PASS; full Edge Function type-check PASS with Deno 2 + local Node dependency resolution; frontend 136/136 PASS, lint 0 error/3 warning cũ, build PASS; secret scan reviewed. OAuth/Supabase rehearsal chỉ được báo sau khi owner thực hiện trên project rehearsal.
+
+## [2026-08-18] P5-02R live runtime rehearsal attempt
+
+- **Agent:** Codex
+- **Thay đổi:** Chạy preflight rehearsal trên project Supabase không-production đã cấu hình; cập nhật
+  verdict thành `P5_02R_RUNTIME_BLOCKED_REHEARSAL_SCHEMA_DRIFT_AND_CRON_CONFIG_MISSING`.
+- **File đã sửa:** `docs/phase-5/10-p5-02r-drive-runtime-gate.md`,
+  `docs/brain/04-current-tasks.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Project thiếu `public.document_sources`/các bảng P5-02 cần, thiếu hai tên Vault cron,
+  thiếu cron job và chưa deploy `run-ingestion-jobs`; áp dụng nguyên trạng P5-02 dừng an toàn tại
+  lỗi `42P01` thay vì sửa hoặc lách migration. Vì vậy không thể chứng minh A–F và không được báo PASS.
+- **Kiểm tra:** Frontend 136/136 PASS; lint 0 lỗi/3 cảnh báo Fast Refresh cũ; production build PASS;
+  secret scan không thấy credential-shaped value. Không có Drive request, object, token, permission,
+  public share hay production change; P5-03 không bắt đầu.

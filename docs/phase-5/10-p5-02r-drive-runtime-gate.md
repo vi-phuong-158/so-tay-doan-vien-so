@@ -1,8 +1,10 @@
 # P5-02R — Google My Drive runtime gate
 
-> **Current verdict:** `P5_02R_TECHNICAL_READY_USER_OAUTH_ACTION_REQUIRED`.
-> No Google credential, personal document, Drive request, Supabase rehearsal operation or production
-> deployment was performed by this change.
+> **Current verdict:** `P5_02R_RUNTIME_BLOCKED_REHEARSAL_SCHEMA_DRIFT_AND_CRON_CONFIG_MISSING`.
+> The live rehearsal was started against the configured non-production Supabase project, but the
+> project cannot execute the accepted P5-02 runtime path safely: P5-01 tables required by P5-02 are
+> absent, the P5-02 Vault names are absent, and the worker Edge Function is not deployed. No Drive
+> request or production deployment was performed.
 
 ## Technical contract
 
@@ -90,6 +92,29 @@ Only redacted evidence is needed next: consent status (`In production`), declare
 root exists/private, synthetic create/read/hash/cleanup results, failure matrix, cron NO_OP result,
 and exact commit/CI status. No secret material is needed from the owner.
 
+## 2026-08-18 live rehearsal attempt
+
+- **HEAD:** `56c5d0a1caf7d6e41900d328e6efa748113cbd56` (short `56c5d0a`); Draft PR **#33**.
+- **Supabase project:** configured rehearsal project was healthy, but the public schema inventory
+  contained `documents` only among the required Phase 5 tables. `document_sources` was absent, so
+  applying the unchanged accepted P5-02 migration failed with `42P01 relation public.document_sources
+  does not exist`. No migration file was changed and no replacement DDL was attempted.
+- **Cron preflight:** redacted name-only checks found neither Vault name
+  `ingestion_jobs_worker_url` nor `ingestion_jobs_worker_cron_secret`; `cron.job` also had no
+  `ingestion_jobs_worker` row. `run-ingestion-jobs` was not present in the Edge Function inventory.
+- **Google A–E:** **not executed**. No access-token exchange, provider initialization, Drive upload,
+  read-back, hash, delete, or post-delete read occurred; consequently there is no locator or hash
+  evidence and no rehearsal object to clean up.
+- **Cron F:** **not executed**. A cron-secret gate, claim/lease, NO_OP completion, retry/idempotency,
+  and duplicate-job check cannot be demonstrated without the missing schema, Vault names, and worker.
+- **Safety:** no Google credential value, account email, complete Drive ID, public link, permission or
+  sharing API call was printed or persisted. No production project was changed. P5-03 was not started.
+
+This is a hard runtime block until the rehearsal project is reset/provisioned from the accepted
+P5-01/P5-02 baseline, the two Vault-backed cron names are provisioned, and the accepted worker is
+deployed. Re-run this document's rehearsal from A after that repair; do not report PASS from this
+attempt.
+
 ## Token durability
 
 `TOKEN_DURABILITY_PENDING`: no Google Cloud console evidence has been supplied. The gate cannot be
@@ -104,8 +129,9 @@ to non-retryable `AUTH_INVALID` rather than retrying indefinitely.
 - Full Edge Function type-check: **PASS** with Deno 2 and the local Node dependency resolver.
 - Frontend regression: **136/136 PASS**; lint: **0 errors** (3 pre-existing Fast Refresh warnings);
   production build: **PASS**.
-- P5-01/P5-02 accepted migrations and tests: **unchanged**. Supabase CLI/Docker are unavailable in
-  this workspace, so the full DB reset/pgTAP and exact final-head CI remain required on the draft PR.
+- P5-01/P5-02 accepted migrations and tests: **unchanged**. Supabase CLI/Docker and Deno are
+  unavailable in this workspace. Frontend gates were re-run locally; the exact-head CI remains the
+  authoritative DB/Deno evidence until the rehearsal project is repaired.
 - Secret scan reviewed the diff for `refresh_token`, `access_token`, `client_secret`, `Bearer`,
   `ya29.`, `1//` and `AIza`: the first four appear only as code/API field names, blank example
   variable names or synthetic test values; no credential-shaped value was found. No production

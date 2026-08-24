@@ -10,9 +10,11 @@
 ### P5-02R — Google My Drive Runtime Gate Closure
 - **Base:** isolated stacked worktree `codex/phase-5-02r-drive-runtime-gate` from P5-02 accepted
   `572bfa9de0b4c01a32d9076331f255faafdc666f`; P5-01/P5-02 accepted migrations are unchanged.
-- **Trạng thái:** `P5_02R_TECHNICAL_READY_USER_OAUTH_ACTION_REQUIRED`. The hermetic provider,
-  authorization-gate and bootstrap implementation are ready; no OAuth owner consent, backend secret,
-  rehearsal Drive or Supabase project action has been fabricated.
+- **Trạng thái:** `P5_02R_RUNTIME_BLOCKED_REHEARSAL_SCHEMA_DRIFT_AND_CRON_CONFIG_MISSING`. The
+  hermetic provider and authorization gate are ready, but the configured rehearsal project is not
+  at the accepted P5-01/P5-02 schema/runtime baseline: `document_sources` is absent, the two
+  ingestion Vault names are absent, and `run-ingestion-jobs` is not deployed. No Drive call or
+  synthetic object was attempted. See `docs/phase-5/10-p5-02r-drive-runtime-gate.md`.
 - **Phạm vi:** Google My Drive personal-account OAuth with only `drive.file`, app-managed root,
   typed backend-only `StorageProvider`, synthetic-only rehearsal plan and cron runtime checklist.
   No extraction, Gemini, Wiki, evidence, embedding, retrieval, UI or production deploy.
