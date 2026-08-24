@@ -87,7 +87,8 @@ create table if not exists public.document_versions (
   created_by uuid references public.profiles(id),
   created_at timestamptz not null default now(),
   unique (document_id, version_number),
-  check (effective_to is null or effective_from is null or effective_to >= effective_from)
+  check (effective_to is null or effective_from is null or effective_to >= effective_from),
+  check (not (source_metadata ?| array['access_token', 'refresh_token', 'client_secret', 'service_role_key', 'authorization']))
 );
 
 alter table public.documents
@@ -122,6 +123,7 @@ create table if not exists public.document_sources (
     or (provider_kind = 'GOOGLE_DRIVE' and external_file_id is not null)
     or (provider_kind = 'HTTP' and official_url is not null)
   ),
+  check (not (provider_metadata ?| array['access_token', 'refresh_token', 'client_secret', 'service_role_key', 'authorization'])),
   check (source_kind <> 'URL_SNAPSHOT' or snapshot_storage_path is not null)
 );
 
