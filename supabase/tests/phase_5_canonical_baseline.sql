@@ -198,6 +198,8 @@ select throws_ok(
 );
 update public.documents set retrieval_enabled = true
  where id = 'f1000000-0000-0000-0000-000000000001'::uuid;
+update public.knowledge_articles set retrieval_enabled = true
+ where id = 'f4000000-0000-0000-0000-000000000002'::uuid;
 insert into public.knowledge_embeddings (
   target_kind, article_id, document_id, document_version_id, embedding_model,
   embedding_dimension, provider
