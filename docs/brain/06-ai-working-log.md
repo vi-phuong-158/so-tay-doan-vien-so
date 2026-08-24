@@ -899,3 +899,18 @@
   `Files=26, Tests=772` với Phase 5 `45/45`, `deno check **/*.ts` PASS, Deno `58 passed`, frontend
   lint/test/build PASS. Runtime Google Drive rehearsal vẫn pending do không có credential/rehearsal
   environment được ủy quyền.
+
+## [2026-08-24] P5-R0C — Merge & baseline closure
+
+- **Agent:** Codex
+- **Thay đổi:** Chuyển PR #34 sang Ready for review và merge vào `master` bằng merge commit
+  `f2b60de9b86532a3a26b48549be71a19b5851f17`; đóng #31/#32/#33 là superseded; giữ nguyên
+  branch lịch sử và checkpoint P5-02R `8d37f5c`.
+- **File đã sửa:** `docs/phase-5/11-p5-r0-canonical-baseline.md`,
+  `docs/brain/04-current-tasks.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Đóng canonical Phase 5 technical baseline trên merged `master` trước P5-03 mà
+  không merge stacked PR độc lập hoặc nâng runtime Drive gate thành PASS.
+- **Kiểm tra:** PR #34 merged lúc `2026-08-24T15:22:39Z`; merged-master CI `32744476634`
+  PASS trên exact merge commit với db reset/pgTAP `Files=26, Tests=772`, Phase 5 `45/45`,
+  Deno `58 passed`, frontend tests/lint/build PASS. Google Drive OAuth/HTTP rehearsal vẫn
+  `PENDING`; không có production credential/deployment. P5-03 chưa bắt đầu.

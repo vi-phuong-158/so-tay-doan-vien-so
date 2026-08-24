@@ -10,9 +10,12 @@
 ### P5-R0 — Consolidate Phase 5 Canonical Baseline
 - **Base:** exact `origin/master@343547cb5a81d5e1e69cea26a6a232c990e8c92b`; isolated branch
   `feat/phase-5-canonical-baseline`.
-- **Trạng thái:** `P5_R0_TECHNICAL_BASELINE_PASS_RUNTIME_GATE_PENDING`; canonical source/version →
+- **Trạng thái:** `P5_R0_CANONICAL_BASELINE_MERGED_AND_CLOSED`; canonical source/version →
   `knowledge_articles` → selective evidence → optional embeddings, ingestion queue và provider-neutral
-  Drive boundary. Không dùng `knowledge_wikis`; không bắt đầu P5-03.
+  Drive boundary. Không dùng `knowledge_wikis`; không bắt đầu P5-03 trong closure này.
+- **Closure:** PR #34 merged bằng merge commit `f2b60de9b86532a3a26b48549be71a19b5851f17`;
+  merged-master CI `32744476634` PASS trên exact merge commit. PR #31/#32/#33 đã đóng với lý do
+  `SUPERSEDED_BY_P5_R0_PR_34`; branch và checkpoint lịch sử vẫn được giữ.
 - **Historical work:** #31/#32/#33 được audit theo KEEP/ADAPT/REWRITE/DROP; P5-02R dirty docs đã
   được bảo toàn trên branch riêng bằng checkpoint `8d37f5c`, không dùng làm P5-R0 acceptance.
 - **Technical evidence:** Exact-head CI `32743048493` trên implementation HEAD
@@ -20,6 +23,7 @@
   Deno `58 passed`, frontend lint/test/build PASS.
 - **Runtime gate:** Google OAuth/Drive rehearsal chưa chạy; cần environment rehearsal đã sync
   canonical schema, Vault/secret và cron contract trước khi claim runtime pass.
+- **P5-03:** Chỉ được branch từ final `origin/master` sau closure; không branch từ PR #34/#31/#32/#33.
 - **Report:** `docs/phase-5/11-p5-r0-canonical-baseline.md`.
 
 ### P4-R — Phase 4 Runtime Readiness Closure
