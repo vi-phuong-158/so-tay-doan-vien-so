@@ -513,3 +513,24 @@ không nới, không skip bất kỳ assertion nào**; test 14/15/16/26 vẫn đ
   `db reset`, or a test run) until an operator provisions them. Batch size, retry backoff and max
   attempts are unchanged (P3-02 defaults, already bounded); this migration does not tune them.
 - **Người quyết định:** Claude (Sonnet), theo yêu cầu P3-08.
+
+## [2026-08-24] P5-R0 canonical Phase 5 baseline
+
+- **Quyết định:** `knowledge_articles` là canonical reviewed knowledge model. Mỗi row là một
+  article revision gắn bắt buộc với `document_id` và `document_version_id`; approved content không
+  sửa in-place. `knowledge_wikis`/`knowledge_wiki_versions` không được tạo trong baseline mới.
+- **Quyết định:** Giữ `document_versions` và `document_sources` làm provenance layer bất biến;
+  tiến hóa `document_chunks` in-place thành selective evidence để không duy trì một bảng chunk/evidence
+  song song. `knowledge_embeddings` là secondary index tùy chọn, model/dimension-aware, chỉ dành cho
+  approved + retrieval-enabled content và không cấp quyền bảng cho client.
+- **Quyết định:** `ingestion_jobs`/`ingestion_events` là queue backend-only với idempotency key,
+  atomic `SKIP LOCKED` claim, lease, stale reclaim, bounded retry và append-only events. Queue không
+  được thay đổi `documents.status`; P5-03 extraction và AI generation vẫn ngoài scope.
+- **Quyết định:** Google Drive chỉ là provider sau `StorageProvider` contract. Gateway kiểm tra
+  authorization trước khi gửi locator đến provider; credential chỉ ở backend secret runtime, không
+  lưu trong DB/log/frontend và không tạo public sharing.
+- **Lý do:** Hợp nhất có chọn lọc các primitive tốt của stacked #31/#32/#33 trên exact
+  `origin/master`, loại bỏ lineage obsolete và chặn drift giữa publication, ingestion, review và retrieval.
+- **Đánh đổi:** Các trường/luồng legacy của `document_chunks` và `match_document_chunks()` được giữ
+  đủ để Phase 1–4 tests không bị xóa hoặc yếu đi; P5 retrieval mới sẽ dùng evidence/embeddings qua
+  trusted API ở task sau.

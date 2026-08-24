@@ -7,6 +7,16 @@
 
 ## Đang làm
 
+### P5-R0 — Consolidate Phase 5 Canonical Baseline
+- **Base:** exact `origin/master@343547cb5a81d5e1e69cea26a6a232c990e8c92b`; isolated branch
+  `feat/phase-5-canonical-baseline`.
+- **Trạng thái:** Đang thi công canonical source/version → `knowledge_articles` → selective evidence
+  → optional embeddings, ingestion queue và provider-neutral Drive boundary. Không dùng
+  `knowledge_wikis`; không bắt đầu P5-03.
+- **Historical work:** #31/#32/#33 được audit theo KEEP/ADAPT/REWRITE/DROP; P5-02R dirty docs đã
+  được bảo toàn trên branch riêng bằng checkpoint `8d37f5c`, không dùng làm P5-R0 acceptance.
+- **Report:** `docs/phase-5/11-p5-r0-canonical-baseline.md`.
+
 ### P4-R — Phase 4 Runtime Readiness Closure
 - **Base:** fresh `origin/master@72b627a9c407f304f3bd3453fb0a00797fc7239b` (P4-06 merge).
 - **Branch:** `rehearsal/phase-4-runtime-readiness`.
