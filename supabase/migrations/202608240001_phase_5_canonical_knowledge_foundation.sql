@@ -713,7 +713,7 @@ grant select on table public.document_versions, public.document_sources to authe
 
 revoke all on table public.knowledge_embeddings from public, anon, authenticated;
 
-revoke insert, update, delete on table public.ai_message_sources from anon, authenticated;
+revoke all on table public.ai_message_sources from anon, authenticated;
 grant select on table public.ai_message_sources to authenticated;
 
 revoke delete on table public.document_chunks from authenticated;
