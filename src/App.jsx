@@ -27,6 +27,7 @@ import { AdminReportDashboard } from './pages/AdminReportDashboard';
 import { AdminLearningTopics } from './pages/AdminLearningTopics';
 import { AdminLearningTopicDetail } from './pages/AdminLearningTopicDetail';
 import { AdminQuizEditor } from './pages/AdminQuizEditor';
+import { AdminKnowledgeArticle } from './pages/AdminKnowledgeArticle';
 
 import { EmptyState } from './components/common';
 
@@ -79,6 +80,7 @@ export default function App() {
                 <AdminDocuments />
               </RoleGuard>
             } />
+            <Route path="admin/van-ban/:documentId/tri-thuc" element={<RoleGuard allowedRoles={['YOUTH_ADMIN']}><AdminKnowledgeArticle /></RoleGuard>} />
             <Route path="admin/chuyen-de" element={<RoleGuard allowedRoles={['YOUTH_ADMIN']}><AdminLearningTopics /></RoleGuard>} />
             <Route path="admin/chuyen-de/:topicId" element={<RoleGuard allowedRoles={['YOUTH_ADMIN']}><AdminLearningTopicDetail /></RoleGuard>} />
             <Route path="admin/chuyen-de/:topicId/trac-nghiem/:quizId" element={<RoleGuard allowedRoles={['YOUTH_ADMIN']}><AdminQuizEditor /></RoleGuard>} />

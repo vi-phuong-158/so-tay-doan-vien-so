@@ -7,6 +7,14 @@
 
 ## Đang làm
 
+### P5-03 — Canonical document extraction → knowledge article generation
+- **Base:** exact `origin/master@a91f7145a76507e171bb9e96a9a7262ed6575aaf`; isolated branch
+  `feat/phase-5-03-article-generation`.
+- **Trạng thái:** Đang triển khai vertical slice deterministic extraction → structured AI draft →
+  selective evidence → trusted human review. Không làm embedding, retrieval, ask-ai hoặc OCR.
+- **Runtime gates:** Gemini/Google Drive rehearsal là gate riêng; technical tests dùng synthetic
+  fixtures/provider fake và phải không cần credential thật.
+
 ### P5-R0 — Consolidate Phase 5 Canonical Baseline
 - **Base:** exact `origin/master@343547cb5a81d5e1e69cea26a6a232c990e8c92b`; isolated branch
   `feat/phase-5-canonical-baseline`.

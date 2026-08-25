@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Button, EmptyState, PageHeader, Toast } from '../components/common';
 import Skeleton from '../components/Skeleton';
 import { supabase } from '../services/supabaseClient';
@@ -453,6 +454,7 @@ export function AdminDocuments() {
                   </span>
                 </div>
                 <h2>{doc.title}</h2>
+                <Link className="document-admin-link" to={`/admin/van-ban/${doc.id}/tri-thuc`}>Review tri thức</Link>
                 <p>
                   {doc.issuingAuthority || '—'} • {formatDocumentDate(doc.issuedDate)}
                   {doc.hasSourceFile ? ' • Đã có tệp gốc' : ' • Chưa có tệp gốc'}

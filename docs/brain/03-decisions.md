@@ -534,3 +534,19 @@ không nới, không skip bất kỳ assertion nào**; test 14/15/16/26 vẫn đ
 - **Đánh đổi:** Các trường/luồng legacy của `document_chunks` và `match_document_chunks()` được giữ
   đủ để Phase 1–4 tests không bị xóa hoặc yếu đi; P5 retrieval mới sẽ dùng evidence/embeddings qua
   trusted API ở task sau.
+
+## [2026-08-25] P5-03 deterministic extraction and reviewed article generation
+
+- **Quyết định:** P5-03 lưu extraction artifact riêng, private và gắn một-một với immutable
+  `document_version`; `document_chunks` tiếp tục là bảng selective evidence canonical. Không tạo
+  `article_chunks`, không embedding, retrieval hoặc ask-ai.
+- **Quyết định:** External AI eligibility là cờ `documents.ai_processing_allowed`, mặc định false.
+  Edge Function phải authorize scoped content admin trước khi đọc provider, kiểm tra SHA-256 của
+  bytes với version/source checksum, rồi mới gọi Gemini. Source classification không đủ điều kiện
+  thì fail closed.
+- **Quyết định:** `KnowledgeGenerator` trả structured JSON; batching giữ toàn bộ page boundaries,
+  validation flag literal số/ngày không xuất hiện trong source, và evidence chỉ được backend copy
+  từ exact extracted text. AI không được tự tạo citation.
+- **Quyết định:** Generation job dùng `document_version + article_key + generator_version` làm
+  idempotency key. Retry cùng profile tái sử dụng attempt; regeneration phải có key explicit và
+  tạo revision/attempt mới. Draft luôn `PENDING_REVIEW`; approve/reject đi qua trusted RPC có audit.

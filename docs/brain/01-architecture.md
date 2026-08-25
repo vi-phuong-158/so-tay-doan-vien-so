@@ -428,6 +428,26 @@ Google Drive is an optional backend storage provider behind
 the database stores only provider-neutral source metadata and opaque locators. The provider never
 creates sharing permissions or public links.
 
+### Phase 5 / P5-03 execution slice
+
+```text
+trusted document/version/source rows
+  -> authorization-before-provider read
+  -> SHA-256 source checksum/version verification
+  -> deterministic PDF text-layer / DOCX XML / TXT-Markdown extraction
+  -> normalized pages + sections persisted as private document_extractions
+  -> bounded KnowledgeGenerator (Gemini or deterministic fake)
+  -> exact-source evidence resolution
+  -> trusted persist_knowledge_article_draft transaction
+  -> PENDING_REVIEW article + PENDING selective evidence
+  -> review_knowledge_article RPC -> APPROVED or REJECTED
+```
+
+`documents.ai_processing_allowed` is explicit and defaults to false. `document_extractions` and
+`knowledge_generation_attempts` are backend-only. Generated articles never become published
+documents automatically; approval is a separate scoped admin transition. Approved article/evidence
+content remains immutable and a correction/regeneration uses a new revision/generation key.
+
 ### Phase 5 Code Graph
 
 | Module / file | Vai trò | Được gọi bởi | Phụ thuộc vào |
@@ -439,6 +459,13 @@ creates sharing permissions or public links.
 | `supabase/functions/_shared/storage/authorizedSourceGateway.ts` | authorization-before-provider boundary | future ingestion | storage contract |
 | `supabase/functions/_shared/storage/googleDriveStorageProvider.ts` | server-only My Drive adapter | future ingestion/rehearsal | storage contract, OAuth env |
 | `supabase/functions/run-ingestion-jobs/*` | trusted no-op queue worker and contract tests | future scheduler/manual call | queue RPCs, Supabase service role |
+| `supabase/functions/_shared/knowledge/extraction.ts` | deterministic PDF/DOCX/TXT extraction, normalization, pages/sections and hashes | `generate-knowledge-article`, Deno fixtures | `fflate`, Web Crypto |
+| `supabase/functions/_shared/knowledge/generator.ts` | provider-neutral structured article generator, batching, schema/fact validation | `generate-knowledge-article`, Deno fixtures | Gemini env or deterministic fake |
+| `supabase/functions/_shared/knowledge/evidence.ts` | resolves AI hints to exact extracted source excerpts | `generate-knowledge-article` | extraction pages |
+| `supabase/functions/generate-knowledge-article/index.ts` | authenticated scoped admin orchestration: source read, checksum, extraction, Gemini, persist draft | admin UI | StorageProvider, queue/RPCs |
+| `supabase/migrations/202608250001_phase_5_article_generation.sql` | private extraction/attempt artifacts, AI eligibility, idempotent queue, trusted persist/review RPCs | Supabase reset/CI | canonical P5-R0 schema |
+| `src/services/knowledgeAdminService.js` | read-only article/evidence admin reads plus Edge Function/RPC mutation boundary | `AdminKnowledgeArticle` | Supabase client |
+| `src/pages/AdminKnowledgeArticle.jsx` | minimal source/article/evidence review workflow | `/admin/van-ban/:documentId/tri-thuc` | knowledge admin service, RoleGuard |
 # Email queue foundation (P3-02)
 
 Trusted producer (service role only)

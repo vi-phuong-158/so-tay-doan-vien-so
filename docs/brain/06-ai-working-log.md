@@ -914,3 +914,22 @@
   PASS trên exact merge commit với db reset/pgTAP `Files=26, Tests=772`, Phase 5 `45/45`,
   Deno `58 passed`, frontend tests/lint/build PASS. Google Drive OAuth/HTTP rehearsal vẫn
   `PENDING`; không có production credential/deployment. P5-03 chưa bắt đầu.
+
+## [2026-08-25] P5-03 — Canonical extraction and knowledge article generation
+
+- **Agent:** Codex
+- **Thay đổi:** Bổ sung deterministic PDF text-layer/DOCX/TXT extraction, Unicode/line normalization,
+  page/section structure, source checksum verification, provider-neutral generation boundary,
+  bounded Gemini JSON generation, exact-source selective evidence, idempotent generation attempts,
+  trusted draft persistence/review RPCs và admin review UI.
+- **File đã sửa:** `supabase/migrations/202608250001_phase_5_article_generation.sql`,
+  `supabase/functions/_shared/knowledge/*`, `supabase/functions/_shared/storage/supabaseStorageProvider.ts`,
+  `supabase/functions/generate-knowledge-article/index.ts`, `src/services/knowledgeAdminService.js`,
+  `src/pages/AdminKnowledgeArticle.jsx`, `src/App.jsx`, `src/pages/AdminDocuments.jsx`, `src/index.css`,
+  `supabase/tests/phase_5_article_generation.sql`, `tests/knowledge_admin_service.test.mjs`,
+  `tests/knowledge_admin_ui.test.mjs`, `.env.example`, `docs/phase-5/12-p5-03-article-generation.md`.
+- **Lý do:** Hoàn thiện vertical slice đầu tiên của Phase 5 mà vẫn giữ file gốc là canonical source,
+  không mở retrieval/embedding/ask-ai và không cho AI tự viết evidence.
+- **Kiểm tra:** Frontend `npm test` 143/143 PASS, `npm run lint` 0 errors/3 existing warnings,
+  `npm run build` PASS. Supabase CLI/Deno không có trong môi trường local; database/Deno gates còn
+  phải chạy bằng CI/rehearsal exact-head.
