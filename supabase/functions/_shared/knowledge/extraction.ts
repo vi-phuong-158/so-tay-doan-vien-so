@@ -27,7 +27,7 @@ export type ExtractionErrorCode =
   | 'SOURCE_TOO_LARGE';
 
 export class ExtractionError extends Error {
-  constructor(readonly code: ExtractionErrorCode, message = code) {
+  constructor(readonly code: ExtractionErrorCode, message: string = code) {
     super(message);
     this.name = 'ExtractionError';
   }
