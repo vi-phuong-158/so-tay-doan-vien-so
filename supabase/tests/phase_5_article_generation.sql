@@ -1,6 +1,6 @@
 begin;
 
-select plan(36);
+select plan(30);
 
 create or replace function p5_03_set_auth_user(p_uid uuid) returns void
 language plpgsql as $$
