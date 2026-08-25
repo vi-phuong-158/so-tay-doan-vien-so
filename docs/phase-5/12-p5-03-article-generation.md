@@ -95,7 +95,7 @@ fabricated evidence, and duplicate generation attempts.
 - `npm test`: 143/143 PASS.
 - `npm run lint`: 0 errors, 3 pre-existing Fast Refresh warnings.
 - `npm run build`: PASS.
-- Exact-head CI run `32806720861` on `11f6d0ae255f8b922f6f4be64c76fea5140dbf20`: PASS.
+- Exact-final-head CI run `32807105911` on `b5cebcf23dd2868ecc14aac72e135e8376e34712`: PASS (`build`, `test-db`).
 - Database reset/pgTAP: `Files=27, Tests=802`; P5-03 article generation `30/30` assertions PASS.
 - Edge/Deno: `70 passed, 0 failed`; frontend CI build/lint/tests PASS.
 - `git diff --check` PASS; secret-pattern audit clean.

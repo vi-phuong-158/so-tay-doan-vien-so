@@ -942,7 +942,8 @@
   privilege của `anon`/`authenticated` cho article/evidence/generation internals, và giữ các
   SECURITY DEFINER function với `search_path` cố định. Sửa TAP plan theo số assertion thực tế và
   harden PDF fail-closed/UTF-8 extraction fixtures.
-- **Kiểm tra exact-head:** CI run `32806720861`, HEAD
-  `11f6d0ae255f8b922f6f4be64c76fea5140dbf20`: database `Files=27, Tests=802`, P5-03 `30/30`,
-  Deno `70 passed`, frontend build/lint/tests PASS.
+- **Kiểm tra exact-final-head:** CI run `32807105911`, HEAD
+  `b5cebcf23dd2868ecc14aac72e135e8376e34712`: database `Files=27, Tests=802`, P5-03 `30/30`,
+  Deno `70 passed`, frontend build/lint/tests PASS; both `build` and `test-db` jobs completed
+  successfully.
 - **Kết luận:** Technical acceptance PASS; Gemini và Google Drive runtime rehearsal vẫn PENDING.
