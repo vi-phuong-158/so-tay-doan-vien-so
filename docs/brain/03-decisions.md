@@ -550,3 +550,17 @@ không nới, không skip bất kỳ assertion nào**; test 14/15/16/26 vẫn đ
 - **Quyết định:** Generation job dùng `document_version + article_key + generator_version` làm
   idempotency key. Retry cùng profile tái sử dụng attempt; regeneration phải có key explicit và
   tạo revision/attempt mới. Draft luôn `PENDING_REVIEW`; approve/reject đi qua trusted RPC có audit.
+
+## [2026-08-26] P5-03 internal function privilege contract
+
+- **Quyết định:** Các function P5 `RETURNS trigger` là implementation nội bộ; forward migration
+  `20260825154300` thu hồi toàn bộ quyền `EXECUTE` từ `PUBLIC`, `anon` và `authenticated` theo
+  đúng full signature. Không grant lại `service_role` vì các function này không phải RPC.
+- **Quyết định:** Giữ explicit authenticated `EXECUTE` chỉ cho RPC có UI contract
+  `review_knowledge_article` và `set_document_ai_processing_allowed`; worker/ingestion routines
+  tiếp tục service-role-only.
+- **Lý do:** PostgreSQL cấp `EXECUTE` cho `PUBLIC` mặc định. Rehearsal catalog audit xác định 16
+  P5 trigger functions đã thừa hưởng quyền này dù trigger bindings vẫn phải tiếp tục chạy.
+- **Đảm bảo:** Regression pgTAP inventory trigger functions từ catalog P5 để chặn helper trigger
+  mới quay lại default-open; test source insertion tiếp tục tạo ingestion job. SECURITY DEFINER
+  P5 đã có `search_path=public`, nên migration không thay function body hay semantics.

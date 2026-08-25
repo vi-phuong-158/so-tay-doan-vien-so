@@ -464,6 +464,8 @@ content remains immutable and a correction/regeneration uses a new revision/gene
 | `supabase/functions/_shared/knowledge/evidence.ts` | resolves AI hints to exact extracted source excerpts | `generate-knowledge-article` | extraction pages |
 | `supabase/functions/generate-knowledge-article/index.ts` | authenticated scoped admin orchestration: source read, checksum, extraction, Gemini, persist draft | admin UI | StorageProvider, queue/RPCs |
 | `supabase/migrations/202608250001_phase_5_article_generation.sql` | private extraction/attempt artifacts, AI eligibility, idempotent queue, trusted persist/review RPCs | Supabase reset/CI | canonical P5-R0 schema |
+| `supabase/migrations/20260825154300_phase_5_function_privilege_hardening.sql` | revoke default client `EXECUTE` from internal P5 trigger functions; preserves explicit RPC grants | Supabase reset/CI | P5 trigger bindings and PostgreSQL function ACLs |
+| `supabase/tests/phase_5_article_generation.sql` | P5-03 table/RPC security, dynamic trigger-function ACL and trigger-behavior regression acceptance | `supabase test db` | P5 migrations + seed |
 | `src/services/knowledgeAdminService.js` | read-only article/evidence admin reads plus Edge Function/RPC mutation boundary | `AdminKnowledgeArticle` | Supabase client |
 | `src/pages/AdminKnowledgeArticle.jsx` | minimal source/article/evidence review workflow | `/admin/van-ban/:documentId/tri-thuc` | knowledge admin service, RoleGuard |
 # Email queue foundation (P3-02)

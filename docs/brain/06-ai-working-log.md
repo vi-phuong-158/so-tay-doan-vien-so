@@ -947,3 +947,9 @@
   Deno `70 passed`, frontend build/lint/tests PASS; both `build` and `test-db` jobs completed
   successfully.
 - **Kết luận:** Technical acceptance PASS; Gemini và Google Drive runtime rehearsal vẫn PENDING.
+## [2026-08-26] P5-03 function privilege hardening
+- **Agent:** Codex
+- **Thay đổi:** Thêm forward migration thu hồi quyền `EXECUTE` mặc định khỏi 16 trigger functions canonical P5 và bổ sung regression test catalog-driven cho PUBLIC/anon/authenticated cùng trigger ingestion.
+- **File đã sửa:** `supabase/migrations/20260825154300_phase_5_function_privilege_hardening.sql`, `supabase/tests/phase_5_article_generation.sql`, `docs/brain/06-ai-working-log.md`
+- **Lý do:** Rehearsal audit xác định trigger functions canonical P5 vẫn nhận quyền `EXECUTE` mặc định qua `PUBLIC`.
+- **Kiểm tra:** Chạy clean database replay/pgTAP, full repository validation và kiểm kê grants rehearsal sau khi CI pass.

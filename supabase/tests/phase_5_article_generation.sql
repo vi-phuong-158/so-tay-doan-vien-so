@@ -1,6 +1,6 @@
 begin;
 
-select plan(30);
+select plan(35);
 
 create or replace function p5_03_set_auth_user(p_uid uuid) returns void
 language plpgsql as $$
@@ -34,6 +34,58 @@ select table_privs_are('public', 'ingestion_jobs', 'anon', ARRAY[]::text[], 'ano
 select function_privs_are('public', 'queue_knowledge_article_generation', ARRAY['uuid','text','text','uuid'], 'authenticated', ARRAY[]::text[], 'queue is backend-only');
 select function_privs_are('public', 'persist_knowledge_article_draft', ARRAY['uuid','uuid','jsonb','jsonb','jsonb','uuid'], 'authenticated', ARRAY[]::text[], 'article persistence is backend-only');
 select function_privs_are('public', 'review_knowledge_article', ARRAY['uuid','text','text'], 'authenticated', ARRAY['EXECUTE'], 'review uses a trusted RPC');
+select function_privs_are('public', 'set_document_ai_processing_allowed', ARRAY['uuid','boolean'], 'authenticated', ARRAY['EXECUTE'], 'AI eligibility uses a trusted RPC');
+select results_eq(
+  $$
+    select count(*)::integer
+      from pg_trigger t
+      join pg_proc p on p.oid = t.tgfoid
+      join pg_class c on c.oid = t.tgrelid
+      join pg_namespace n on n.oid = c.relnamespace
+     where n.nspname = 'public'
+       and c.relname in ('documents', 'document_versions', 'document_sources', 'knowledge_articles',
+                         'document_chunks', 'knowledge_embeddings', 'ai_message_sources',
+                         'ingestion_jobs', 'ingestion_events')
+       and p.proname <> 'set_updated_at'
+       and not t.tgisinternal
+       and has_function_privilege('public', p.oid, 'EXECUTE')
+  $$,
+  ARRAY[0], 'P5 trigger functions are not executable by PUBLIC'
+);
+select results_eq(
+  $$
+    select count(*)::integer
+      from pg_trigger t
+      join pg_proc p on p.oid = t.tgfoid
+      join pg_class c on c.oid = t.tgrelid
+      join pg_namespace n on n.oid = c.relnamespace
+     where n.nspname = 'public'
+       and c.relname in ('documents', 'document_versions', 'document_sources', 'knowledge_articles',
+                         'document_chunks', 'knowledge_embeddings', 'ai_message_sources',
+                         'ingestion_jobs', 'ingestion_events')
+       and p.proname <> 'set_updated_at'
+       and not t.tgisinternal
+       and has_function_privilege('anon', p.oid, 'EXECUTE')
+  $$,
+  ARRAY[0], 'P5 trigger functions are not executable by anon'
+);
+select results_eq(
+  $$
+    select count(*)::integer
+      from pg_trigger t
+      join pg_proc p on p.oid = t.tgfoid
+      join pg_class c on c.oid = t.tgrelid
+      join pg_namespace n on n.oid = c.relnamespace
+     where n.nspname = 'public'
+       and c.relname in ('documents', 'document_versions', 'document_sources', 'knowledge_articles',
+                         'document_chunks', 'knowledge_embeddings', 'ai_message_sources',
+                         'ingestion_jobs', 'ingestion_events')
+       and p.proname <> 'set_updated_at'
+       and not t.tgisinternal
+       and has_function_privilege('authenticated', p.oid, 'EXECUTE')
+  $$,
+  ARRAY[0], 'P5 trigger functions are not executable by authenticated'
+);
 select results_eq(
   $$
     select count(*)::integer
@@ -59,6 +111,11 @@ values ('f8000000-0000-0000-0000-000000000001', 'f7000000-0000-0000-0000-0000000
 insert into public.document_sources (id, document_version_id, source_kind, provider_kind, storage_path, content_hash)
 values ('f9000000-0000-0000-0000-000000000001', 'f8000000-0000-0000-0000-000000000001', 'PRIMARY_FILE', 'SUPABASE_STORAGE',
   'f7000000-0000-0000-0000-000000000001/source/fixture.txt', encode(extensions.digest(convert_to('p5-03-source-bytes', 'UTF8'), 'sha256'::text), 'hex'));
+select results_eq(
+  $$ select count(*)::integer from public.ingestion_jobs
+      where source_id = 'f9000000-0000-0000-0000-000000000001'::uuid and job_kind = 'SOURCE_READY' $$,
+  ARRAY[1], 'source insert continues to run the internal ingestion trigger'
+);
 select public.set_current_document_version('f7000000-0000-0000-0000-000000000001'::uuid, 'f8000000-0000-0000-0000-000000000001'::uuid);
 
 select throws_ok(
