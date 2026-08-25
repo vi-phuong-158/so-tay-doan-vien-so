@@ -28,7 +28,7 @@ export type ExtractionErrorCode =
 
 export class ExtractionError extends Error {
   constructor(readonly code: ExtractionErrorCode, message: string = code) {
-    super(message);
+    super(message === code ? code : `${code}: ${message}`);
     this.name = 'ExtractionError';
   }
 }
@@ -73,7 +73,7 @@ function pdfLiteral(value: string): string {
 }
 
 function pdfTextSources(bytes: Uint8Array): string[] {
-  const raw = new TextDecoder('latin1').decode(bytes);
+  const raw = new TextDecoder('utf-8').decode(bytes);
   const sources = [raw];
   let cursor = 0;
   while (cursor < raw.length) {
@@ -88,7 +88,7 @@ function pdfTextSources(bytes: Uint8Array): string[] {
     if (header.includes('/FlateDecode')) {
       let end = streamEnd;
       while (end > dataStart && (bytes[end - 1] === 10 || bytes[end - 1] === 13)) end -= 1;
-      try { sources.push(new TextDecoder('latin1').decode(unzlibSync(bytes.slice(dataStart, end)))); } catch { /* malformed stream is handled as no text */ }
+      try { sources.push(new TextDecoder('utf-8').decode(unzlibSync(bytes.slice(dataStart, end)))); } catch { /* malformed stream is handled as no text */ }
     }
     cursor = streamEnd + 9;
   }
@@ -104,7 +104,7 @@ function extractPdfPages(bytes: Uint8Array): ExtractedPage[] {
     for (const match of raw.matchAll(/\[((?:[^\]]|\\\])*)\]\s*TJ/g)) {
       for (const literal of match[1].matchAll(/\(([^()]*(?:\\.[^()]*)*)\)/g)) strings.push(pdfLiteral(literal[1]));
     }
-    const text = strings.length ? strings.join(' ').replace(/\s+/g, ' ') : raw.replace(/[^\x09\x0A\x0D\x20-\x7E]/g, ' ');
+    const text = strings.length ? strings.join(' ').replace(/\s+/g, ' ') : '';
     return { page: index + 1, text: normalizeExtractedText(text) };
   }).filter(page => page.text.length > 0);
   if (!pages.length) throw new ExtractionError('OCR_REQUIRED', 'PDF has no usable text layer');
