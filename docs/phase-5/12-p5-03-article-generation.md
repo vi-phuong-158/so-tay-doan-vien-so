@@ -2,7 +2,7 @@
 
 ## VERDICT
 
-`P5_03_TECHNICAL_ACCEPTANCE_PENDING_DATABASE_DENO_CI_RUNTIME_GATES_PENDING`
+`P5_03_TECHNICAL_ACCEPTANCE_PASS_RUNTIME_GATES_PENDING`
 
 The implementation is isolated on `feat/phase-5-03-article-generation` from exact accepted
 `origin/master@a91f7145a76507e171bb9e96a9a7262ed6575aaf`. It is not a production deployment and
@@ -74,10 +74,13 @@ immutable; correction/regeneration uses a new generation key/revision.
 
 ## DATABASE / RLS / IDEMPOTENCY
 
-Migration `202608250001_phase_5_article_generation.sql` adds private extraction artifacts,
+Migrations `202608250001_phase_5_article_generation.sql` and
+`202608250002_phase_5_article_generation_runtime_remediation.sql` add private extraction artifacts,
 generation attempts, explicit AI eligibility, a specific-claim queue RPC, transactional draft
-persistence and trusted review RPC. Authenticated clients retain SELECT-only article/evidence access;
-generation internals and direct writes are backend-only. Idempotency is
+persistence and trusted review RPC. The remediation uses explicit UTF-8 byte hashing through
+`extensions.digest` and resets client table privileges before restoring the intentional read path.
+Authenticated clients retain SELECT-only article/evidence access; generation internals and direct
+writes are backend-only. Idempotency is
 `document_version + article_key + generator_version`; intentional regeneration must carry an
 explicit regeneration key.
 
@@ -92,18 +95,16 @@ fabricated evidence, and duplicate generation attempts.
 - `npm test`: 143/143 PASS.
 - `npm run lint`: 0 errors, 3 pre-existing Fast Refresh warnings.
 - `npm run build`: PASS.
-- Deno extraction/generator/evidence tests added but not runnable locally because `deno` is not installed.
-- pgTAP migration suite added but `supabase`/Postgres are not installed locally.
-- `git diff --check` and secret-pattern audit remain required before CI/PR acceptance.
+- Exact-head CI run `32806720861` on `11f6d0ae255f8b922f6f4be64c76fea5140dbf20`: PASS.
+- Database reset/pgTAP: `Files=27, Tests=802`; P5-03 article generation `30/30` assertions PASS.
+- Edge/Deno: `70 passed, 0 failed`; frontend CI build/lint/tests PASS.
+- `git diff --check` PASS; secret-pattern audit clean.
 
 ## RUNTIME GATES / RESIDUAL RISKS
 
-`GEMINI_RUNTIME_GATE_PENDING` and `DRIVE_RUNTIME_GATE_PENDING` remain. Synthetic tests do not prove
-provider OAuth, external-AI policy approval, real source permissions, or runtime cleanup. CI must run
-the full database reset/pgTAP suite, Deno check/tests and exact-head frontend gates before technical
-acceptance can be upgraded.
+`GEMINI_RUNTIME_GATE_PENDING` and `DRIVE_RUNTIME_GATE_PENDING` remain. Technical CI does not prove
+provider OAuth, external-AI policy approval, real source permissions, or runtime cleanup.
 
 ## NEXT TASK
 
-`P5-04 — Knowledge Article Quality Evaluation & Selective Embedding` (only after this technical
-slice is accepted; retrieval/embedding is deliberately not started here).
+`P5-03R2 — Runtime Rehearsal Closure` (Gemini/Drive runtime evidence only; no retrieval or embedding).

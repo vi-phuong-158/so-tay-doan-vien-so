@@ -933,3 +933,16 @@
 - **Kiểm tra:** Frontend `npm test` 143/143 PASS, `npm run lint` 0 errors/3 existing warnings,
   `npm run build` PASS. Supabase CLI/Deno không có trong môi trường local; database/Deno gates còn
   phải chạy bằng CI/rehearsal exact-head.
+
+## [2026-08-25] P5-03R1 — Database runtime and exact-head CI remediation
+
+- **Agent:** Codex
+- **Thay đổi:** Thêm forward-fix migration `202608250002_phase_5_article_generation_runtime_remediation.sql`:
+  hash evidence bằng `extensions.digest(convert_to(..., 'UTF8'), 'sha256'::text)`, reset toàn phần
+  privilege của `anon`/`authenticated` cho article/evidence/generation internals, và giữ các
+  SECURITY DEFINER function với `search_path` cố định. Sửa TAP plan theo số assertion thực tế và
+  harden PDF fail-closed/UTF-8 extraction fixtures.
+- **Kiểm tra exact-head:** CI run `32806720861`, HEAD
+  `11f6d0ae255f8b922f6f4be64c76fea5140dbf20`: database `Files=27, Tests=802`, P5-03 `30/30`,
+  Deno `70 passed`, frontend build/lint/tests PASS.
+- **Kết luận:** Technical acceptance PASS; Gemini và Google Drive runtime rehearsal vẫn PENDING.
