@@ -1,6 +1,6 @@
 begin;
 
-select plan(28);
+select plan(36);
 
 create or replace function p5_03_set_auth_user(p_uid uuid) returns void
 language plpgsql as $$
@@ -25,9 +25,29 @@ select table_privs_are('public', 'document_extractions', 'authenticated', ARRAY[
 select table_privs_are('public', 'knowledge_generation_attempts', 'authenticated', ARRAY[]::text[], 'clients cannot read generation internals');
 select table_privs_are('public', 'knowledge_articles', 'authenticated', ARRAY['SELECT'], 'clients cannot write generated articles');
 select table_privs_are('public', 'document_chunks', 'authenticated', ARRAY['SELECT'], 'clients cannot write evidence');
+select table_privs_are('public', 'document_extractions', 'anon', ARRAY[]::text[], 'anonymous clients cannot read extraction artifacts');
+select table_privs_are('public', 'knowledge_generation_attempts', 'anon', ARRAY[]::text[], 'anonymous clients cannot read generation internals');
+select table_privs_are('public', 'knowledge_articles', 'anon', ARRAY[]::text[], 'anonymous clients cannot read generated articles');
+select table_privs_are('public', 'document_chunks', 'anon', ARRAY[]::text[], 'anonymous clients cannot read evidence');
+select table_privs_are('public', 'ingestion_jobs', 'authenticated', ARRAY[]::text[], 'clients cannot read generation jobs');
+select table_privs_are('public', 'ingestion_jobs', 'anon', ARRAY[]::text[], 'anonymous clients cannot read generation jobs');
 select function_privs_are('public', 'queue_knowledge_article_generation', ARRAY['uuid','text','text','uuid'], 'authenticated', ARRAY[]::text[], 'queue is backend-only');
 select function_privs_are('public', 'persist_knowledge_article_draft', ARRAY['uuid','uuid','jsonb','jsonb','jsonb','uuid'], 'authenticated', ARRAY[]::text[], 'article persistence is backend-only');
 select function_privs_are('public', 'review_knowledge_article', ARRAY['uuid','text','text'], 'authenticated', ARRAY['EXECUTE'], 'review uses a trusted RPC');
+select results_eq(
+  $$
+    select count(*)::integer
+      from pg_proc p
+      join pg_namespace n on n.oid = p.pronamespace
+     where n.nspname = 'public'
+       and p.proname in ('queue_knowledge_article_generation', 'set_document_ai_processing_allowed',
+                         'claim_specific_ingestion_job', 'persist_document_extraction',
+                         'persist_knowledge_article_draft', 'review_knowledge_article')
+       and p.prosecdef
+       and p.proconfig @> array['search_path=public']
+  $$,
+  ARRAY[6], 'P5-03 SECURITY DEFINER functions pin search_path'
+);
 
 select p5_03_reset_auth();
 insert into public.documents (id, title, status, visibility_level, owner_organization_id, created_by, ai_processing_allowed)
@@ -35,10 +55,10 @@ values ('f7000000-0000-0000-0000-000000000001', 'P5-03 synthetic source', 'PUBLI
   '22222222-2222-2222-2222-222222222222', '11112222-3333-4444-5555-666677778888', false);
 insert into public.document_versions (id, document_id, version_number, content_hash, mime_type, created_by)
 values ('f8000000-0000-0000-0000-000000000001', 'f7000000-0000-0000-0000-000000000001', 1,
-  encode(digest('p5-03-source-bytes', 'sha256'), 'hex'), 'text/plain', '11112222-3333-4444-5555-666677778888');
+  encode(extensions.digest(convert_to('p5-03-source-bytes', 'UTF8'), 'sha256'::text), 'hex'), 'text/plain', '11112222-3333-4444-5555-666677778888');
 insert into public.document_sources (id, document_version_id, source_kind, provider_kind, storage_path, content_hash)
 values ('f9000000-0000-0000-0000-000000000001', 'f8000000-0000-0000-0000-000000000001', 'PRIMARY_FILE', 'SUPABASE_STORAGE',
-  'f7000000-0000-0000-0000-000000000001/source/fixture.txt', encode(digest('p5-03-source-bytes', 'sha256'), 'hex'));
+  'f7000000-0000-0000-0000-000000000001/source/fixture.txt', encode(extensions.digest(convert_to('p5-03-source-bytes', 'UTF8'), 'sha256'::text), 'hex'));
 select public.set_current_document_version('f7000000-0000-0000-0000-000000000001'::uuid, 'f8000000-0000-0000-0000-000000000001'::uuid);
 
 select throws_ok(
@@ -64,7 +84,7 @@ select results_eq(
 );
 select public.persist_document_extraction(
   'f9000000-0000-0000-0000-000000000001'::uuid,
-  encode(digest('p5-03-source-bytes', 'sha256'), 'hex'), 'normalized-fixture-hash', 'deterministic-text', 'p5-03-deterministic-v1',
+  encode(extensions.digest(convert_to('p5-03-source-bytes', 'UTF8'), 'sha256'::text), 'hex'), 'normalized-fixture-hash', 'deterministic-text', 'p5-03-deterministic-v1',
   '[{"page":1,"text":"Điều 1. Hạn 15 ngày."}]'::jsonb, '{"sections":[]}'::jsonb, 'Điều 1. Hạn 15 ngày.'
 ) is not null;
 select results_eq('select count(*)::integer from public.document_extractions', ARRAY[1], 'successful extraction is stored privately');
@@ -81,12 +101,17 @@ select results_eq('select count(*)::integer from p5_03_claim', ARRAY[1], 'genera
 select public.persist_knowledge_article_draft(
   (select id from p5_03_claim), (select claim_token from p5_03_claim),
   '{"title":"Bản nháp synthetic","summary":"Hạn 15 ngày","key_points":["Hạn 15 ngày"],"structured_content":{}}'::jsonb,
-  jsonb_build_array(jsonb_build_object('content','Điều 1. Hạn 15 ngày.','content_hash',encode(digest('Điều 1. Hạn 15 ngày.', 'sha256'),'hex'),'locator',jsonb_build_object('page',1),'evidence_kind','DEADLINE','selected_reason','fixture')),
+  jsonb_build_array(jsonb_build_object('content','Điều 1. Hạn 15 ngày.','content_hash',encode(extensions.digest(convert_to('Điều 1. Hạn 15 ngày.', 'UTF8'), 'sha256'::text),'hex'),'locator',jsonb_build_object('page',1),'evidence_kind','DEADLINE','selected_reason','fixture')),
   '{"provider":"FAKE","model":"synthetic-fake-v1","prompt_version":"knowledge_article_v1"}'::jsonb,
   '11112222-3333-4444-5555-666677778888'::uuid
 ) is not null;
 select results_eq($$ select count(*)::integer from public.knowledge_articles where review_status = 'PENDING_REVIEW' $$, ARRAY[1], 'generated article is reviewable, never auto-approved');
 select results_eq($$ select count(*)::integer from public.document_chunks where article_id is not null and review_status = 'PENDING' $$, ARRAY[1], 'evidence is selective and initially pending');
+select results_eq(
+  $$ select content_hash from public.document_chunks where article_id is not null $$,
+  $$ select encode(extensions.digest(convert_to('Điều 1. Hạn 15 ngày.', 'UTF8'), 'sha256'::text), 'hex') $$,
+  'database evidence hash is explicit UTF-8 SHA-256'
+);
 select public.complete_ingestion_job((select id from p5_03_claim), (select claim_token from p5_03_claim), '{"article_id":"f0000000-0000-0000-0000-000000000001"}'::jsonb);
 
 select p5_03_set_auth_user('11112222-3333-4444-5555-666677778888'::uuid);
