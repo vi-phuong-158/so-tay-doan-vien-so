@@ -972,3 +972,18 @@
 - **Kiểm tra:** `npm test` 146/146 PASS; lint 0 errors/3 existing warnings; build PASS;
   `git diff --check` PASS. Supabase CLI/Deno and rehearsal runtime access are unavailable locally,
   so DB/Deno/rehearsal/real-Gemini acceptance remains blocked and is not claimed as PASS.
+
+## [2026-08-31] Phase 5 final technical acceptance gates
+
+- **Agent:** Codex
+- **Thay đổi:** Replayed exact base `a91f7145` in current CI, proved the four pgTAP failures are
+  runtime-default grant drift, added the forward-only explicit privilege stabilization migration,
+  and typed the Ask AI retrieval RPC boundary for strict Deno checking.
+- **File đã sửa:** `supabase/migrations/202608310002_phase_5_baseline_privilege_stabilization.sql`,
+  `supabase/functions/ask-ai/index.ts`, Phase 5 closure/testing/task/decision documentation.
+- **Lý do:** Preserve Phase 1/3 fail-closed grants under current Supabase local images without
+  weakening tests or changing Phase 5 retrieval semantics.
+- **Kiểm tra:** Baseline CI `33413402157` failed the same 4 assertions; exact-head CI
+  `33414314759` on `70e8e6a` passed frontend gates, migration reset, 815 pgTAP assertions and
+  74 Deno tests. Runtime actor acceptance remains blocked because no authenticated rehearsal
+  management/runtime access is present; Production was not accessed.

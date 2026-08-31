@@ -578,3 +578,16 @@ không nới, không skip bất kỳ assertion nào**; test 14/15/16/26 vẫn đ
   signed URL hay provider locator.
 - **Lý do:** Khép vòng reviewed evidence → retrieval → answer → citation mà không dùng service
   role như retrieval bypass và không làm vector index trở thành source of truth.
+
+## [2026-08-31] Explicit table grants are a security contract, not a runtime default
+
+- **Quyết định:** Forward migration `202608310002_phase_5_baseline_privilege_stabilization.sql`
+  revokes inherited `PUBLIC`/`anon`/`authenticated` table privileges on `profiles` and
+  `notifications`, then grants back only the pre-existing minimum contract. Anonymous callers may
+  read `profiles` for RLS evaluation but cannot read notifications; authenticated callers may read
+  notifications and may update only the four existing profile self-service columns.
+- **Lý do:** The exact pre-Phase-5 base replayed with the current CI runtime acquired an unintended
+  `INSERT` privilege on `profiles` and anonymous `SELECT` on `notifications`. Historical CI had
+  passed, proving this was a runtime-default drift rather than a Phase 5 retrieval change.
+- **Đảm bảo:** No policy or test was weakened. The existing Phase 1/3 pgTAP assertions remain the
+  regression checks, and the change narrows privileges before RLS is evaluated.

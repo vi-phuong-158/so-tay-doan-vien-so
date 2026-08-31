@@ -64,6 +64,15 @@ question; the former must reveal no source/metadata and the latter must return t
 answer. Record only source type, checksum, short IDs, statuses and result counts—never secrets,
 tokens, storage paths or document body.
 
+### Phase 5 closure baseline regression evidence
+
+Use the same CI runtime when classifying an existing pgTAP failure. On 2026-08-31, exact base
+`a91f7145` was replayed by manual CI run `33413402157` and failed the same four assertions as the
+first closure candidate: anonymous notification read and three unexpected `profiles` INSERT grants.
+The forward grant remediation then passed exact-head CI `33414314759` on `70e8e6a`: reset/migration,
+`Files=27, Tests=815`, `deno check`, and `deno test` (`74 passed`). This is CI evidence only; it
+does not replace the non-production actor rehearsal.
+
 Checklist thủ công trước khi commit/push:
 - [ ] `npm test` xanh và `npm run lint` sạch (không thêm cảnh báo mới).
 - [ ] `npm run build` chạy được.
