@@ -99,7 +99,7 @@ Deno.serve(async request => {
       p_match_count: 8,
     });
     if (retrievalError) throw new Error('RETRIEVAL_FAILED');
-    const sources = (data ?? []).map(mapSource);
+    const sources: RetrievedKnowledgeSource[] = ((data ?? []) as RetrievalRow[]).map(mapSource);
 
     if (sources.length === 0) {
       const { data: message, error } = await adminClient.from('ai_messages')
