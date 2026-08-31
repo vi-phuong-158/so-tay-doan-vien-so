@@ -55,6 +55,15 @@ npm run lint      # eslint src
 6. Test AI chỉ truy hồi chunk `APPROVED`, đúng quyền.
 7. E2E responsive tại 360, 390, 430, 768, 1440 px.
 
+### Phase 5 cited retrieval rehearsal
+
+Run on the non-production rehearsal project only: enable retrieval through its trusted RPCs for one
+approved document/article, invoke `ask-ai` as an allowed user and confirm its evidence citation
+opens the canonical document route. Repeat as a cross-organization user and with an unsupported
+question; the former must reveal no source/metadata and the latter must return the no-evidence
+answer. Record only source type, checksum, short IDs, statuses and result counts—never secrets,
+tokens, storage paths or document body.
+
 Checklist thủ công trước khi commit/push:
 - [ ] `npm test` xanh và `npm run lint` sạch (không thêm cảnh báo mới).
 - [ ] `npm run build` chạy được.

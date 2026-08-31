@@ -12,6 +12,7 @@ import { Home } from './pages/Home';
 import { Work } from './pages/Work';
 import { ReportAssignmentDetail } from './pages/ReportAssignmentDetail';
 import { Knowledge } from './pages/Knowledge';
+import { AskAi } from './pages/AskAi';
 import { Documents } from './pages/Documents';
 import { DocumentDetail } from './pages/DocumentDetail';
 import { LearningTopics } from './pages/LearningTopics';
@@ -57,6 +58,7 @@ export default function App() {
             <Route path="cong-viec" element={<Work />} />
             <Route path="cong-viec/bao-cao/:assignmentId" element={<ReportAssignmentDetail />} />
             <Route path="tri-thuc" element={<Knowledge />} />
+            <Route path="tri-thuc/hoi-ai" element={<AskAi />} />
             <Route path="tri-thuc/van-ban" element={<Documents />} />
             <Route path="tri-thuc/van-ban/:documentId" element={<DocumentDetail />} />
             <Route path="tri-thuc/chuyen-de" element={<LearningTopics />} />

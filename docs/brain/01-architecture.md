@@ -465,6 +465,10 @@ content remains immutable and a correction/regeneration uses a new revision/gene
 | `supabase/functions/generate-knowledge-article/index.ts` | authenticated scoped admin orchestration: source read, checksum, extraction, Gemini, persist draft | admin UI | StorageProvider, queue/RPCs |
 | `supabase/migrations/202608250001_phase_5_article_generation.sql` | private extraction/attempt artifacts, AI eligibility, idempotent queue, trusted persist/review RPCs | Supabase reset/CI | canonical P5-R0 schema |
 | `supabase/migrations/20260825154300_phase_5_function_privilege_hardening.sql` | revoke default client `EXECUTE` from internal P5 trigger functions; preserves explicit RPC grants | Supabase reset/CI | P5 trigger bindings and PostgreSQL function ACLs |
+| `supabase/migrations/202608310001_phase_5_rag_retrieval.sql` | controlled retrieval enablement and security-invoker lexical retrieval of current approved evidence | `ask-ai`, Supabase reset/CI | documents, articles, evidence RLS |
+| `supabase/functions/_shared/knowledge/rag.ts` | bounded Gemini grounded-answer adapter and source-only prompt | `ask-ai`, Deno tests | Gemini secret, approved evidence |
+| `supabase/functions/ask-ai/index.ts` | authenticated RLS-first retrieval, conversation ownership check, answer/citation persistence | `aiService` | RAG adapter, `ai_*` provenance trigger |
+| `src/services/aiService.js`, `src/pages/AskAi.jsx` | browser boundary and user-facing cited-answer screen | `/tri-thuc/hoi-ai` | authenticated Edge Function only |
 | `supabase/tests/phase_5_article_generation.sql` | P5-03 table/RPC security, dynamic trigger-function ACL and trigger-behavior regression acceptance | `supabase test db` | P5 migrations + seed |
 | `src/services/knowledgeAdminService.js` | read-only article/evidence admin reads plus Edge Function/RPC mutation boundary | `AdminKnowledgeArticle` | Supabase client |
 | `src/pages/AdminKnowledgeArticle.jsx` | minimal source/article/evidence review workflow | `/admin/van-ban/:documentId/tri-thuc` | knowledge admin service, RoleGuard |

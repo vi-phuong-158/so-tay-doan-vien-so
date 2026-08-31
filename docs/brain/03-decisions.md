@@ -564,3 +564,17 @@ không nới, không skip bất kỳ assertion nào**; test 14/15/16/26 vẫn đ
 - **Đảm bảo:** Regression pgTAP inventory trigger functions từ catalog P5 để chặn helper trigger
   mới quay lại default-open; test source insertion tiếp tục tạo ingestion job. SECURITY DEFINER
   P5 đã có `search_path=public`, nên migration không thay function body hay semantics.
+
+## [2026-08-31] P5 cited retrieval is RLS-first and embedding-optional
+
+- **Quyết định:** `ask-ai` truy vấn `search_published_knowledge()` bằng `userClient` trước khi
+  dùng service role để persist conversation/message. RPC là `SECURITY INVOKER`, chỉ trả approved,
+  current, retrieval-enabled article evidence; do đó RLS của caller lọc source trước model call.
+- **Quyết định:** Bật retrieval cho document và article là hai trusted scoped-admin RPC riêng.
+  Không bật mặc định khi approve, không tạo embedding tự động, và không cho PUBLISHED/superseded
+  state bị thay đổi cùng thao tác này.
+- **Quyết định:** Citation được persist dưới `source_kind = 'EVIDENCE'`, để trigger provenance
+  điền lại canonical document/version; browser chỉ nhận document route, không nhận storage path,
+  signed URL hay provider locator.
+- **Lý do:** Khép vòng reviewed evidence → retrieval → answer → citation mà không dùng service
+  role như retrieval bypass và không làm vector index trở thành source of truth.

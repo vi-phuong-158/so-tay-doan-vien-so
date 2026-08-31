@@ -953,3 +953,22 @@
 - **File đã sửa:** `supabase/migrations/20260825154300_phase_5_function_privilege_hardening.sql`, `supabase/tests/phase_5_article_generation.sql`, `docs/brain/06-ai-working-log.md`
 - **Lý do:** Rehearsal audit xác định trigger functions canonical P5 vẫn nhận quyền `EXECUTE` mặc định qua `PUBLIC`.
 - **Kiểm tra:** Chạy clean database replay/pgTAP, full repository validation và kiểm kê grants rehearsal sau khi CI pass.
+
+## [2026-08-31] Phase 5 cited RAG technical closure
+
+- **Agent:** Codex
+- **Thay đổi:** Thêm forward migration cho retrieval opt-in và `SECURITY INVOKER` search của
+  approved evidence; thay `ask-ai` bằng RLS-first retrieval, bounded Gemini gateway, verified
+  citation provenance và kiểm tra ownership conversation; thêm service, route `/tri-thuc/hoi-ai`,
+  pgTAP and unit coverage.
+- **File đã sửa:** `supabase/migrations/202608310001_phase_5_rag_retrieval.sql`,
+  `supabase/functions/_shared/knowledge/rag.*`, `supabase/functions/ask-ai/index.ts`,
+  `supabase/tests/phase_5_article_generation.sql`, `src/services/aiService.js`,
+  `src/pages/AskAi.jsx`, `src/App.jsx`, `src/pages/Knowledge.jsx`, `src/index.css`,
+  `tests/ai_service.test.mjs`, architecture/decision/task/testing docs and
+  `docs/phase-5/13-phase-5-end-to-end-closure.md`.
+- **Lý do:** P5-03 deliberately stopped before user-facing retrieval; this forward slice preserves
+  human review and evidence provenance while preventing a service-role retrieval bypass.
+- **Kiểm tra:** `npm test` 146/146 PASS; lint 0 errors/3 existing warnings; build PASS;
+  `git diff --check` PASS. Supabase CLI/Deno and rehearsal runtime access are unavailable locally,
+  so DB/Deno/rehearsal/real-Gemini acceptance remains blocked and is not claimed as PASS.

@@ -1,6 +1,6 @@
 begin;
 
-select plan(35);
+select plan(43);
 
 create or replace function p5_03_set_auth_user(p_uid uuid) returns void
 language plpgsql as $$
@@ -35,6 +35,10 @@ select function_privs_are('public', 'queue_knowledge_article_generation', ARRAY[
 select function_privs_are('public', 'persist_knowledge_article_draft', ARRAY['uuid','uuid','jsonb','jsonb','jsonb','uuid'], 'authenticated', ARRAY[]::text[], 'article persistence is backend-only');
 select function_privs_are('public', 'review_knowledge_article', ARRAY['uuid','text','text'], 'authenticated', ARRAY['EXECUTE'], 'review uses a trusted RPC');
 select function_privs_are('public', 'set_document_ai_processing_allowed', ARRAY['uuid','boolean'], 'authenticated', ARRAY['EXECUTE'], 'AI eligibility uses a trusted RPC');
+select function_privs_are('public', 'set_document_retrieval_enabled', ARRAY['uuid','boolean'], 'authenticated', ARRAY['EXECUTE'], 'document retrieval uses a trusted RPC');
+select function_privs_are('public', 'set_knowledge_article_retrieval_enabled', ARRAY['uuid','boolean'], 'authenticated', ARRAY['EXECUTE'], 'article retrieval uses a trusted RPC');
+select function_privs_are('public', 'search_published_knowledge', ARRAY['text','integer'], 'authenticated', ARRAY['EXECUTE'], 'retrieval is callable only by authenticated users');
+select function_privs_are('public', 'search_published_knowledge', ARRAY['text','integer'], 'anon', ARRAY[]::text[], 'anonymous callers cannot invoke retrieval');
 select results_eq(
   $$
     select count(*)::integer
@@ -175,6 +179,25 @@ select p5_03_set_auth_user('11112222-3333-4444-5555-666677778888'::uuid);
 select public.review_knowledge_article((select id from public.knowledge_articles where document_id = 'f7000000-0000-0000-0000-000000000001'::uuid), 'APPROVE', 'Đã đối chiếu source');
 select results_eq($$ select count(*)::integer from public.knowledge_articles where document_id = 'f7000000-0000-0000-0000-000000000001'::uuid and review_status = 'APPROVED' $$, ARRAY[1], 'scoped admin can approve a complete article');
 select results_eq($$ select count(*)::integer from public.document_chunks where article_id = (select id from public.knowledge_articles where document_id = 'f7000000-0000-0000-0000-000000000001'::uuid) and review_status = 'APPROVED' $$, ARRAY[1], 'approval atomically approves linked evidence');
+select lives_ok(
+  $$ select public.set_document_retrieval_enabled('f7000000-0000-0000-0000-000000000001'::uuid, true) $$,
+  'scoped admin can enable published document retrieval'
+);
+select lives_ok(
+  $$ select public.set_knowledge_article_retrieval_enabled((select id from public.knowledge_articles where document_id = 'f7000000-0000-0000-0000-000000000001'::uuid), true) $$,
+  'scoped admin can enable approved current article retrieval'
+);
+select p5_03_set_auth_user('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'::uuid);
+select results_eq(
+  $$ select count(*)::integer from public.search_published_knowledge('Hạn 15 ngày', 8) $$,
+  ARRAY[1], 'same-organization member retrieves approved source evidence'
+);
+select p5_03_set_auth_user('dddddddd-dddd-dddd-dddd-dddddddddddd'::uuid);
+select results_eq(
+  $$ select count(*)::integer from public.search_published_knowledge('Hạn 15 ngày', 8) $$,
+  ARRAY[0], 'cross-organization user cannot retrieve source evidence'
+);
+select p5_03_set_auth_user('11112222-3333-4444-5555-666677778888'::uuid);
 select throws_ok(
   $$ update public.knowledge_articles set content = '{"tampered":true}'::jsonb where document_id = 'f7000000-0000-0000-0000-000000000001'::uuid $$,
   'permission denied for table knowledge_articles', 'authenticated clients cannot edit generated content directly'

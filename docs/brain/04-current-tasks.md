@@ -7,6 +7,14 @@
 
 ## Đang làm
 
+### Phase 5 end-to-end closure
+- **Base:** isolated closure worktree/branch `codex/phase-5-full-closure`, based on P5-03 plus the
+  forward-only trigger-function privilege fix `ff72ccd`.
+- **Trạng thái:** technical closure work adds cited, RLS-first Ask AI retrieval and the user route
+  `/tri-thuc/hoi-ai`; runtime acceptance is still blocked until the exact head can be replayed and
+  exercised in project `znexculhbdjiflkczpyu`. Production must not be used.
+- **Report:** `docs/phase-5/13-phase-5-end-to-end-closure.md`.
+
 ### P5-03 — Canonical document extraction → knowledge article generation
 - **Base:** exact `origin/master@a91f7145a76507e171bb9e96a9a7262ed6575aaf`; isolated branch
   `feat/phase-5-03-article-generation`.
