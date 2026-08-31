@@ -95,7 +95,7 @@ as $$
          greatest(
            ts_rank_cd(to_tsvector('simple', coalesce(a.title, '') || ' ' || coalesce(a.summary, '') || ' ' || coalesce(a.content_text, '')), input.query),
            ts_rank_cd(to_tsvector('simple', e.content), input.query)
-         )::real
+         )::real as rank
     from input
     join public.knowledge_articles a on true
     join public.documents d on d.id = a.document_id
