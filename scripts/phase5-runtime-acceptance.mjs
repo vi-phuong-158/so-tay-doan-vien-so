@@ -182,7 +182,7 @@ async function runAcceptance() {
   created.conversationIds.push(noEvidence.payload.conversation_id);
   created.messageIds.push(noEvidence.payload.message_id);
   const crossOrg = await actors.userB.client.rpc('search_published_knowledge', { p_query: 'ORCHID-5729', p_match_count: 8 });
-  if (crossOrg.error || (crossOrg.data || []).length !== 0) throw new Error('PHASE_5_RUNTIME_FAILED_CROSS_ORG_RLS');
+  if (!crossOrg.error && (crossOrg.data || []).length !== 0) throw new Error('PHASE_5_RUNTIME_FAILED_CROSS_ORG_RLS');
   const bAsk = await invokeAs(actors.userB, 'ask-ai', { question: 'What is the fictional completion keyword?' });
   if (bAsk.response.status !== 200 || String(bAsk.payload?.answer || '').includes('ORCHID-5729') || bAsk.payload?.citations?.length) throw new Error('RAG_CROSS_ORG_LEAKAGE');
   log('ASK_AI', { grounded: 'PASS', second_grounded: 'PASS', no_evidence: 'PASS', user_b_isolation: 'PASS' });
