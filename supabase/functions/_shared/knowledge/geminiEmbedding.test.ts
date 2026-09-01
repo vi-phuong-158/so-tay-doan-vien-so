@@ -1,5 +1,5 @@
 import { assertEquals, assertThrows } from 'jsr:@std/assert@1';
-import { embeddingEndpoint, embeddingRequest, GEMINI_EMBEDDING_DIMENSION, parseEmbeddingResponse } from './geminiEmbedding.ts';
+import { embeddingEndpoint, embeddingRequest, GEMINI_EMBEDDING_DIMENSION, GeminiEmbeddingError, parseEmbeddingResponse } from './geminiEmbedding.ts';
 
 Deno.test('Gemini embedding request explicitly requests the database vector dimension', () => {
   assertEquals(embeddingRequest('fixture text').output_dimensionality, GEMINI_EMBEDDING_DIMENSION);
@@ -11,6 +11,6 @@ Deno.test('Gemini embedding response accepts exactly 768 finite numeric dimensio
 });
 
 Deno.test('Gemini embedding response fails closed for a wrong dimension or invalid numeric value', () => {
-  assertThrows(() => parseEmbeddingResponse({ embedding: { values: Array.from({ length: 767 }, () => 0) } }), /GEMINI_EMBEDDING_DIMENSION_INVALID/);
-  assertThrows(() => parseEmbeddingResponse({ embedding: { values: [...Array.from({ length: 767 }, () => 0), Number.NaN] } }), /GEMINI_EMBEDDING_DIMENSION_INVALID/);
+  assertThrows(() => parseEmbeddingResponse({ embedding: { values: Array.from({ length: 767 }, () => 0) } }), GeminiEmbeddingError, 'GEMINI_EMBEDDING_DIMENSION_INVALID');
+  assertThrows(() => parseEmbeddingResponse({ embedding: { values: [...Array.from({ length: 767 }, () => 0), Number.NaN] } }), GeminiEmbeddingError, 'GEMINI_EMBEDDING_DIMENSION_INVALID');
 });
