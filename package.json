@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "node --test tests/*.test.mjs",
-    "lint": "eslint src"
+    "lint": "eslint src",
+    "test:phase5:runtime": "node scripts/phase5-runtime-acceptance.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.111.0",

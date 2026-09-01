@@ -92,6 +92,16 @@ operation and no secret-presence endpoint; consequently authenticated actor/runt
 presence, pilot, Ask AI, citations, failure paths, cleanup, and UI gates remain blocked and are not
 claimed as PASS. Production access: NO.
 
+### Phase 5 authenticated runtime harness (2026-09-01)
+
+`scripts/phase5-runtime-acceptance.mjs` is acceptance-only and uses the existing Supabase JS SDK.
+It hard-rejects non-rehearsal URLs, creates random temporary Auth users only with a server/admin
+credential, signs in normally to obtain user sessions, sends user JWTs to `ask-ai`,
+`process-document`, and `generate-knowledge-article`, redacts sensitive output, and cleans up in a
+`finally` block. Run with `npm run test:phase5:runtime` after supplying untracked rehearsal env
+configuration. Current local run stopped before any remote mutation with
+`PHASE_5_RUNTIME_BLOCKED_REHEARSAL_PUBLIC_CONFIG_REQUIRED`; no actor or pilot artifact was created.
+
 Checklist thủ công trước khi commit/push:
 - [ ] `npm test` xanh và `npm run lint` sạch (không thêm cảnh báo mới).
 - [ ] `npm run build` chạy được.

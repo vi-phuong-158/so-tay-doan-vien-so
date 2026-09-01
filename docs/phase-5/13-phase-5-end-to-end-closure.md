@@ -70,6 +70,21 @@ a full Phase 5 pass.
   actor matrix, document pilot, review/toggle sequence, Ask AI evidence, citations, failure matrix,
   cleanup proof, and citation UI acceptance were not executed and are not fabricated.
 
+## Authenticated runtime harness
+
+Added `scripts/phase5-runtime-acceptance.mjs` and the rehearsal-only command
+`npm run test:phase5:runtime`. The harness uses the existing `@supabase/supabase-js` dependency,
+rejects every URL except `https://znexculhbdjiflkczpyu.supabase.co`, creates random temporary actors
+through the server-side Auth Admin API, signs them in through `signInWithPassword`, invokes deployed
+Edge Functions with ordinary user JWTs, redacts sensitive headers, and performs best-effort cleanup
+in `finally`. It never imports into the product runtime and never logs credentials.
+
+Local execution was intentionally blocked because no rehearsal public configuration or server/admin
+bootstrap credential exists in the local environment. The harness emitted
+`PHASE_5_RUNTIME_BLOCKED_REHEARSAL_PUBLIC_CONFIG_REQUIRED`; with public config supplied, the next
+precise blocker is `PHASE_5_RUNTIME_BLOCKED_REHEARSAL_AUTH_BOOTSTRAP_CREDENTIAL_REQUIRED`. No
+authenticated actor or pilot data was created by this run.
+
 ## Security advisor classification
 
 The rehearsal security advisor returned existing INFO `rls_enabled_no_policy` notices for internal

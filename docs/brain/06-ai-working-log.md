@@ -1002,3 +1002,16 @@
   Function invoke, cũng không có secret-presence endpoint. Vì vậy actor matrix, real-document pilot,
   Ask AI evidence/citations, toggle, failure paths, cleanup và citation UI chưa thể chứng minh;
   verdict là `PHASE_5_RUNTIME_BLOCKED_ACTOR_INVOCATION_TOOL_UNAVAILABLE`, không phải PASS.
+
+## [2026-09-01] Phase 5 authenticated runtime harness
+
+- **Agent:** Codex
+- **Thay đổi:** Thêm `scripts/phase5-runtime-acceptance.mjs` và npm command
+  `test:phase5:runtime` làm acceptance tooling độc lập; dùng `@supabase/supabase-js`, Auth Admin
+  bootstrap tạm thời, `signInWithPassword`, user-JWT HTTP calls, rehearsal URL allowlist, redaction,
+  và cleanup trong `finally`.
+- **Kiểm tra:** `node --check` PASS; production URL probe bị chặn bằng `REHEARSAL_URL_MISMATCH`;
+  thiếu local public config dừng an toàn ở `PHASE_5_RUNTIME_BLOCKED_REHEARSAL_PUBLIC_CONFIG_REQUIRED`;
+  không tạo actor/pilot artifact.
+- **Kết luận:** Đây không phải production code change. Cần cung cấp public rehearsal config và
+  rehearsal-only server/admin credential qua untracked environment để chạy authenticated gates.

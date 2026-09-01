@@ -229,6 +229,11 @@
   trong connector: `PHASE_5_RUNTIME_BLOCKED_ACTOR_INVOCATION_TOOL_UNAVAILABLE`. Không truy cập Production;
   không mở Phase 6.
 
+- [2026-09-01] Đã thêm harness `scripts/phase5-runtime-acceptance.mjs` và command
+  `npm run test:phase5:runtime`; harness chỉ cho phép rehearsal, dùng user JWT thật và cleanup trong
+  `finally`. Local execution chưa có public/admin env nên dừng tại
+  `PHASE_5_RUNTIME_BLOCKED_REHEARSAL_PUBLIC_CONFIG_REQUIRED`; không tạo dữ liệu rehearsal.
+
 - [2026-08-14] Phase 3 Stack Consolidation: P3-00 → P3-05 merged to `master` via PR #17 at `2a68f20`; CI `31783521687` PASS.
 
 - [2026-08-11] P2-15: `Phase 2 — Công việc & Báo cáo: TECHNICAL ACCEPTANCE COMPLETE`; P1 direct RPC bypass đã đóng, integrated vertical slice + ma trận A–G PASS; CI `31411605381` PASS (40 frontend, 236 pgTAP, 16 Deno).
