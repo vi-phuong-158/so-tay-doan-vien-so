@@ -122,13 +122,13 @@ async function geminiGenerate(model: string, apiKey: string, prompt: string, fet
     signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
     body: JSON.stringify(knowledgeGenerationRequest(prompt)),
   }).catch(() => {
-    throw new KnowledgeGenerationError('PROVIDER_UNAVAILABLE', 'Gemini request unavailable', true);
+    throw new KnowledgeGenerationError('PROVIDER_UNAVAILABLE', undefined, true);
   });
   const body = await response.json().catch(() => null) as Record<string, any> | null;
   if (!response.ok) {
-    if (response.status === 429) throw new KnowledgeGenerationError('MODEL_RATE_LIMITED', 'Gemini request rate limited', true);
-    if (response.status === 500 || response.status === 503) throw new KnowledgeGenerationError('PROVIDER_UNAVAILABLE', 'Gemini provider unavailable', true);
-    throw new KnowledgeGenerationError('MODEL_PROVIDER_ERROR', 'Gemini request failed');
+    if (response.status === 429) throw new KnowledgeGenerationError('MODEL_RATE_LIMITED', undefined, true);
+    if (response.status === 500 || response.status === 503) throw new KnowledgeGenerationError('PROVIDER_UNAVAILABLE', undefined, true);
+    throw new KnowledgeGenerationError('MODEL_PROVIDER_ERROR');
   }
   const text = body?.candidates?.[0]?.content?.parts?.map((part: any) => part.text || '').join('').trim();
   if (!text) throw new KnowledgeGenerationError('MODEL_INVALID_OUTPUT');
