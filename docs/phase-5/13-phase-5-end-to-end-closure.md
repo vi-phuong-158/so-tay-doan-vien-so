@@ -141,7 +141,10 @@ The source was updated before the next deployment to request `output_dimensional
 `models/gemini-embedding-2`, validate finite numeric vectors of exactly 768 dimensions, and fail
 closed for any mismatch. Gemini 3.7 requests now remove deprecated sampling parameters; knowledge
 generation uses medium thinking while the evidence-grounded Ask AI path uses low thinking. These
-contracts have automated regression tests.
+contracts have automated regression tests. Exact-head CI `33484622052` passed on
+`7ebefbdf23d6bfe45b27c00f451ba687e35d4a07`: frontend lint/test/build, Supabase reset, all
+pgTAP, Deno check, and Deno tests. This proves the source change only; it does not establish hosted
+secret presence or replace the remaining rehearsal runtime gates.
 
 Owner action for rehearsal only: open **Edge Functions → Secrets** in project
 `znexculhbdjiflkczpyu`, add or replace exactly `GEMINI_API_KEY`, `GEMINI_EMBEDDING_MODEL`,

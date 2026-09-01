@@ -1049,3 +1049,6 @@
 - **Owner action:** Tại rehearsal `znexculhbdjiflkczpyu` vào Edge Functions → Secrets, set đúng
   `GEMINI_API_KEY`, `GEMINI_EMBEDDING_MODEL`, `KNOWLEDGE_GENERATION_MODEL`,
   `RAG_GENERATION_MODEL`; không thay Production và không ghi giá trị vào Git/PR.
+- **Kiểm tra sau sửa assertion:** Exact-head CI `33484622052` PASS trên
+  `7ebefbdf23d6bfe45b27c00f451ba687e35d4a07`: frontend lint/test/build, Supabase reset, toàn bộ
+  pgTAP, Deno check và Deno test. Đây không thay thế hosted secret sync hoặc runtime acceptance.

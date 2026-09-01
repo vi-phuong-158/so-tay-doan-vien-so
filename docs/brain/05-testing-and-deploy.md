@@ -133,7 +133,10 @@ parameters; knowledge draft generation requests medium thinking and Ask AI reque
 Hosted secret sync is blocked locally because neither Supabase CLI nor a management secret-write
 capability is present. An authorized owner must set exactly the four Gemini variables under the
 rehearsal project's **Edge Functions → Secrets** page. This is the only permitted configuration
-target; Production remains out of scope.
+target; Production remains out of scope. Exact-head CI `33484622052` passed on
+`7ebefbdf23d6bfe45b27c00f451ba687e35d4a07`, covering frontend lint/test/build, Supabase reset,
+all pgTAP, Deno check, and Deno tests; hosted configuration and runtime acceptance remain separate
+blocked gates.
 
 Checklist thủ công trước khi commit/push:
 - [ ] `npm test` xanh và `npm run lint` sạch (không thêm cảnh báo mới).

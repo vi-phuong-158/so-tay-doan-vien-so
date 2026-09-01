@@ -19,7 +19,9 @@
 - **Gemini remediation:** Local untracked config is now complete and model contracts match, but the
   hosted rehearsal secrets cannot be written from this session because CLI and MCP secret-write
   access are unavailable. The 768-dimensional embedding and Gemini 3.7 compatibility fixes are in
-  the closure branch pending CI, rehearsal function deployment, and owner-only secret sync.
+  the closure branch passed exact-head CI `33484622052` on
+  `7ebefbdf23d6bfe45b27c00f451ba687e35d4a07`; rehearsal function deployment and owner-only secret
+  sync remain required before the runtime harness may resume.
 - **Report:** `docs/phase-5/13-phase-5-end-to-end-closure.md`.
 
 ### P5-03 — Canonical document extraction → knowledge article generation
