@@ -129,6 +129,17 @@ actor password exceeded the Auth/bcrypt length limit, and it did not recognize a
 error payload. Regression tests cover both behaviors. This is still not a full runtime acceptance
 pass.
 
+## Owner-configured rehearsal attempt (2026-09-01)
+
+After owner configuration, `process-document`, `generate-knowledge-article`, and `ask-ai` were
+deployed to rehearsal as active version 3 with JWT verification enabled. Synthetic Auth and
+`process-document` completed successfully, including the 768-dimensional embedding contract.
+Gemini generation reached the provider but returned redacted HTTP 503 `UNAVAILABLE`; one bounded
+retry returned the same transient condition. Storage objects and chunks were removed and the five
+synthetic jobs were cancelled. Because ingestion events are append-only and foreign-key linked,
+3 documents, 3 versions, 3 sources, 5 jobs and 9 events remain as linked audit history; orphan
+jobs/events = 0. Production accessed: **NO**.
+
 ## Gemini compatibility remediation pending rehearsal secret sync (2026-09-01)
 
 The local untracked environment now contains all four required Gemini settings and their model

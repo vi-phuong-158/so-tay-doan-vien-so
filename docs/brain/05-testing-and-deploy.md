@@ -138,6 +138,13 @@ target; Production remains out of scope. Exact-head CI `33484622052` passed on
 all pgTAP, Deno check, and Deno tests; hosted configuration and runtime acceptance remain separate
 blocked gates.
 
+Owner configuration was subsequently verified by deployment v3 of `process-document`,
+`generate-knowledge-article`, and `ask-ai`, all with JWT verification enabled. `process-document`
+returned 200 and provider generation reached Gemini but returned controlled `MODEL_PROVIDER_ERROR`
+from redacted HTTP 503 `UNAVAILABLE`; a bounded retry remained 503. Synthetic storage/chunks were
+removed and five retry/pending jobs cancelled; linked append-only audit rows remain and orphan
+jobs/events = 0. CI `33487744493` on `08e0c85c5bfb0befa0010aef78522ba69af372f6` passed all gates.
+
 Checklist thủ công trước khi commit/push:
 - [ ] `npm test` xanh và `npm run lint` sạch (không thêm cảnh báo mới).
 - [ ] `npm run build` chạy được.

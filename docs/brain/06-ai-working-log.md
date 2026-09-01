@@ -1052,3 +1052,8 @@
 - **Kiểm tra sau sửa assertion:** Exact-head CI `33484622052` PASS trên
   `7ebefbdf23d6bfe45b27c00f451ba687e35d4a07`: frontend lint/test/build, Supabase reset, toàn bộ
   pgTAP, Deno check và Deno test. Đây không thay thế hosted secret sync hoặc runtime acceptance.
+- **Rehearsal follow-up:** Owner-configured secrets enabled exact-head deployment v3 of
+  `process-document`, `generate-knowledge-article`, and `ask-ai` (`verify_jwt=true`). Auth and
+  embedding processing passed; Gemini generation returned redacted HTTP 503 `UNAVAILABLE` twice.
+  Storage/chunks were removed and five exact synthetic jobs cancelled; append-only linked audit
+  rows remain with orphan jobs/events = 0. Harness policy fix is `08e0c85`; CI `33487744493` PASS.
