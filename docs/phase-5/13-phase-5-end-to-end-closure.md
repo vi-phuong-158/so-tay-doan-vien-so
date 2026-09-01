@@ -178,3 +178,19 @@ The post-deployment minimal provider smoke used the accepted `models/gemini-3.7-
 short JSON prompt without creating a document chain. All four bounded attempts returned redacted
 HTTP 503 `UNAVAILABLE`. The full authenticated runtime harness was therefore not started and the
 runtime verdict remains `PHASE_5_RUNTIME_BLOCKED_PROVIDER_UNAVAILABLE_503`.
+
+## Provider model diagnostic (2026-09-01)
+
+Using the same rehearsal-only API key, REST endpoint, minimal prompt and bounded request timeout:
+
+| Model | HTTP | Error code | Result |
+|---|---:|---|---|
+| `models/gemini-3.7-flash` | 503 | `UNAVAILABLE` | unavailable during diagnostic |
+| `models/gemini-3.6-flash` | 200 | — | minimal generation succeeded |
+
+This classifies the incident as `MODEL_SPECIFIC_CAPACITY_ISSUE_GEMINI_3_7_FLASH`, not a provider-wide
+outage. No automatic fallback was added. The hosted rehearsal configuration still points at 3.7;
+the connected tooling exposes no secret/config write operation, so the owner must explicitly set both
+`KNOWLEDGE_GENERATION_MODEL` and `RAG_GENERATION_MODEL` to `models/gemini-3.6-flash` in rehearsal
+before hosted generation smoke and the full runtime harness can resume. Embedding remains
+`models/gemini-embedding-2` with 768 dimensions.

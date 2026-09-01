@@ -27,6 +27,9 @@
   `UNAVAILABLE` twice. Retry hardening passed exact-head CI `33515450066`; a minimal post-deploy
   smoke exhausted four bounded attempts with the same 503. Full runtime acceptance remains
   provider-blocked; no model fallback was introduced.
+-  Model diagnostic then showed `gemini-3.7-flash` HTTP 503 while `gemini-3.6-flash` HTTP 200.
+  This is classified as `MODEL_SPECIFIC_CAPACITY_ISSUE_GEMINI_3_7_FLASH`; owner must update both
+  hosted rehearsal generation model secrets to `models/gemini-3.6-flash` before rerunning acceptance.
 - **Report:** `docs/phase-5/13-phase-5-end-to-end-closure.md`.
 
 ### P5-03 — Canonical document extraction → knowledge article generation

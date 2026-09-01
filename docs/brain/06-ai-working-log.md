@@ -1078,3 +1078,13 @@
 - **Kết luận:** Phân loại vẫn là `PROVIDER_UNAVAILABLE` (transient availability), không đổi model,
   không fallback và không chạy full runtime harness khi smoke chưa thành công. Verdict giữ nguyên
   `PHASE_5_RUNTIME_BLOCKED_PROVIDER_UNAVAILABLE_503`; Production accessed = NO.
+
+## [2026-09-01] Phase 5 Gemini model diagnostic
+
+- **Bằng chứng:** Minimal diagnostic trên rehearsal dùng cùng credentials/REST endpoint cho hai model:
+  `models/gemini-3.7-flash` trả HTTP 503 `UNAVAILABLE`; `models/gemini-3.6-flash` trả HTTP 200.
+  Không tạo fixture và không in secret.
+- **Phân loại:** `MODEL_SPECIFIC_CAPACITY_ISSUE_GEMINI_3_7_FLASH`; không phải provider-wide outage.
+- **Blocker:** Connector hiện không có secret/config write operation. Chưa đổi hosted rehearsal config,
+  nên chưa chạy generation smoke hosted hoặc `npm run test:phase5:runtime`; không triển khai fallback
+  code và không truy cập Production.
