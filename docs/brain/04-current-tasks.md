@@ -223,6 +223,12 @@
 - [2026-08-14] P3-R1: Email delivery safety gate & reminder cycle fix merged via PR #19 (`5665dc4`).
 - [2026-08-11] P3-01: Notification Foundation PASS; CI 31491748132 xanh với migration reset, 267 pgTAP, Edge Function và frontend gates.
 
+- [2026-09-01] Phase 5 rehearsal đã đồng bộ tới exact HEAD `1cdc3d51d35d86338aacd8c88d138006dd3ad1d5`
+  trên project `znexculhbdjiflkczpyu`; đã deploy `ask-ai`, `process-document`,
+  `generate-knowledge-article`. Runtime actor/Ask AI/pilot vẫn bị chặn bởi thiếu API invoke/Auth
+  trong connector: `PHASE_5_RUNTIME_BLOCKED_ACTOR_INVOCATION_TOOL_UNAVAILABLE`. Không truy cập Production;
+  không mở Phase 6.
+
 - [2026-08-14] Phase 3 Stack Consolidation: P3-00 → P3-05 merged to `master` via PR #17 at `2a68f20`; CI `31783521687` PASS.
 
 - [2026-08-11] P2-15: `Phase 2 — Công việc & Báo cáo: TECHNICAL ACCEPTANCE COMPLETE`; P1 direct RPC bypass đã đóng, integrated vertical slice + ma trận A–G PASS; CI `31411605381` PASS (40 frontend, 236 pgTAP, 16 Deno).

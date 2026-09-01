@@ -2,10 +2,12 @@
 
 ## Status
 
-`PHASE_5_RUNTIME_ACCEPTANCE_BLOCKED_REHEARSAL_ACCESS_REQUIRED`
+`PHASE_5_RUNTIME_BLOCKED_ACTOR_INVOCATION_TOOL_UNAVAILABLE`
 
-Technical CI gates are complete; runtime acceptance is not. This report does not claim production
-deployment, rehearsal execution, or a full Phase 5 pass.
+Technical CI gates are complete. The authenticated Supabase management connector reconciled and
+deployed the rehearsal state, but it exposes no authenticated Auth/session creation or Edge Function
+invocation operation. Runtime actor acceptance therefore remains blocked; this report does not claim
+a full Phase 5 pass.
 
 ## Forward changes
 
@@ -40,25 +42,41 @@ deployment, rehearsal execution, or a full Phase 5 pass.
 - `npm run lint`: 0 errors.
 - `npm run build`: passed.
 - `git diff --check`: passed.
-- Exact-head CI `33414314759` on `70e8e6a`: frontend lint/test/build passed; Supabase reset and
+- Exact-head CI `33415028799` on `1cdc3d51d35d86338aacd8c88d138006dd3ad1d5`: frontend lint/test/build passed; Supabase reset and
   full pgTAP passed (`Files=27, Tests=815`); `phase_5_article_generation.sql` passed; Deno check
   and Deno test passed (`74 passed, 0 failed`).
 
-## Runtime acceptance blocked
+## Runtime acceptance evidence (rehearsal only)
 
-The local environment has no Supabase CLI/Deno binary and no authenticated Supabase
-management/runtime connector. Therefore the following must run on the non-production rehearsal
-project `znexculhbdjiflkczpyu`, never production:
+- Exact HEAD: `1cdc3d51d35d86338aacd8c88d138006dd3ad1d5`; worktree clean; Production accessed: **NO**.
+- C1 identity: ref `znexculhbdjiflkczpyu`, name `so-tay-doan-vien-rehearsal`, status `ACTIVE_HEALTHY`,
+  region `ap-southeast-1`, PostgreSQL `17.6.1.155`.
+- C2 reconciliation: starting head `20260825154300_phase_5_function_privilege_hardening`; applied
+  exact committed migrations `202608310001_phase_5_rag_retrieval` and
+  `202608310002_phase_5_baseline_privilege_stabilization`; final head includes both.
+- RPC/security verification: retrieval manager RPCs are `SECURITY DEFINER` with authenticated-only
+  EXECUTE and internal authorization; `search_published_knowledge(text,integer)` is
+  `SECURITY INVOKER`, authenticated-only EXECUTE, anonymous denied. All Phase 5 tables retain RLS.
+  Stabilized grants show anonymous notification SELECT denied, authenticated profile INSERT denied,
+  and only intended profile update columns allowed.
+- C3 deployment: `ask-ai` v1, `process-document` v1, and `generate-knowledge-article` v1 are ACTIVE,
+  source uploaded from this HEAD, `verify_jwt=true`. `run-ingestion-jobs` was not deployed: its
+  canonical worker is explicit `NO_OP_FOUNDATION` and is not required by the selected pilot.
+- C4 configuration: no secret-presence endpoint is available; a Vault name query returned no matching
+  names and cannot prove Edge runtime secret state. Gemini configuration is `UNVERIFIABLE`; Drive is
+  `NOT_REQUIRED` for a Supabase Storage text pilot.
+- Anonymous HTTP probe to rehearsal `ask-ai` returned controlled `401 UNAUTHORIZED_NO_AUTH_HEADER`.
+  No authenticated actor/session or Edge invocation API is available in the connected tooling, so
+  actor matrix, document pilot, review/toggle sequence, Ask AI evidence, citations, failure matrix,
+  cleanup proof, and citation UI acceptance were not executed and are not fabricated.
 
-1. Prove project identity/non-production status, installed migrations, deployed functions and
-   server-only secret names without inspecting values.
-2. Deploy the changed `ask-ai` function only to rehearsal and verify server-only Gemini secrets are
-   configured without inspecting or logging values.
-3. Run the synthetic TXT/DOCX/PDF pilot through source registration, extraction, generation,
-   review approval and retrieval; verify a citation opens the RLS-authorized canonical document.
-4. Run the no-source, cross-organization, duplicate execution, lease expiry, provider timeout and
-   cleanup scenarios. Retain only non-sensitive audit evidence.
-5. Retain only non-sensitive evidence and remove synthetic artifacts after the rehearsal.
+## Security advisor classification
+
+The rehearsal security advisor returned existing INFO `rls_enabled_no_policy` notices for internal
+queue/audit/embedding tables and existing WARN mutable-search-path and authenticated SECURITY
+DEFINER notices across legacy RPCs. These are pre-existing project-wide findings, not introduced by
+the two Phase 5 migrations; the Phase 5 retrieval RPC contract was verified explicitly and no
+high-confidence new Phase 5 issue was found. No advisor remediation was applied in this closure.
 
 ## Production
 

@@ -69,9 +69,28 @@ tokens, storage paths or document body.
 Use the same CI runtime when classifying an existing pgTAP failure. On 2026-08-31, exact base
 `a91f7145` was replayed by manual CI run `33413402157` and failed the same four assertions as the
 first closure candidate: anonymous notification read and three unexpected `profiles` INSERT grants.
-The forward grant remediation then passed exact-head CI `33414314759` on `70e8e6a`: reset/migration,
+The forward grant remediation then passed exact-head CI `33415028799` on `1cdc3d51d35d86338aacd8c88d138006dd3ad1d5`: reset/migration,
 `Files=27, Tests=815`, `deno check`, and `deno test` (`74 passed`). This is CI evidence only; it
 does not replace the non-production actor rehearsal.
+
+### Phase 5 final rehearsal reconciliation (2026-09-01)
+
+Connected Supabase management evidence was collected only for rehearsal project
+`znexculhbdjiflkczpyu` (`so-tay-doan-vien-rehearsal`, `ACTIVE_HEALTHY`, PostgreSQL `17.6.1.155`).
+The project was reconciled from `20260825154300_phase_5_function_privilege_hardening` to the exact
+HEAD migrations `202608310001_phase_5_rag_retrieval` and
+`202608310002_phase_5_baseline_privilege_stabilization`. RPC/RLS/grant checks passed: anonymous
+retrieval EXECUTE and notification SELECT are denied; authenticated retrieval EXECUTE is limited to
+the intended functions; search is SECURITY INVOKER; profile INSERT is denied and scoped update
+columns are preserved. Security advisor findings were classified as existing project-wide notices.
+
+Exact HEAD `1cdc3d51d35d86338aacd8c88d138006dd3ad1d5` deployed `ask-ai` v1,
+`process-document` v1, and `generate-knowledge-article` v1 with `verify_jwt=true`; the no-op
+`run-ingestion-jobs` foundation was not required for the selected pilot. An anonymous HTTP probe
+returned controlled 401. The connector has no authenticated Auth/session or Edge Function invoke
+operation and no secret-presence endpoint; consequently authenticated actor/runtime, Gemini
+presence, pilot, Ask AI, citations, failure paths, cleanup, and UI gates remain blocked and are not
+claimed as PASS. Production access: NO.
 
 Checklist thủ công trước khi commit/push:
 - [ ] `npm test` xanh và `npm run lint` sạch (không thêm cảnh báo mới).

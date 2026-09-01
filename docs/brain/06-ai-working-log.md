@@ -984,6 +984,21 @@
 - **Lý do:** Preserve Phase 1/3 fail-closed grants under current Supabase local images without
   weakening tests or changing Phase 5 retrieval semantics.
 - **Kiểm tra:** Baseline CI `33413402157` failed the same 4 assertions; exact-head CI
-  `33414314759` on `70e8e6a` passed frontend gates, migration reset, 815 pgTAP assertions and
+  `33415028799` on `1cdc3d51d35d86338aacd8c88d138006dd3ad1d5` passed frontend gates, migration reset, 815 pgTAP assertions and
   74 Deno tests. Runtime actor acceptance remains blocked because no authenticated rehearsal
   management/runtime access is present; Production was not accessed.
+
+## [2026-09-01] Phase 5 rehearsal reconciliation and runtime gate audit
+
+- **Agent:** Codex
+- **Thay đổi:** Xác minh đúng rehearsal `znexculhbdjiflkczpyu`, áp dụng nguyên văn hai migration còn
+  thiếu từ exact HEAD `1cdc3d51d35d86338aacd8c88d138006dd3ad1d5`, và deploy ba Edge Function tối thiểu
+  cho pilot (`ask-ai`, `process-document`, `generate-knowledge-article`) với `verify_jwt=true`.
+- **Bằng chứng:** Project `ACTIVE_HEALTHY`, PostgreSQL `17.6.1.155`; migration head đã đồng bộ;
+  retrieval RPC/RLS/grant contract khớp; anonymous probe trả `401 UNAUTHORIZED_NO_AUTH_HEADER`;
+  Production accessed = NO. Security advisor chỉ có finding tồn tại trước ở phạm vi project và đã
+  được phân loại, không tự ý sửa trong closure.
+- **Giới hạn:** Supabase connector hiện không có Auth/session creation hoặc authenticated Edge
+  Function invoke, cũng không có secret-presence endpoint. Vì vậy actor matrix, real-document pilot,
+  Ask AI evidence/citations, toggle, failure paths, cleanup và citation UI chưa thể chứng minh;
+  verdict là `PHASE_5_RUNTIME_BLOCKED_ACTOR_INVOCATION_TOOL_UNAVAILABLE`, không phải PASS.
