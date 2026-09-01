@@ -189,8 +189,34 @@ Using the same rehearsal-only API key, REST endpoint, minimal prompt and bounded
 | `models/gemini-3.6-flash` | 200 | — | minimal generation succeeded |
 
 This classifies the incident as `MODEL_SPECIFIC_CAPACITY_ISSUE_GEMINI_3_7_FLASH`, not a provider-wide
-outage. No automatic fallback was added. The hosted rehearsal configuration still points at 3.7;
-the connected tooling exposes no secret/config write operation, so the owner must explicitly set both
-`KNOWLEDGE_GENERATION_MODEL` and `RAG_GENERATION_MODEL` to `models/gemini-3.6-flash` in rehearsal
-before hosted generation smoke and the full runtime harness can resume. Embedding remains
-`models/gemini-embedding-2` with 768 dimensions.
+outage. No automatic fallback was added. At the time of this diagnostic the hosted configuration
+could not be changed through the connected tooling; the owner subsequently reported setting both
+`KNOWLEDGE_GENERATION_MODEL` and `RAG_GENERATION_MODEL` to `models/gemini-3.6-flash`. Embedding
+remains `models/gemini-embedding-2` with 768 dimensions.
+
+## Hosted Gemini 3.6 follow-up (2026-09-01)
+
+- **Starting/ending HEAD:** `c3f5b5d4c88d070e23516be5b547b2e1e0ad636a`; no repository code change was
+  made during this attempt.
+- **Rehearsal guard:** Supabase ref `znexculhbdjiflkczpyu`, project `so-tay-doan-vien-rehearsal`,
+  healthy non-production project; Production accessed: **NO**.
+- **Hosted functions:** `ask-ai`, `process-document`, and `generate-knowledge-article` were observed
+  ACTIVE at hosted version 6 with `verify_jwt=true`. Source/model values are not exposed by the safe
+  inventory response.
+- **Owner configuration:** owner reported `KNOWLEDGE_GENERATION_MODEL` and
+  `RAG_GENERATION_MODEL` set to `models/gemini-3.6-flash`; secret values were not read or printed.
+- **Hosted generation smoke:** the first real generation call in
+  `npm run test:phase5:runtime` returned HTTP 503 with controlled `PROVIDER_UNAVAILABLE` after the
+  bounded retry policy. The edge-function log summary likewise shows `generate-knowledge-article`
+  version 6 returning 503. Because the hosted response does not disclose the configured model, the
+  3.6 hosted model cannot be independently proven from this run.
+- **Runtime progress:** Auth bootstrap (Admin/User A/User B), anonymous `ask-ai` denial (401),
+  User A manager-boundary denial, and `process-document` (HTTP 200 with the 768-dimensional embedding
+  contract) passed. Generation failure stopped the harness before review, retrieval toggles, Ask AI,
+  citation, cross-organization, failure-path, and final cleanup gates.
+- **Cleanup:** storage/chunk artifacts from this run were removed and two temporary users were
+  removed. Immutable source-linked database history was retained by design; the harness reported
+  `database_rows_removed=false` and `orphan_check=BLOCKED_IMMUTABLE_SOURCE`. No force-delete or RLS
+  bypass was used.
+- **Verdict:** `PHASE_5_RUNTIME_BLOCKED_HOSTED_GENERATION_UNAVAILABLE_503`. Do not claim full runtime
+  acceptance until a successful hosted 3.6 generation smoke is observed, then rerun the full harness.

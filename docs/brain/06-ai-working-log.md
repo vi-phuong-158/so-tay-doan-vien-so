@@ -1088,3 +1088,22 @@
 - **Blocker:** Connector hiện không có secret/config write operation. Chưa đổi hosted rehearsal config,
   nên chưa chạy generation smoke hosted hoặc `npm run test:phase5:runtime`; không triển khai fallback
   code và không truy cập Production.
+
+## [2026-09-01] Phase 5 hosted Gemini 3.6 follow-up
+
+- **Bằng chứng:** Owner báo đã cập nhật hai model generation rehearsal thành
+  `models/gemini-3.6-flash` (không đọc/in secret). Rehearsal ref `znexculhbdjiflkczpyu` vẫn healthy
+  và non-production; hosted `process-document`, `generate-knowledge-article`, `ask-ai` hiện ACTIVE
+  version 6 với `verify_jwt=true`.
+- **Runtime:** Chạy `npm run test:phase5:runtime` từ exact HEAD
+  `c3f5b5d4c88d070e23516be5b547b2e1e0ad636a`. Auth Admin/User A/User B, anonymous 401 boundary,
+  manager-boundary denial và `process-document` HTTP 200/768-dimension PASS. Hosted generation trả
+  HTTP 503 `PROVIDER_UNAVAILABLE` sau bounded retry; log chỉ cho biết function/version/status, không
+  tiết lộ model thực tế.
+- **Kết luận:** Harness dừng fail-closed trước knowledge review, Ask AI, citation, cross-org và các
+  failure gates hậu-generation. Verdict chính xác:
+  `PHASE_5_RUNTIME_BLOCKED_HOSTED_GENERATION_UNAVAILABLE_503`; không fallback, không code change,
+  không truy cập Production.
+- **Cleanup:** Storage/chunks và hai user tạm được dọn; immutable source-linked audit history giữ lại
+  theo contract. Harness báo `database_rows_removed=false`, `orphan_check=BLOCKED_IMMUTABLE_SOURCE`;
+  không force-delete hoặc tắt RLS.
