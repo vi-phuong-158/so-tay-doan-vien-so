@@ -1,9 +1,11 @@
 import type { StructuredExtraction } from './extraction.ts';
+import { withProviderRetry, type ProviderRetryOptions } from './providerRetry.ts';
 
 export const PROMPT_VERSION = 'knowledge_article_v1';
 export const GENERATOR_VERSION = 'p5-03-generator-v1';
 const MAX_BATCH_CHARS = 45_000;
 const MAX_TOTAL_CHARS = 220_000;
+const PROVIDER_TIMEOUT_MS = 12_000;
 
 export type KnowledgeArticleDraft = {
   title: string;
@@ -111,14 +113,23 @@ export function knowledgeGenerationRequest(prompt: string) {
   };
 }
 
-async function geminiGenerate(model: string, apiKey: string, prompt: string): Promise<unknown> {
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/${model}:generateContent?key=${encodeURIComponent(apiKey)}`, {
+type FetchLike = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+
+async function geminiGenerate(model: string, apiKey: string, prompt: string, fetcher: FetchLike): Promise<unknown> {
+  const response = await fetcher(`https://generativelanguage.googleapis.com/v1beta/${model}:generateContent?key=${encodeURIComponent(apiKey)}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
     body: JSON.stringify(knowledgeGenerationRequest(prompt)),
+  }).catch(() => {
+    throw new KnowledgeGenerationError('PROVIDER_UNAVAILABLE', 'Gemini request unavailable', true);
   });
   const body = await response.json().catch(() => null) as Record<string, any> | null;
-  if (!response.ok) throw new KnowledgeGenerationError(response.status === 429 ? 'MODEL_RATE_LIMITED' : 'MODEL_PROVIDER_ERROR', 'Gemini request failed', response.status >= 500 || response.status === 429);
+  if (!response.ok) {
+    if (response.status === 429) throw new KnowledgeGenerationError('MODEL_RATE_LIMITED', 'Gemini request rate limited', true);
+    if (response.status === 500 || response.status === 503) throw new KnowledgeGenerationError('PROVIDER_UNAVAILABLE', 'Gemini provider unavailable', true);
+    throw new KnowledgeGenerationError('MODEL_PROVIDER_ERROR', 'Gemini request failed');
+  }
   const text = body?.candidates?.[0]?.content?.parts?.map((part: any) => part.text || '').join('').trim();
   if (!text) throw new KnowledgeGenerationError('MODEL_INVALID_OUTPUT');
   try { return JSON.parse(text); } catch { throw new KnowledgeGenerationError('MODEL_INVALID_OUTPUT'); }
@@ -126,19 +137,32 @@ async function geminiGenerate(model: string, apiKey: string, prompt: string): Pr
 
 export class GeminiKnowledgeGenerator implements KnowledgeGenerator {
   readonly provider = 'GEMINI';
-  constructor(readonly model: string, private readonly apiKey: string) {}
+  constructor(
+    readonly model: string,
+    private readonly apiKey: string,
+    private readonly fetcher: FetchLike = fetch,
+    private readonly retryOptions: ProviderRetryOptions = {},
+  ) {}
+
+  private generateWithRetry(prompt: string): Promise<unknown> {
+    return withProviderRetry(
+      () => geminiGenerate(this.model, this.apiKey, prompt, this.fetcher),
+      error => error instanceof KnowledgeGenerationError && error.retryable,
+      this.retryOptions,
+    );
+  }
 
   async generateKnowledgeArticle(input: KnowledgeGeneratorInput): Promise<KnowledgeArticleDraft> {
     const batches = createSourceBatches(input.extraction);
     const summaries: string[] = [];
     for (const batch of batches) {
       if (batches.length === 1) {
-        return validateGeneratedDraft(await geminiGenerate(this.model, this.apiKey, promptFor(input, batch)), input.extraction.normalizedText);
+        return validateGeneratedDraft(await this.generateWithRetry(promptFor(input, batch)), input.extraction.normalizedText);
       }
-      const result = await geminiGenerate(this.model, this.apiKey, `${promptFor(input, batch)}\nTóm tắt riêng batch này, giữ nguyên literal và page locator; trả JSON {summary:string,key_points:string[],evidence:object[],warnings:string[]}.`);
+      const result = await this.generateWithRetry(`${promptFor(input, batch)}\nTóm tắt riêng batch này, giữ nguyên literal và page locator; trả JSON {summary:string,key_points:string[],evidence:object[],warnings:string[]}.`);
       summaries.push(JSON.stringify(result));
     }
-    return validateGeneratedDraft(await geminiGenerate(this.model, this.apiKey, promptFor(input, summaries.join('\n\n'))), input.extraction.normalizedText);
+    return validateGeneratedDraft(await this.generateWithRetry(promptFor(input, summaries.join('\n\n'))), input.extraction.normalizedText);
   }
 }
 

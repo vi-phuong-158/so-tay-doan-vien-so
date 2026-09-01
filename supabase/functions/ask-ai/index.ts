@@ -32,6 +32,7 @@ function statusFor(code: string): number {
   if (code.includes('FORBIDDEN') || code.includes('SCOPE_DENIED')) return 403;
   if (code === 'CONVERSATION_NOT_FOUND') return 404;
   if (code === 'MODEL_RATE_LIMITED') return 429;
+  if (code === 'PROVIDER_UNAVAILABLE') return 503;
   if (code === 'MODEL_TIMEOUT') return 504;
   return 400;
 }

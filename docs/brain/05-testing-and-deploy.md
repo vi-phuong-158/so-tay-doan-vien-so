@@ -55,6 +55,13 @@ npm run lint      # eslint src
 6. Test AI chỉ truy hồi chunk `APPROVED`, đúng quyền.
 7. E2E responsive tại 360, 390, 430, 768, 1440 px.
 
+### Phase 5 provider retry contract
+
+Gemini generation and RAG adapters use bounded exponential backoff (maximum four attempts, jitter,
+per-request timeout) only for 500/503, 429, and transient network/timeout failures. Permanent 4xx,
+malformed output, and missing configuration fail without retry. No automatic model fallback is
+allowed during Phase 5 acceptance.
+
 ### Phase 5 cited retrieval rehearsal
 
 Run on the non-production rehearsal project only: enable retrieval through its trusted RPCs for one

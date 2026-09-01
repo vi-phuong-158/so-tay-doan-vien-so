@@ -163,3 +163,13 @@ Owner action for rehearsal only: open **Edge Functions → Secrets** in project
 Do not copy values into a ticket, PR, or browser source. No redeploy is required merely to make
 saved secrets available, but the affected function source must be deployed from the post-fix PR
 HEAD before rerunning the authenticated acceptance harness.
+
+## Provider retry hardening (2026-09-01)
+
+The Gemini generation adapters now share a bounded four-attempt exponential backoff policy with
+small jitter and a per-request timeout. Only HTTP 500/503, HTTP 429, and transient network/timeout
+failures retry. HTTP 503 is classified as `PROVIDER_UNAVAILABLE`, HTTP 429 as
+`MODEL_RATE_LIMITED`, malformed successful output as `MODEL_INVALID_OUTPUT`, and permanent 4xx as
+`MODEL_PROVIDER_ERROR`; configuration errors do not retry. Deterministic Deno tests cover retry,
+non-retry, success-after-transient, malformed output, and exhaustion semantics. No model fallback
+was introduced; the accepted Gemini 3.7 models remain unchanged.

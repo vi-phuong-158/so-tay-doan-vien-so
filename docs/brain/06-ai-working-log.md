@@ -1057,3 +1057,15 @@
   embedding processing passed; Gemini generation returned redacted HTTP 503 `UNAVAILABLE` twice.
   Storage/chunks were removed and five exact synthetic jobs cancelled; append-only linked audit
   rows remain with orphan jobs/events = 0. Harness policy fix is `08e0c85`; CI `33487744493` PASS.
+
+## [2026-09-01] Phase 5 provider retry hardening
+
+- **Agent:** Codex
+- **Thay đổi:** Thêm `providerRetry.ts` dùng chung cho Gemini knowledge generation và RAG với tối
+  đa bốn attempt, exponential backoff + jitter, timeout mỗi request và không fallback model. Chuẩn
+  hóa lỗi 503 thành `PROVIDER_UNAVAILABLE`, 429 thành `MODEL_RATE_LIMITED`, malformed output thành
+  `MODEL_INVALID_OUTPUT`; lỗi cấu hình và 4xx cố định không retry.
+- **Kiểm tra:** Bổ sung deterministic Deno tests cho 503/429 retry, 400/malformed no-retry,
+  success-after-transient và retry exhaustion. Frontend `npm test` 150 PASS, lint 0 errors (3
+  existing warnings), build PASS. Supabase/Deno runtime gates sẽ chạy qua exact-head CI.
+- **An toàn:** Giữ nguyên các model Gemini đã chốt; không đọc/in secret và không truy cập Production.

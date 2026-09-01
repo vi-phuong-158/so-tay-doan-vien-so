@@ -27,6 +27,7 @@ function statusFor(code: string): number {
   if (code === 'SOURCE_NOT_FOUND') return 404;
   if (code === 'GENERATION_IN_PROGRESS') return 409;
   if (code === 'MODEL_RATE_LIMITED') return 429;
+  if (code === 'PROVIDER_UNAVAILABLE') return 503;
   return 400;
 }
 

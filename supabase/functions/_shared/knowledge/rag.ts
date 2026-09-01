@@ -1,3 +1,5 @@
+import { withProviderRetry, type ProviderRetryOptions } from './providerRetry.ts';
+
 export const NO_EVIDENCE_ANSWER = 'Không tìm thấy đủ căn cứ trong kho tri thức mà đồng chí được phép truy cập.';
 
 export type RetrievedKnowledgeSource = {
@@ -36,26 +38,42 @@ type FetchLike = (input: RequestInfo | URL, init?: RequestInit) => Promise<Respo
 export class GeminiGroundedAnswerGenerator {
   readonly provider = 'GEMINI';
 
-  constructor(readonly model: string, private readonly apiKey: string, private readonly fetcher: FetchLike = fetch) {}
+  constructor(
+    readonly model: string,
+    private readonly apiKey: string,
+    private readonly fetcher: FetchLike = fetch,
+    private readonly retryOptions: ProviderRetryOptions = {},
+  ) {}
 
   async generate(question: string, sources: RetrievedKnowledgeSource[]): Promise<string> {
-    const response = await this.fetcher(
-      `https://generativelanguage.googleapis.com/v1beta/${this.model}:generateContent?key=${encodeURIComponent(this.apiKey)}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        signal: AbortSignal.timeout(12_000),
-        body: JSON.stringify({
-          contents: [{ role: 'user', parts: [{ text: buildGroundedAnswerPrompt(question, sources) }] }],
-          generationConfig: { maxOutputTokens: 1_200, thinkingConfig: { thinkingLevel: 'low' } },
-        }),
+    const answer = await withProviderRetry(
+      async () => {
+        const response = await this.fetcher(
+          `https://generativelanguage.googleapis.com/v1beta/${this.model}:generateContent?key=${encodeURIComponent(this.apiKey)}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            signal: AbortSignal.timeout(12_000),
+            body: JSON.stringify({
+              contents: [{ role: 'user', parts: [{ text: buildGroundedAnswerPrompt(question, sources) }] }],
+              generationConfig: { maxOutputTokens: 1_200, thinkingConfig: { thinkingLevel: 'low' } },
+            }),
+          },
+        ).catch(() => { throw new RagError('PROVIDER_UNAVAILABLE', true); });
+        const body = await response.json().catch(() => null) as Record<string, any> | null;
+        if (!response.ok) {
+          if (response.status === 429) throw new RagError('MODEL_RATE_LIMITED', true);
+          if (response.status === 500 || response.status === 503) throw new RagError('PROVIDER_UNAVAILABLE', true);
+          throw new RagError('MODEL_PROVIDER_ERROR');
+        }
+        const text = body?.candidates?.[0]?.content?.parts
+          ?.map((part: Record<string, unknown>) => typeof part.text === 'string' ? part.text : '')
+          .join('');
+        return validateGroundedAnswer(text);
       },
-    ).catch(() => { throw new RagError('MODEL_TIMEOUT', true); });
-    const body = await response.json().catch(() => null) as Record<string, any> | null;
-    if (!response.ok) throw new RagError(response.status === 429 ? 'MODEL_RATE_LIMITED' : 'MODEL_PROVIDER_ERROR', response.status >= 500 || response.status === 429);
-    const answer = body?.candidates?.[0]?.content?.parts
-      ?.map((part: Record<string, unknown>) => typeof part.text === 'string' ? part.text : '')
-      .join('');
-    return validateGroundedAnswer(answer);
+      error => error instanceof RagError && error.retryable,
+      this.retryOptions,
+    );
+    return answer;
   }
 }

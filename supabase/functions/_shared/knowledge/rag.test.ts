@@ -23,8 +23,33 @@ Deno.test('RAG gateway returns a bounded Gemini answer with low thinking and no 
 });
 
 Deno.test('RAG gateway maps provider failures to a bounded retryable error', async () => {
-  const generator = new GeminiGroundedAnswerGenerator('gemini-test', 'test-key', async () => new Response('{}', { status: 429 }));
+  let calls = 0;
+  const generator = new GeminiGroundedAnswerGenerator('gemini-test', 'test-key', async () => {
+    calls += 1;
+    return new Response('{}', { status: 429 });
+  }, { sleep: async (_delayMs: number) => {}, random: () => 0, baseDelayMs: 0 });
   await assertRejects(() => generator.generate('Thời hạn bao lâu?', [source]), RagError, 'MODEL_RATE_LIMITED');
+  assertEquals(calls, 4);
+});
+
+Deno.test('RAG gateway retries 503 and does not retry permanent 400', async () => {
+  let calls = 0;
+  const generator = new GeminiGroundedAnswerGenerator('gemini-test', 'test-key', async () => {
+    calls += 1;
+    return calls === 1
+      ? new Response('{}', { status: 503 })
+      : new Response(JSON.stringify({ candidates: [{ content: { parts: [{ text: 'Thời hạn là 15 ngày.' }] } }] }), { status: 200 });
+  }, { sleep: async (_delayMs: number) => {}, random: () => 0, baseDelayMs: 0 });
+  assertEquals(await generator.generate('Thời hạn bao lâu?', [source]), 'Thời hạn là 15 ngày.');
+  assertEquals(calls, 2);
+
+  calls = 0;
+  const permanent = new GeminiGroundedAnswerGenerator('gemini-test', 'test-key', async () => {
+    calls += 1;
+    return new Response('{}', { status: 400 });
+  }, { sleep: async (_delayMs: number) => {}, random: () => 0, baseDelayMs: 0 });
+  await assertRejects(() => permanent.generate('Thời hạn bao lâu?', [source]), RagError, 'MODEL_PROVIDER_ERROR');
+  assertEquals(calls, 1);
 });
 
 Deno.test('RAG answer validation rejects empty output', () => {
