@@ -102,6 +102,25 @@ credential, signs in normally to obtain user sessions, sends user JWTs to `ask-a
 configuration. Current local run stopped before any remote mutation with
 `PHASE_5_RUNTIME_BLOCKED_REHEARSAL_PUBLIC_CONFIG_REQUIRED`; no actor or pilot artifact was created.
 
+### Phase 5 authenticated rehearsal execution (2026-09-01)
+
+The untracked rehearsal configuration was preflighted by presence only and its URL was verified to
+match `znexculhbdjiflkczpyu`; no credential values were printed. The configuration uses PowerShell
+assignment syntax and was parsed into the harness child process only. Real Auth Admin bootstrap and
+user password sign-in passed for synthetic admin, Organization A, and Organization B actors.
+
+The anonymous `ask-ai` request was denied (HTTP 401 / `UNAUTHENTICATED`), and a normal User A was
+denied the retrieval-manager RPC. The selected synthetic document then reached the deployed
+`process-document` function, which failed closed with HTTP 400 / `GEMINI_NOT_CONFIGURED`.
+Accordingly the runtime verdict is
+`PHASE_5_RUNTIME_BLOCKED_REHEARSAL_PROVIDER_CONFIG_REQUIRED`; generation, review, retrieval, Ask
+AI, citations, and UI gates remain unrun rather than assumed.
+
+All artifacts from the failed rehearsal runs were removed under an exact-ID management cleanup;
+the final counts for synthetic organizations, documents, sources, jobs, and storage objects were
+zero. Production accessed: NO. The harness also has regression coverage for the Auth-compatible
+temporary password length and controlled string-error payload decoding.
+
 Checklist thủ công trước khi commit/push:
 - [ ] `npm test` xanh và `npm run lint` sạch (không thêm cảnh báo mới).
 - [ ] `npm run build` chạy được.

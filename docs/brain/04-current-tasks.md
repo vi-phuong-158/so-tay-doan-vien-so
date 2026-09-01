@@ -10,10 +10,12 @@
 ### Phase 5 end-to-end closure
 - **Base:** isolated closure worktree/branch `codex/phase-5-full-closure`, based on P5-03 plus the
   forward-only trigger-function privilege fix `ff72ccd`.
-- **Trạng thái:** `PHASE_5_RUNTIME_ACCEPTANCE_BLOCKED_REHEARSAL_ACCESS_REQUIRED`. Exact-head CI
-  `33414314759` passed on `70e8e6a` (815 pgTAP assertions and 74 Deno tests). The non-production
-  runtime actor/pilot gates still require authenticated access to project `znexculhbdjiflkczpyu`;
-  Production must not be used.
+- **Trạng thái:** `PHASE_5_RUNTIME_BLOCKED_REHEARSAL_PROVIDER_CONFIG_REQUIRED`. Authenticated
+  rehearsal access is proven: temporary Admin/User A/User B JWT actors bootstrapped successfully,
+  anonymous and retrieval-manager boundaries denied correctly, then `process-document` failed
+  closed at `GEMINI_NOT_CONFIGURED`. An authorized rehearsal owner must configure the required
+  Gemini embedding settings before the remaining pilot/retrieval/Ask AI gates can run. Production
+  must not be used.
 - **Report:** `docs/phase-5/13-phase-5-end-to-end-closure.md`.
 
 ### P5-03 — Canonical document extraction → knowledge article generation

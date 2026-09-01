@@ -97,3 +97,34 @@ high-confidence new Phase 5 issue was found. No advisor remediation was applied 
 
 Production access used: **NO**. Production migration, deploy, secret change, cron change, and test
 artifact upload are all out of scope for this closure.
+
+## Authenticated rehearsal execution update (2026-09-01)
+
+The rehearsal-only harness was run with untracked local configuration after a presence-only
+preflight. The URL matched `znexculhbdjiflkczpyu`; the public and server/admin keys were present;
+no secret value was printed or committed. The local configuration file uses PowerShell assignment
+syntax, so the three required values were parsed into the child process only rather than sourced as
+arbitrary code.
+
+- Auth bootstrap passed: an admin, User A (Organization A), and User B (Organization B) were
+  created through the server-side Auth Admin API and signed in through normal password auth to
+  obtain user JWTs.
+- The anonymous `ask-ai` request was denied with HTTP 401 / `UNAUTHENTICATED`; a regular User A
+  was denied the retrieval-manager RPC. This is runtime evidence for the initial direct-client and
+  privileged-boundary gates.
+- The real `process-document` invocation then failed closed with HTTP 400 and controlled
+  `GEMINI_NOT_CONFIGURED`, normalized by the harness as
+  `PHASE_5_RUNTIME_BLOCKED_REHEARSAL_PROVIDER_CONFIG_REQUIRED`. Therefore no extraction,
+  generation, review/toggle, Ask AI, citation, provider-failure, or UI gate is claimed as passed.
+- This is a rehearsal server configuration blocker, not a bypassable test failure. The required
+  Gemini embedding configuration for `process-document` (one or both of `GEMINI_API_KEY` and
+  `GEMINI_EMBEDDING_MODEL`) must be configured by an authorized rehearsal owner before rerun.
+- Every synthetic artifact created by the failed runs was removed using an exact-ID, transactionally
+  scoped management cleanup because provenance triggers correctly make sources immutable to the
+  application service client. Final synthetic counts were zero for organizations, documents,
+  sources, ingestion jobs, and storage objects. Production accessed: **NO**.
+
+The harness was corrected after real reproduction of two acceptance-tool defects: its original
+actor password exceeded the Auth/bcrypt length limit, and it did not recognize a controlled string
+error payload. Regression tests cover both behaviors. This is still not a full runtime acceptance
+pass.

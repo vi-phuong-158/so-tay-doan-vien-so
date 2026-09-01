@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
+import { createRuntimeActorPassword, responseErrorCode } from './phase5-runtime-acceptance-helpers.mjs';
 
 const REHEARSAL_REF = 'znexculhbdjiflkczpyu';
 const REHEARSAL_ORIGIN = `https://${REHEARSAL_REF}.supabase.co`;
@@ -60,7 +61,7 @@ async function invokeAs(actor, slug, body) {
   });
   let payload = null;
   try { payload = await response.json(); } catch { /* controlled non-JSON response */ }
-  const code = payload?.code || payload?.error?.code || null;
+  const code = responseErrorCode(payload);
   evidence.push({ actor: actor.label, function: slug, status: response.status, code });
   return { response, payload, code };
 }
@@ -73,7 +74,7 @@ async function invokeAnonymous(slug, body, publishableKey) {
   });
   let payload = null;
   try { payload = await response.json(); } catch { /* controlled non-JSON response */ }
-  return { response, payload, code: payload?.code || payload?.error?.code || null };
+  return { response, payload, code: responseErrorCode(payload) };
 }
 
 async function signIn(label, email, password, publishableKey) {
@@ -86,7 +87,7 @@ async function signIn(label, email, password, publishableKey) {
 
 async function createActor(admin, publishableKey, label, roleCode, organizationId, fullName) {
   const email = `p5-${label.toLowerCase()}-${runId}@example.invalid`;
-  const password = `${randomUUID()}!${randomUUID()}A9`;
+  const password = createRuntimeActorPassword();
   const { data, error } = await admin.auth.admin.createUser({ email, password, email_confirm: true });
   if (error || !data.user) throw new Error(`${label}_CREATE_FAILED`);
   created.users.push(data.user.id);
@@ -148,7 +149,12 @@ async function runAcceptance() {
   assertOk(await admin.rpc('set_current_document_version', { p_document_id: draft, p_version_id: version.id }), 'CURRENT_VERSION_FAILED');
 
   const processResult = await invokeAs(actors.admin, 'process-document', { document_id: draft, extracted_text: pilotText });
-  if (processResult.response.status !== 200) throw new Error('DOCUMENT_EXTRACTION_FAILED');
+  if (processResult.response.status !== 200) {
+    if (processResult.code === 'GEMINI_NOT_CONFIGURED' || processResult.code === 'MODEL_CONFIGURATION_MISSING') {
+      throw new Error('PHASE_5_RUNTIME_BLOCKED_REHEARSAL_PROVIDER_CONFIG_REQUIRED');
+    }
+    throw new Error('DOCUMENT_EXTRACTION_FAILED');
+  }
   log('DOCUMENT_EXTRACTION', { status: processResult.response.status, result: 'PASS' });
   const generated = await invokeAs(actors.admin, 'generate-knowledge-article', { document_id: draft, article_key: 'overview' });
   if (generated.response.status !== 200 || !generated.payload?.article_id) {

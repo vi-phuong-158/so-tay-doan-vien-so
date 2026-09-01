@@ -1015,3 +1015,21 @@
   không tạo actor/pilot artifact.
 - **Kết luận:** Đây không phải production code change. Cần cung cấp public rehearsal config và
   rehearsal-only server/admin credential qua untracked environment để chạy authenticated gates.
+
+## [2026-09-01] Phase 5 authenticated rehearsal execution and provider blocker
+
+- **Agent:** Codex
+- **Thay đổi:** Sửa harness acceptance để mật khẩu actor tạm thời luôn dưới giới hạn Auth/bcrypt,
+  đồng thời nhận diện controlled string error payload từ Edge Functions. Thêm regression tests cho
+  hai contract này.
+- **Bằng chứng:** `.env` local không bị Git theo dõi, URL match rehearsal và ba cấu hình client/admin
+  cần thiết hiện diện (không in giá trị). Auth Admin bootstrap và sign-in JWT của Admin/User A/User B
+  PASS; anonymous `ask-ai` bị từ chối 401/`UNAUTHENTICATED`; User A bị từ chối retrieval-manager RPC.
+  `process-document` thật trả 400/`GEMINI_NOT_CONFIGURED`, nên verdict chính xác là
+  `PHASE_5_RUNTIME_BLOCKED_REHEARSAL_PROVIDER_CONFIG_REQUIRED`.
+- **Cleanup:** Xóa theo ID/prefix duy nhất của các fixture vừa tạo bằng management transaction vì
+  `document_sources` cố ý immutable ở application path; final orphan count bằng 0 cho organization,
+  document, source, ingestion job và Storage object. Production accessed = NO.
+- **Giới hạn:** Không có `GEMINI_API_KEY` và/hoặc `GEMINI_EMBEDDING_MODEL` khả dụng cho
+  `process-document`, nên extraction/generation/review/retrieval/Ask AI/citation/UI và failure
+  matrix hậu provider không được tuyên bố PASS.
