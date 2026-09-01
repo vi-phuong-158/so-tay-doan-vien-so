@@ -147,6 +147,7 @@ async function runAcceptance() {
   const source = assertOk(await admin.from('document_sources').select('id').eq('document_version_id', version.id).single(), 'SOURCE_LOOKUP_FAILED');
   created.sourceId = source.id;
   assertOk(await admin.rpc('set_current_document_version', { p_document_id: draft, p_version_id: version.id }), 'CURRENT_VERSION_FAILED');
+  assertOk(await actors.admin.client.rpc('set_document_ai_processing_allowed', { p_document_id: draft, p_allowed: true }), 'AI_POLICY_ENABLE_FAILED');
 
   const processResult = await invokeAs(actors.admin, 'process-document', { document_id: draft, extracted_text: pilotText });
   if (processResult.response.status !== 200) {
@@ -158,6 +159,7 @@ async function runAcceptance() {
   log('DOCUMENT_EXTRACTION', { status: processResult.response.status, result: 'PASS' });
   const generated = await invokeAs(actors.admin, 'generate-knowledge-article', { document_id: draft, article_key: 'overview' });
   if (generated.response.status !== 200 || !generated.payload?.article_id) {
+    log('ARTICLE_GENERATION_FAILURE', { status: generated.response.status, code: generated.code });
     if (generated.code === 'MODEL_CONFIGURATION_MISSING' || generated.code === 'GEMINI_NOT_CONFIGURED') throw new Error('PHASE_5_RUNTIME_BLOCKED_REHEARSAL_PROVIDER_CONFIG_REQUIRED');
     throw new Error('ARTICLE_GENERATION_FAILED');
   }
