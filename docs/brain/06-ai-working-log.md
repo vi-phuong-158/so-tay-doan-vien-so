@@ -1069,3 +1069,12 @@
   success-after-transient và retry exhaustion. Frontend `npm test` 150 PASS, lint 0 errors (3
   existing warnings), build PASS. Supabase/Deno runtime gates sẽ chạy qua exact-head CI.
 - **An toàn:** Giữ nguyên các model Gemini đã chốt; không đọc/in secret và không truy cập Production.
+
+## [2026-09-01] Phase 5 provider smoke after retry deployment
+
+- **Bằng chứng:** Sau khi CI exact-head `33515450066` PASS và deploy v4 lên rehearsal, provider smoke
+  tối giản dùng model generation đã chốt, prompt JSON ngắn và không tạo fixture. Policy thực hiện
+  đúng 4 attempts bounded với exponential backoff + jitter; cả 4 trả HTTP 503 `UNAVAILABLE`.
+- **Kết luận:** Phân loại vẫn là `PROVIDER_UNAVAILABLE` (transient availability), không đổi model,
+  không fallback và không chạy full runtime harness khi smoke chưa thành công. Verdict giữ nguyên
+  `PHASE_5_RUNTIME_BLOCKED_PROVIDER_UNAVAILABLE_503`; Production accessed = NO.

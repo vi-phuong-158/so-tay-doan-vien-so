@@ -24,8 +24,9 @@
   sync remain required before the runtime harness may resume.
   Owner configuration then enabled deployment v3 of the three affected functions with JWT
   verification; embedding processing passed, while Gemini generation returned redacted HTTP 503
-  `UNAVAILABLE` twice. Full runtime acceptance remains provider-blocked; exact-head CI
-  `33487744493` passed the harness policy fix.
+  `UNAVAILABLE` twice. Retry hardening passed exact-head CI `33515450066`; a minimal post-deploy
+  smoke exhausted four bounded attempts with the same 503. Full runtime acceptance remains
+  provider-blocked; no model fallback was introduced.
 - **Report:** `docs/phase-5/13-phase-5-end-to-end-closure.md`.
 
 ### P5-03 — Canonical document extraction → knowledge article generation

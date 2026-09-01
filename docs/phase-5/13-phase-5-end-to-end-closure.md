@@ -173,3 +173,8 @@ failures retry. HTTP 503 is classified as `PROVIDER_UNAVAILABLE`, HTTP 429 as
 `MODEL_PROVIDER_ERROR`; configuration errors do not retry. Deterministic Deno tests cover retry,
 non-retry, success-after-transient, malformed output, and exhaustion semantics. No model fallback
 was introduced; the accepted Gemini 3.7 models remain unchanged.
+
+The post-deployment minimal provider smoke used the accepted `models/gemini-3.7-flash` model and a
+short JSON prompt without creating a document chain. All four bounded attempts returned redacted
+HTTP 503 `UNAVAILABLE`. The full authenticated runtime harness was therefore not started and the
+runtime verdict remains `PHASE_5_RUNTIME_BLOCKED_PROVIDER_UNAVAILABLE_503`.
