@@ -16,6 +16,10 @@
   closed at `GEMINI_NOT_CONFIGURED`. An authorized rehearsal owner must configure the required
   Gemini embedding settings before the remaining pilot/retrieval/Ask AI gates can run. Production
   must not be used.
+- **Gemini remediation:** Local untracked config is now complete and model contracts match, but the
+  hosted rehearsal secrets cannot be written from this session because CLI and MCP secret-write
+  access are unavailable. The 768-dimensional embedding and Gemini 3.7 compatibility fixes are in
+  the closure branch pending CI, rehearsal function deployment, and owner-only secret sync.
 - **Report:** `docs/phase-5/13-phase-5-end-to-end-closure.md`.
 
 ### P5-03 — Canonical document extraction → knowledge article generation

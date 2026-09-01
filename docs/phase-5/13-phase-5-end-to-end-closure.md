@@ -128,3 +128,24 @@ The harness was corrected after real reproduction of two acceptance-tool defects
 actor password exceeded the Auth/bcrypt length limit, and it did not recognize a controlled string
 error payload. Regression tests cover both behaviors. This is still not a full runtime acceptance
 pass.
+
+## Gemini compatibility remediation pending rehearsal secret sync (2026-09-01)
+
+The local untracked environment now contains all four required Gemini settings and their model
+identifiers match the accepted contract; values were inspected only as presence/equality booleans
+and were neither printed nor staged. The hosted reconciliation cannot be performed from this
+session: `supabase` CLI is not installed (and must not be installed as a workaround) and the
+connected management tools do not expose a secret-write operation.
+
+The source was updated before the next deployment to request `output_dimensionality: 768` from
+`models/gemini-embedding-2`, validate finite numeric vectors of exactly 768 dimensions, and fail
+closed for any mismatch. Gemini 3.7 requests now remove deprecated sampling parameters; knowledge
+generation uses medium thinking while the evidence-grounded Ask AI path uses low thinking. These
+contracts have automated regression tests.
+
+Owner action for rehearsal only: open **Edge Functions → Secrets** in project
+`znexculhbdjiflkczpyu`, add or replace exactly `GEMINI_API_KEY`, `GEMINI_EMBEDDING_MODEL`,
+`KNOWLEDGE_GENERATION_MODEL`, and `RAG_GENERATION_MODEL` from the local untracked file, then save.
+Do not copy values into a ticket, PR, or browser source. No redeploy is required merely to make
+saved secrets available, but the affected function source must be deployed from the post-fix PR
+HEAD before rerunning the authenticated acceptance harness.

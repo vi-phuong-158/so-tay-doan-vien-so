@@ -1033,3 +1033,19 @@
 - **Giới hạn:** Không có `GEMINI_API_KEY` và/hoặc `GEMINI_EMBEDDING_MODEL` khả dụng cho
   `process-document`, nên extraction/generation/review/retrieval/Ask AI/citation/UI và failure
   matrix hậu provider không được tuyên bố PASS.
+
+## [2026-09-01] Phase 5 Gemini 3.7 and 768-dimensional embedding compatibility
+
+- **Agent:** Codex
+- **Thay đổi:** `process-document` yêu cầu `output_dimensionality: 768` cho Gemini Embedding 2,
+  kiểm tra response là 768 số finite và fail-closed khi sai. Knowledge generation bỏ sampling
+  parameter đã obsolete trên Gemini 3.7 và dùng thinking `medium`; Ask AI dùng thinking `low` để
+  ưu tiên độ trễ mà vẫn grounded. Thêm regression tests cho request/dimension đúng, dimension sai,
+  và generation config.
+- **Bằng chứng:** Local `.env` có đủ 4 biến Gemini; model contract khớp theo boolean, `.env` không
+  tracked/đã ignore/không staged, không in secret. Deno/Supabase CLI không có trong local và không
+  được tự cài; connected Supabase tooling không có secret-write. Vì vậy chưa deploy/rerun runtime và
+  verdict vẫn `PHASE_5_RUNTIME_BLOCKED_REHEARSAL_PROVIDER_CONFIG_REQUIRED`.
+- **Owner action:** Tại rehearsal `znexculhbdjiflkczpyu` vào Edge Functions → Secrets, set đúng
+  `GEMINI_API_KEY`, `GEMINI_EMBEDDING_MODEL`, `KNOWLEDGE_GENERATION_MODEL`,
+  `RAG_GENERATION_MODEL`; không thay Production và không ghi giá trị vào Git/PR.

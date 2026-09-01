@@ -121,6 +121,20 @@ the final counts for synthetic organizations, documents, sources, jobs, and stor
 zero. Production accessed: NO. The harness also has regression coverage for the Auth-compatible
 temporary password length and controlled string-error payload decoding.
 
+### Gemini model/dimension compatibility (2026-09-01)
+
+The local untracked environment now has all Gemini variables required by the selected Phase 5
+functions; their values were checked only as presence/equality booleans. The accepted identifiers
+match `models/gemini-embedding-2` and `models/gemini-3.7-flash`. The processing request now asks
+Gemini Embedding 2 for `output_dimensionality: 768`, validates a finite 768-number response, and
+fails closed for an invalid dimension. Gemini 3.7 generation removes deprecated sampling
+parameters; knowledge draft generation requests medium thinking and Ask AI requests low thinking.
+
+Hosted secret sync is blocked locally because neither Supabase CLI nor a management secret-write
+capability is present. An authorized owner must set exactly the four Gemini variables under the
+rehearsal project's **Edge Functions → Secrets** page. This is the only permitted configuration
+target; Production remains out of scope.
+
 Checklist thủ công trước khi commit/push:
 - [ ] `npm test` xanh và `npm run lint` sạch (không thêm cảnh báo mới).
 - [ ] `npm run build` chạy được.

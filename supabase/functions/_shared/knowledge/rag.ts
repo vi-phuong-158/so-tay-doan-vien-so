@@ -47,7 +47,7 @@ export class GeminiGroundedAnswerGenerator {
         signal: AbortSignal.timeout(12_000),
         body: JSON.stringify({
           contents: [{ role: 'user', parts: [{ text: buildGroundedAnswerPrompt(question, sources) }] }],
-          generationConfig: { temperature: 0, maxOutputTokens: 1_200 },
+          generationConfig: { maxOutputTokens: 1_200, thinkingConfig: { thinkingLevel: 'low' } },
         }),
       },
     ).catch(() => { throw new RagError('MODEL_TIMEOUT', true); });

@@ -1,6 +1,6 @@
 import { assertEquals, assertRejects } from 'https://deno.land/std@0.177.0/testing/asserts.ts';
 import { extractDeterministically } from './extraction.ts';
-import { DeterministicFakeKnowledgeGenerator, KnowledgeGenerationError, createSourceBatches, validateGeneratedDraft } from './generator.ts';
+import { DeterministicFakeKnowledgeGenerator, KnowledgeGenerationError, createSourceBatches, knowledgeGenerationRequest, validateGeneratedDraft } from './generator.ts';
 
 const extraction = await extractDeterministically({
   documentVersionId: '11111111-1111-4111-8111-111111111111', fileName: 'fixture.txt', mimeType: 'text/plain',
@@ -27,4 +27,12 @@ Deno.test('numeric fact drift is flagged and malformed output is rejected', asyn
   }, extraction.normalizedText);
   assertEquals(draft.warnings?.some(item => item.includes('30')), true);
   await assertRejects(async () => validateGeneratedDraft({ title: 'missing' }, extraction.normalizedText), KnowledgeGenerationError, 'MODEL_INVALID_OUTPUT');
+});
+
+Deno.test('Gemini 3 generation uses supported thinking and omits deprecated sampling parameters', () => {
+  const config = knowledgeGenerationRequest('fixture').generationConfig as Record<string, unknown>;
+  assertEquals(config.thinkingConfig, { thinkingLevel: 'medium' });
+  assertEquals('temperature' in config, false);
+  assertEquals('topP' in config, false);
+  assertEquals('topK' in config, false);
 });

@@ -12,11 +12,14 @@ Deno.test('RAG prompt contains only approved evidence and abstention instruction
   assertEquals(prompt.includes(NO_EVIDENCE_ANSWER), true);
 });
 
-Deno.test('RAG gateway returns a bounded Gemini answer', async () => {
-  const generator = new GeminiGroundedAnswerGenerator('gemini-test', 'test-key', async () => new Response(JSON.stringify({
-    candidates: [{ content: { parts: [{ text: 'Thời hạn là 15 ngày.' }] } }],
-  }), { status: 200 }));
+Deno.test('RAG gateway returns a bounded Gemini answer with low thinking and no deprecated sampling', async () => {
+  let request: Record<string, any> | null = null;
+  const generator = new GeminiGroundedAnswerGenerator('gemini-test', 'test-key', async (_input, init) => {
+    request = JSON.parse(String(init?.body));
+    return new Response(JSON.stringify({ candidates: [{ content: { parts: [{ text: 'Thời hạn là 15 ngày.' }] } }] }), { status: 200 });
+  });
   assertEquals(await generator.generate('Thời hạn bao lâu?', [source]), 'Thời hạn là 15 ngày.');
+  assertEquals(request?.generationConfig, { maxOutputTokens: 1200, thinkingConfig: { thinkingLevel: 'low' } });
 });
 
 Deno.test('RAG gateway maps provider failures to a bounded retryable error', async () => {

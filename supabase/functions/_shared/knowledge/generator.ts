@@ -100,18 +100,22 @@ NGUỒN:
 ${source}`;
 }
 
+export function knowledgeGenerationRequest(prompt: string) {
+  return {
+    contents: [{ role: 'user', parts: [{ text: prompt }] }],
+    generationConfig: {
+      maxOutputTokens: 2400,
+      responseMimeType: 'application/json',
+      thinkingConfig: { thinkingLevel: 'medium' },
+    },
+  };
+}
+
 async function geminiGenerate(model: string, apiKey: string, prompt: string): Promise<unknown> {
   const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/${model}:generateContent?key=${encodeURIComponent(apiKey)}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.1,
-        maxOutputTokens: 2400,
-        responseMimeType: 'application/json',
-      },
-    }),
+    body: JSON.stringify(knowledgeGenerationRequest(prompt)),
   });
   const body = await response.json().catch(() => null) as Record<string, any> | null;
   if (!response.ok) throw new KnowledgeGenerationError(response.status === 429 ? 'MODEL_RATE_LIMITED' : 'MODEL_PROVIDER_ERROR', 'Gemini request failed', response.status >= 500 || response.status === 429);
