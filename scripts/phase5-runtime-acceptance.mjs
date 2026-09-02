@@ -179,11 +179,14 @@ async function runAcceptance() {
   if (!enabled.length || !enabled.some(row => row.document_id === draft)) throw new Error('RETRIEVAL_ENABLED_GATE_FAILED');
   log('HUMAN_REVIEW_GATE', { before_approval: 'PASS', approved_disabled: 'PASS', approved_enabled: 'PASS', auto_publish_bypass: 'NONE' });
 
-  const conversation = await invokeAs(actors.userA, 'ask-ai', { question: 'What is the fictional completion keyword?' });
+  // The canonical retrieval RPC uses plainto_tsquery (AND semantics). Keep the
+  // synthetic query terms present in one approved evidence row so this gate
+  // exercises grounded RAG rather than the intentional no-evidence branch.
+  const conversation = await invokeAs(actors.userA, 'ask-ai', { question: 'fictional completion keyword' });
   if (conversation.response.status !== 200 || !String(conversation.payload?.answer || '').includes('ORCHID-5729')) throw new Error('ASK_AI_GROUNDED_FAILED');
   created.conversationIds.push(conversation.payload.conversation_id);
   created.messageIds.push(conversation.payload.message_id);
-  const second = await invokeAs(actors.userA, 'ask-ai', { question: 'How many fictional review steps are required?', conversation_id: conversation.payload.conversation_id });
+  const second = await invokeAs(actors.userA, 'ask-ai', { question: 'fictional Blue Lotus procedure review steps', conversation_id: conversation.payload.conversation_id });
   if (second.response.status !== 200 || !/three|3/i.test(String(second.payload?.answer || ''))) throw new Error('ASK_AI_SECOND_GROUNDED_FAILED');
   const noEvidence = await invokeAs(actors.userA, 'ask-ai', { question: 'What is the fictional lunar archive code?' });
   if (noEvidence.response.status !== 200 || noEvidence.payload?.citations?.length) throw new Error('ASK_AI_NO_EVIDENCE_FAILED');
@@ -191,7 +194,7 @@ async function runAcceptance() {
   created.messageIds.push(noEvidence.payload.message_id);
   const crossOrg = await actors.userB.client.rpc('search_published_knowledge', { p_query: 'ORCHID-5729', p_match_count: 8 });
   if (!crossOrg.error && (crossOrg.data || []).length !== 0) throw new Error('PHASE_5_RUNTIME_FAILED_CROSS_ORG_RLS');
-  const bAsk = await invokeAs(actors.userB, 'ask-ai', { question: 'What is the fictional completion keyword?' });
+  const bAsk = await invokeAs(actors.userB, 'ask-ai', { question: 'fictional completion keyword' });
   if (bAsk.response.status !== 200 || String(bAsk.payload?.answer || '').includes('ORCHID-5729') || bAsk.payload?.citations?.length) throw new Error('RAG_CROSS_ORG_LEAKAGE');
   log('ASK_AI', { grounded: 'PASS', second_grounded: 'PASS', no_evidence: 'PASS', user_b_isolation: 'PASS' });
 
