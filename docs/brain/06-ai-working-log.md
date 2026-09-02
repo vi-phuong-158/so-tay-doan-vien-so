@@ -1158,3 +1158,24 @@
   add regression coverage. Pending exact-head CI and generation-function redeploy before rerun.
 - **Cleanup:** Storage deleted, mutable jobs disabled, two actors deleted, immutable source/version/
   event history retained, and post-cleanup retrieval/Ask AI negative checks PASS. Production = NO.
+
+## [2026-09-02] Phase 5 R3 final end-to-end rehearsal
+
+- **Run:** `P5_ACCEPTANCE_56e868dbbee4457e` on rehearsal `znexculhbdjiflkczpyu` only. Document
+  `6fd275f4-b207-4564-b509-27ba9e93579b`, article `22e437b4-a89e-42ed-ac92-7823cc53e67b`.
+- **Provider/runtime:** direct synthetic `models/gemini-3.6-flash` smoke returned HTTP 200 in
+  11,233 ms with the accepted 35-second timeout. Hosted generation v8 returned HTTP 200 in
+  10,535 ms; `ask-ai` v7 returned HTTP 200 for grounded and abstention paths. The earlier v7
+  generation failure was resolved by canonical evidence-kind normalization, and the harness query
+  was aligned with `plainto_tsquery` AND semantics so its grounded gate tests retrieval rather than
+  the intentional no-evidence branch.
+- **Acceptance:** ingestion/provenance, TXT extraction, structured generation, human approval,
+  retrieval enablement, citations, insufficient-evidence, anonymous denial, conversation ownership,
+  and cross-org RLS isolation all PASS. Cleanup removed Storage and mutable AI rows, cancelled exact
+  run jobs, retained bounded immutable synthetic history, and passed post-cleanup retrieval/Ask AI
+  negative checks. Production = NO.
+- **Validation:** local `npm test` 153/153 PASS, lint 0 errors/3 existing warnings, build PASS;
+  exact-head CI `33587311565` PASS including pgTAP and Deno. Harness fix commit:
+  `b92012af0f1ba59c49154637ce57b981bf1e47b3`.
+- **Verdict:** `PHASE_5_END_TO_END_ACCEPTANCE_PASS`; PR #37 remains Draft and no merge or
+  Production action was taken.

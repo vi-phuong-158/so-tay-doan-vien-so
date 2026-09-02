@@ -306,6 +306,12 @@ jobs are terminal, and no existing record is touched by broad matching. Their ex
 are recorded in the rehearsal evidence; ordinary retrieval is ineligible because no article is
 approved/enabled and the documents are not published.
 
+The five retained historical document IDs are `344935b5-cf59-4f8a-836e-dc023e6e3800`,
+`b92a1a90-4119-42aa-a363-5e1524a82f1d`, `80204d6d-bc1b-4f05-91da-3550cd410471`,
+`b6e6c7e1-5a5f-47c1-9d9f-f5c8a58676da`, and `b12877ae-8774-46b4-9041-fa8956d04d2b`.
+The final run's retained chain is separately enumerated above; all are synthetic, non-sensitive,
+bounded by the `PHASE 5 REHEARSAL` marker, and `NOT_RETRIEVAL_ELIGIBLE` after cleanup.
+
 This retention strategy treats bounded, synthetic, non-retrievable immutable history as successful
 cleanup. Physical deletion is required only for mutable/external resources. A post-cleanup negative
 retrieval and Ask AI check is mandatory for the new run.
@@ -324,3 +330,29 @@ The targeted fix normalizes untrusted evidence labels to the canonical `ARTICLE_
 adds a regression test. This is a production-safe boundary fix; no schema, RLS, immutability,
 provider, or model fallback was added. Exact-head CI and redeployment of `generate-knowledge-article`
 are required before rerunning the smoke/E2E gates.
+
+## R3 final rehearsal and acceptance result (2026-09-02)
+
+- **Source and CI:** the evidence-normalization fix was deployed as `generate-knowledge-article`
+  v8 from `4579863a33a10d7392e013fa2bd8b96e0ad9a87b`. The harness-only retrieval-query alignment
+  was then committed at `b92012af0f1ba59c49154637ce57b981bf1e47b3`; exact-head CI
+  `33587311565` passed frontend, pgTAP, Deno and Edge Function tests. `ask-ai` remains v7.
+- **Provider smoke:** a synthetic direct request with `models/gemini-3.6-flash` and the accepted
+  35-second timeout completed in 11,233 ms with HTTP 200 `SUCCESS`. The hosted generation call
+  also completed in 10,535 ms with HTTP 200. A prior 12-second diagnostic timeout is recorded as
+  `MODEL_TIMEOUT`, not as a provider outage; no model fallback was introduced.
+- **Run:** namespace `P5_ACCEPTANCE_56e868dbbee4457e`; document
+  `6fd275f4-b207-4564-b509-27ba9e93579b`; version `66b1b544-4849-4410-b900-e485a0c3e0be`;
+  source `3e8913d4-e921-4526-84d0-c97140bb7b77`; article
+  `22e437b4-a89e-42ed-ac92-7823cc53e67b`. Admin, User A (Org A), User B (Org B), and anonymous
+  checks all passed. The harness verified extraction, generation, pre-approval denial, canonical
+  approval, enabled retrieval, grounded Ask AI with citations, second grounded answer,
+  insufficient-evidence abstention, conversation ownership, and cross-organization isolation.
+- **Cleanup:** the exact run's document is `WITHDRAWN`, document/article retrieval are both false,
+  Storage was removed, mutable AI rows and generation attempts were deleted, pending/retry jobs
+  were cancelled by exact ID, and append-only source/version/events remain retained. Two of three
+  temporary Auth users were deleted; the admin actor remains only where historical foreign keys
+  prevent deletion. Post-cleanup retrieval returned zero rows and post-cleanup Ask AI returned the
+  safe no-evidence answer with zero citations.
+- **Verdict:** `PHASE_5_END_TO_END_ACCEPTANCE_PASS`. Production accessed: `NO`. This closes the
+  Phase 5 runtime gate; it does not authorize a merge or Production deployment.

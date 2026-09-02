@@ -10,21 +10,21 @@
 ### Phase 5 end-to-end closure
 - **Base:** isolated closure worktree/branch `codex/phase-5-full-closure`, based on P5-03 plus the
   forward-only trigger-function privilege fix `ff72ccd`.
-- **Trạng thái:** `PHASE_5_RUNTIME_BLOCKED_CONFIGURATION`. The authoritative Supabase deployment
-  connector deployed exact source `19ddf93` to rehearsal `znexculhbdjiflkczpyu` only:
-  `generate-knowledge-article` v7 and `ask-ai` v7 are ACTIVE with JWT verification and their hosted
-  source contains the timeout mapping. `process-document` was not changed because it is outside the
-  timeout patch. No secret/configuration or Production target was changed.
-- **Runtime guard:** Before any additional full harness run, an aggregate fixture audit found five
+- **Trạng thái:** `PHASE_5_END_TO_END_ACCEPTANCE_PASS`. Rehearsal-only runtime closed on namespace
+  `P5_ACCEPTANCE_56e868dbbee4457e`: generation v8 and `ask-ai` v7 are ACTIVE with JWT verification;
+  extraction, generation, review, retrieval, grounded/cited Ask AI, insufficient-evidence,
+  cross-org isolation and post-cleanup negative checks passed. Production was not accessed.
+- **Runtime guard/history:** Before the final run, an aggregate fixture audit found five
   synthetic documents/versions/sources, nine jobs, seventeen append-only events, and five temporary
   Auth users from historical attempts. The only `_cleanup()` function is pgTAP internal cleanup,
   not a supported fixture-purge contract. Provenance, version, and event immutability make a new
   full run unsafe without accumulating non-removable residue; the R3 retention contract now permits
   bounded, non-retrievable immutable history. The first R3 run still returned generic
   `GENERATION_FAILED`; Postgres identified an unsupported model evidence label violating
-  `document_chunks_evidence_kind_check`. A targeted normalization fix and exact-head CI/redeploy
-  are pending before rerun. Owner-reported generation model `models/gemini-3.6-flash` remains
-  independently unverified because secret values and hosted model selection are not exposed.
+  `document_chunks_evidence_kind_check`. The targeted normalization fix was deployed as v8 and
+  exact-head CI `33587311565` passed. Owner-reported generation model `models/gemini-3.6-flash`
+  remains independently unverified because secret values and hosted model selection are not
+  exposed; direct synthetic smoke on that model returned HTTP 200 under the 35-second timeout.
 - **Historical model diagnostic:** `gemini-3.7-flash` returned HTTP 503 while
   `gemini-3.6-flash` returned HTTP 200, a model-specific capacity signal. The owner later reported
   3.6 configured, but the hosted resolved model remains unverified; this does not bypass the
