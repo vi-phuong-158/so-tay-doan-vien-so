@@ -1,0 +1,1 @@
+synthetic image-only source: extraction must route this fixture as unsupported when labeled image-only.

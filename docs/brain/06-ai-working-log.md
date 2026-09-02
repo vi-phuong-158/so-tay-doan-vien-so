@@ -914,3 +914,268 @@
   PASS trên exact merge commit với db reset/pgTAP `Files=26, Tests=772`, Phase 5 `45/45`,
   Deno `58 passed`, frontend tests/lint/build PASS. Google Drive OAuth/HTTP rehearsal vẫn
   `PENDING`; không có production credential/deployment. P5-03 chưa bắt đầu.
+
+## [2026-08-25] P5-03 — Canonical extraction and knowledge article generation
+
+- **Agent:** Codex
+- **Thay đổi:** Bổ sung deterministic PDF text-layer/DOCX/TXT extraction, Unicode/line normalization,
+  page/section structure, source checksum verification, provider-neutral generation boundary,
+  bounded Gemini JSON generation, exact-source selective evidence, idempotent generation attempts,
+  trusted draft persistence/review RPCs và admin review UI.
+- **File đã sửa:** `supabase/migrations/202608250001_phase_5_article_generation.sql`,
+  `supabase/functions/_shared/knowledge/*`, `supabase/functions/_shared/storage/supabaseStorageProvider.ts`,
+  `supabase/functions/generate-knowledge-article/index.ts`, `src/services/knowledgeAdminService.js`,
+  `src/pages/AdminKnowledgeArticle.jsx`, `src/App.jsx`, `src/pages/AdminDocuments.jsx`, `src/index.css`,
+  `supabase/tests/phase_5_article_generation.sql`, `tests/knowledge_admin_service.test.mjs`,
+  `tests/knowledge_admin_ui.test.mjs`, `.env.example`, `docs/phase-5/12-p5-03-article-generation.md`.
+- **Lý do:** Hoàn thiện vertical slice đầu tiên của Phase 5 mà vẫn giữ file gốc là canonical source,
+  không mở retrieval/embedding/ask-ai và không cho AI tự viết evidence.
+- **Kiểm tra:** Frontend `npm test` 143/143 PASS, `npm run lint` 0 errors/3 existing warnings,
+  `npm run build` PASS. Supabase CLI/Deno không có trong môi trường local; database/Deno gates còn
+  phải chạy bằng CI/rehearsal exact-head.
+
+## [2026-08-25] P5-03R1 — Database runtime and exact-head CI remediation
+
+- **Agent:** Codex
+- **Thay đổi:** Thêm forward-fix migration `202608250002_phase_5_article_generation_runtime_remediation.sql`:
+  hash evidence bằng `extensions.digest(convert_to(..., 'UTF8'), 'sha256'::text)`, reset toàn phần
+  privilege của `anon`/`authenticated` cho article/evidence/generation internals, và giữ các
+  SECURITY DEFINER function với `search_path` cố định. Sửa TAP plan theo số assertion thực tế và
+  harden PDF fail-closed/UTF-8 extraction fixtures.
+- **Kiểm tra exact-final-head:** CI run `32807105911`, HEAD
+  `b5cebcf23dd2868ecc14aac72e135e8376e34712`: database `Files=27, Tests=802`, P5-03 `30/30`,
+  Deno `70 passed`, frontend build/lint/tests PASS; both `build` and `test-db` jobs completed
+  successfully.
+- **Kết luận:** Technical acceptance PASS; Gemini và Google Drive runtime rehearsal vẫn PENDING.
+## [2026-08-26] P5-03 function privilege hardening
+- **Agent:** Codex
+- **Thay đổi:** Thêm forward migration thu hồi quyền `EXECUTE` mặc định khỏi 16 trigger functions canonical P5 và bổ sung regression test catalog-driven cho PUBLIC/anon/authenticated cùng trigger ingestion.
+- **File đã sửa:** `supabase/migrations/20260825154300_phase_5_function_privilege_hardening.sql`, `supabase/tests/phase_5_article_generation.sql`, `docs/brain/06-ai-working-log.md`
+- **Lý do:** Rehearsal audit xác định trigger functions canonical P5 vẫn nhận quyền `EXECUTE` mặc định qua `PUBLIC`.
+- **Kiểm tra:** Chạy clean database replay/pgTAP, full repository validation và kiểm kê grants rehearsal sau khi CI pass.
+
+## [2026-08-31] Phase 5 cited RAG technical closure
+
+- **Agent:** Codex
+- **Thay đổi:** Thêm forward migration cho retrieval opt-in và `SECURITY INVOKER` search của
+  approved evidence; thay `ask-ai` bằng RLS-first retrieval, bounded Gemini gateway, verified
+  citation provenance và kiểm tra ownership conversation; thêm service, route `/tri-thuc/hoi-ai`,
+  pgTAP and unit coverage.
+- **File đã sửa:** `supabase/migrations/202608310001_phase_5_rag_retrieval.sql`,
+  `supabase/functions/_shared/knowledge/rag.*`, `supabase/functions/ask-ai/index.ts`,
+  `supabase/tests/phase_5_article_generation.sql`, `src/services/aiService.js`,
+  `src/pages/AskAi.jsx`, `src/App.jsx`, `src/pages/Knowledge.jsx`, `src/index.css`,
+  `tests/ai_service.test.mjs`, architecture/decision/task/testing docs and
+  `docs/phase-5/13-phase-5-end-to-end-closure.md`.
+- **Lý do:** P5-03 deliberately stopped before user-facing retrieval; this forward slice preserves
+  human review and evidence provenance while preventing a service-role retrieval bypass.
+- **Kiểm tra:** `npm test` 146/146 PASS; lint 0 errors/3 existing warnings; build PASS;
+  `git diff --check` PASS. Supabase CLI/Deno and rehearsal runtime access are unavailable locally,
+  so DB/Deno/rehearsal/real-Gemini acceptance remains blocked and is not claimed as PASS.
+
+## [2026-08-31] Phase 5 final technical acceptance gates
+
+- **Agent:** Codex
+- **Thay đổi:** Replayed exact base `a91f7145` in current CI, proved the four pgTAP failures are
+  runtime-default grant drift, added the forward-only explicit privilege stabilization migration,
+  and typed the Ask AI retrieval RPC boundary for strict Deno checking.
+- **File đã sửa:** `supabase/migrations/202608310002_phase_5_baseline_privilege_stabilization.sql`,
+  `supabase/functions/ask-ai/index.ts`, Phase 5 closure/testing/task/decision documentation.
+- **Lý do:** Preserve Phase 1/3 fail-closed grants under current Supabase local images without
+  weakening tests or changing Phase 5 retrieval semantics.
+- **Kiểm tra:** Baseline CI `33413402157` failed the same 4 assertions; exact-head CI
+  `33415028799` on `1cdc3d51d35d86338aacd8c88d138006dd3ad1d5` passed frontend gates, migration reset, 815 pgTAP assertions and
+  74 Deno tests. Runtime actor acceptance remains blocked because no authenticated rehearsal
+  management/runtime access is present; Production was not accessed.
+
+## [2026-09-01] Phase 5 rehearsal reconciliation and runtime gate audit
+
+- **Agent:** Codex
+- **Thay đổi:** Xác minh đúng rehearsal `znexculhbdjiflkczpyu`, áp dụng nguyên văn hai migration còn
+  thiếu từ exact HEAD `1cdc3d51d35d86338aacd8c88d138006dd3ad1d5`, và deploy ba Edge Function tối thiểu
+  cho pilot (`ask-ai`, `process-document`, `generate-knowledge-article`) với `verify_jwt=true`.
+- **Bằng chứng:** Project `ACTIVE_HEALTHY`, PostgreSQL `17.6.1.155`; migration head đã đồng bộ;
+  retrieval RPC/RLS/grant contract khớp; anonymous probe trả `401 UNAUTHORIZED_NO_AUTH_HEADER`;
+  Production accessed = NO. Security advisor chỉ có finding tồn tại trước ở phạm vi project và đã
+  được phân loại, không tự ý sửa trong closure.
+- **Giới hạn:** Supabase connector hiện không có Auth/session creation hoặc authenticated Edge
+  Function invoke, cũng không có secret-presence endpoint. Vì vậy actor matrix, real-document pilot,
+  Ask AI evidence/citations, toggle, failure paths, cleanup và citation UI chưa thể chứng minh;
+  verdict là `PHASE_5_RUNTIME_BLOCKED_ACTOR_INVOCATION_TOOL_UNAVAILABLE`, không phải PASS.
+
+## [2026-09-01] Phase 5 authenticated runtime harness
+
+- **Agent:** Codex
+- **Thay đổi:** Thêm `scripts/phase5-runtime-acceptance.mjs` và npm command
+  `test:phase5:runtime` làm acceptance tooling độc lập; dùng `@supabase/supabase-js`, Auth Admin
+  bootstrap tạm thời, `signInWithPassword`, user-JWT HTTP calls, rehearsal URL allowlist, redaction,
+  và cleanup trong `finally`.
+- **Kiểm tra:** `node --check` PASS; production URL probe bị chặn bằng `REHEARSAL_URL_MISMATCH`;
+  thiếu local public config dừng an toàn ở `PHASE_5_RUNTIME_BLOCKED_REHEARSAL_PUBLIC_CONFIG_REQUIRED`;
+  không tạo actor/pilot artifact.
+- **Kết luận:** Đây không phải production code change. Cần cung cấp public rehearsal config và
+  rehearsal-only server/admin credential qua untracked environment để chạy authenticated gates.
+
+## [2026-09-01] Phase 5 authenticated rehearsal execution and provider blocker
+
+- **Agent:** Codex
+- **Thay đổi:** Sửa harness acceptance để mật khẩu actor tạm thời luôn dưới giới hạn Auth/bcrypt,
+  đồng thời nhận diện controlled string error payload từ Edge Functions. Thêm regression tests cho
+  hai contract này.
+- **Bằng chứng:** `.env` local không bị Git theo dõi, URL match rehearsal và ba cấu hình client/admin
+  cần thiết hiện diện (không in giá trị). Auth Admin bootstrap và sign-in JWT của Admin/User A/User B
+  PASS; anonymous `ask-ai` bị từ chối 401/`UNAUTHENTICATED`; User A bị từ chối retrieval-manager RPC.
+  `process-document` thật trả 400/`GEMINI_NOT_CONFIGURED`, nên verdict chính xác là
+  `PHASE_5_RUNTIME_BLOCKED_REHEARSAL_PROVIDER_CONFIG_REQUIRED`.
+- **Cleanup:** Xóa theo ID/prefix duy nhất của các fixture vừa tạo bằng management transaction vì
+  `document_sources` cố ý immutable ở application path; final orphan count bằng 0 cho organization,
+  document, source, ingestion job và Storage object. Production accessed = NO.
+- **Giới hạn:** Không có `GEMINI_API_KEY` và/hoặc `GEMINI_EMBEDDING_MODEL` khả dụng cho
+  `process-document`, nên extraction/generation/review/retrieval/Ask AI/citation/UI và failure
+  matrix hậu provider không được tuyên bố PASS.
+
+## [2026-09-01] Phase 5 Gemini 3.7 and 768-dimensional embedding compatibility
+
+- **Agent:** Codex
+- **Thay đổi:** `process-document` yêu cầu `output_dimensionality: 768` cho Gemini Embedding 2,
+  kiểm tra response là 768 số finite và fail-closed khi sai. Knowledge generation bỏ sampling
+  parameter đã obsolete trên Gemini 3.7 và dùng thinking `medium`; Ask AI dùng thinking `low` để
+  ưu tiên độ trễ mà vẫn grounded. Thêm regression tests cho request/dimension đúng, dimension sai,
+  và generation config.
+- **Bằng chứng:** Local `.env` có đủ 4 biến Gemini; model contract khớp theo boolean, `.env` không
+  tracked/đã ignore/không staged, không in secret. Deno/Supabase CLI không có trong local và không
+  được tự cài; connected Supabase tooling không có secret-write. Vì vậy chưa deploy/rerun runtime và
+  verdict vẫn `PHASE_5_RUNTIME_BLOCKED_REHEARSAL_PROVIDER_CONFIG_REQUIRED`.
+- **Owner action:** Tại rehearsal `znexculhbdjiflkczpyu` vào Edge Functions → Secrets, set đúng
+  `GEMINI_API_KEY`, `GEMINI_EMBEDDING_MODEL`, `KNOWLEDGE_GENERATION_MODEL`,
+  `RAG_GENERATION_MODEL`; không thay Production và không ghi giá trị vào Git/PR.
+- **Kiểm tra sau sửa assertion:** Exact-head CI `33484622052` PASS trên
+  `7ebefbdf23d6bfe45b27c00f451ba687e35d4a07`: frontend lint/test/build, Supabase reset, toàn bộ
+  pgTAP, Deno check và Deno test. Đây không thay thế hosted secret sync hoặc runtime acceptance.
+- **Rehearsal follow-up:** Owner-configured secrets enabled exact-head deployment v3 of
+  `process-document`, `generate-knowledge-article`, and `ask-ai` (`verify_jwt=true`). Auth and
+  embedding processing passed; Gemini generation returned redacted HTTP 503 `UNAVAILABLE` twice.
+  Storage/chunks were removed and five exact synthetic jobs cancelled; append-only linked audit
+  rows remain with orphan jobs/events = 0. Harness policy fix is `08e0c85`; CI `33487744493` PASS.
+
+## [2026-09-01] Phase 5 provider retry hardening
+
+- **Agent:** Codex
+- **Thay đổi:** Thêm `providerRetry.ts` dùng chung cho Gemini knowledge generation và RAG với tối
+  đa bốn attempt, exponential backoff + jitter, timeout mỗi request và không fallback model. Chuẩn
+  hóa lỗi 503 thành `PROVIDER_UNAVAILABLE`, 429 thành `MODEL_RATE_LIMITED`, malformed output thành
+  `MODEL_INVALID_OUTPUT`; lỗi cấu hình và 4xx cố định không retry.
+- **Kiểm tra:** Bổ sung deterministic Deno tests cho 503/429 retry, 400/malformed no-retry,
+  success-after-transient và retry exhaustion. Frontend `npm test` 150 PASS, lint 0 errors (3
+  existing warnings), build PASS. Supabase/Deno runtime gates sẽ chạy qua exact-head CI.
+- **An toàn:** Giữ nguyên các model Gemini đã chốt; không đọc/in secret và không truy cập Production.
+
+## [2026-09-01] Phase 5 provider smoke after retry deployment
+
+- **Bằng chứng:** Sau khi CI exact-head `33515450066` PASS và deploy v4 lên rehearsal, provider smoke
+  tối giản dùng model generation đã chốt, prompt JSON ngắn và không tạo fixture. Policy thực hiện
+  đúng 4 attempts bounded với exponential backoff + jitter; cả 4 trả HTTP 503 `UNAVAILABLE`.
+- **Kết luận:** Phân loại vẫn là `PROVIDER_UNAVAILABLE` (transient availability), không đổi model,
+  không fallback và không chạy full runtime harness khi smoke chưa thành công. Verdict giữ nguyên
+  `PHASE_5_RUNTIME_BLOCKED_PROVIDER_UNAVAILABLE_503`; Production accessed = NO.
+
+## [2026-09-01] Phase 5 Gemini model diagnostic
+
+- **Bằng chứng:** Minimal diagnostic trên rehearsal dùng cùng credentials/REST endpoint cho hai model:
+  `models/gemini-3.7-flash` trả HTTP 503 `UNAVAILABLE`; `models/gemini-3.6-flash` trả HTTP 200.
+  Không tạo fixture và không in secret.
+- **Phân loại:** `MODEL_SPECIFIC_CAPACITY_ISSUE_GEMINI_3_7_FLASH`; không phải provider-wide outage.
+- **Blocker:** Connector hiện không có secret/config write operation. Chưa đổi hosted rehearsal config,
+  nên chưa chạy generation smoke hosted hoặc `npm run test:phase5:runtime`; không triển khai fallback
+  code và không truy cập Production.
+
+## [2026-09-01] Phase 5 hosted Gemini 3.6 follow-up
+
+- **Bằng chứng:** Owner báo đã cập nhật hai model generation rehearsal thành
+  `models/gemini-3.6-flash` (không đọc/in secret). Rehearsal ref `znexculhbdjiflkczpyu` vẫn healthy
+  và non-production; hosted `process-document`, `generate-knowledge-article`, `ask-ai` hiện ACTIVE
+  version 6 với `verify_jwt=true`.
+- **Runtime:** Chạy `npm run test:phase5:runtime` từ exact HEAD
+  `c3f5b5d4c88d070e23516be5b547b2e1e0ad636a`. Auth Admin/User A/User B, anonymous 401 boundary,
+  manager-boundary denial và `process-document` HTTP 200/768-dimension PASS. Hosted generation trả
+  HTTP 503 `PROVIDER_UNAVAILABLE` sau bounded retry; log chỉ cho biết function/version/status, không
+  tiết lộ model thực tế.
+- **Kết luận:** Harness dừng fail-closed trước knowledge review, Ask AI, citation, cross-org và các
+  failure gates hậu-generation. Verdict chính xác:
+  `PHASE_5_RUNTIME_BLOCKED_HOSTED_GENERATION_UNAVAILABLE_503`; không fallback, không code change,
+  không truy cập Production.
+- **Cleanup:** Storage/chunks và hai user tạm được dọn; immutable source-linked audit history giữ lại
+  theo contract. Harness báo `database_rows_removed=false`, `orphan_check=BLOCKED_IMMUTABLE_SOURCE`;
+  không force-delete hoặc tắt RLS.
+
+## [2026-09-02] Phase 5 Gemini hosted timeout classification
+
+- **Agent:** Codex
+- **Thay đổi:** Thêm bounded `GEMINI_GENERATION_TIMEOUT_MS` (30–45 giây, default 35), runtime retry
+  policy hai attempt, safe provider-attempt diagnostic và phân biệt local timeout (`MODEL_TIMEOUT`)
+  với upstream HTTP 500/503 (`PROVIDER_UNAVAILABLE`) cho cả article generation/RAG. Thêm synthetic
+  production-shaped Gemini diagnostic script và deterministic mapping/config/security tests.
+- **File đã sửa:** `.env.example`, `scripts/phase5-gemini-diagnostic.mjs`,
+  `supabase/functions/_shared/knowledge/{geminiRuntime,generator,rag}.*`, two Edge Function indexes,
+  Phase 5 test/docs files.
+- **Lý do:** Hosted v6 duration khoảng 54.5 giây phù hợp với local 12-second abort + retry nhưng
+  code cũ báo nhầm là provider 503; direct minimal Gemini 3.6 HTTP 200 không đủ chứng minh request
+  generation thực tế.
+- **Kiểm tra:** `npm test` 153/153 PASS, `npm run lint` 0 errors/3 existing warnings, `npm run build`
+  PASS, `git diff --check` PASS. Direct synthetic diagnostic was repaired for Windows direct-script
+  execution and reports only canonical outcome metadata. Deno/Supabase CLI absent locally;
+  exact-head CI run `33583763200` later passed all frontend, reset/pgTAP and Deno gates for
+  `60759a9`. Rehearsal deploy remains blocked because no scoped deploy capability is present;
+  no workaround tool was installed and no Production target was accessed.
+
+## [2026-09-02] Phase 5 authorized rehearsal deployment and cleanup-contract gate
+
+- **Agent:** Codex
+- **Deployment evidence:** Using the authorized Supabase management connector and only rehearsal
+  ref `znexculhbdjiflkczpyu`, deployed exact source `19ddf93` for
+  `generate-knowledge-article` and `ask-ai`. Both are ACTIVE v7 with JWT verification; retrieved
+  hosted source confirms the timeout mapping. No secret, model-setting, migration, or Production
+  change was made.
+- **Technical evidence:** Exact-head GitHub Actions `33584096813` PASS: frontend build/lint/tests,
+  Supabase reset/full pgTAP, Deno check and Deno tests.
+- **Safety stop:** Historical fixture audit found five synthetic document chains, nine jobs,
+  seventeen immutable events, and five temporary users. The only public `_cleanup()` function is
+  pgTAP-internal table/sequence cleanup, not a scoped application cleanup contract. Do not create
+  another actor/fixture, run provider smoke, or run the full harness until a reviewed rehearsal-only
+  exact-ID cleanup DAG specifies the permitted retained immutable audit history.
+- **Verdict:** `PHASE_5_RUNTIME_BLOCKED_CLEANUP_CONTRACT`; PR #37 stays Draft and PR #36 remains
+  unchanged. Owner-reported `models/gemini-3.6-flash` is not independently verified by safe hosted
+  interfaces.
+
+## [2026-09-02] Phase 5 R3 generation error trace and evidence normalization
+
+- **Rehearsal:** Contract cleanup passed for run `P5_ACCEPTANCE_0ba6a78b298d4d85`; auth, anonymous
+  denial, manager-boundary denial and TXT extraction passed. Generation v7 returned HTTP 400 generic
+  `GENERATION_FAILED`.
+- **Root cause:** Postgres log `document_chunks_evidence_kind_check` rejected an unsupported model
+  evidence label during article evidence insert. This was not a timeout or provider outage.
+- **Fix:** Normalize untrusted evidence kinds to the canonical enum with `ARTICLE_CLAUSE` fallback;
+  add regression coverage. Pending exact-head CI and generation-function redeploy before rerun.
+- **Cleanup:** Storage deleted, mutable jobs disabled, two actors deleted, immutable source/version/
+  event history retained, and post-cleanup retrieval/Ask AI negative checks PASS. Production = NO.
+
+## [2026-09-02] Phase 5 R3 final end-to-end rehearsal
+
+- **Run:** `P5_ACCEPTANCE_56e868dbbee4457e` on rehearsal `znexculhbdjiflkczpyu` only. Document
+  `6fd275f4-b207-4564-b509-27ba9e93579b`, article `22e437b4-a89e-42ed-ac92-7823cc53e67b`.
+- **Provider/runtime:** direct synthetic `models/gemini-3.6-flash` smoke returned HTTP 200 in
+  11,233 ms with the accepted 35-second timeout. Hosted generation v8 returned HTTP 200 in
+  10,535 ms; `ask-ai` v7 returned HTTP 200 for grounded and abstention paths. The earlier v7
+  generation failure was resolved by canonical evidence-kind normalization, and the harness query
+  was aligned with `plainto_tsquery` AND semantics so its grounded gate tests retrieval rather than
+  the intentional no-evidence branch.
+- **Acceptance:** ingestion/provenance, TXT extraction, structured generation, human approval,
+  retrieval enablement, citations, insufficient-evidence, anonymous denial, conversation ownership,
+  and cross-org RLS isolation all PASS. Cleanup removed Storage and mutable AI rows, cancelled exact
+  run jobs, retained bounded immutable synthetic history, and passed post-cleanup retrieval/Ask AI
+  negative checks. Production = NO.
+- **Validation:** local `npm test` 153/153 PASS, lint 0 errors/3 existing warnings, build PASS;
+  exact-head CI `33587311565` PASS including pgTAP and Deno. Harness fix commit:
+  `b92012af0f1ba59c49154637ce57b981bf1e47b3`.
+- **Verdict:** `PHASE_5_END_TO_END_ACCEPTANCE_PASS`; PR #37 remains Draft and no merge or
+  Production action was taken.

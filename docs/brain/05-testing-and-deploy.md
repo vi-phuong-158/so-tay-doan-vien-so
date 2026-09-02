@@ -55,6 +55,129 @@ npm run lint      # eslint src
 6. Test AI chỉ truy hồi chunk `APPROVED`, đúng quyền.
 7. E2E responsive tại 360, 390, 430, 768, 1440 px.
 
+### Phase 5 provider retry contract
+
+Gemini generation and RAG adapters use `GEMINI_GENERATION_TIMEOUT_MS` (30–45 seconds, default 35)
+and two bounded attempts with jitter. They retry only for 500/503, 429, and transient network/timeout
+failures. Local timeout is `MODEL_TIMEOUT`; a received 500/503 is `PROVIDER_UNAVAILABLE`. Permanent 4xx,
+malformed output, and missing configuration fail without retry. No automatic model fallback is
+allowed during Phase 5 acceptance.
+
+Before changing the timeout, run `node scripts/phase5-gemini-diagnostic.mjs` with rehearsal-only
+configuration and `GEMINI_DIAGNOSTIC_TIMEOUT_MS=12000`, then repeat at the proposed bound. It logs
+only model, synthetic request class, prompt-size class, elapsed time and received HTTP status or
+timeout category.
+
+### Phase 5 cited retrieval rehearsal
+
+Run on the non-production rehearsal project only: enable retrieval through its trusted RPCs for one
+approved document/article, invoke `ask-ai` as an allowed user and confirm its evidence citation
+opens the canonical document route. Repeat as a cross-organization user and with an unsupported
+question; the former must reveal no source/metadata and the latter must return the no-evidence
+answer. Record only source type, checksum, short IDs, statuses and result counts—never secrets,
+tokens, storage paths or document body.
+
+### Phase 5 closure baseline regression evidence
+
+Use the same CI runtime when classifying an existing pgTAP failure. On 2026-08-31, exact base
+`a91f7145` was replayed by manual CI run `33413402157` and failed the same four assertions as the
+first closure candidate: anonymous notification read and three unexpected `profiles` INSERT grants.
+The forward grant remediation then passed exact-head CI `33415028799` on `1cdc3d51d35d86338aacd8c88d138006dd3ad1d5`: reset/migration,
+`Files=27, Tests=815`, `deno check`, and `deno test` (`74 passed`). This is CI evidence only; it
+does not replace the non-production actor rehearsal.
+
+### Phase 5 final rehearsal reconciliation (2026-09-01)
+
+Connected Supabase management evidence was collected only for rehearsal project
+`znexculhbdjiflkczpyu` (`so-tay-doan-vien-rehearsal`, `ACTIVE_HEALTHY`, PostgreSQL `17.6.1.155`).
+The project was reconciled from `20260825154300_phase_5_function_privilege_hardening` to the exact
+HEAD migrations `202608310001_phase_5_rag_retrieval` and
+`202608310002_phase_5_baseline_privilege_stabilization`. RPC/RLS/grant checks passed: anonymous
+retrieval EXECUTE and notification SELECT are denied; authenticated retrieval EXECUTE is limited to
+the intended functions; search is SECURITY INVOKER; profile INSERT is denied and scoped update
+columns are preserved. Security advisor findings were classified as existing project-wide notices.
+
+Exact HEAD `1cdc3d51d35d86338aacd8c88d138006dd3ad1d5` deployed `ask-ai` v1,
+`process-document` v1, and `generate-knowledge-article` v1 with `verify_jwt=true`; the no-op
+`run-ingestion-jobs` foundation was not required for the selected pilot. An anonymous HTTP probe
+returned controlled 401. The connector has no authenticated Auth/session or Edge Function invoke
+operation and no secret-presence endpoint; consequently authenticated actor/runtime, Gemini
+presence, pilot, Ask AI, citations, failure paths, cleanup, and UI gates remain blocked and are not
+claimed as PASS. Production access: NO.
+
+### Phase 5 authenticated runtime harness (2026-09-01)
+
+`scripts/phase5-runtime-acceptance.mjs` is acceptance-only and uses the existing Supabase JS SDK.
+It hard-rejects non-rehearsal URLs, creates random temporary Auth users only with a server/admin
+credential, signs in normally to obtain user sessions, sends user JWTs to `ask-ai`,
+`process-document`, and `generate-knowledge-article`, redacts sensitive output, and cleans up in a
+`finally` block. Run with `npm run test:phase5:runtime` after supplying untracked rehearsal env
+configuration. Current local run stopped before any remote mutation with
+`PHASE_5_RUNTIME_BLOCKED_REHEARSAL_PUBLIC_CONFIG_REQUIRED`; no actor or pilot artifact was created.
+
+### Phase 5 authenticated rehearsal execution (2026-09-01)
+
+The untracked rehearsal configuration was preflighted by presence only and its URL was verified to
+match `znexculhbdjiflkczpyu`; no credential values were printed. The configuration uses PowerShell
+assignment syntax and was parsed into the harness child process only. Real Auth Admin bootstrap and
+user password sign-in passed for synthetic admin, Organization A, and Organization B actors.
+
+The anonymous `ask-ai` request was denied (HTTP 401 / `UNAUTHENTICATED`), and a normal User A was
+denied the retrieval-manager RPC. The selected synthetic document then reached the deployed
+`process-document` function, which failed closed with HTTP 400 / `GEMINI_NOT_CONFIGURED`.
+Accordingly the runtime verdict is
+`PHASE_5_RUNTIME_BLOCKED_REHEARSAL_PROVIDER_CONFIG_REQUIRED`; generation, review, retrieval, Ask
+AI, citations, and UI gates remain unrun rather than assumed.
+
+All artifacts from the failed rehearsal runs were removed under an exact-ID management cleanup;
+the final counts for synthetic organizations, documents, sources, jobs, and storage objects were
+zero. Production accessed: NO. The harness also has regression coverage for the Auth-compatible
+temporary password length and controlled string-error payload decoding.
+
+### Phase 5 authorized deployment and cleanup prerequisite (2026-09-02)
+
+The authorized management deployment connector deployed exact source `19ddf93` only to rehearsal
+`znexculhbdjiflkczpyu`: `generate-knowledge-article` and `ask-ai` are ACTIVE v7 with JWT
+verification and contain the timeout mapping. No secret/configuration or Production change occurred.
+Before rerunning the full harness, an aggregate audit found retained historical synthetic document
+chains, jobs/events, and temporary users. The public `_cleanup()` routine is pgTAP-only cleanup, not
+an application fixture purge path. Because provenance, version, and event history are immutable,
+the full harness is prohibited until a reviewed exact-ID rehearsal cleanup contract exists; provider
+smoke and all later E2E gates remain unrun.
+
+### Phase 5 R3 generic generation failure trace (2026-09-02)
+
+R3 authentication, anonymous/manager boundaries and TXT extraction passed, but deployed generation
+v7 returned HTTP 400 `GENERATION_FAILED`. Postgres logs attributed it to an unsupported model
+`evidence_kind` rejected by `document_chunks_evidence_kind_check`. The cleanup contract then
+withdrew/disabled the exact synthetic document, removed Storage and disposable rows, cancelled
+mutable jobs, and verified negative retrieval plus Ask AI. The targeted evidence-kind normalization
+fix requires a new exact-head CI and generation-function redeploy before rerun.
+
+### Gemini model/dimension compatibility (2026-09-01)
+
+The local untracked environment now has all Gemini variables required by the selected Phase 5
+functions; their values were checked only as presence/equality booleans. The accepted identifiers
+match `models/gemini-embedding-2` and `models/gemini-3.7-flash`. The processing request now asks
+Gemini Embedding 2 for `output_dimensionality: 768`, validates a finite 768-number response, and
+fails closed for an invalid dimension. Gemini 3.7 generation removes deprecated sampling
+parameters; knowledge draft generation requests medium thinking and Ask AI requests low thinking.
+
+Hosted secret sync is blocked locally because neither Supabase CLI nor a management secret-write
+capability is present. An authorized owner must set exactly the four Gemini variables under the
+rehearsal project's **Edge Functions → Secrets** page. This is the only permitted configuration
+target; Production remains out of scope. Exact-head CI `33484622052` passed on
+`7ebefbdf23d6bfe45b27c00f451ba687e35d4a07`, covering frontend lint/test/build, Supabase reset,
+all pgTAP, Deno check, and Deno tests; hosted configuration and runtime acceptance remain separate
+blocked gates.
+
+Owner configuration was subsequently verified by deployment v3 of `process-document`,
+`generate-knowledge-article`, and `ask-ai`, all with JWT verification enabled. `process-document`
+returned 200 and provider generation reached Gemini but returned controlled `MODEL_PROVIDER_ERROR`
+from redacted HTTP 503 `UNAVAILABLE`; a bounded retry remained 503. Synthetic storage/chunks were
+removed and five retry/pending jobs cancelled; linked append-only audit rows remain and orphan
+jobs/events = 0. CI `33487744493` on `08e0c85c5bfb0befa0010aef78522ba69af372f6` passed all gates.
+
 Checklist thủ công trước khi commit/push:
 - [ ] `npm test` xanh và `npm run lint` sạch (không thêm cảnh báo mới).
 - [ ] `npm run build` chạy được.

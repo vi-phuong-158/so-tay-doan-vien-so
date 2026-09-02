@@ -7,6 +7,38 @@
 
 ## Đang làm
 
+### Phase 5 end-to-end closure
+- **Base:** isolated closure worktree/branch `codex/phase-5-full-closure`, based on P5-03 plus the
+  forward-only trigger-function privilege fix `ff72ccd`.
+- **Trạng thái:** `PHASE_5_END_TO_END_ACCEPTANCE_PASS`. Rehearsal-only runtime closed on namespace
+  `P5_ACCEPTANCE_56e868dbbee4457e`: generation v8 and `ask-ai` v7 are ACTIVE with JWT verification;
+  extraction, generation, review, retrieval, grounded/cited Ask AI, insufficient-evidence,
+  cross-org isolation and post-cleanup negative checks passed. Production was not accessed.
+- **Runtime guard/history:** Before the final run, an aggregate fixture audit found five
+  synthetic documents/versions/sources, nine jobs, seventeen append-only events, and five temporary
+  Auth users from historical attempts. The only `_cleanup()` function is pgTAP internal cleanup,
+  not a supported fixture-purge contract. Provenance, version, and event immutability make a new
+  full run unsafe without accumulating non-removable residue; the R3 retention contract now permits
+  bounded, non-retrievable immutable history. The first R3 run still returned generic
+  `GENERATION_FAILED`; Postgres identified an unsupported model evidence label violating
+  `document_chunks_evidence_kind_check`. The targeted normalization fix was deployed as v8 and
+  exact-head CI `33587311565` passed. Owner-reported generation model `models/gemini-3.6-flash`
+  remains independently unverified because secret values and hosted model selection are not
+  exposed; direct synthetic smoke on that model returned HTTP 200 under the 35-second timeout.
+- **Historical model diagnostic:** `gemini-3.7-flash` returned HTTP 503 while
+  `gemini-3.6-flash` returned HTTP 200, a model-specific capacity signal. The owner later reported
+  3.6 configured, but the hosted resolved model remains unverified; this does not bypass the
+  cleanup-contract gate.
+- **Report:** `docs/phase-5/13-phase-5-end-to-end-closure.md`.
+
+### P5-03 — Canonical document extraction → knowledge article generation
+- **Base:** exact `origin/master@a91f7145a76507e171bb9e96a9a7262ed6575aaf`; isolated branch
+  `feat/phase-5-03-article-generation`.
+- **Trạng thái:** Đang triển khai vertical slice deterministic extraction → structured AI draft →
+  selective evidence → trusted human review. Không làm embedding, retrieval, ask-ai hoặc OCR.
+- **Runtime gates:** Gemini/Google Drive rehearsal là gate riêng; technical tests dùng synthetic
+  fixtures/provider fake và phải không cần credential thật.
+
 ### P5-R0 — Consolidate Phase 5 Canonical Baseline
 - **Base:** exact `origin/master@343547cb5a81d5e1e69cea26a6a232c990e8c92b`; isolated branch
   `feat/phase-5-canonical-baseline`.
@@ -205,6 +237,17 @@
   `docs/phase-3/06-cron-overdue-automation.md`, `docs/phase-3/07-live-cron-rehearsal.md`.
 - [2026-08-14] P3-R1: Email delivery safety gate & reminder cycle fix merged via PR #19 (`5665dc4`).
 - [2026-08-11] P3-01: Notification Foundation PASS; CI 31491748132 xanh với migration reset, 267 pgTAP, Edge Function và frontend gates.
+
+- [2026-09-01] Phase 5 rehearsal đã đồng bộ tới exact HEAD `1cdc3d51d35d86338aacd8c88d138006dd3ad1d5`
+  trên project `znexculhbdjiflkczpyu`; đã deploy `ask-ai`, `process-document`,
+  `generate-knowledge-article`. Runtime actor/Ask AI/pilot vẫn bị chặn bởi thiếu API invoke/Auth
+  trong connector: `PHASE_5_RUNTIME_BLOCKED_ACTOR_INVOCATION_TOOL_UNAVAILABLE`. Không truy cập Production;
+  không mở Phase 6.
+
+- [2026-09-01] Đã thêm harness `scripts/phase5-runtime-acceptance.mjs` và command
+  `npm run test:phase5:runtime`; harness chỉ cho phép rehearsal, dùng user JWT thật và cleanup trong
+  `finally`. Local execution chưa có public/admin env nên dừng tại
+  `PHASE_5_RUNTIME_BLOCKED_REHEARSAL_PUBLIC_CONFIG_REQUIRED`; không tạo dữ liệu rehearsal.
 
 - [2026-08-14] Phase 3 Stack Consolidation: P3-00 → P3-05 merged to `master` via PR #17 at `2a68f20`; CI `31783521687` PASS.
 

@@ -182,7 +182,7 @@ export function Knowledge() {
           </div>
         )}
       </div>
-      <button className="fab" aria-label="Hỏi AI"><Icon name="sparkles" size={24} /></button>
+      <Link className="fab" aria-label="Hỏi AI" to="/tri-thuc/hoi-ai"><Icon name="sparkles" size={24} /></Link>
     </div>
   );
 }

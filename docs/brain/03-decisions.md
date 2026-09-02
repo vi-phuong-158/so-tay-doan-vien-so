@@ -534,3 +534,73 @@ không nới, không skip bất kỳ assertion nào**; test 14/15/16/26 vẫn đ
 - **Đánh đổi:** Các trường/luồng legacy của `document_chunks` và `match_document_chunks()` được giữ
   đủ để Phase 1–4 tests không bị xóa hoặc yếu đi; P5 retrieval mới sẽ dùng evidence/embeddings qua
   trusted API ở task sau.
+
+## [2026-08-25] P5-03 deterministic extraction and reviewed article generation
+
+- **Quyết định:** P5-03 lưu extraction artifact riêng, private và gắn một-một với immutable
+  `document_version`; `document_chunks` tiếp tục là bảng selective evidence canonical. Không tạo
+  `article_chunks`, không embedding, retrieval hoặc ask-ai.
+- **Quyết định:** External AI eligibility là cờ `documents.ai_processing_allowed`, mặc định false.
+  Edge Function phải authorize scoped content admin trước khi đọc provider, kiểm tra SHA-256 của
+  bytes với version/source checksum, rồi mới gọi Gemini. Source classification không đủ điều kiện
+  thì fail closed.
+- **Quyết định:** `KnowledgeGenerator` trả structured JSON; batching giữ toàn bộ page boundaries,
+  validation flag literal số/ngày không xuất hiện trong source, và evidence chỉ được backend copy
+  từ exact extracted text. AI không được tự tạo citation.
+- **Quyết định:** Generation job dùng `document_version + article_key + generator_version` làm
+  idempotency key. Retry cùng profile tái sử dụng attempt; regeneration phải có key explicit và
+  tạo revision/attempt mới. Draft luôn `PENDING_REVIEW`; approve/reject đi qua trusted RPC có audit.
+
+## [2026-08-26] P5-03 internal function privilege contract
+
+- **Quyết định:** Các function P5 `RETURNS trigger` là implementation nội bộ; forward migration
+  `20260825154300` thu hồi toàn bộ quyền `EXECUTE` từ `PUBLIC`, `anon` và `authenticated` theo
+  đúng full signature. Không grant lại `service_role` vì các function này không phải RPC.
+- **Quyết định:** Giữ explicit authenticated `EXECUTE` chỉ cho RPC có UI contract
+  `review_knowledge_article` và `set_document_ai_processing_allowed`; worker/ingestion routines
+  tiếp tục service-role-only.
+- **Lý do:** PostgreSQL cấp `EXECUTE` cho `PUBLIC` mặc định. Rehearsal catalog audit xác định 16
+  P5 trigger functions đã thừa hưởng quyền này dù trigger bindings vẫn phải tiếp tục chạy.
+- **Đảm bảo:** Regression pgTAP inventory trigger functions từ catalog P5 để chặn helper trigger
+  mới quay lại default-open; test source insertion tiếp tục tạo ingestion job. SECURITY DEFINER
+  P5 đã có `search_path=public`, nên migration không thay function body hay semantics.
+
+## [2026-08-31] P5 cited retrieval is RLS-first and embedding-optional
+
+- **Quyết định:** `ask-ai` truy vấn `search_published_knowledge()` bằng `userClient` trước khi
+  dùng service role để persist conversation/message. RPC là `SECURITY INVOKER`, chỉ trả approved,
+  current, retrieval-enabled article evidence; do đó RLS của caller lọc source trước model call.
+- **Quyết định:** Bật retrieval cho document và article là hai trusted scoped-admin RPC riêng.
+  Không bật mặc định khi approve, không tạo embedding tự động, và không cho PUBLISHED/superseded
+  state bị thay đổi cùng thao tác này.
+- **Quyết định:** Citation được persist dưới `source_kind = 'EVIDENCE'`, để trigger provenance
+  điền lại canonical document/version; browser chỉ nhận document route, không nhận storage path,
+  signed URL hay provider locator.
+- **Lý do:** Khép vòng reviewed evidence → retrieval → answer → citation mà không dùng service
+  role như retrieval bypass và không làm vector index trở thành source of truth.
+
+## [2026-08-31] Explicit table grants are a security contract, not a runtime default
+
+- **Quyết định:** Forward migration `202608310002_phase_5_baseline_privilege_stabilization.sql`
+  revokes inherited `PUBLIC`/`anon`/`authenticated` table privileges on `profiles` and
+  `notifications`, then grants back only the pre-existing minimum contract. Anonymous callers may
+  read `profiles` for RLS evaluation but cannot read notifications; authenticated callers may read
+  notifications and may update only the four existing profile self-service columns.
+- **Lý do:** The exact pre-Phase-5 base replayed with the current CI runtime acquired an unintended
+  `INSERT` privilege on `profiles` and anonymous `SELECT` on `notifications`. Historical CI had
+  passed, proving this was a runtime-default drift rather than a Phase 5 retrieval change.
+- **Đảm bảo:** No policy or test was weakened. The existing Phase 1/3 pgTAP assertions remain the
+  regression checks, and the change narrows privileges before RLS is evaluated.
+
+## [2026-09-02] Phase 5 Gemini timeout is explicit and separately observable
+
+- **Quyết định:** Knowledge generation và RAG cùng đọc `GEMINI_GENERATION_TIMEOUT_MS`; chỉ chấp nhận
+  30–45 giây và mặc định 35 giây. Hosted runtime dùng tối đa hai provider attempts, không fallback
+  model. `AbortSignal.timeout()` trả `MODEL_TIMEOUT` (HTTP 504), còn HTTP 500/503 thật trả
+  `PROVIDER_UNAVAILABLE` (HTTP 503), HTTP 429 trả `MODEL_RATE_LIMITED`, network failure giữ
+  `PROVIDER_UNAVAILABLE`, và HTTP 4xx cố định không retry.
+- **Lý do:** Bốn timeout 12 giây cộng backoff có thể trông giống một HTTP 503 kéo dài; không được
+  suy diễn provider status khi fetch bị local abort. Hai attempt 35 giây + backoff nhỏ nằm dưới
+  idle timeout hosted 150 giây.
+- **Đảm bảo:** Log chỉ chứa provider, model, attempt, elapsed time, outcome và HTTP status thực tế;
+  không chứa prompt, key/JWT, source content, signed URL hoặc storage locator.
