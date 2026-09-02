@@ -591,3 +591,16 @@ không nới, không skip bất kỳ assertion nào**; test 14/15/16/26 vẫn đ
   passed, proving this was a runtime-default drift rather than a Phase 5 retrieval change.
 - **Đảm bảo:** No policy or test was weakened. The existing Phase 1/3 pgTAP assertions remain the
   regression checks, and the change narrows privileges before RLS is evaluated.
+
+## [2026-09-02] Phase 5 Gemini timeout is explicit and separately observable
+
+- **Quyết định:** Knowledge generation và RAG cùng đọc `GEMINI_GENERATION_TIMEOUT_MS`; chỉ chấp nhận
+  30–45 giây và mặc định 35 giây. Hosted runtime dùng tối đa hai provider attempts, không fallback
+  model. `AbortSignal.timeout()` trả `MODEL_TIMEOUT` (HTTP 504), còn HTTP 500/503 thật trả
+  `PROVIDER_UNAVAILABLE` (HTTP 503), HTTP 429 trả `MODEL_RATE_LIMITED`, network failure giữ
+  `PROVIDER_UNAVAILABLE`, và HTTP 4xx cố định không retry.
+- **Lý do:** Bốn timeout 12 giây cộng backoff có thể trông giống một HTTP 503 kéo dài; không được
+  suy diễn provider status khi fetch bị local abort. Hai attempt 35 giây + backoff nhỏ nằm dưới
+  idle timeout hosted 150 giây.
+- **Đảm bảo:** Log chỉ chứa provider, model, attempt, elapsed time, outcome và HTTP status thực tế;
+  không chứa prompt, key/JWT, source content, signed URL hoặc storage locator.

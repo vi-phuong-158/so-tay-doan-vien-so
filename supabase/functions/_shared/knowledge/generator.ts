@@ -1,11 +1,11 @@
 import type { StructuredExtraction } from './extraction.ts';
+import { isProviderTimeout, logProviderAttempt, DEFAULT_GEMINI_GENERATION_TIMEOUT_MS } from './geminiRuntime.ts';
 import { withProviderRetry, type ProviderRetryOptions } from './providerRetry.ts';
 
 export const PROMPT_VERSION = 'knowledge_article_v1';
 export const GENERATOR_VERSION = 'p5-03-generator-v1';
 const MAX_BATCH_CHARS = 45_000;
 const MAX_TOTAL_CHARS = 220_000;
-const PROVIDER_TIMEOUT_MS = 12_000;
 
 export type KnowledgeArticleDraft = {
   title: string;
@@ -115,24 +115,41 @@ export function knowledgeGenerationRequest(prompt: string) {
 
 type FetchLike = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 
-async function geminiGenerate(model: string, apiKey: string, prompt: string, fetcher: FetchLike): Promise<unknown> {
-  const response = await fetcher(`https://generativelanguage.googleapis.com/v1beta/${model}:generateContent?key=${encodeURIComponent(apiKey)}`, {
+async function geminiGenerate(model: string, apiKey: string, prompt: string, fetcher: FetchLike, timeoutMs: number, attempt: number): Promise<unknown> {
+  const startedAt = Date.now();
+  let response: Response;
+  try {
+    response = await fetcher(`https://generativelanguage.googleapis.com/v1beta/${model}:generateContent?key=${encodeURIComponent(apiKey)}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
+    signal: AbortSignal.timeout(timeoutMs),
     body: JSON.stringify(knowledgeGenerationRequest(prompt)),
-  }).catch(() => {
-    throw new KnowledgeGenerationError('PROVIDER_UNAVAILABLE', undefined, true);
-  });
+    });
+  } catch (error) {
+    const code = isProviderTimeout(error) ? 'MODEL_TIMEOUT' : 'PROVIDER_UNAVAILABLE';
+    logProviderAttempt({ provider: 'GEMINI', model, attempt, elapsed_ms: Date.now() - startedAt, outcome: code });
+    throw new KnowledgeGenerationError(code, undefined, true);
+  }
   const body = await response.json().catch(() => null) as Record<string, any> | null;
   if (!response.ok) {
+    logProviderAttempt({ provider: 'GEMINI', model, attempt, elapsed_ms: Date.now() - startedAt, outcome: 'HTTP_ERROR', http_status: response.status });
     if (response.status === 429) throw new KnowledgeGenerationError('MODEL_RATE_LIMITED', undefined, true);
     if (response.status === 500 || response.status === 503) throw new KnowledgeGenerationError('PROVIDER_UNAVAILABLE', undefined, true);
     throw new KnowledgeGenerationError('MODEL_PROVIDER_ERROR');
   }
   const text = body?.candidates?.[0]?.content?.parts?.map((part: any) => part.text || '').join('').trim();
-  if (!text) throw new KnowledgeGenerationError('MODEL_INVALID_OUTPUT');
-  try { return JSON.parse(text); } catch { throw new KnowledgeGenerationError('MODEL_INVALID_OUTPUT'); }
+  if (!text) {
+    logProviderAttempt({ provider: 'GEMINI', model, attempt, elapsed_ms: Date.now() - startedAt, outcome: 'MODEL_INVALID_OUTPUT', http_status: response.status });
+    throw new KnowledgeGenerationError('MODEL_INVALID_OUTPUT');
+  }
+  try {
+    const result = JSON.parse(text);
+    logProviderAttempt({ provider: 'GEMINI', model, attempt, elapsed_ms: Date.now() - startedAt, outcome: 'SUCCESS', http_status: response.status });
+    return result;
+  } catch {
+    logProviderAttempt({ provider: 'GEMINI', model, attempt, elapsed_ms: Date.now() - startedAt, outcome: 'MODEL_INVALID_OUTPUT', http_status: response.status });
+    throw new KnowledgeGenerationError('MODEL_INVALID_OUTPUT');
+  }
 }
 
 export class GeminiKnowledgeGenerator implements KnowledgeGenerator {
@@ -142,11 +159,12 @@ export class GeminiKnowledgeGenerator implements KnowledgeGenerator {
     private readonly apiKey: string,
     private readonly fetcher: FetchLike = fetch,
     private readonly retryOptions: ProviderRetryOptions = {},
+    private readonly timeoutMs = DEFAULT_GEMINI_GENERATION_TIMEOUT_MS,
   ) {}
 
   private generateWithRetry(prompt: string): Promise<unknown> {
     return withProviderRetry(
-      () => geminiGenerate(this.model, this.apiKey, prompt, this.fetcher),
+      attempt => geminiGenerate(this.model, this.apiKey, prompt, this.fetcher, this.timeoutMs, attempt),
       error => error instanceof KnowledgeGenerationError && error.retryable,
       this.retryOptions,
     );

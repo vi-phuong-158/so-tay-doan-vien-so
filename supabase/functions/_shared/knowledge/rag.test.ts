@@ -52,6 +52,24 @@ Deno.test('RAG gateway retries 503 and does not retry permanent 400', async () =
   assertEquals(calls, 1);
 });
 
+Deno.test('RAG maps local timeout separately from an upstream 500', async () => {
+  let calls = 0;
+  const timeout = new GeminiGroundedAnswerGenerator('gemini-test', 'test-key', async () => {
+    calls += 1;
+    throw new DOMException('timed out', 'TimeoutError');
+  }, { sleep: async (_delayMs: number) => {}, random: () => 0, baseDelayMs: 0 });
+  await assertRejects(() => timeout.generate('Thời hạn bao lâu?', [source]), RagError, 'MODEL_TIMEOUT');
+  assertEquals(calls, 4);
+
+  calls = 0;
+  const upstream = new GeminiGroundedAnswerGenerator('gemini-test', 'test-key', async () => {
+    calls += 1;
+    return new Response('{}', { status: 500 });
+  }, { sleep: async (_delayMs: number) => {}, random: () => 0, baseDelayMs: 0 });
+  await assertRejects(() => upstream.generate('Thời hạn bao lâu?', [source]), RagError, 'PROVIDER_UNAVAILABLE');
+  assertEquals(calls, 4);
+});
+
 Deno.test('RAG answer validation rejects empty output', () => {
   assertEquals(validateGroundedAnswer(' Có căn cứ. '), 'Có căn cứ.');
   try { validateGroundedAnswer(''); } catch (error) { assertEquals((error as RagError).code, 'MODEL_INVALID_OUTPUT'); }

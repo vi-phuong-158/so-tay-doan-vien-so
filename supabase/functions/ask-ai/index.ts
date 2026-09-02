@@ -7,6 +7,7 @@ import {
   type RetrievedKnowledgeSource,
   RagError,
 } from '../_shared/knowledge/rag.ts';
+import { getGeminiGenerationRuntimeConfig } from '../_shared/knowledge/geminiRuntime.ts';
 
 type Payload = { question: string; mode?: string; conversation_id?: string };
 
@@ -116,7 +117,9 @@ Deno.serve(async request => {
     if (!apiKey || !model) throw new Error('GEMINI_NOT_CONFIGURED');
 
     const startedAt = Date.now();
-    const generatedAnswer = await new GeminiGroundedAnswerGenerator(model, apiKey).generate(question, sources);
+    const runtime = getGeminiGenerationRuntimeConfig({ GEMINI_GENERATION_TIMEOUT_MS: Deno.env.get('GEMINI_GENERATION_TIMEOUT_MS') });
+    const generatedAnswer = await new GeminiGroundedAnswerGenerator(model, apiKey, fetch, { maxAttempts: runtime.maxAttempts }, runtime.timeoutMs)
+      .generate(question, sources);
     const citations = sources.map((source, index) => citation(source, index + 1));
     const answer = `${generatedAnswer}\n\nNguồn tra cứu:\n${citations.map(item => `[${item.rank}] ${item.title}`).join('\n')}`;
     const { data: message, error: messageError } = await adminClient.from('ai_messages')

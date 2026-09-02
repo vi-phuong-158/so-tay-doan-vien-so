@@ -220,3 +220,27 @@ remains `models/gemini-embedding-2` with 768 dimensions.
   bypass was used.
 - **Verdict:** `PHASE_5_RUNTIME_BLOCKED_HOSTED_GENERATION_UNAVAILABLE_503`. Do not claim full runtime
   acceptance until a successful hosted 3.6 generation smoke is observed, then rerun the full harness.
+
+## Timeout remediation preliminary rehearsal (2026-09-02)
+
+- **Source state:** the timeout/remapping patch is locally validated but not yet deployed to
+  rehearsal. It changes the client-bound timeout from 12 seconds to 35 seconds (accepted range
+  30–45 seconds), uses two hosted attempts, and returns `MODEL_TIMEOUT` only for a local abort;
+  received HTTP 500/503 remains `PROVIDER_UNAVAILABLE`.
+- **Rehearsal identity and actor gates:** the harness rejected every non-rehearsal target and ran
+  only against `znexculhbdjiflkczpyu`. Admin, User A and User B authenticated; anonymous Ask AI
+  received 401; User A was denied the scoped manager RPC; and synthetic TXT extraction returned
+  HTTP 200. The following generation call returned HTTP 400 `GENERATION_FAILED` from the currently
+  deployed function, before review/retrieval/Ask AI. That generic hosted response has no actual
+  Gemini HTTP status, so it is not classified as either timeout or provider outage.
+- **Direct synthetic diagnostic:** the local untracked diagnostic configuration resolved to
+  `models/gemini-3.7-flash`, not the accepted generation contract. Its harmless, production-shaped
+  synthetic request received actual HTTP 503 at 4.001s with a 12-second bound and 10.804s with a
+  35-second bound. This is evidence of an upstream response for that non-contract local setting,
+  not evidence about hosted `models/gemini-3.6-flash` and not a reason to change models.
+- **Cleanup:** the harness removed the synthetic storage object; it removed two of three temporary
+  users, while immutable source-linked audit history correctly prevented destructive database
+  deletion. No orphan check was claimed PASS and Production access remained **NO**.
+- **Current verdict:** `PHASE_5_RUNTIME_BLOCKED_CONFIGURATION`. Exact-head CI, rehearsal deployment
+  of the timeout patch, and independent confirmation that the hosted generation model is
+  `models/gemini-3.6-flash` are required before resuming the full vertical-slice harness.

@@ -13,6 +13,7 @@ import {
   KnowledgeGenerationError,
   PROMPT_VERSION,
 } from '../_shared/knowledge/generator.ts';
+import { getGeminiGenerationRuntimeConfig } from '../_shared/knowledge/geminiRuntime.ts';
 
 type Payload = {
   document_id: string;
@@ -27,6 +28,7 @@ function statusFor(code: string): number {
   if (code === 'SOURCE_NOT_FOUND') return 404;
   if (code === 'GENERATION_IN_PROGRESS') return 409;
   if (code === 'MODEL_RATE_LIMITED') return 429;
+  if (code === 'MODEL_TIMEOUT') return 504;
   if (code === 'PROVIDER_UNAVAILABLE') return 503;
   return 400;
 }
@@ -133,7 +135,8 @@ async function run(request: Request): Promise<Response> {
     const model = Deno.env.get('KNOWLEDGE_GENERATION_MODEL');
     const apiKey = Deno.env.get('GEMINI_API_KEY');
     if (!model || !apiKey) throw new Error('MODEL_CONFIGURATION_MISSING');
-    const generator = new GeminiKnowledgeGenerator(model, apiKey);
+    const runtime = getGeminiGenerationRuntimeConfig({ GEMINI_GENERATION_TIMEOUT_MS: Deno.env.get('GEMINI_GENERATION_TIMEOUT_MS') });
+    const generator = new GeminiKnowledgeGenerator(model, apiKey, fetch, { maxAttempts: runtime.maxAttempts }, runtime.timeoutMs);
     const draft = await generator.generateKnowledgeArticle({
       document: { title: document.title, document_number: document.document_number, issued_date: document.issued_date, document_type: document.document_type },
       extraction,

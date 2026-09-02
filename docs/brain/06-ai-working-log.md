@@ -1107,3 +1107,21 @@
 - **Cleanup:** Storage/chunks và hai user tạm được dọn; immutable source-linked audit history giữ lại
   theo contract. Harness báo `database_rows_removed=false`, `orphan_check=BLOCKED_IMMUTABLE_SOURCE`;
   không force-delete hoặc tắt RLS.
+
+## [2026-09-02] Phase 5 Gemini hosted timeout classification
+
+- **Agent:** Codex
+- **Thay đổi:** Thêm bounded `GEMINI_GENERATION_TIMEOUT_MS` (30–45 giây, default 35), runtime retry
+  policy hai attempt, safe provider-attempt diagnostic và phân biệt local timeout (`MODEL_TIMEOUT`)
+  với upstream HTTP 500/503 (`PROVIDER_UNAVAILABLE`) cho cả article generation/RAG. Thêm synthetic
+  production-shaped Gemini diagnostic script và deterministic mapping/config/security tests.
+- **File đã sửa:** `.env.example`, `scripts/phase5-gemini-diagnostic.mjs`,
+  `supabase/functions/_shared/knowledge/{geminiRuntime,generator,rag}.*`, two Edge Function indexes,
+  Phase 5 test/docs files.
+- **Lý do:** Hosted v6 duration khoảng 54.5 giây phù hợp với local 12-second abort + retry nhưng
+  code cũ báo nhầm là provider 503; direct minimal Gemini 3.6 HTTP 200 không đủ chứng minh request
+  generation thực tế.
+- **Kiểm tra:** `npm test` 153/153 PASS, `npm run lint` 0 errors/3 existing warnings, `npm run build`
+  PASS, `git diff --check` PASS. Direct synthetic diagnostic was repaired for Windows direct-script
+  execution and reports only canonical outcome metadata. Deno/Supabase CLI absent locally;
+  exact-head CI and rehearsal deploy remain required before runtime verdict.

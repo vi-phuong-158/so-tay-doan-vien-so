@@ -67,6 +67,34 @@ Deno.test('Gemini generation retries 429 and succeeds', async () => {
   assertEquals(calls, 2);
 });
 
+Deno.test('Gemini generation maps local timeout separately from an upstream 500', async () => {
+  let calls = 0;
+  const timeout = new GeminiKnowledgeGenerator('gemini-test', 'test-key', async () => {
+    calls += 1;
+    throw new DOMException('timed out', 'TimeoutError');
+  }, noSleep);
+  await assertRejects(() => timeout.generateKnowledgeArticle(generatorInput), KnowledgeGenerationError, 'MODEL_TIMEOUT');
+  assertEquals(calls, 4);
+
+  calls = 0;
+  const upstream = new GeminiKnowledgeGenerator('gemini-test', 'test-key', async () => {
+    calls += 1;
+    return new Response('{}', { status: 500 });
+  }, noSleep);
+  await assertRejects(() => upstream.generateKnowledgeArticle(generatorInput), KnowledgeGenerationError, 'PROVIDER_UNAVAILABLE');
+  assertEquals(calls, 4);
+});
+
+Deno.test('Gemini generation preserves a non-timeout network failure category', async () => {
+  let calls = 0;
+  const generator = new GeminiKnowledgeGenerator('gemini-test', 'test-key', async () => {
+    calls += 1;
+    throw new TypeError('network unavailable');
+  }, noSleep);
+  await assertRejects(() => generator.generateKnowledgeArticle(generatorInput), KnowledgeGenerationError, 'PROVIDER_UNAVAILABLE');
+  assertEquals(calls, 4);
+});
+
 Deno.test('Gemini generation does not retry permanent 400 or malformed output', async () => {
   let calls = 0;
   const badRequest = new GeminiKnowledgeGenerator('gemini-test', 'test-key', async () => {

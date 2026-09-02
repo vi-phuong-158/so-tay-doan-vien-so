@@ -1,4 +1,5 @@
 import { withProviderRetry, type ProviderRetryOptions } from './providerRetry.ts';
+import { isProviderTimeout, logProviderAttempt, DEFAULT_GEMINI_GENERATION_TIMEOUT_MS } from './geminiRuntime.ts';
 
 export const NO_EVIDENCE_ANSWER = 'Không tìm thấy đủ căn cứ trong kho tri thức mà đồng chí được phép truy cập.';
 
@@ -43,25 +44,35 @@ export class GeminiGroundedAnswerGenerator {
     private readonly apiKey: string,
     private readonly fetcher: FetchLike = fetch,
     private readonly retryOptions: ProviderRetryOptions = {},
+    private readonly timeoutMs = DEFAULT_GEMINI_GENERATION_TIMEOUT_MS,
   ) {}
 
   async generate(question: string, sources: RetrievedKnowledgeSource[]): Promise<string> {
     const answer = await withProviderRetry(
-      async () => {
-        const response = await this.fetcher(
+      async attempt => {
+        const startedAt = Date.now();
+        let response: Response;
+        try {
+          response = await this.fetcher(
           `https://generativelanguage.googleapis.com/v1beta/${this.model}:generateContent?key=${encodeURIComponent(this.apiKey)}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            signal: AbortSignal.timeout(12_000),
+            signal: AbortSignal.timeout(this.timeoutMs),
             body: JSON.stringify({
               contents: [{ role: 'user', parts: [{ text: buildGroundedAnswerPrompt(question, sources) }] }],
               generationConfig: { maxOutputTokens: 1_200, thinkingConfig: { thinkingLevel: 'low' } },
             }),
           },
-        ).catch(() => { throw new RagError('PROVIDER_UNAVAILABLE', true); });
+          );
+        } catch (error) {
+          const code = isProviderTimeout(error) ? 'MODEL_TIMEOUT' : 'PROVIDER_UNAVAILABLE';
+          logProviderAttempt({ provider: 'GEMINI', model: this.model, attempt, elapsed_ms: Date.now() - startedAt, outcome: code });
+          throw new RagError(code, true);
+        }
         const body = await response.json().catch(() => null) as Record<string, any> | null;
         if (!response.ok) {
+          logProviderAttempt({ provider: 'GEMINI', model: this.model, attempt, elapsed_ms: Date.now() - startedAt, outcome: 'HTTP_ERROR', http_status: response.status });
           if (response.status === 429) throw new RagError('MODEL_RATE_LIMITED', true);
           if (response.status === 500 || response.status === 503) throw new RagError('PROVIDER_UNAVAILABLE', true);
           throw new RagError('MODEL_PROVIDER_ERROR');
@@ -69,7 +80,14 @@ export class GeminiGroundedAnswerGenerator {
         const text = body?.candidates?.[0]?.content?.parts
           ?.map((part: Record<string, unknown>) => typeof part.text === 'string' ? part.text : '')
           .join('');
-        return validateGroundedAnswer(text);
+        try {
+          const answer = validateGroundedAnswer(text);
+          logProviderAttempt({ provider: 'GEMINI', model: this.model, attempt, elapsed_ms: Date.now() - startedAt, outcome: 'SUCCESS', http_status: response.status });
+          return answer;
+        } catch (error) {
+          logProviderAttempt({ provider: 'GEMINI', model: this.model, attempt, elapsed_ms: Date.now() - startedAt, outcome: 'MODEL_INVALID_OUTPUT', http_status: response.status });
+          throw error;
+        }
       },
       error => error instanceof RagError && error.retryable,
       this.retryOptions,

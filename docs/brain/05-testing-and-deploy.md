@@ -57,10 +57,16 @@ npm run lint      # eslint src
 
 ### Phase 5 provider retry contract
 
-Gemini generation and RAG adapters use bounded exponential backoff (maximum four attempts, jitter,
-per-request timeout) only for 500/503, 429, and transient network/timeout failures. Permanent 4xx,
+Gemini generation and RAG adapters use `GEMINI_GENERATION_TIMEOUT_MS` (30–45 seconds, default 35)
+and two bounded attempts with jitter. They retry only for 500/503, 429, and transient network/timeout
+failures. Local timeout is `MODEL_TIMEOUT`; a received 500/503 is `PROVIDER_UNAVAILABLE`. Permanent 4xx,
 malformed output, and missing configuration fail without retry. No automatic model fallback is
 allowed during Phase 5 acceptance.
+
+Before changing the timeout, run `node scripts/phase5-gemini-diagnostic.mjs` with rehearsal-only
+configuration and `GEMINI_DIAGNOSTIC_TIMEOUT_MS=12000`, then repeat at the proposed bound. It logs
+only model, synthetic request class, prompt-size class, elapsed time and received HTTP status or
+timeout category.
 
 ### Phase 5 cited retrieval rehearsal
 

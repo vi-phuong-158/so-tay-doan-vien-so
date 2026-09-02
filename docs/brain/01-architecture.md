@@ -380,7 +380,11 @@ VITE_SUPABASE_ANON_KEY
 SUPABASE_URL
 SUPABASE_ANON_KEY
 SUPABASE_SERVICE_ROLE_KEY   # (fallback: SERVICE_ROLE_KEY)
-# + Gemini API key, email provider key (theo function)
+GEMINI_API_KEY
+KNOWLEDGE_GENERATION_MODEL
+RAG_GENERATION_MODEL
+GEMINI_GENERATION_TIMEOUT_MS # 30000-45000 ms; default 35000; no browser exposure
+# + email provider key (theo function)
 ```
 
 ## Lưu ý kiến trúc quan trọng
@@ -461,6 +465,7 @@ content remains immutable and a correction/regeneration uses a new revision/gene
 | `supabase/functions/run-ingestion-jobs/*` | trusted no-op queue worker and contract tests | future scheduler/manual call | queue RPCs, Supabase service role |
 | `supabase/functions/_shared/knowledge/extraction.ts` | deterministic PDF/DOCX/TXT extraction, normalization, pages/sections and hashes | `generate-knowledge-article`, Deno fixtures | `fflate`, Web Crypto |
 | `supabase/functions/_shared/knowledge/generator.ts` | provider-neutral structured article generator, batching, schema/fact validation | `generate-knowledge-article`, Deno fixtures | Gemini env or deterministic fake |
+| `supabase/functions/_shared/knowledge/geminiRuntime.ts` | bounded timeout/retry policy and safe provider-attempt diagnostics | knowledge generator, RAG adapter | `GEMINI_GENERATION_TIMEOUT_MS` |
 | `supabase/functions/_shared/knowledge/evidence.ts` | resolves AI hints to exact extracted source excerpts | `generate-knowledge-article` | extraction pages |
 | `supabase/functions/generate-knowledge-article/index.ts` | authenticated scoped admin orchestration: source read, checksum, extraction, Gemini, persist draft | admin UI | StorageProvider, queue/RPCs |
 | `supabase/migrations/202608250001_phase_5_article_generation.sql` | private extraction/attempt artifacts, AI eligibility, idempotent queue, trusted persist/review RPCs | Supabase reset/CI | canonical P5-R0 schema |
