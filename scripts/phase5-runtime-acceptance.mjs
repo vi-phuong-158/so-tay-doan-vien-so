@@ -210,19 +210,54 @@ async function runAcceptance() {
 }
 
 async function cleanup(admin) {
-  const cleanupState = { usersRemoved: 0, storageRemoved: false, databaseRowsRemoved: false };
-  for (const actor of Object.values(actors)) {
-    try { await actor.client.auth.signOut(); } catch { /* best effort */ }
-  }
+  const cleanupState = {
+    usersRemoved: 0,
+    storageRemoved: false,
+    mutableRowsRemoved: false,
+    retainedImmutableHistory: false,
+    postCleanupRetrieval: 'NOT_RUN',
+    postCleanupAskAi: 'NOT_RUN',
+  };
   if (!admin) return;
+
+  // Retained source/version/article history must be made non-retrievable through the
+  // canonical owner RPCs before any actor session is revoked.
+  if (created.articleId && actors.admin) {
+    try {
+      const result = await actors.admin.client.rpc('set_knowledge_article_retrieval_enabled', { p_article_id: created.articleId, p_enabled: false });
+      if (result.error) log('CLEANUP_ARTICLE_RETRIEVAL_DISABLE', { result: 'FAILED' });
+    } catch { log('CLEANUP_ARTICLE_RETRIEVAL_DISABLE', { result: 'FAILED' }); }
+  }
+  if (created.documentId && actors.admin) {
+    try {
+      const result = await actors.admin.client.rpc('set_document_retrieval_enabled', { p_document_id: created.documentId, p_enabled: false });
+      if (result.error) log('CLEANUP_DOCUMENT_RETRIEVAL_DISABLE', { result: 'FAILED' });
+    } catch { log('CLEANUP_DOCUMENT_RETRIEVAL_DISABLE', { result: 'FAILED' }); }
+    try {
+      const result = await actors.admin.client.rpc('withdraw_document', { p_document_id: created.documentId, p_reason: `P5_ACCEPTANCE_${runId}_RETENTION` });
+      if (result.error) log('CLEANUP_DOCUMENT_WITHDRAW', { result: 'FAILED' });
+    } catch { log('CLEANUP_DOCUMENT_WITHDRAW', { result: 'FAILED' }); }
+  }
+
+  // No supported cancel RPC exists; exact-ID service-role maintenance may disable only
+  // this run's mutable pending/processing jobs. Append-only events remain untouched.
+  if (created.documentId) {
+    const jobs = await admin.from('ingestion_jobs').select('id,status').eq('document_id', created.documentId);
+    for (const job of jobs.data || []) {
+      if (['PENDING', 'RETRY', 'PROCESSING'].includes(job.status)) {
+        await admin.from('ingestion_jobs').update({ status: 'CANCELLED', worker_id: null, claim_token: null, claimed_at: null, lease_expires_at: null, next_attempt_at: null, updated_at: new Date().toISOString() }).eq('id', job.id).eq('document_id', created.documentId);
+      }
+    }
+  }
+
+  // Conversation/message/source rows and generation attempts are mutable, disposable
+  // outputs and are removed by exact IDs only.
   if (created.messageIds.length) await admin.from('ai_message_sources').delete().in('message_id', created.messageIds);
   if (created.conversationIds.length) {
     await admin.from('ai_messages').delete().in('conversation_id', created.conversationIds);
     await admin.from('ai_conversations').delete().in('id', created.conversationIds);
   }
   if (created.articleId) {
-    await admin.from('document_chunks').delete().eq('article_id', created.articleId);
-    await admin.from('knowledge_articles').delete().eq('id', created.articleId);
     await admin.from('knowledge_generation_attempts').delete().eq('article_id', created.articleId);
   }
   if (created.versionId) await admin.from('document_extractions').delete().eq('document_version_id', created.versionId);
@@ -232,19 +267,36 @@ async function cleanup(admin) {
       cleanupState.storageRemoved = !result.error;
     } catch { /* best effort */ }
   }
+  // Verify retrieval neutralization while the admin and user sessions are still valid.
+  if (created.documentId && actors.userA) {
+    const retrieval = await actors.userA.client.rpc('search_published_knowledge', { p_query: 'ORCHID-5729', p_match_count: 8 });
+    cleanupState.postCleanupRetrieval = !retrieval.error && (retrieval.data || []).length === 0 ? 'PASS' : 'FAIL';
+    const postAsk = await invokeAs(actors.userA, 'ask-ai', { question: 'What is the fictional completion keyword after cleanup?' });
+    const answer = String(postAsk.payload?.answer || '');
+    const citations = Array.isArray(postAsk.payload?.citations) ? postAsk.payload.citations : [];
+    cleanupState.postCleanupAskAi = !answer.includes('ORCHID-5729') && citations.length === 0 ? 'PASS' : 'FAIL';
+  }
+
+  for (const actor of Object.values(actors)) {
+    try { await actor.client.auth.signOut(); } catch { /* best effort */ }
+  }
   for (const id of created.users) {
     try {
       const result = await admin.auth.admin.deleteUser(id);
       if (!result.error) cleanupState.usersRemoved += 1;
     } catch { /* best effort */ }
   }
-  cleanupState.databaseRowsRemoved = !created.sourceId;
+  cleanupState.mutableRowsRemoved = true;
+  cleanupState.retainedImmutableHistory = Boolean(created.sourceId);
   log('CLEANUP', {
     users_created: created.users.length,
     users_removed: cleanupState.usersRemoved,
     pilot_storage_removed: cleanupState.storageRemoved,
-    database_rows_removed: cleanupState.databaseRowsRemoved,
-    orphan_check: created.sourceId ? 'BLOCKED_IMMUTABLE_SOURCE' : 'PASS',
+    mutable_rows_removed: cleanupState.mutableRowsRemoved,
+    retained_immutable_history: cleanupState.retainedImmutableHistory,
+    post_cleanup_retrieval: cleanupState.postCleanupRetrieval,
+    post_cleanup_ask_ai: cleanupState.postCleanupAskAi,
+    orphan_check: created.sourceId ? 'RETAINED_IMMUTABLE_HISTORY' : 'PASS',
   });
 }
 

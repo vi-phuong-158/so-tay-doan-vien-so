@@ -17,3 +17,8 @@ Deno.test('evidence is copied from exact source text and carries a page locator'
 Deno.test('fabricated citation hints are rejected', async () => {
   await assertRejects(() => resolveEvidenceSuggestions(extraction, [{ page: 1, excerpt_hint: 'Thời hạn 30 ngày.' }]), Error, 'EVIDENCE_NOT_FOUND');
 });
+
+Deno.test('unsupported model evidence kinds normalize to the database enum', async () => {
+  const evidence = await resolveEvidenceSuggestions(extraction, [{ page: 1, excerpt_hint: 'Thời hạn 15 ngày.', evidence_kind: 'UNSUPPORTED_MODEL_LABEL' }]);
+  assertEquals(evidence[0].evidence_kind, 'ARTICLE_CLAUSE');
+});

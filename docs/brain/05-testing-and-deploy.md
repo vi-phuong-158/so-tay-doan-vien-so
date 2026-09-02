@@ -134,6 +134,26 @@ the final counts for synthetic organizations, documents, sources, jobs, and stor
 zero. Production accessed: NO. The harness also has regression coverage for the Auth-compatible
 temporary password length and controlled string-error payload decoding.
 
+### Phase 5 authorized deployment and cleanup prerequisite (2026-09-02)
+
+The authorized management deployment connector deployed exact source `19ddf93` only to rehearsal
+`znexculhbdjiflkczpyu`: `generate-knowledge-article` and `ask-ai` are ACTIVE v7 with JWT
+verification and contain the timeout mapping. No secret/configuration or Production change occurred.
+Before rerunning the full harness, an aggregate audit found retained historical synthetic document
+chains, jobs/events, and temporary users. The public `_cleanup()` routine is pgTAP-only cleanup, not
+an application fixture purge path. Because provenance, version, and event history are immutable,
+the full harness is prohibited until a reviewed exact-ID rehearsal cleanup contract exists; provider
+smoke and all later E2E gates remain unrun.
+
+### Phase 5 R3 generic generation failure trace (2026-09-02)
+
+R3 authentication, anonymous/manager boundaries and TXT extraction passed, but deployed generation
+v7 returned HTTP 400 `GENERATION_FAILED`. Postgres logs attributed it to an unsupported model
+`evidence_kind` rejected by `document_chunks_evidence_kind_check`. The cleanup contract then
+withdrew/disabled the exact synthetic document, removed Storage and disposable rows, cancelled
+mutable jobs, and verified negative retrieval plus Ask AI. The targeted evidence-kind normalization
+fix requires a new exact-head CI and generation-function redeploy before rerun.
+
 ### Gemini model/dimension compatibility (2026-09-01)
 
 The local untracked environment now has all Gemini variables required by the selected Phase 5

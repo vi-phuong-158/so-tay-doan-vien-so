@@ -1127,3 +1127,34 @@
   exact-head CI run `33583763200` later passed all frontend, reset/pgTAP and Deno gates for
   `60759a9`. Rehearsal deploy remains blocked because no scoped deploy capability is present;
   no workaround tool was installed and no Production target was accessed.
+
+## [2026-09-02] Phase 5 authorized rehearsal deployment and cleanup-contract gate
+
+- **Agent:** Codex
+- **Deployment evidence:** Using the authorized Supabase management connector and only rehearsal
+  ref `znexculhbdjiflkczpyu`, deployed exact source `19ddf93` for
+  `generate-knowledge-article` and `ask-ai`. Both are ACTIVE v7 with JWT verification; retrieved
+  hosted source confirms the timeout mapping. No secret, model-setting, migration, or Production
+  change was made.
+- **Technical evidence:** Exact-head GitHub Actions `33584096813` PASS: frontend build/lint/tests,
+  Supabase reset/full pgTAP, Deno check and Deno tests.
+- **Safety stop:** Historical fixture audit found five synthetic document chains, nine jobs,
+  seventeen immutable events, and five temporary users. The only public `_cleanup()` function is
+  pgTAP-internal table/sequence cleanup, not a scoped application cleanup contract. Do not create
+  another actor/fixture, run provider smoke, or run the full harness until a reviewed rehearsal-only
+  exact-ID cleanup DAG specifies the permitted retained immutable audit history.
+- **Verdict:** `PHASE_5_RUNTIME_BLOCKED_CLEANUP_CONTRACT`; PR #37 stays Draft and PR #36 remains
+  unchanged. Owner-reported `models/gemini-3.6-flash` is not independently verified by safe hosted
+  interfaces.
+
+## [2026-09-02] Phase 5 R3 generation error trace and evidence normalization
+
+- **Rehearsal:** Contract cleanup passed for run `P5_ACCEPTANCE_0ba6a78b298d4d85`; auth, anonymous
+  denial, manager-boundary denial and TXT extraction passed. Generation v7 returned HTTP 400 generic
+  `GENERATION_FAILED`.
+- **Root cause:** Postgres log `document_chunks_evidence_kind_check` rejected an unsupported model
+  evidence label during article evidence insert. This was not a timeout or provider outage.
+- **Fix:** Normalize untrusted evidence kinds to the canonical enum with `ARTICLE_CLAUSE` fallback;
+  add regression coverage. Pending exact-head CI and generation-function redeploy before rerun.
+- **Cleanup:** Storage deleted, mutable jobs disabled, two actors deleted, immutable source/version/
+  event history retained, and post-cleanup retrieval/Ask AI negative checks PASS. Production = NO.

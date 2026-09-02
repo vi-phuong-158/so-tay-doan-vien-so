@@ -10,34 +10,25 @@
 ### Phase 5 end-to-end closure
 - **Base:** isolated closure worktree/branch `codex/phase-5-full-closure`, based on P5-03 plus the
   forward-only trigger-function privilege fix `ff72ccd`.
-- **Trạng thái:** `PHASE_5_RUNTIME_BLOCKED_REHEARSAL_PROVIDER_CONFIG_REQUIRED`. Authenticated
-  rehearsal access is proven: temporary Admin/User A/User B JWT actors bootstrapped successfully,
-  anonymous and retrieval-manager boundaries denied correctly, then `process-document` failed
-  closed at `GEMINI_NOT_CONFIGURED`. An authorized rehearsal owner must configure the required
-  Gemini embedding settings before the remaining pilot/retrieval/Ask AI gates can run. Production
-  must not be used.
-- **Gemini remediation:** Local untracked config is now complete and model contracts match, but the
-  hosted rehearsal secrets cannot be written from this session because CLI and MCP secret-write
-  access are unavailable. The 768-dimensional embedding and Gemini 3.7 compatibility fixes are in
-  the closure branch passed exact-head CI `33484622052` on
-  `7ebefbdf23d6bfe45b27c00f451ba687e35d4a07`; rehearsal function deployment and owner-only secret
-  sync remain required before the runtime harness may resume.
-  Owner configuration then enabled deployment v3 of the three affected functions with JWT
-  verification; embedding processing passed, while Gemini generation returned redacted HTTP 503
-  `UNAVAILABLE` twice. Retry hardening passed exact-head CI `33515450066`; hosted v6 then took
-  approximately 54.5 seconds, but its old adapter collapsed local 12-second aborts into the same
-  `PROVIDER_UNAVAILABLE` code. A forward observability/timeout fix is now pending CI and rehearsal
-  deploy before any root-cause or runtime PASS claim; no model fallback was introduced. A
-  preliminary 2026-09-02 harness run reached extraction successfully but the pre-patch hosted
-  generator returned generic HTTP 400 `GENERATION_FAILED`; no Gemini HTTP outcome can be inferred.
-  Direct synthetic diagnostics used a local non-contract 3.7 model and returned actual 503, so the
-  canonical 3.6 hosted model remains unproven. Runtime is `PHASE_5_RUNTIME_BLOCKED_CONFIGURATION`
-  pending rehearsal deploy and server-side model confirmation. Exact timeout-patch head `60759a9`
-  passed CI run `33583763200` (frontend, reset/pgTAP and Deno); local deploy capability is absent,
-  so no non-production function update was attempted through an unsafe workaround.
--  Model diagnostic then showed `gemini-3.7-flash` HTTP 503 while `gemini-3.6-flash` HTTP 200.
-  This is classified as `MODEL_SPECIFIC_CAPACITY_ISSUE_GEMINI_3_7_FLASH`; owner must update both
-  hosted rehearsal generation model secrets to `models/gemini-3.6-flash` before rerunning acceptance.
+- **Trạng thái:** `PHASE_5_RUNTIME_BLOCKED_CONFIGURATION`. The authoritative Supabase deployment
+  connector deployed exact source `19ddf93` to rehearsal `znexculhbdjiflkczpyu` only:
+  `generate-knowledge-article` v7 and `ask-ai` v7 are ACTIVE with JWT verification and their hosted
+  source contains the timeout mapping. `process-document` was not changed because it is outside the
+  timeout patch. No secret/configuration or Production target was changed.
+- **Runtime guard:** Before any additional full harness run, an aggregate fixture audit found five
+  synthetic documents/versions/sources, nine jobs, seventeen append-only events, and five temporary
+  Auth users from historical attempts. The only `_cleanup()` function is pgTAP internal cleanup,
+  not a supported fixture-purge contract. Provenance, version, and event immutability make a new
+  full run unsafe without accumulating non-removable residue; the R3 retention contract now permits
+  bounded, non-retrievable immutable history. The first R3 run still returned generic
+  `GENERATION_FAILED`; Postgres identified an unsupported model evidence label violating
+  `document_chunks_evidence_kind_check`. A targeted normalization fix and exact-head CI/redeploy
+  are pending before rerun. Owner-reported generation model `models/gemini-3.6-flash` remains
+  independently unverified because secret values and hosted model selection are not exposed.
+- **Historical model diagnostic:** `gemini-3.7-flash` returned HTTP 503 while
+  `gemini-3.6-flash` returned HTTP 200, a model-specific capacity signal. The owner later reported
+  3.6 configured, but the hosted resolved model remains unverified; this does not bypass the
+  cleanup-contract gate.
 - **Report:** `docs/phase-5/13-phase-5-end-to-end-closure.md`.
 
 ### P5-03 — Canonical document extraction → knowledge article generation

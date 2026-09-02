@@ -253,3 +253,74 @@ completed successfully. The local environment has neither a Supabase CLI/local d
 rehearsal-scoped deployment token, and no tool was installed as a workaround. Therefore no
 function deployment, secret change, or additional hosted runtime call was made after this gate.
 This remains a deployment/configuration handoff, not a runtime pass or Production action.
+
+## Authorized rehearsal deployment and cleanup-contract gate (2026-09-02)
+
+- **Source and deployment:** exact source `19ddf93ee14d4f721a29dcf4b224a8e1bc7f842f` was deployed
+  only through the authorized Supabase management connector to rehearsal
+  `znexculhbdjiflkczpyu` (`so-tay-doan-vien-rehearsal`). `generate-knowledge-article` and `ask-ai`
+  are now ACTIVE version 7 with JWT verification; retrieved hosted source confirms both include
+  the shared timeout mapping. `process-document` was intentionally not redeployed because it is
+  outside this patch. No secret, model setting, migration, or Production project was changed.
+- **Technical gate:** GitHub Actions `33584096813` passed on the exact source above, including
+  frontend build/lint/tests, Supabase reset/full pgTAP, Deno check, and Deno tests.
+- **Hosted model evidence:** `models/gemini-3.6-flash` is owner-reported only. Safe management
+  interfaces do not expose secret values or the resolved hosted model, so the model is
+  `OWNER_CONFIGURED_NOT_INDEPENDENTLY_VERIFIED`; no provider smoke is claimed.
+- **Cleanup gate before full harness:** a rehearsal aggregate audit found five synthetic document
+  chains (documents, versions, sources), nine synthetic ingestion jobs, seventeen append-only
+  events, and five temporary Auth users left by historical attempts. The sole public `_cleanup()`
+  routine only drops pgTAP temporary tables/sequences. It is not a fixture purge API. Source,
+  version, and ingestion-event immutability therefore leave no supported, ID-scoped cleanup DAG
+  for another full run. No additional harness or actor creation was performed, avoiding further
+  non-removable residue.
+- **Verdict:** `PHASE_5_RUNTIME_BLOCKED_CLEANUP_CONTRACT`. Provide a reviewed, rehearsal-only,
+  exact-ID cleanup contract (including documented treatment of immutable audit history) before
+  running the provider smoke or full actor harness. PR #37 remains Draft; PR #36 is unchanged.
+
+## Rehearsal Cleanup & Immutable Retention Contract (2026-09-02)
+
+The contract is now `CLEANUP_CONTRACT_PASS` for a new, uniquely namespaced run. It does not weaken
+RLS, triggers, provenance, or append-only history. Every new fixture uses one `P5_ACCEPTANCE_<runId>`
+namespace and is enumerated by exact IDs.
+
+| Entity | Lifecycle class | Cleanup action | Final state |
+|---|---|---|---|
+| documents | ARCHIVE_OR_DISABLE | `set_document_retrieval_enabled(false)` then `withdraw_document` | synthetic, `WITHDRAWN`, not retrievable |
+| document_versions | IMMUTABLE_RETAIN | retain by exact document/version ID | synthetic provenance history |
+| document_sources | IMMUTABLE_RETAIN | retain by exact source ID; delete linked Storage object | synthetic provenance history |
+| ingestion_jobs | ARCHIVE_OR_DISABLE | exact-ID status transition to `CANCELLED` | no active work |
+| ingestion_events | IMMUTABLE_RETAIN | never update/delete | bounded append-only audit |
+| knowledge_articles/revisions | IMMUTABLE_RETAIN after approval | disable article retrieval via scoped RPC; retain approved history | not retrievable |
+| selective evidence | IMMUTABLE_RETAIN when approved | retain exact article/document linkage | not retrievable with disabled article/document |
+| knowledge_embeddings | DELETE_ALLOWED when disposable | exact-ID deletion if created by run; otherwise retain only if immutable | inactive/absent |
+| AI conversations/messages/sources | DELETE_ALLOWED | exact-ID deletion after negative check | removed |
+| Storage objects | EXTERNAL_RESOURCE_MUST_DELETE | exact path removal in private bucket | removed |
+| temporary Auth users/profiles/roles | AUTH_ACTOR_MUST_DELETE_OR_REUSE | sign out, delete where no historical FK requires retention | deleted or explicitly retained fixture identity |
+
+Historical residue audit identified five synthetic document/version/source chains (all titles begin
+`PHASE 5 REHEARSAL`, all `PENDING_REVIEW` and `ORGANIZATION_ONLY`), nine jobs, seventeen append-only
+events, and five `p5-admin-*` users. There are no historical knowledge articles or embeddings. The
+chains are `RETAIN_AS_IMMUTABLE_REHEARSAL_HISTORY`; pending/retry jobs are `DISABLE`, failed/cancelled
+jobs are terminal, and no existing record is touched by broad matching. Their exact IDs and counts
+are recorded in the rehearsal evidence; ordinary retrieval is ineligible because no article is
+approved/enabled and the documents are not published.
+
+This retention strategy treats bounded, synthetic, non-retrievable immutable history as successful
+cleanup. Physical deletion is required only for mutable/external resources. A post-cleanup negative
+retrieval and Ask AI check is mandatory for the new run.
+
+## R3 generation failure trace and targeted fix (2026-09-02)
+
+The first R3 rehearsal used run namespace `P5_ACCEPTANCE_0ba6a78b298d4d85`. Authentication,
+anonymous denial, manager-boundary denial, and TXT extraction passed. Deployed generation v7 then
+returned HTTP 400 `GENERATION_FAILED` after 12.6 seconds. Postgres logs identified the exact cause:
+`document_chunks_evidence_kind_check` rejected a model-supplied evidence label outside the canonical
+enum. The job and attempt were retained as synthetic failed history; Storage was deleted and the
+new document was withdrawn/disabled by the cleanup contract. Post-cleanup retrieval and Ask AI
+returned no synthetic content.
+
+The targeted fix normalizes untrusted evidence labels to the canonical `ARTICLE_CLAUSE` fallback and
+adds a regression test. This is a production-safe boundary fix; no schema, RLS, immutability,
+provider, or model fallback was added. Exact-head CI and redeployment of `generate-knowledge-article`
+are required before rerunning the smoke/E2E gates.

@@ -16,6 +16,15 @@ export type ResolvedEvidence = {
   selected_reason: string;
 };
 
+const EVIDENCE_KINDS = new Set([
+  'ARTICLE_CLAUSE', 'DEADLINE', 'PROCEDURE_STEP', 'FORM_FIELD', 'DEFINITION', 'TABLE_ROW', 'QUOTE',
+]);
+
+function normalizeEvidenceKind(value: unknown): string {
+  const kind = typeof value === 'string' ? value.trim() : '';
+  return EVIDENCE_KINDS.has(kind) ? kind : 'ARTICLE_CLAUSE';
+}
+
 function normalizeHint(value: string): string {
   return String(value ?? '').normalize('NFC').replace(/\s+/g, ' ').trim();
 }
@@ -48,7 +57,7 @@ export async function resolveEvidenceSuggestions(
       content: excerpt,
       content_hash: await sha256Hex(new TextEncoder().encode(excerpt)),
       locator: { page: page.page },
-      evidence_kind: suggestion.evidence_kind || 'ARTICLE_CLAUSE',
+      evidence_kind: normalizeEvidenceKind(suggestion.evidence_kind),
       selected_by: 'AI_SUGGESTED',
       selected_reason: String(suggestion.reason ?? 'AI selected; backend resolved exact source text').slice(0, 500),
     });
