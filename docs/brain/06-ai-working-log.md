@@ -1124,4 +1124,6 @@
 - **Kiểm tra:** `npm test` 153/153 PASS, `npm run lint` 0 errors/3 existing warnings, `npm run build`
   PASS, `git diff --check` PASS. Direct synthetic diagnostic was repaired for Windows direct-script
   execution and reports only canonical outcome metadata. Deno/Supabase CLI absent locally;
-  exact-head CI and rehearsal deploy remain required before runtime verdict.
+  exact-head CI run `33583763200` later passed all frontend, reset/pgTAP and Deno gates for
+  `60759a9`. Rehearsal deploy remains blocked because no scoped deploy capability is present;
+  no workaround tool was installed and no Production target was accessed.

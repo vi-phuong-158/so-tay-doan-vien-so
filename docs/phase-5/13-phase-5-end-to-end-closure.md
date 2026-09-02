@@ -244,3 +244,12 @@ remains `models/gemini-embedding-2` with 768 dimensions.
 - **Current verdict:** `PHASE_5_RUNTIME_BLOCKED_CONFIGURATION`. Exact-head CI, rehearsal deployment
   of the timeout patch, and independent confirmation that the hosted generation model is
   `models/gemini-3.6-flash` are required before resuming the full vertical-slice harness.
+
+## Exact-head technical gate and deployment handoff (2026-09-02)
+
+Commit `60759a977cb30bc48d801817414404b062769681` passed GitHub Actions run
+`33583763200`: frontend build/lint/tests, Supabase reset/full pgTAP, Deno check and Deno tests all
+completed successfully. The local environment has neither a Supabase CLI/local deploy binary nor a
+rehearsal-scoped deployment token, and no tool was installed as a workaround. Therefore no
+function deployment, secret change, or additional hosted runtime call was made after this gate.
+This remains a deployment/configuration handoff, not a runtime pass or Production action.

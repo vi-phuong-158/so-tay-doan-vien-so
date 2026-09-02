@@ -32,7 +32,9 @@
   generator returned generic HTTP 400 `GENERATION_FAILED`; no Gemini HTTP outcome can be inferred.
   Direct synthetic diagnostics used a local non-contract 3.7 model and returned actual 503, so the
   canonical 3.6 hosted model remains unproven. Runtime is `PHASE_5_RUNTIME_BLOCKED_CONFIGURATION`
-  pending exact-head CI/deploy and server-side model confirmation.
+  pending rehearsal deploy and server-side model confirmation. Exact timeout-patch head `60759a9`
+  passed CI run `33583763200` (frontend, reset/pgTAP and Deno); local deploy capability is absent,
+  so no non-production function update was attempted through an unsafe workaround.
 -  Model diagnostic then showed `gemini-3.7-flash` HTTP 503 while `gemini-3.6-flash` HTTP 200.
   This is classified as `MODEL_SPECIFIC_CAPACITY_ISSUE_GEMINI_3_7_FLASH`; owner must update both
   hosted rehearsal generation model secrets to `models/gemini-3.6-flash` before rerunning acceptance.
