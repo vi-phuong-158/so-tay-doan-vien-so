@@ -19,7 +19,10 @@ insert into auth.users (
 ('00000000-0000-0000-0000-000000000000', 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'authenticated', 'authenticated', 'member@test.local', extensions.crypt('password123', extensions.gen_salt('bf', 10)), now(), jsonb_build_object('provider', 'email', 'providers', jsonb_build_array('email')), '{}'::jsonb, false, false, now(), now(), '', '', '', '', '', '', '', ''),
 ('00000000-0000-0000-0000-000000000000', 'ffffffff-ffff-ffff-ffff-ffffffffffff', 'authenticated', 'authenticated', 'innovation@test.local', extensions.crypt('password123', extensions.gen_salt('bf', 10)), now(), jsonb_build_object('provider', 'email', 'providers', jsonb_build_array('email')), '{}'::jsonb, false, false, now(), now(), '', '', '', '', '', '', '', ''),
 ('00000000-0000-0000-0000-000000000000', '11112222-3333-4444-5555-666677778888', 'authenticated', 'authenticated', 'youthadmina@test.local', extensions.crypt('password123', extensions.gen_salt('bf', 10)), now(), jsonb_build_object('provider', 'email', 'providers', jsonb_build_array('email')), '{}'::jsonb, false, false, now(), now(), '', '', '', '', '', '', '', ''),
-('00000000-0000-0000-0000-000000000000', '99999999-9999-9999-9999-999999999999', 'authenticated', 'authenticated', 'suspended@test.local', extensions.crypt('password123', extensions.gen_salt('bf', 10)), now(), jsonb_build_object('provider', 'email', 'providers', jsonb_build_array('email')), '{}'::jsonb, false, false, now(), now(), '', '', '', '', '', '', '', '')
+('00000000-0000-0000-0000-000000000000', '99999999-9999-9999-9999-999999999999', 'authenticated', 'authenticated', 'suspended@test.local', extensions.crypt('password123', extensions.gen_salt('bf', 10)), now(), jsonb_build_object('provider', 'email', 'providers', jsonb_build_array('email')), '{}'::jsonb, false, false, now(), now(), '', '', '', '', '', '', '', ''),
+-- P5.5-02: SYSTEM_ADMIN + YOUTH_ADMIN dual-role persona, to test that holding SYSTEM_ADMIN never
+-- broadens Member Management scope beyond the YOUTH_ADMIN grant held alongside it (never global).
+('00000000-0000-0000-0000-000000000000', 'd0d0d0d0-d0d0-d0d0-d0d0-d0d0d0d0d0d0', 'authenticated', 'authenticated', 'dualadmin@test.local', extensions.crypt('password123', extensions.gen_salt('bf', 10)), now(), jsonb_build_object('provider', 'email', 'providers', jsonb_build_array('email')), '{}'::jsonb, false, false, now(), now(), '', '', '', '', '', '', '', '')
 on conflict (id) do nothing;
 
 insert into auth.identities (id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at) values
@@ -31,7 +34,8 @@ insert into auth.identities (id, user_id, identity_data, provider, provider_id, 
 (gen_random_uuid(), 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', jsonb_build_object('sub', 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'email', 'member@test.local', 'email_verified', true, 'phone_verified', false), 'email', 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', now(), now(), now()),
 (gen_random_uuid(), 'ffffffff-ffff-ffff-ffff-ffffffffffff', jsonb_build_object('sub', 'ffffffff-ffff-ffff-ffff-ffffffffffff', 'email', 'innovation@test.local', 'email_verified', true, 'phone_verified', false), 'email', 'ffffffff-ffff-ffff-ffff-ffffffffffff', now(), now(), now()),
 (gen_random_uuid(), '11112222-3333-4444-5555-666677778888', jsonb_build_object('sub', '11112222-3333-4444-5555-666677778888', 'email', 'youthadmina@test.local', 'email_verified', true, 'phone_verified', false), 'email', '11112222-3333-4444-5555-666677778888', now(), now(), now()),
-(gen_random_uuid(), '99999999-9999-9999-9999-999999999999', jsonb_build_object('sub', '99999999-9999-9999-9999-999999999999', 'email', 'suspended@test.local', 'email_verified', true, 'phone_verified', false), 'email', '99999999-9999-9999-9999-999999999999', now(), now(), now())
+(gen_random_uuid(), '99999999-9999-9999-9999-999999999999', jsonb_build_object('sub', '99999999-9999-9999-9999-999999999999', 'email', 'suspended@test.local', 'email_verified', true, 'phone_verified', false), 'email', '99999999-9999-9999-9999-999999999999', now(), now(), now()),
+(gen_random_uuid(), 'd0d0d0d0-d0d0-d0d0-d0d0-d0d0d0d0d0d0', jsonb_build_object('sub', 'd0d0d0d0-d0d0-d0d0-d0d0-d0d0d0d0d0d0', 'email', 'dualadmin@test.local', 'email_verified', true, 'phone_verified', false), 'email', 'd0d0d0d0-d0d0-d0d0-d0d0-d0d0d0d0d0d0', now(), now(), now())
 on conflict do nothing;
 
 insert into auth.sessions (id, user_id, aal, not_after, created_at, updated_at) values
@@ -43,7 +47,8 @@ insert into auth.sessions (id, user_id, aal, not_after, created_at, updated_at) 
 ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'aal1', now() + interval '10 years', now(), now()),
 ('ffffffff-ffff-ffff-ffff-ffffffffffff', 'ffffffff-ffff-ffff-ffff-ffffffffffff', 'aal1', now() + interval '10 years', now(), now()),
 ('11112222-3333-4444-5555-666677778888', '11112222-3333-4444-5555-666677778888', 'aal1', now() + interval '10 years', now(), now()),
-('99999999-9999-9999-9999-999999999999', '99999999-9999-9999-9999-999999999999', 'aal1', now() + interval '10 years', now(), now())
+('99999999-9999-9999-9999-999999999999', '99999999-9999-9999-9999-999999999999', 'aal1', now() + interval '10 years', now(), now()),
+('d0d0d0d0-d0d0-d0d0-d0d0-d0d0d0d0d0d0', 'd0d0d0d0-d0d0-d0d0-d0d0-d0d0d0d0d0d0', 'aal1', now() + interval '10 years', now(), now())
 on conflict (id) do nothing;
 
 -- Create profiles
@@ -56,7 +61,8 @@ insert into public.profiles (id, full_name, organization_id, account_status) val
 ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'Member', '22222222-2222-2222-2222-222222222222', 'ACTIVE'),
 ('ffffffff-ffff-ffff-ffff-ffffffffffff', 'Innovation Member', '11111111-1111-1111-1111-111111111111', 'ACTIVE'),
 ('11112222-3333-4444-5555-666677778888', 'Youth Admin A', '22222222-2222-2222-2222-222222222222', 'ACTIVE'),
-('99999999-9999-9999-9999-999999999999', 'Suspended Member', '22222222-2222-2222-2222-222222222222', 'SUSPENDED')
+('99999999-9999-9999-9999-999999999999', 'Suspended Member', '22222222-2222-2222-2222-222222222222', 'SUSPENDED'),
+('d0d0d0d0-d0d0-d0d0-d0d0-d0d0d0d0d0d0', 'Dual Admin', '44444444-4444-4444-4444-444444444444', 'ACTIVE')
 on conflict (id) do nothing;
 
 -- Create user roles
@@ -68,7 +74,9 @@ insert into public.user_roles (user_id, role_code, scope_organization_id) values
 ('dddddddd-dddd-dddd-dddd-dddddddddddd', 'BRANCH_OFFICER', '33333333-3333-3333-3333-333333333333'),
 ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'MEMBER', '22222222-2222-2222-2222-222222222222'),
 ('ffffffff-ffff-ffff-ffff-ffffffffffff', 'INNOVATION_MEMBER', '11111111-1111-1111-1111-111111111111'),
-('11112222-3333-4444-5555-666677778888', 'YOUTH_ADMIN', '22222222-2222-2222-2222-222222222222')
+('11112222-3333-4444-5555-666677778888', 'YOUTH_ADMIN', '22222222-2222-2222-2222-222222222222'),
+('d0d0d0d0-d0d0-d0d0-d0d0-d0d0d0d0d0d0', 'SYSTEM_ADMIN', null),
+('d0d0d0d0-d0d0-d0d0-d0d0-d0d0d0d0d0d0', 'YOUTH_ADMIN', '44444444-4444-4444-4444-444444444444')
 on conflict do nothing;
 
 insert into public.report_campaigns (id, title,description,issuer,open_at,due_at,status,allow_resubmission)
