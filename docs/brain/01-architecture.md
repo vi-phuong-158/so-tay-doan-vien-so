@@ -369,6 +369,44 @@ timestamptz default now())` — same PENDING→OVERDUE eligibility rule, now wit
 (`report_mark_overdue_daily`, `report_reminder_scan_daily`) that call trusted RPCs directly
 in-database. `service_role` and `postgres` hold EXECUTE; `anon`/`authenticated` do not.
 
+## Phase 5.5 — Member Management (architecture only, chưa có code)
+
+P5.5-00 (`docs/phase-5-5/00-member-management-architecture.md`) chốt kiến trúc cho một hệ **quản lý
+đoàn viên** (Member Management) tách biệt khỏi Supabase, chưa có bất kỳ implementation nào. Ghi ở
+đây để agent sau không nhầm đây là code đã tồn tại — **toàn bộ mục này là thiết kế, không phải bản
+đồ module thật.**
+
+```text
+                    USER
+                     │
+                     ▼
+               React/Vite PWA
+                   Vercel
+                     │
+          ┌──────────┴──────────┐
+          │                     │
+          ▼                     ▼
+      SUPABASE               MEMBER API
+  (Auth/Roles/Org/          (Mắt Bão, VN)
+   Reports/Docs/                 │
+   Learning/AI/                  ▼
+   Innovation)               PostgreSQL
+          │                  MEMBER RECORDS
+          └────── resolve-member-scope ──────┘
+             (Edge Function, xác minh JWT +
+              dịch scope sang organizations.code)
+```
+
+**Quyết định kiến trúc chốt:** `ACCOUNT PROFILE` (Supabase Auth/`profiles`/`user_roles`, số lượng
+nhỏ, cán bộ được cấp quyền) ≠ `MEMBER RECORD` (Member API/PostgreSQL Mắt Bão, ~3.000 đoàn viên
+pilot, không auth.users, không login). Import member **không** tạo account. Member API xác thực
+người gọi bằng cách forward Supabase JWT tới một Edge Function `resolve-member-scope` (chưa tồn tại)
+dùng lại `_shared/auth.ts`; Member API không bao giờ tự tin role/scope do frontend gửi. Chi tiết đầy
+đủ (data model, API contract, import/dedup, audit, backup, threat model, test matrix, decomposition
+P5.5-01…10): xem `docs/phase-5-5/00-member-management-architecture.md`.
+
+**Gate:** `PHASE_6_BUSINESS_IMPLEMENTATION_MUST_NOT_START until PHASE_5_5_END_TO_END_ACCEPTANCE_PASS`.
+
 ## Biến môi trường
 
 ```
