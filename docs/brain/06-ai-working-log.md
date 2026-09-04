@@ -1238,3 +1238,34 @@
   overprovision (đề xuất tier Basic, không tự bịa giá — dùng đúng số liệu công bố); không tạo
   `members` table, không viết Member API, không migration, không mua dịch vụ; `git diff --check`
   sạch; scope chỉ nằm trong `docs/`.
+
+## [2026-09-04] P5.5-01 — Member data foundation (first Member Management code)
+- **Agent:** Claude Code
+- **Thay đổi:** Merge PR #38 (P5.5-00 architecture + infra decision) vào `master` sau xác nhận owner
+  (không tự suy đoán merge policy — hỏi trước khi merge, CI exact-head xanh trước và sau merge).
+  Tạo `member-api/`, một service Node.js + PostgreSQL độc lập, hoàn toàn tách biệt Supabase: migration
+  `0001_init_members_schema.sql` (bảng `members` + 5 enum type đúng nguyên văn mục 5 tài liệu kiến
+  trúc, index composite `(work_unit_code, member_status)` + trigram/unaccent cho tìm tên theo mục
+  14/25, trigger `updated_at`), migration runner deterministic (`migrate.mjs`, hỗ trợ `--fresh`
+  bootstrap tách biệt với "migration chạy một lần"), HTTP skeleton (`/healthz` không phụ thuộc DB,
+  `/readyz` fail-closed 503 khi DB down, `/v1/members` luôn trả 501 — chưa có authorization bridge
+  nên deny thay vì mock allow, đúng mục 17), config fail-fast khi thiếu `MEMBER_DATABASE_URL`. Thêm
+  CI job `member-api-test` dùng service container `postgres:16` riêng, không đụng vào Supabase local
+  stack của `test-db`.
+- **File đã sửa:** `member-api/**` (mới — migration, scripts, src, tests, README, package.json,
+  .env.example, .gitignore); `.github/workflows/ci.yml` (job `member-api-test` mới);
+  `docs/brain/01-architecture.md`, `docs/brain/04-current-tasks.md` (P5.5-00 đóng, P5.5-01 mở).
+- **Lý do:** P5.5-00 đã RESOLVED hạ tầng ở mức kiến trúc (Vibe Host v2); P5.5-01 là subphase đầu
+  tiên có code, chỉ dựng data foundation + skeleton đủ test được, không CRUD/import/auth bridge thật
+  (đúng decomposition mục 26 P5.5-00 và scope guard task riêng).
+- **Kiểm tra:** `node --test tests/isolation.test.mjs` chạy cục bộ (không cần DB) — phát hiện và sửa
+  một false-positive thật trong test (chuỗi tài liệu "auth.users" trong comment/COMMENT ON bị so
+  khớp nhầm là tạo bảng — sửa bằng cách strip comment + regex CREATE TABLE chính xác thay vì substring
+  match). `schema.test.mjs`/`server.test.mjs` cần PostgreSQL 16 — không có Docker và không dùng thử
+  Postgres cục bộ sẵn có của máy (không rõ mật khẩu, không đoán/bruteforce; đã hỏi owner, owner chọn
+  dựa vào CI thay vì cấp quyền truy cập Postgres cục bộ) — validation thật cho các test này nằm ở CI
+  job `member-api-test` (exact-head, service container `postgres:16` riêng, không phải Postgres máy
+  người dùng). SQL migration được soát thủ công (cú pháp `unaccent`/`pg_trgm` immutable wrapper,
+  `gen_random_uuid()` built-in từ PG13+, transactional DDL). Root `npm test`/`npm run lint`/
+  `npm run build` không bị ảnh hưởng vì `member-api/` là npm project riêng, không đụng `src/` hay
+  root `package.json`/lockfile.
