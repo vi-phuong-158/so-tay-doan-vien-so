@@ -10,19 +10,14 @@ function sendJson(res, status, body) {
   res.end(payload);
 }
 
-// P5.5-01 exposes no Member data endpoint. `/v1/members` exists only as an explicit fail-closed
-// placeholder for the authorization bridge seam (P5.5-02) — per
-// docs/phase-5-5/00-member-management-architecture.md muc 17 of the P5.5-01 task instructions:
-// "DENY / NOT IMPLEMENTED tot hon mock allow. Khong tao route allow-all roi sua sau."
-// This handler never queries the database, regardless of any request header.
-function handleMembersPlaceholder(req, res) {
-  sendJson(res, 501, {
-    error: 'not_implemented',
-    message: 'Member Management authorization bridge is not implemented yet (P5.5-02). This endpoint never returns member data.',
-  });
-}
-
-export function createServer(pool) {
+// createServer(pool, { authorizeMemberManagement }) — the second argument is the P5.5-02
+// authorization bridge (see memberScope.js: createMemberManagementAuthorizer). It is injected
+// rather than imported directly so tests can supply a deterministic stub instead of a real network
+// call to Supabase. This function is the ONLY thing that decides whether a Member Management
+// request is authorized — it is never told anything by the request itself (no `X-Role`/
+// `X-Organization` header, no body field, is ever read for that decision; see
+// docs/phase-5-5/00-member-management-architecture.md muc 13/22, threat #1/#3).
+export function createServer(pool, { authorizeMemberManagement } = {}) {
   return http.createServer(async (req, res) => {
     try {
       const { pathname } = new URL(req.url, 'http://localhost');
@@ -46,8 +41,31 @@ export function createServer(pool) {
         return;
       }
 
+      if (pathname === '/v1/member-scope') {
+        // Proves the authorization bridge end-to-end without ever touching Member data (P5.5-02
+        // scope guard: no list/CRUD here, only the resolved scope itself).
+        const result = await authorizeMemberManagement(req.headers.authorization);
+        if (!result.authorized) {
+          sendJson(res, result.status, result.body);
+          return;
+        }
+        sendJson(res, 200, { user_id: result.userId, roles: result.roles });
+        return;
+      }
+
       if (pathname === '/v1/members') {
-        handleMembersPlaceholder(req, res);
+        // Authorization is enforced first, for every method, before anything else runs. Only once
+        // a request is authenticated AND authorized does it fall through to 501 — Member CRUD/list
+        // itself is still out of scope until P5.5-03 (muc 7 of the P5.5-02 task instructions).
+        const result = await authorizeMemberManagement(req.headers.authorization);
+        if (!result.authorized) {
+          sendJson(res, result.status, result.body);
+          return;
+        }
+        sendJson(res, 501, {
+          error: 'not_implemented',
+          message: 'Member CRUD/list is not implemented yet (P5.5-03). This endpoint never returns member data.',
+        });
         return;
       }
 

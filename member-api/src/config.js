@@ -17,5 +17,20 @@ export function loadConfig(env = process.env) {
     throw new Error(`PORT must be a valid TCP port number, got "${portRaw}".`);
   }
 
-  return { databaseUrl, port };
+  // P5.5-02: the authorization bridge (resolve-member-scope). Required at startup, same fail-closed
+  // contract as MEMBER_DATABASE_URL — there is no "authorization disabled" mode to fall back to.
+  const memberScopeResolverUrl = env.MEMBER_SCOPE_RESOLVER_URL;
+  if (!memberScopeResolverUrl) {
+    throw new Error(
+      'MEMBER_SCOPE_RESOLVER_URL is required. Set it in member-api/.env (never commit real values) — see member-api/.env.example.'
+    );
+  }
+  const memberScopeResolverSecret = env.MEMBER_SCOPE_RESOLVER_SECRET;
+  if (!memberScopeResolverSecret) {
+    throw new Error(
+      'MEMBER_SCOPE_RESOLVER_SECRET is required. Set it in member-api/.env (never commit real values) — see member-api/.env.example.'
+    );
+  }
+
+  return { databaseUrl, port, memberScopeResolverUrl, memberScopeResolverSecret };
 }
