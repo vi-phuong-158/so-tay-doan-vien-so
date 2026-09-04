@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createServer } from '../src/server.js';
 import { createPool } from '../src/db.js';
 import { loadConfig } from '../src/config.js';
+import { createMemberManagementAuthorizer } from '../src/memberScope.js';
 
 const databaseUrl = process.env.MEMBER_DATABASE_URL;
 if (!databaseUrl) {
@@ -66,15 +67,20 @@ test('GET /readyz fails closed with a bounded 503 (no internals leaked) when the
 // only falls through to 501 once a request is authenticated AND authorized, because Member CRUD/list
 // itself is still not implemented until P5.5-03. See authorization boundary tests below for the full
 // matrix; this section only re-covers "never returns member-shaped data" for the authorized case.
-function neverCalled() {
-  return async () => {
-    throw new Error('authorizeMemberManagement must not be called when there is no Authorization header');
-  };
+//
+// server.js always calls the injected authorizeMemberManagement(header) — that function itself is
+// responsible for deciding "no token -> 401" without a network call. So these tests use the REAL
+// createMemberManagementAuthorizer wired to a fetch stub that throws if ever invoked, to prove the
+// resolver network call is skipped entirely when there is no usable Authorization header.
+function authorizerWithUncalledFetch() {
+  return createMemberManagementAuthorizer({ resolverUrl: 'http://unused', resolverSecret: 'unused' }, async () => {
+    throw new Error('the resolver must not be called when there is no usable Authorization header');
+  });
 }
 
 test('GET /v1/members with no Authorization header denies (401) without ever calling the resolver', async () => {
   const pool = createPool(databaseUrl);
-  const server = createServer(pool, { authorizeMemberManagement: neverCalled() });
+  const server = createServer(pool, { authorizeMemberManagement: authorizerWithUncalledFetch() });
   const port = await listenEphemeral(server);
   try {
     const res = await fetch(`http://127.0.0.1:${port}/v1/members`);
@@ -90,7 +96,7 @@ test('GET /v1/members with no Authorization header denies (401) without ever cal
 
 test('GET /v1/members with a malformed Authorization header denies (401) without ever calling the resolver', async () => {
   const pool = createPool(databaseUrl);
-  const server = createServer(pool, { authorizeMemberManagement: neverCalled() });
+  const server = createServer(pool, { authorizeMemberManagement: authorizerWithUncalledFetch() });
   const port = await listenEphemeral(server);
   try {
     const res = await fetch(`http://127.0.0.1:${port}/v1/members`, { headers: { Authorization: 'not-a-bearer-token' } });
@@ -166,7 +172,7 @@ test('GET /v1/members ignores client-supplied X-Role/X-Organization headers enti
 
 test('GET /v1/member-scope denies (401) with no Authorization header', async () => {
   const pool = createPool(databaseUrl);
-  const server = createServer(pool, { authorizeMemberManagement: neverCalled() });
+  const server = createServer(pool, { authorizeMemberManagement: authorizerWithUncalledFetch() });
   const port = await listenEphemeral(server);
   try {
     const res = await fetch(`http://127.0.0.1:${port}/v1/member-scope`);
