@@ -632,6 +632,10 @@ audit — không cần endpoint riêng.
 
 Vì Member data nằm ngoài Supabase (không được Supabase managed backup bao phủ), đây là điều kiện bắt
 buộc để P5.5 được acceptance — không thể để dữ liệu 3.000 đoàn viên không có backup.
+`BLOCKS_RUNTIME_ACCEPTANCE` + `BLOCKS_PRODUCTION` — **không** `BLOCKS_IMPLEMENTATION_START` (xem
+mục 28, mục con 2): P5.5-01 vẫn phát triển được schema/API trên môi trường local/rehearsal mà chưa cần
+biết SLA backup của gói production; câu trả lời chỉ bắt buộc phải có trước khi P5.5-07/P5.5-09 được
+coi PASS và trước khi hệ thống production-ready.
 
 **Tối thiểu cần có (đề xuất, không invent capability của Mắt Bão khi chưa xác nhận gói hosting):**
 
@@ -788,8 +792,35 @@ architecture decision mới, ngoài phạm vi P5.5.
   └─ bước 3: confirm/commit + kết quả
 ```
 
-**Role routing:** `RoleGuard` hiện có (`src/components/Guards.jsx`) đã đủ pattern (allowedRoles +
-SYSTEM_ADMIN luôn qua) — route Member Management dùng lại cơ chế này, không cần Guard mới.
+**Role routing — `MemberManagementGuard`, KHÔNG dùng `RoleGuard` as-is (fix 2026-09-04, F1).**
+`src/components/Guards.jsx` hiện có `RoleGuard` với logic `roles.includes('SYSTEM_ADMIN') ||
+allowedRoles.some(...)` — `SYSTEM_ADMIN` **luôn** đi qua, bất kể `allowedRoles` truyền vào là gì.
+Điều này **mâu thuẫn trực tiếp** với quy tắc đã chốt ở mục 7/mục 12: một `SYSTEM_ADMIN` đơn lẻ
+(không có `YOUTH_ADMIN`) có **ZERO** quyền Member Management. Dùng `RoleGuard` nguyên trạng cho route
+`/quan-ly-doan-vien*` sẽ cho tài khoản đó vào được page shell rồi mới nhận hàng loạt lỗi 403 từ
+Member API — không lộ dữ liệu (backend vẫn đúng), nhưng là một trạng thái UX sai và mơ hồ, không
+phải một `FORBIDDEN` rõ ràng.
+
+**Quyết định:** Member Management dùng một guard riêng, khái niệm `MemberManagementGuard`, **không**
+tái sử dụng `RoleGuard` nguyên trạng cho các route này (không cần viết component trong P5.5-00 — đây
+là quyết định kiến trúc, code thuộc P5.5-06):
+- Điều kiện qua guard: `roles.includes('YOUTH_ADMIN') || roles.includes('BRANCH_OFFICER')` — **không**
+  có nhánh `SYSTEM_ADMIN` tự động qua. Dữ liệu `roles` đã có sẵn từ `AuthContext` (không cần thêm
+  network call ở frontend) — guard này thuần là so khớp danh sách role hiện có với route, cùng độ
+  phức tạp với `RoleGuard` gốc, không phải một cơ chế mới nặng hơn.
+- `SYSTEM_ADMIN` không kèm `YOUTH_ADMIN`/`BRANCH_OFFICER` → guard trả về trạng thái **`FORBIDDEN`**
+  tường minh ngay tại route (thông điệp kiểu "Cần quyền `YOUTH_ADMIN` để truy cập Quản lý đoàn
+  viên"), **không** render page shell rồi để mỗi lệnh gọi Member API tự trả lỗi rời rạc.
+- **Frontend guard chỉ là UX boundary, không phải security boundary.** Đây không phải "ẩn nút thay
+  cho bảo mật" (nguyên tắc mục 7 vẫn giữ nguyên) — `MemberManagementGuard` chỉ tránh cho người dùng
+  một trải nghiệm tệ (vào trang rồi gặp lỗi liên tục); **Member API (backend) vẫn là trust boundary
+  thật sự** và **bắt buộc** tự re-check toàn bộ authorization qua resolver (mục 13) trên **mọi**
+  request, kể cả khi frontend guard có bug hoặc bị bypass bằng cách gọi thẳng API. Nếu
+  `MemberManagementGuard` có sai sót và lỡ cho một `SYSTEM_ADMIN` đơn lẻ vào trang, Member API vẫn
+  phải deny toàn bộ — không có kịch bản nào frontend guard là tuyến phòng thủ duy nhất.
+- `RoleGuard` gốc **không đổi** và tiếp tục dùng cho mọi route khác của ứng dụng (reports, documents,
+  learning...) — đây không phải một thay đổi toàn cục, chỉ Member Management cần logic chặt hơn vì
+  đây là dữ liệu PII nhạy cảm mà `SYSTEM_ADMIN` explicitly không có quyền nghiệp vụ.
 
 **Mobile-first:** danh sách dùng card list (giống pattern `Documents.jsx`/`AdminReports.jsx` hiện
 có) thay vì bảng rộng cứng nhắc trên màn hình nhỏ. Member detail là trang riêng có URL
@@ -823,7 +854,9 @@ một branch riêng (`docs/brain/02-coding-rules.md`: "Mỗi phase một branch"
 - **Objective:** Dựng PostgreSQL schema tại Mắt Bão (bảng `members`, enum types mục 5) +
   Member API skeleton (routing, health check, config/secret loading) trên hạ tầng thật đã xác nhận
   (mục 28).
-- **Dependencies:** P5.5-00 (tài liệu này) được review; hạ tầng Mắt Bão đã provisioned.
+- **Dependencies:** P5.5-00 (tài liệu này) được review; owner đã trả lời mục 28.1
+  (`BLOCKS_IMPLEMENTATION_START` — hạ tầng Mắt Bão cụ thể) và hạ tầng đó đã provisioned. Mục 28.2
+  (backup capability) **không** phải dependency của P5.5-01.
 - **Code surface:** repo Member API mới (ngôn ngữ/runtime — OWNER DECISION mục 28) + migration đầu
   tiên PostgreSQL Mắt Bão.
 - **Security contract:** chưa expose endpoint công khai nào — chỉ nội bộ/health check.
@@ -842,7 +875,9 @@ một branch riêng (`docs/brain/02-coding-rules.md`: "Mỗi phase một branch"
 
 ### P5.5-03 — Member CRUD
 - **Objective:** `GET/POST/PATCH /members`, `/members/:id`, `/members/:id/archive` (mục 9).
-- **Dependencies:** P5.5-02.
+- **Dependencies:** P5.5-02; owner đã trả lời mục 28.8 (`NON_BLOCKING_OWNER_DECISION` —
+  `BRANCH_OFFICER` view-only hay được sửa) — bắt buộc phải chốt trước khi viết
+  `PATCH /members/:id` vì nó quyết định trực tiếp permission matrix của endpoint này.
 - **Code surface:** Member API route handlers + validation layer.
 - **Security contract:** threat #2, #3, #6, #10 (mục 22).
 - **Tests:** CRUD happy path + toàn bộ negative test #1–#6, #9, #10 liên quan (mục 23).
@@ -933,36 +968,63 @@ Phase 5 → Phase 5.5 → Phase 6 → Phase 7
 
 ## 28. Owner decisions needed
 
-Chỉ liệt kê những gì không thể tự xác minh từ code/docs hiện có:
+Chỉ liệt kê những gì không thể tự xác minh từ code/docs hiện có. Mỗi mục được gắn đúng một nhãn
+theo taxonomy thống nhất (fix 2026-09-04, đóng mâu thuẫn trước đó nói backup vừa chặn vừa không
+chặn P5.5-01):
 
-1. **Hạ tầng Mắt Bão cụ thể:** gói/sản phẩm chính xác, PostgreSQL availability (managed hay tự cài),
-   runtime khả dụng cho Member API (Node/Deno/Python/khác) — quyết định trực tiếp code surface của
-   P5.5-01.
-2. **Backup capability thật của gói Mắt Bão đang/sẽ dùng** (mục 18) — không thể invent, cần owner
-   hoặc bên hạ tầng xác nhận.
-3. **Domain/TLS arrangement** cho Member API (subdomain riêng? qua Vercel rewrite? trực tiếp domain
-   Mắt Bão?) — ảnh hưởng CORS/cấu hình frontend gọi Member API.
+```text
+BLOCKS_IMPLEMENTATION_START   — P5.5-01 không thể bắt đầu viết code/schema nếu thiếu
+BLOCKS_RUNTIME_ACCEPTANCE     — không chặn viết code, nhưng chặn P5.5-08/P5.5-09 PASS
+BLOCKS_PRODUCTION             — không chặn implementation/runtime rehearsal, chỉ chặn go-live thật
+NON_BLOCKING_OWNER_DECISION   — không chặn subphase nào ngay, chỉ cần chốt trước khi phần liên quan
+                                 được viết
+```
+
+1. **`BLOCKS_IMPLEMENTATION_START`** — Hạ tầng Mắt Bão cụ thể: gói/sản phẩm chính xác, PostgreSQL
+   availability (managed hay tự cài), runtime khả dụng cho Member API (Node/Deno/Python/khác).
+   **Lý do:** P5.5 đã chốt kiến trúc Member data/API trên hạ tầng Mắt Bão; không được giả định
+   PostgreSQL/runtime/API hosting tồn tại khi chưa xác minh — quyết định này định hình trực tiếp
+   code surface của P5.5-01 (ngôn ngữ/runtime, connection string, migration tool). **Đây là blocker
+   thật sự duy nhất cho việc bắt đầu P5.5-01.**
+2. **`BLOCKS_RUNTIME_ACCEPTANCE` + `BLOCKS_PRODUCTION`, KHÔNG `BLOCKS_IMPLEMENTATION_START`** —
+   Backup capability thật của gói Mắt Bão đang/sẽ dùng (mục 18). P5.5-01 vẫn viết được schema/API
+   trên môi trường local/rehearsal phù hợp mà chưa cần biết SLA backup cụ thể của gói production;
+   nhưng câu hỏi này **bắt buộc** phải có câu trả lời trước khi P5.5-07 (audit + backup/restore) và
+   P5.5-09 (runtime rehearsal) được coi là PASS, và trước khi hệ thống được coi production-ready.
+   Không thể invent — cần owner hoặc bên hạ tầng xác nhận.
+3. **`BLOCKS_RUNTIME_ACCEPTANCE` / `BLOCKS_PRODUCTION` (tuỳ kiến trúc thực tế triển khai), KHÔNG
+   `BLOCKS_IMPLEMENTATION_START`** — Domain/TLS arrangement cho Member API (subdomain riêng? qua
+   Vercel rewrite? trực tiếp domain Mắt Bão?) — ảnh hưởng CORS/cấu hình frontend gọi Member API khi
+   chạy thật, không chặn viết schema/code cục bộ. Không tự bịa hostname/domain trong bất kỳ code hay
+   config nào trước khi có câu trả lời — dùng placeholder/biến môi trường, không hardcode.
 4. ~~`date_of_birth` có bắt buộc không?~~ **RESOLVED (2026-09-04 revision):** `OPTIONAL_MVP`, không
    `REQUIRED` — xem mục 5. Owner có thể ghi đè thành bắt buộc sau nếu có nhu cầu nghiệp vụ cụ thể.
-5. **`gender` có thực sự cần không?** Đã để optional/loại trừ nếu owner xác nhận không cần — hiện
-   giữ như optional field chờ xác nhận thay vì mặc định thêm.
+5. **`NON_BLOCKING_OWNER_DECISION`** — `gender` có thực sự cần không? Đã để optional/loại trừ nếu
+   owner xác nhận không cần. Không chặn P5.5-01: data model mục 5 đã thiết kế field này là optional
+   enum \| NULL ngay từ đầu, nên P5.5-01 tạo schema có `gender` (nullable) hay bỏ hẳn cột này lúc
+   khởi tạo đều là một migration `ADD COLUMN`/`DROP COLUMN` đơn giản không phá dữ liệu — không có
+   nhánh nào của quyết định này buộc phải sửa lại schema đã có sau khi owner trả lời.
 6. ~~Member export có bắt buộc trong MVP không?~~ **RESOLVED (2026-09-04 revision):** Export bị
    `DEFERRED` khỏi P5.5 MVP theo mặc định — xem mục 9/mục 24. Owner có thể yêu cầu thêm sau như một
    architecture/security decision riêng.
 7. ~~`SYSTEM_ADMIN` có mặc định thấy `political_theory_level` không?~~ **RESOLVED (2026-09-04
    revision):** Không mặc định — `SYSTEM_ADMIN` chỉ thấy Member PII nếu đồng thời có `YOUTH_ADMIN`
    (hoặc quyền emergency/support tường minh thiết kế sau) — xem mục 7/mục 12.
-8. **`BRANCH_OFFICER` có được sửa member đơn vị mình không**, hay MVP chỉ cho xem (mục 7) — ảnh hưởng
-   endpoint permission ở P5.5-03.
+8. **`NON_BLOCKING_OWNER_DECISION`** — `BRANCH_OFFICER` có được sửa member đơn vị mình không, hay
+   MVP chỉ cho xem (mục 7)? Không chặn P5.5-01 (schema/auth-bridge không phụ thuộc câu trả lời này).
+   **Nhưng phải chốt trước khi P5.5-03 (Member CRUD) bắt đầu viết endpoint** — endpoint permission
+   chính xác cho `PATCH /members/:id` phụ thuộc trực tiếp quyết định này.
 
-Những mục còn lại owner có thể trả lời sau, không chặn P5.5-01 bắt đầu (trừ mục 1–2, chặn trực tiếp
-việc chọn runtime/schema hosting thật).
+**Chỉ mục 1 là `BLOCKS_IMPLEMENTATION_START` thật sự.** Mục 2–3 chặn runtime/production, không chặn
+việc bắt đầu viết code. Mục 5, 8 là `NON_BLOCKING_OWNER_DECISION` với hạn chốt riêng (8 phải xong
+trước P5.5-03, 5 không có hạn chặn vì schema đã cho phép defer). Mục 4, 6, 7 đã `RESOLVED`.
 
 ---
 
 ## 29. Next task
 
 **P5.5-01 — Member service foundation** (mục 26): dựng schema PostgreSQL tại Mắt Bão + skeleton
-Member API, **chỉ sau khi** owner xác nhận tối thiểu mục 28.1–28.2 (hạ tầng Mắt Bão cụ thể + backup
-capability), vì hai quyết định này định hình toàn bộ code surface của P5.5-01 (runtime, connection
-string, migration tool).
+Member API, **chỉ sau khi** owner xác nhận mục 28.1 (hạ tầng Mắt Bão cụ thể — `BLOCKS_IMPLEMENTATION_
+START`), vì quyết định này định hình toàn bộ code surface của P5.5-01 (runtime, connection string,
+migration tool). Mục 28.2 (backup capability) **không** chặn P5.5-01 bắt đầu — chỉ bắt buộc phải có
+câu trả lời trước P5.5-07/P5.5-09 (xem mục 28).

@@ -1179,3 +1179,32 @@
   `b92012af0f1ba59c49154637ce57b981bf1e47b3`.
 - **Verdict:** `PHASE_5_END_TO_END_ACCEPTANCE_PASS`; PR #37 remains Draft and no merge or
   Production action was taken.
+
+## [2026-09-04] P5.5-00 — Member Management architecture closed
+
+- **Agent:** Claude Code
+- **Thay đổi:** Viết kiến trúc P5.5-00 (Member Management, Account Profile ≠ Member Record, Mắt Bão
+  làm source of truth cho member PII), sau đó đóng toàn bộ finding từ hai vòng review độc lập:
+  (1) 12 finding R1–R12 (dangling section reference, `organizations.code` immutability contract,
+  `date_of_birth`/export/`SYSTEM_ADMIN` contradiction, import job state machine + idempotency,
+  `member_id` không phải business identifier, `DUPLICATE`→`POSSIBLE_DUPLICATE` terminology,
+  IndexedDB trong browser-storage prohibition, A/B/C authorization-bridge comparison,
+  `import_job_id` trong audit contract); (2) finding F1 (frontend `RoleGuard` cho `SYSTEM_ADMIN`
+  qua mặc định, mâu thuẫn với rule "SYSTEM_ADMIN đơn lẻ = zero Member Management access") và một
+  mâu thuẫn về blocker classification (backup capability vừa được ghi là chặn vừa không chặn
+  P5.5-01 bắt đầu).
+- **File đã sửa:** `docs/phase-5-5/00-member-management-architecture.md` (mới, qua 3 commit:
+  `2ca1e5d` tạo tài liệu, `62b3c02` đóng R1–R12, commit tiếp theo đóng F1 + blocker taxonomy);
+  `docs/brain/00-project-overview.md`, `docs/brain/01-architecture.md`, `docs/brain/03-decisions.md`
+  (P5.5-D0…D7), `docs/brain/04-current-tasks.md`.
+- **Lý do:** Owner chủ động đưa lightweight Member Management vào Phase 5.5 trước Innovation Corner
+  (Phase 6); Phase 6 business implementation bị gate bởi `PHASE_5_5_END_TO_END_ACCEPTANCE_PASS`.
+  Đây là architecture-only — không có bảng `members`, không có Member API, không migration nào được
+  viết trong toàn bộ chuỗi task này.
+- **Kiểm tra:** Đọc lại toàn bộ tài liệu độc lập hai lần (không tự tin vào bản thân đã viết); đối
+  chiếu từng assertion về code hiện tại với source thật (`organizations` grants, `RoleGuard`,
+  `_shared/auth.ts`, `is_organization_in_scope`, `documentService` keyset pagination, `audit_logs`
+  schema, P2-12/P3-02 idempotency precedent, P2-14 formula-neutralization, P5 Gemini logging
+  discipline) — tất cả `VERIFIED`, không có assertion nào `FALSE`; kiểm tra toàn bộ cross-reference
+  nội bộ (`mục N`) khớp đúng section thật tồn tại sau mỗi lần sửa; `git diff --check` sạch mỗi lần
+  commit; scope mỗi commit chỉ nằm trong `docs/`.
