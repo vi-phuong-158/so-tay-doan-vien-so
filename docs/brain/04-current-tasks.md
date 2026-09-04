@@ -21,18 +21,41 @@
 - **Report:** `docs/phase-5-5/00-member-management-architecture.md`,
   `docs/phase-5-5/01-member-infrastructure-decision.md`.
 
-### P5.5-01 — Member data foundation
-- **Base:** `master` sau merge PR #38. Branch `feat/p5-5-01-member-data-foundation`.
+### P5.5-01 — Member data foundation — CLOSED
+- **Base:** `master` sau merge PR #38. Branch `feat/p5-5-01-member-data-foundation`, merged vào
+  `master` qua PR #39 (merge commit `0f6f1e526cd374d40b45ce7d672da2ce677b27c5`).
 - **Nội dung:** `member-api/` — service Node.js độc lập, KHÔNG phải Supabase Edge Function. Migration
   `0001_init_members_schema.sql` (bảng `members` + 5 enum type theo đúng mục 5 tài liệu kiến trúc),
   migration runner deterministic (`scripts/migrate.mjs`, hỗ trợ `--fresh` bootstrap), HTTP skeleton
-  (`/healthz`, `/readyz`, `/v1/members` trả 501 fail-closed placeholder — chưa có resolver, theo
-  đúng mục 17: DENY/NOT_IMPLEMENTED tốt hơn mock allow).
-- **Không có trong subphase này:** CRUD thật, import XLSX, authorization bridge (`resolve-member-scope`
-  Edge Function), frontend, deploy Mắt Bão, mua/provision dịch vụ.
+  (`/healthz`, `/readyz`).
 - **Test:** `member-api/tests/` (`schema.test.mjs`, `isolation.test.mjs`, `server.test.mjs`) chạy qua
-  `node --test`, CI job `member-api-test` mới trong `.github/workflows/ci.yml` dùng service container
+  `node --test`, CI job `member-api-test` trong `.github/workflows/ci.yml` dùng service container
   `postgres:16` riêng biệt — không dùng chung Postgres của Supabase local stack.
+- **Report:** `member-api/README.md`.
+
+### P5.5-02 — Member Scope Authorization Bridge
+- **Base:** `master` sau merge PR #39. Branch `feat/p5-5-02-member-scope-bridge`.
+- **Nội dung:** Edge Function `supabase/functions/resolve-member-scope/` — xác thực Supabase JWT thật
+  (`_shared/auth.ts` `requireUser`), đọc lại `profiles.account_status` + `user_roles` server-side,
+  trả `{ user_id, account_status, roles: [{role_code, is_global, org_codes}] }`. Một `SYSTEM_ADMIN`
+  đơn lẻ luôn resolve về `roles: []` (đúng mục 7/12); `SYSTEM_ADMIN` + `YOUTH_ADMIN` chỉ resolve đúng
+  scope của `YOUTH_ADMIN`, không bao giờ global. Migration mới
+  `202609050001_phase_5_5_member_scope_resolver.sql` thêm hàm `member_scope_org_codes()` (dịch
+  `scope_organization_id` → danh sách `organizations.code` trong scope, tái dùng cùng recursive CTE
+  với `is_organization_in_scope()`). `member-api/src/memberScope.js` gọi resolver này (secret dùng
+  chung `x-member-api-secret`, cùng pattern `CRON_SECRET`/P3-08) và derive quyết định authorize.
+  `GET /v1/member-scope` (mới) chứng minh bridge hoạt động (trả scope đã resolve, không phải dữ liệu
+  đoàn viên); `/v1/members` nay enforce authorization trước (401/403), chỉ khi authorized mới rơi về
+  `501` (CRUD vẫn chưa có, chờ P5.5-03). Không dùng signed/internal token — lý do: kiến trúc mục 13
+  đã chọn "resolve mỗi request, không cache" chính vì lý do tránh thêm độ phức tạp đó.
+- **Không có trong subphase này:** Member CRUD/list thật, import XLSX, frontend, deploy Mắt Bão,
+  mua/provision dịch vụ, quyết định 28.8 (`BRANCH_OFFICER` write permission).
+- **Test:** `supabase/functions/resolve-member-scope/` (`contract.test.ts` pure, `index.test.ts` full
+  auth flow qua local Supabase stack — invalid/expired/forged JWT, suspended account, cross-org scope,
+  dual-role SYSTEM_ADMIN+YOUTH_ADMIN — persona synthetic mới `dualadmin@test.local` trong
+  `supabase/seed.sql`); `member-api/tests/memberScope.test.mjs` (resolver HTTP client, derive logic);
+  `member-api/tests/server.test.mjs` mở rộng (ma trận 401/403/501); `member-api/tests/isolation.test.mjs`
+  mở rộng (không đọc header/body do client tự khai để authorize).
 - **Report:** `member-api/README.md`.
 
 ### Phase 5 end-to-end closure
