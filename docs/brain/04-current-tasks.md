@@ -7,19 +7,33 @@
 
 ## Đang làm
 
-### P5.5-00 — Member Management Architecture & Data Contract (architecture only)
+### P5.5-00 — Member Management Architecture & Data Contract (architecture only) — CLOSED
 - **Base:** `master@a775a637a29217dbce6d658086935fd1b64da5c9` (Phase 1–5 đã đóng). Branch
-  `docs/p5-5-member-management-architecture`.
-- **Trạng thái:** `P5_5_00_ARCHITECTURE_READY`. Forensic audit trước task xác nhận không có code
-  Phase 5.5 nào tồn tại trước đây (verdict `P5_5_NOT_FOUND`) — đây là fresh initiative. Không có
-  code business trong task này (chỉ tài liệu).
+  `docs/p5-5-member-management-architecture`, merged vào `master` qua PR #38 (merge commit
+  `fdffc494d549f3440b5fec2963722b15cb67de54`).
+- **Trạng thái:** `P5_5_00_ARCHITECTURE_READY`, merged. Bao gồm quyết định hạ tầng
+  `docs/phase-5-5/01-member-infrastructure-decision.md` (Mắt Bão Vibe Host v2, PostgreSQL 16 +
+  Node.js) — mục 28.1 RESOLVED ở mức kiến trúc; provisioning thật vẫn chưa thực hiện.
 - **Nội dung:** Kiến trúc Member Management tách biệt Supabase (Account Profile) khỏi Member API +
   PostgreSQL tại Mắt Bão VN (Member Record); data model, API contract, import Excel, authorization
   cross-system, audit, backup/restore, threat model, test matrix, decomposition P5.5-01…10.
 - **Gate:** `PHASE_6_BUSINESS_IMPLEMENTATION_MUST_NOT_START until PHASE_5_5_END_TO_END_ACCEPTANCE_PASS`.
-- **Owner decisions còn treo** (không chặn P5.5-00, chặn P5.5-01): hạ tầng Mắt Bão cụ thể (gói,
-  PostgreSQL, runtime Member API), backup capability thật của hạ tầng đó — xem mục 28 báo cáo.
-- **Report:** `docs/phase-5-5/00-member-management-architecture.md`.
+- **Report:** `docs/phase-5-5/00-member-management-architecture.md`,
+  `docs/phase-5-5/01-member-infrastructure-decision.md`.
+
+### P5.5-01 — Member data foundation
+- **Base:** `master` sau merge PR #38. Branch `feat/p5-5-01-member-data-foundation`.
+- **Nội dung:** `member-api/` — service Node.js độc lập, KHÔNG phải Supabase Edge Function. Migration
+  `0001_init_members_schema.sql` (bảng `members` + 5 enum type theo đúng mục 5 tài liệu kiến trúc),
+  migration runner deterministic (`scripts/migrate.mjs`, hỗ trợ `--fresh` bootstrap), HTTP skeleton
+  (`/healthz`, `/readyz`, `/v1/members` trả 501 fail-closed placeholder — chưa có resolver, theo
+  đúng mục 17: DENY/NOT_IMPLEMENTED tốt hơn mock allow).
+- **Không có trong subphase này:** CRUD thật, import XLSX, authorization bridge (`resolve-member-scope`
+  Edge Function), frontend, deploy Mắt Bão, mua/provision dịch vụ.
+- **Test:** `member-api/tests/` (`schema.test.mjs`, `isolation.test.mjs`, `server.test.mjs`) chạy qua
+  `node --test`, CI job `member-api-test` mới trong `.github/workflows/ci.yml` dùng service container
+  `postgres:16` riêng biệt — không dùng chung Postgres của Supabase local stack.
+- **Report:** `member-api/README.md`.
 
 ### Phase 5 end-to-end closure
 - **Base:** isolated closure worktree/branch `codex/phase-5-full-closure`, based on P5-03 plus the

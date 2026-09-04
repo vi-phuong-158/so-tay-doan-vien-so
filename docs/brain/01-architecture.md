@@ -369,12 +369,15 @@ timestamptz default now())` — same PENDING→OVERDUE eligibility rule, now wit
 (`report_mark_overdue_daily`, `report_reminder_scan_daily`) that call trusted RPCs directly
 in-database. `service_role` and `postgres` hold EXECUTE; `anon`/`authenticated` do not.
 
-## Phase 5.5 — Member Management (architecture only, chưa có code)
+## Phase 5.5 — Member Management
 
 P5.5-00 (`docs/phase-5-5/00-member-management-architecture.md`) chốt kiến trúc cho một hệ **quản lý
-đoàn viên** (Member Management) tách biệt khỏi Supabase, chưa có bất kỳ implementation nào. Ghi ở
-đây để agent sau không nhầm đây là code đã tồn tại — **toàn bộ mục này là thiết kế, không phải bản
-đồ module thật.**
+đoàn viên** (Member Management) tách biệt khỏi Supabase. Từ P5.5-01, code thật đã tồn tại ở
+`member-api/` (service Node.js + PostgreSQL 16 độc lập, KHÔNG phải Supabase Edge Function, KHÔNG
+migration nào trong `supabase/migrations/`) — **chỉ** schema `members` + HTTP skeleton
+(`/healthz`, `/readyz`, `/v1/members` trả 501 placeholder fail-closed). Chưa có: CRUD thật, import,
+authorization bridge (`resolve-member-scope` vẫn chưa tồn tại), frontend, deploy Mắt Bão thật. Xem
+`member-api/README.md` cho chi tiết P5.5-01 và giới hạn hiện tại.
 
 ```text
                     USER
