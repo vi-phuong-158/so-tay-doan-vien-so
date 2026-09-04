@@ -64,3 +64,42 @@ jobs:
         export SUPABASE_SERVICE_ROLE_KEY=$(supabase status -o json | jq -r .SERVICE_ROLE_KEY)
         export SUPABASE_JWT_SECRET="super-secret-jwt-token-with-at-least-32-characters-long"
         deno test --allow-all
+
+  member-api-test:
+    runs-on: ubuntu-latest
+    # P5.5 Member Management: a separate PostgreSQL database, deliberately isolated from the
+    # Supabase stack above (docs/phase-5-5/00-member-management-architecture.md muc 4/13).
+    # This service container is a throwaway, CI-only database — never a target for real member data.
+    services:
+      member-postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: member_api_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      MEMBER_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/member_api_test
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+        cache: 'npm'
+        cache-dependency-path: member-api/package-lock.json
+
+    - name: Install member-api dependencies
+      run: npm ci
+      working-directory: member-api
+
+    - name: Run member-api tests
+      run: npm test
+      working-directory: member-api
