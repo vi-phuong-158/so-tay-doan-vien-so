@@ -376,6 +376,27 @@ không nới, không skip bất kỳ assertion nào**; test 14/15/16/26 vẫn đ
   decision mới, ngoài phạm vi P5.5.
 - **Người quyết định:** user (owner).
 
+## [2026-09-04] P5.5-D8 — Member Management runtime/hosting: Mắt Bão Vibe Host v2 (PostgreSQL 16 + Node.js)
+
+- **Quyết định:** Chọn `Mắt Bão Vibe Host v2` (PaaS container, PostgreSQL 16 managed, Node.js
+  runtime) làm hạ tầng đích cho Member API + PostgreSQL, thay vì Cloud Server Linux (VPS tự quản)
+  hoặc Hosting Linux Premium (cPanel). Đóng mục 28, mục con 1 (`BLOCKS_IMPLEMENTATION_START`) của
+  `docs/phase-5-5/00-member-management-architecture.md` **ở mức kiến trúc** — chi tiết đầy đủ, bằng
+  chứng nguồn chính thức, option matrix ở `docs/phase-5-5/01-member-infrastructure-decision.md`.
+- **Lý do:** Xác minh độc lập qua `matbao.net`/`wiki.matbao.net` (không dùng blog bên thứ ba) cho
+  thấy Vibe Host v2 đáp ứng runtime tối thiểu (Node.js container + PostgreSQL managed + connection
+  string + env var mã hoá AES-256 + custom domain/TLS tự động + backup capability ở mức tồn tại),
+  vận hành nhẹ hơn hẳn VPS tự quản cho khối lượng ~3.000 record CRUD/import/audit không cần
+  high-throughput. Hosting Linux Premium bị loại vì cơ chế chạy Node.js qua cPanel yêu cầu restart
+  thủ công sau mọi thay đổi — không phù hợp một backend API production.
+- **Đánh đổi:** Chưa xác minh được private database networking, backup retention/encryption/PITR,
+  và chi tiết process-lifecycle (health check/restart policy) của Vibe Host v2 — các mục này giữ
+  nguyên phân loại `BLOCKS_RUNTIME_ACCEPTANCE`/`BLOCKS_PRODUCTION` đã có, không nâng lên PASS. Việc
+  **provisioning thật** (mua dịch vụ, tạo instance, tạo database) chưa được thực hiện — đây là hành
+  động vận hành/mua sắm riêng, ngoài phạm vi quyết định kiến trúc này.
+- **Người quyết định:** Claude Code (nghiên cứu độc lập theo yêu cầu owner), chờ owner xác nhận khi
+  provisioning thật.
+
 ## Template cho entry mới
 
 ```

@@ -1208,3 +1208,33 @@
   discipline) — tất cả `VERIFIED`, không có assertion nào `FALSE`; kiểm tra toàn bộ cross-reference
   nội bộ (`mục N`) khớp đúng section thật tồn tại sau mỗi lần sửa; `git diff --check` sạch mỗi lần
   commit; scope mỗi commit chỉ nằm trong `docs/`.
+
+## [2026-09-04] P5.5 — Member Management infrastructure decision (Vibe Host v2)
+- **Agent:** Claude Code
+- **Thay đổi:** Đóng mục 28, mục con 1 (`BLOCKS_IMPLEMENTATION_START` — hạ tầng Mắt Bão cụ thể) của
+  `docs/phase-5-5/00-member-management-architecture.md` ở mức kiến trúc. Nghiên cứu độc lập nguồn
+  chính thức `matbao.net`/`wiki.matbao.net` cho ba phương án (Vibe Host v2 PaaS, Cloud Server Linux
+  VPS, Hosting Linux Premium cPanel), lập option matrix, xác minh runtime/PostgreSQL/env-secret/
+  domain-TLS/backup capability, và ghi rõ những gì KHÔNG xác minh được (private DB networking,
+  backup retention/encryption/PITR, process-lifecycle detail) thay vì suy đoán. Kết luận: chọn Mắt
+  Bão Vibe Host v2 (PostgreSQL 16 managed + Node.js container runtime) làm kiến trúc đích; loại
+  Hosting Linux Premium vì cơ chế Node.js qua cPanel yêu cầu restart thủ công, không phù hợp backend
+  API production. Không thực hiện provisioning/mua dịch vụ nào — đó là hành động riêng, ngoài phạm
+  vi task.
+- **File đã sửa:** `docs/phase-5-5/01-member-infrastructure-decision.md` (mới — ADR đầy đủ: context,
+  requirements, option matrix, evidence có URL nguồn, decision, rejected alternatives, security/
+  backup/domain implications, open runtime gates, P5.5 dependency impact);
+  `docs/phase-5-5/00-member-management-architecture.md` (mục 26 P5.5-01 objective/dependencies/code
+  surface, mục 28 mục con 1 đánh dấu RESOLVED-ở-mức-kiến-trúc, mục 29 next task — cập nhật để phản
+  ánh: quyết định sản phẩm đã có, provisioning thật vẫn chưa xong và tách riêng khỏi việc bắt đầu
+  viết schema/code); `docs/brain/03-decisions.md` (P5.5-D8).
+- **Lý do:** P5.5-01 cần biết chính xác runtime/hosting để định hình code surface (ngôn ngữ,
+  connection string, migration tool); đây là blocker kiến trúc duy nhất còn treo trước P5.5-01,
+  theo đúng taxonomy đã chốt ở lần đóng P5.5-00 trước đó.
+- **Kiểm tra:** Mọi khẳng định về khả năng Vibe Host v2/Cloud Server Linux/Hosting Linux Premium đều
+  trích từ trang chính thức `matbao.net`/`wiki.matbao.net` truy xuất trực tiếp (không suy đoán,
+  không dùng blog bên thứ ba làm nguồn quyết định khi có nguồn chính thức); mọi khoảng trống bằng
+  chứng được ghi rõ `NOT VERIFIED`/`NOT PUBLICLY VERIFIED` thay vì bị bỏ qua hay giả định; không
+  overprovision (đề xuất tier Basic, không tự bịa giá — dùng đúng số liệu công bố); không tạo
+  `members` table, không viết Member API, không migration, không mua dịch vụ; `git diff --check`
+  sạch; scope chỉ nằm trong `docs/`.

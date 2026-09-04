@@ -851,14 +851,19 @@ scoped read model pattern P2-13/P4-05), đề xuất decomposition theo đúng d
 một branch riêng (`docs/brain/02-coding-rules.md`: "Mỗi phase một branch"):
 
 ### P5.5-01 — Member service foundation
-- **Objective:** Dựng PostgreSQL schema tại Mắt Bão (bảng `members`, enum types mục 5) +
-  Member API skeleton (routing, health check, config/secret loading) trên hạ tầng thật đã xác nhận
-  (mục 28).
-- **Dependencies:** P5.5-00 (tài liệu này) được review; owner đã trả lời mục 28.1
-  (`BLOCKS_IMPLEMENTATION_START` — hạ tầng Mắt Bão cụ thể) và hạ tầng đó đã provisioned. Mục 28.2
+- **Objective:** Dựng PostgreSQL schema (bảng `members`, enum types mục 5) + Member API skeleton
+  (routing, health check, config/secret loading). Viết schema/code cục bộ hoặc trên môi trường
+  rehearsal tương đương (PostgreSQL 16 + Node.js container) có thể bắt đầu ngay — xem
+  `docs/phase-5-5/01-member-infrastructure-decision.md`; deploy lên Vibe Host v2 **đã provisioned**
+  thật là một bước riêng, không chặn việc bắt đầu subphase này.
+- **Dependencies:** P5.5-00 (tài liệu này) được review; mục 28.1 (`BLOCKS_IMPLEMENTATION_START` —
+  hạ tầng Mắt Bão cụ thể) **đã RESOLVED ở mức kiến trúc** — xem
+  `docs/phase-5-5/01-member-infrastructure-decision.md` (Vibe Host v2, PostgreSQL 16, Node.js
+  runtime). Provisioning thật (mua/tạo instance/tạo database/lấy connection string) **chưa thực
+  hiện** — không chặn việc viết schema/code cục bộ, chỉ chặn bước deploy lên hạ tầng thật. Mục 28.2
   (backup capability) **không** phải dependency của P5.5-01.
-- **Code surface:** repo Member API mới (ngôn ngữ/runtime — OWNER DECISION mục 28) + migration đầu
-  tiên PostgreSQL Mắt Bão.
+- **Code surface:** repo Member API mới (Node.js — xem quyết định hạ tầng mục 28.1) + migration đầu
+  tiên PostgreSQL.
 - **Security contract:** chưa expose endpoint công khai nào — chỉ nội bộ/health check.
 - **Tests:** schema constraint test, enum validation test.
 - **Acceptance:** schema tồn tại, migrate lên xuống được, health check trả 200.
@@ -980,12 +985,14 @@ NON_BLOCKING_OWNER_DECISION   — không chặn subphase nào ngay, chỉ cần 
                                  được viết
 ```
 
-1. **`BLOCKS_IMPLEMENTATION_START`** — Hạ tầng Mắt Bão cụ thể: gói/sản phẩm chính xác, PostgreSQL
-   availability (managed hay tự cài), runtime khả dụng cho Member API (Node/Deno/Python/khác).
-   **Lý do:** P5.5 đã chốt kiến trúc Member data/API trên hạ tầng Mắt Bão; không được giả định
-   PostgreSQL/runtime/API hosting tồn tại khi chưa xác minh — quyết định này định hình trực tiếp
-   code surface của P5.5-01 (ngôn ngữ/runtime, connection string, migration tool). **Đây là blocker
-   thật sự duy nhất cho việc bắt đầu P5.5-01.**
+1. ~~`BLOCKS_IMPLEMENTATION_START` — Hạ tầng Mắt Bão cụ thể~~ **RESOLVED Ở MỨC KIẾN TRÚC (2026-09-04,
+   `docs/phase-5-5/01-member-infrastructure-decision.md`):** `Mắt Bão Vibe Host v2` — PostgreSQL 16
+   managed, Node.js container runtime, xác minh độc lập qua nguồn chính thức `matbao.net`/
+   `wiki.matbao.net` (không tự suy đoán). Việc **provisioning thật** (mua dịch vụ, tạo app instance,
+   tạo database, lấy connection string) **chưa được thực hiện** trong task đó — nằm ngoài phạm vi
+   một quyết định kiến trúc, là hành động vận hành/mua sắm riêng. **Không chặn P5.5-01 bắt đầu viết
+   schema/code cục bộ hoặc trên môi trường rehearsal tương đương** (xem tài liệu quyết định, mục
+   "P5.5 dependency impact"); chỉ chặn bước deploy lên hạ tầng thật đã provisioned.
 2. **`BLOCKS_RUNTIME_ACCEPTANCE` + `BLOCKS_PRODUCTION`, KHÔNG `BLOCKS_IMPLEMENTATION_START`** —
    Backup capability thật của gói Mắt Bão đang/sẽ dùng (mục 18). P5.5-01 vẫn viết được schema/API
    trên môi trường local/rehearsal phù hợp mà chưa cần biết SLA backup cụ thể của gói production;
@@ -1015,16 +1022,22 @@ NON_BLOCKING_OWNER_DECISION   — không chặn subphase nào ngay, chỉ cần 
    **Nhưng phải chốt trước khi P5.5-03 (Member CRUD) bắt đầu viết endpoint** — endpoint permission
    chính xác cho `PATCH /members/:id` phụ thuộc trực tiếp quyết định này.
 
-**Chỉ mục 1 là `BLOCKS_IMPLEMENTATION_START` thật sự.** Mục 2–3 chặn runtime/production, không chặn
-việc bắt đầu viết code. Mục 5, 8 là `NON_BLOCKING_OWNER_DECISION` với hạn chốt riêng (8 phải xong
-trước P5.5-03, 5 không có hạn chặn vì schema đã cho phép defer). Mục 4, 6, 7 đã `RESOLVED`.
+**Mục 1 đã RESOLVED ở mức kiến trúc (2026-09-04)** — xem
+`docs/phase-5-5/01-member-infrastructure-decision.md`; provisioning thật còn lại là hành động vận
+hành/mua sắm, không phải một blocker kiến trúc, và **không** chặn P5.5-01 bắt đầu viết schema/code
+cục bộ. Mục 2–3 chặn runtime/production, không chặn việc bắt đầu viết code. Mục 5, 8 là
+`NON_BLOCKING_OWNER_DECISION` với hạn chốt riêng (8 phải xong trước P5.5-03, 5 không có hạn chặn vì
+schema đã cho phép defer). Mục 4, 6, 7 đã `RESOLVED`. **Hiện không còn `BLOCKS_IMPLEMENTATION_START`
+nào treo đối với việc bắt đầu viết code/schema của P5.5-01.**
 
 ---
 
 ## 29. Next task
 
-**P5.5-01 — Member service foundation** (mục 26): dựng schema PostgreSQL tại Mắt Bão + skeleton
-Member API, **chỉ sau khi** owner xác nhận mục 28.1 (hạ tầng Mắt Bão cụ thể — `BLOCKS_IMPLEMENTATION_
-START`), vì quyết định này định hình toàn bộ code surface của P5.5-01 (runtime, connection string,
-migration tool). Mục 28.2 (backup capability) **không** chặn P5.5-01 bắt đầu — chỉ bắt buộc phải có
-câu trả lời trước P5.5-07/P5.5-09 (xem mục 28).
+**P5.5-01 — Member service foundation** (mục 26): dựng schema PostgreSQL + skeleton Member API.
+Mục 28.1 (hạ tầng Mắt Bão cụ thể) **đã RESOLVED ở mức kiến trúc** —
+`docs/phase-5-5/01-member-infrastructure-decision.md` (Vibe Host v2, PostgreSQL 16, Node.js) — nên
+việc viết schema/code cục bộ hoặc trên môi trường rehearsal tương đương có thể bắt đầu ngay; deploy
+lên hạ tầng thật chờ provisioning (mua/tạo instance — hành động riêng, ngoài phạm vi tài liệu kiến
+trúc). Mục 28.2 (backup capability) **không** chặn P5.5-01 bắt đầu — chỉ bắt buộc phải có câu trả
+lời trước P5.5-07/P5.5-09 (xem mục 28).
