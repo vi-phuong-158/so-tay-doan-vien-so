@@ -1179,3 +1179,62 @@
   `b92012af0f1ba59c49154637ce57b981bf1e47b3`.
 - **Verdict:** `PHASE_5_END_TO_END_ACCEPTANCE_PASS`; PR #37 remains Draft and no merge or
   Production action was taken.
+
+## [2026-09-04] P5.5-00 — Member Management architecture closed
+
+- **Agent:** Claude Code
+- **Thay đổi:** Viết kiến trúc P5.5-00 (Member Management, Account Profile ≠ Member Record, Mắt Bão
+  làm source of truth cho member PII), sau đó đóng toàn bộ finding từ hai vòng review độc lập:
+  (1) 12 finding R1–R12 (dangling section reference, `organizations.code` immutability contract,
+  `date_of_birth`/export/`SYSTEM_ADMIN` contradiction, import job state machine + idempotency,
+  `member_id` không phải business identifier, `DUPLICATE`→`POSSIBLE_DUPLICATE` terminology,
+  IndexedDB trong browser-storage prohibition, A/B/C authorization-bridge comparison,
+  `import_job_id` trong audit contract); (2) finding F1 (frontend `RoleGuard` cho `SYSTEM_ADMIN`
+  qua mặc định, mâu thuẫn với rule "SYSTEM_ADMIN đơn lẻ = zero Member Management access") và một
+  mâu thuẫn về blocker classification (backup capability vừa được ghi là chặn vừa không chặn
+  P5.5-01 bắt đầu).
+- **File đã sửa:** `docs/phase-5-5/00-member-management-architecture.md` (mới, qua 3 commit:
+  `2ca1e5d` tạo tài liệu, `62b3c02` đóng R1–R12, commit tiếp theo đóng F1 + blocker taxonomy);
+  `docs/brain/00-project-overview.md`, `docs/brain/01-architecture.md`, `docs/brain/03-decisions.md`
+  (P5.5-D0…D7), `docs/brain/04-current-tasks.md`.
+- **Lý do:** Owner chủ động đưa lightweight Member Management vào Phase 5.5 trước Innovation Corner
+  (Phase 6); Phase 6 business implementation bị gate bởi `PHASE_5_5_END_TO_END_ACCEPTANCE_PASS`.
+  Đây là architecture-only — không có bảng `members`, không có Member API, không migration nào được
+  viết trong toàn bộ chuỗi task này.
+- **Kiểm tra:** Đọc lại toàn bộ tài liệu độc lập hai lần (không tự tin vào bản thân đã viết); đối
+  chiếu từng assertion về code hiện tại với source thật (`organizations` grants, `RoleGuard`,
+  `_shared/auth.ts`, `is_organization_in_scope`, `documentService` keyset pagination, `audit_logs`
+  schema, P2-12/P3-02 idempotency precedent, P2-14 formula-neutralization, P5 Gemini logging
+  discipline) — tất cả `VERIFIED`, không có assertion nào `FALSE`; kiểm tra toàn bộ cross-reference
+  nội bộ (`mục N`) khớp đúng section thật tồn tại sau mỗi lần sửa; `git diff --check` sạch mỗi lần
+  commit; scope mỗi commit chỉ nằm trong `docs/`.
+
+## [2026-09-04] P5.5 — Member Management infrastructure decision (Vibe Host v2)
+- **Agent:** Claude Code
+- **Thay đổi:** Đóng mục 28, mục con 1 (`BLOCKS_IMPLEMENTATION_START` — hạ tầng Mắt Bão cụ thể) của
+  `docs/phase-5-5/00-member-management-architecture.md` ở mức kiến trúc. Nghiên cứu độc lập nguồn
+  chính thức `matbao.net`/`wiki.matbao.net` cho ba phương án (Vibe Host v2 PaaS, Cloud Server Linux
+  VPS, Hosting Linux Premium cPanel), lập option matrix, xác minh runtime/PostgreSQL/env-secret/
+  domain-TLS/backup capability, và ghi rõ những gì KHÔNG xác minh được (private DB networking,
+  backup retention/encryption/PITR, process-lifecycle detail) thay vì suy đoán. Kết luận: chọn Mắt
+  Bão Vibe Host v2 (PostgreSQL 16 managed + Node.js container runtime) làm kiến trúc đích; loại
+  Hosting Linux Premium vì cơ chế Node.js qua cPanel yêu cầu restart thủ công, không phù hợp backend
+  API production. Không thực hiện provisioning/mua dịch vụ nào — đó là hành động riêng, ngoài phạm
+  vi task.
+- **File đã sửa:** `docs/phase-5-5/01-member-infrastructure-decision.md` (mới — ADR đầy đủ: context,
+  requirements, option matrix, evidence có URL nguồn, decision, rejected alternatives, security/
+  backup/domain implications, open runtime gates, P5.5 dependency impact);
+  `docs/phase-5-5/00-member-management-architecture.md` (mục 26 P5.5-01 objective/dependencies/code
+  surface, mục 28 mục con 1 đánh dấu RESOLVED-ở-mức-kiến-trúc, mục 29 next task — cập nhật để phản
+  ánh: quyết định sản phẩm đã có, provisioning thật vẫn chưa xong và tách riêng khỏi việc bắt đầu
+  viết schema/code); `docs/brain/03-decisions.md` (P5.5-D8).
+- **Lý do:** P5.5-01 cần biết chính xác runtime/hosting để định hình code surface (ngôn ngữ,
+  connection string, migration tool); đây là blocker kiến trúc duy nhất còn treo trước P5.5-01,
+  theo đúng taxonomy đã chốt ở lần đóng P5.5-00 trước đó.
+- **Kiểm tra:** Mọi khẳng định về khả năng Vibe Host v2/Cloud Server Linux/Hosting Linux Premium đều
+  trích từ trang chính thức `matbao.net`/`wiki.matbao.net` truy xuất trực tiếp (không suy đoán,
+  không dùng blog bên thứ ba làm nguồn quyết định khi có nguồn chính thức); mọi khoảng trống bằng
+  chứng được ghi rõ `NOT VERIFIED`/`NOT PUBLICLY VERIFIED` thay vì bị bỏ qua hay giả định; không
+  overprovision (đề xuất tier Basic, không tự bịa giá — dùng đúng số liệu công bố); không tạo
+  `members` table, không viết Member API, không migration, không mua dịch vụ; `git diff --check`
+  sạch; scope chỉ nằm trong `docs/`.

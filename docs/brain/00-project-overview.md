@@ -37,7 +37,10 @@ Công an tỉnh Phú Thọ*.
 - Trang quản trị tổng hợp; audit log.
 
 ### Ngoài scope (bản đầu)
-- Đoàn phí, chuyển sinh hoạt Đoàn, hồ sơ đoàn viên đầy đủ, xếp loại tự động.
+- Đoàn phí, chuyển sinh hoạt Đoàn, hồ sơ đoàn viên đầy đủ, xếp loại tự động. **[2026-09-04]** Vẫn
+  đúng cho complete personnel dossier; lightweight Member Management (danh sách đoàn viên tối thiểu)
+  được đưa vào Phase 5.5 — xem `docs/brain/03-decisions.md` (P5.5-D0) và
+  `docs/phase-5-5/00-member-management-architecture.md`.
 - Mạng xã hội nội bộ, nhắn tin riêng, bình luận công khai.
 - Tự công khai công trình chưa duyệt; tự công nhận sáng kiến.
 - Tích hợp dữ liệu bí mật nhà nước / dữ liệu nghiệp vụ nhạy cảm.

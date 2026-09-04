@@ -280,6 +280,123 @@ không nới, không skip bất kỳ assertion nào**; test 14/15/16/26 vẫn đ
 
 ---
 
+## [2026-09-04] P5.5-D0 — Scope reconciliation: lightweight Member Management được đưa vào Phase 5.5
+
+- **Quyết định cũ (2026-07-30, `docs/brain/00-project-overview.md`/`04-current-tasks.md`):** "Đoàn
+  phí, chuyển sinh hoạt Đoàn, hồ sơ đoàn viên đầy đủ, xếp loại tự động — ngoài scope bản đầu." Quyết
+  định này **vẫn đứng nguyên** cho đúng phạm vi nó mô tả: complete personnel dossier (đoàn phí,
+  workflow chuyển sinh hoạt, xếp loại tự động, kỷ luật/lịch sử cán bộ) tiếp tục ngoài scope.
+- **Quyết định mới:** Sau khi Phase 1–5 ổn định, owner chủ động đưa **lightweight Member
+  Management** (danh sách đoàn viên tối thiểu: định danh, đơn vị công tác, chức vụ, chức danh Đoàn,
+  chức danh Ban Thanh niên, trình độ lý luận chính trị, trạng thái) vào Phase 5.5, thực hiện trước
+  khi mở rộng Innovation Corner (Phase 6).
+- **Lý do:** Business priority changed — không phải lỗi tài liệu hay việc bị bỏ sót trước đây.
+- **Đánh đổi:** Phase 6 business implementation bị gate lại cho tới khi
+  `PHASE_5_5_END_TO_END_ACCEPTANCE_PASS`. Không xoá/viết lại lịch sử quyết định 2026-07-30.
+- **Người quyết định:** user (owner), ghi nhận qua Claude Code theo yêu cầu P5.5-00.
+- **Tham chiếu:** `docs/phase-5-5/00-member-management-architecture.md` mục 1.
+
+## [2026-09-04] P5.5-D1 — Account Profile và Member Record là hai khái niệm tách biệt
+
+- **Quyết định:** `ACCOUNT PROFILE` (Supabase Auth + `profiles` + `user_roles`, người có tài khoản
+  đăng nhập, số lượng nhỏ) và `MEMBER RECORD` (đoàn viên trong danh sách quản lý, ~3.000 người, lưu
+  tại Member API/PostgreSQL Mắt Bão, không cần `auth.users`/login/password) là hai model dữ liệu
+  hoàn toàn khác nhau, không gộp.
+- **Lý do:** Không có yêu cầu tạo tài khoản cho từng đoàn viên; chỉ một nhóm nhỏ cán bộ Đoàn cần
+  đăng nhập hệ thống.
+- **Đánh đổi:** Cần một mapping có chủ đích (`member.account_user_id` nullable) khi một member sau
+  này được cấp quyền dùng hệ thống, thay vì member == account mặc định.
+- **Người quyết định:** user (owner).
+
+## [2026-09-04] P5.5-D2 — Member không mặc định có account
+
+- **Quyết định:** Import/tạo Member Record không bao giờ tự động tạo `auth.users`/`profiles`, không
+  gửi invitation email. `member.account_user_id` chỉ được set qua một hành động gán quyền rõ ràng,
+  riêng biệt với import.
+- **Lý do:** Acceptance criterion bắt buộc từ owner — tránh 3.000 account/email giả không cần thiết.
+- **Đánh đổi:** Không có mapping table riêng trong MVP (một cột nullable đủ cho quy mô và tần suất
+  gán hiện tại); nâng cấp lên bảng mapping là việc của một migration sau nếu cần lịch sử gán/gỡ.
+- **Người quyết định:** user (owner).
+
+## [2026-09-04] P5.5-D3 — Member PII source of truth là Member API tại Mắt Bão (Việt Nam)
+
+- **Quyết định:** Dữ liệu đoàn viên (member PII, member history nếu có, import staging/audit) có
+  source of truth tại một hệ thống riêng (Member API + PostgreSQL) hosted tại Mắt Bão, Việt Nam —
+  không lưu trong Supabase.
+- **Lý do:** Yêu cầu data residency Việt Nam cho dữ liệu đoàn viên, tách biệt khỏi hạ tầng Supabase
+  hiện có của các phân hệ khác.
+- **Đánh đổi:** Cần một cơ chế authorization cross-system (P5.5-D4 nói backend nào giữ auth; xem
+  mục 13 tài liệu kiến trúc cho chi tiết resolver) và một backup/restore contract riêng cho hệ thống
+  thứ hai này (không được Supabase managed backup bao phủ).
+- **Người quyết định:** user (owner).
+
+## [2026-09-04] P5.5-D4 — Supabase tiếp tục là authentication/authorization/business backend
+
+- **Quyết định:** Supabase Auth, `profiles`, `user_roles`, `organizations` tiếp tục là nguồn thẩm
+  quyền duy nhất cho danh tính và vai trò/scope. Member API không tự có hệ role song song — nó xác
+  minh Supabase JWT (qua một Edge Function resolver, không tự làm JWKS verification riêng trong MVP)
+  và dịch `user_roles`/`organizations` hiện có sang ngữ cảnh member-management.
+- **Lý do:** Tránh hai nguồn thẩm quyền vai trò/tổ chức lệch nhau; tái sử dụng toàn bộ RLS/RPC
+  boundary đã được review qua Phase 1–5 thay vì phát minh lại.
+- **Đánh đổi:** Mọi request tới Member API phụ thuộc Supabase Auth khả dụng (xem failure model, mục
+  19 tài liệu kiến trúc) — chấp nhận được vì Supabase Auth down vốn đã chặn toàn hệ thống.
+- **Người quyết định:** user (owner).
+
+## [2026-09-04] P5.5-D5 — Phase 6 bị gate bởi Phase 5.5 acceptance
+
+- **Quyết định:** `PHASE_6_BUSINESS_IMPLEMENTATION_MUST_NOT_START until
+  PHASE_5_5_END_TO_END_ACCEPTANCE_PASS`. Ngoại lệ: security remediation độc lập cho scaffold
+  `innovation_*` hiện có (nếu owner yêu cầu riêng) không tính là bắt đầu Phase 6 và không nằm trong
+  scope P5.5-00.
+- **Lý do:** Member Management là nền tảng dữ liệu tổ chức mà Phase 6 (Innovation Corner mở rộng)
+  có thể cần tham chiếu; tránh xây chồng lên một model tổ chức/quyền chưa ổn định.
+- **Đánh đổi:** Trì hoãn Phase 6 cho tới khi P5.5 đóng đủ 10 subphase (P5.5-01…10).
+- **Người quyết định:** user (owner).
+
+## [2026-09-04] P5.5-D6 — Không có trường "số hiệu" dưới bất kỳ tên nào
+
+- **Quyết định:** Member data model không có `police_number`, `personnel_number`, `service_number`
+  hay bất kỳ dạng "số hiệu" nào. Đây là loại bỏ chủ động, không được khôi phục dưới tên khác kể cả
+  khi cần một khoá dedup mạnh hơn cho import Excel (mục 10, 15 tài liệu kiến trúc dùng deterministic
+  soft-match + manual reconciliation thay thế, không dùng CCCD/passport).
+- **Lý do:** Owner đã chủ động cân nhắc và loại bỏ trường này vì không cần thiết và nhạy cảm.
+- **Đánh đổi:** Không có unique identifier đảm bảo tuyệt đối cho dedup tự động; import cần preview
+  + xác nhận thủ công cho các trường hợp nghi trùng thay vì dedup cứng.
+- **Người quyết định:** user (owner).
+
+## [2026-09-04] P5.5-D7 — Member PII không phải một phần của Gemini/RAG
+
+- **Quyết định:** Member PII (mọi field trong bảng data classification, mục 3 tài liệu kiến trúc)
+  không được gửi tới Gemini, không tạo embedding, không đưa vào pipeline RAG Phase 5
+  (`document_chunks`/`knowledge_articles`/`ask-ai`) dưới bất kỳ hình thức nào, mặc định.
+- **Lý do:** Member Management và Phase 5 RAG là hai pipeline dữ liệu độc lập; không có nhu cầu AI
+  nào đã được xác nhận cho dữ liệu đoàn viên, và dữ liệu này có mức nhạy cảm cao hơn tài liệu công
+  khai mà RAG hiện dùng.
+- **Đánh đổi:** Nếu tương lai cần AI liên quan member (ví dụ gợi ý phân công), đó là một architecture
+  decision mới, ngoài phạm vi P5.5.
+- **Người quyết định:** user (owner).
+
+## [2026-09-04] P5.5-D8 — Member Management runtime/hosting: Mắt Bão Vibe Host v2 (PostgreSQL 16 + Node.js)
+
+- **Quyết định:** Chọn `Mắt Bão Vibe Host v2` (PaaS container, PostgreSQL 16 managed, Node.js
+  runtime) làm hạ tầng đích cho Member API + PostgreSQL, thay vì Cloud Server Linux (VPS tự quản)
+  hoặc Hosting Linux Premium (cPanel). Đóng mục 28, mục con 1 (`BLOCKS_IMPLEMENTATION_START`) của
+  `docs/phase-5-5/00-member-management-architecture.md` **ở mức kiến trúc** — chi tiết đầy đủ, bằng
+  chứng nguồn chính thức, option matrix ở `docs/phase-5-5/01-member-infrastructure-decision.md`.
+- **Lý do:** Xác minh độc lập qua `matbao.net`/`wiki.matbao.net` (không dùng blog bên thứ ba) cho
+  thấy Vibe Host v2 đáp ứng runtime tối thiểu (Node.js container + PostgreSQL managed + connection
+  string + env var mã hoá AES-256 + custom domain/TLS tự động + backup capability ở mức tồn tại),
+  vận hành nhẹ hơn hẳn VPS tự quản cho khối lượng ~3.000 record CRUD/import/audit không cần
+  high-throughput. Hosting Linux Premium bị loại vì cơ chế chạy Node.js qua cPanel yêu cầu restart
+  thủ công sau mọi thay đổi — không phù hợp một backend API production.
+- **Đánh đổi:** Chưa xác minh được private database networking, backup retention/encryption/PITR,
+  và chi tiết process-lifecycle (health check/restart policy) của Vibe Host v2 — các mục này giữ
+  nguyên phân loại `BLOCKS_RUNTIME_ACCEPTANCE`/`BLOCKS_PRODUCTION` đã có, không nâng lên PASS. Việc
+  **provisioning thật** (mua dịch vụ, tạo instance, tạo database) chưa được thực hiện — đây là hành
+  động vận hành/mua sắm riêng, ngoài phạm vi quyết định kiến trúc này.
+- **Người quyết định:** Claude Code (nghiên cứu độc lập theo yêu cầu owner), chờ owner xác nhận khi
+  provisioning thật.
+
 ## Template cho entry mới
 
 ```

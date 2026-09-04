@@ -7,6 +7,20 @@
 
 ## Đang làm
 
+### P5.5-00 — Member Management Architecture & Data Contract (architecture only)
+- **Base:** `master@a775a637a29217dbce6d658086935fd1b64da5c9` (Phase 1–5 đã đóng). Branch
+  `docs/p5-5-member-management-architecture`.
+- **Trạng thái:** `P5_5_00_ARCHITECTURE_READY`. Forensic audit trước task xác nhận không có code
+  Phase 5.5 nào tồn tại trước đây (verdict `P5_5_NOT_FOUND`) — đây là fresh initiative. Không có
+  code business trong task này (chỉ tài liệu).
+- **Nội dung:** Kiến trúc Member Management tách biệt Supabase (Account Profile) khỏi Member API +
+  PostgreSQL tại Mắt Bão VN (Member Record); data model, API contract, import Excel, authorization
+  cross-system, audit, backup/restore, threat model, test matrix, decomposition P5.5-01…10.
+- **Gate:** `PHASE_6_BUSINESS_IMPLEMENTATION_MUST_NOT_START until PHASE_5_5_END_TO_END_ACCEPTANCE_PASS`.
+- **Owner decisions còn treo** (không chặn P5.5-00, chặn P5.5-01): hạ tầng Mắt Bão cụ thể (gói,
+  PostgreSQL, runtime Member API), backup capability thật của hạ tầng đó — xem mục 28 báo cáo.
+- **Report:** `docs/phase-5-5/00-member-management-architecture.md`.
+
 ### Phase 5 end-to-end closure
 - **Base:** isolated closure worktree/branch `codex/phase-5-full-closure`, based on P5-03 plus the
   forward-only trigger-function privilege fix `ff72ccd`.
@@ -223,6 +237,11 @@
 ## Không làm lúc này
 
 - Đoàn phí, chuyển sinh hoạt, hồ sơ đoàn viên đầy đủ, xếp loại tự động — ngoài scope bản đầu.
+  **[2026-09-04 cập nhật]** Quyết định này vẫn đúng cho đúng phạm vi nó mô tả (complete personnel
+  dossier: đoàn phí, workflow chuyển sinh hoạt, xếp loại tự động, kỷ luật/lịch sử cán bộ). Owner đã
+  chủ động đưa một **lightweight Member Management** (danh sách đoàn viên tối thiểu) vào Phase 5.5 —
+  đây là deliberate scope change, không phải lỗi tài liệu. Xem `docs/brain/03-decisions.md`
+  (P5.5-D0) và `docs/phase-5-5/00-member-management-architecture.md` mục 1.
 - Mạng xã hội nội bộ, nhắn tin riêng, bình luận công khai — ngoài scope.
 - Tích hợp dữ liệu bí mật nhà nước / nghiệp vụ nhạy cảm — chưa có hạ tầng/quy trình được phép.
 - Mở đăng ký tài khoản tự do — tài khoản do quản trị viên tạo/nhập.
