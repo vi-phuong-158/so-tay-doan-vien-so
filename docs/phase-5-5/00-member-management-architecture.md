@@ -27,7 +27,7 @@ tình hình đoàn viên tối thiểu mà hệ thống hiện tại hoàn toàn
 liệu demo, không có bảng member nào tồn tại).
 
 **Lý do thay đổi:** Business priority changed — không phải lỗi tài liệu, không phải agent trước
-"quên" làm. Ghi rõ ở `docs/brain/03-decisions.md` (P5.5-D0, xem mục 31 file này).
+"quên" làm. Ghi rõ ở `docs/brain/03-decisions.md` (P5.5-D0).
 
 **Ranh giới giữa hai quyết định:**
 
@@ -135,10 +135,10 @@ qua Supabase (mục 13).
 
 | Field | Type | Required | Allowed values | Sensitive? | Notes |
 |---|---|---|---|---|---|
-| `member_id` | UUID | Yes (PK) | — | No | Sinh tại Member API, không phải Supabase UUID nào |
+| `member_id` | UUID | Yes (PK) | — | No | **Technical primary key only.** Sinh tại Member API, không phải Supabase UUID nào. KHÔNG phải số hiệu, mã cán bộ, member number hay bất kỳ business identifier nào — không hiển thị cho người dùng như một mã định danh nghiệp vụ, không mang ý nghĩa, không được dùng để suy ra đơn vị/chức vụ |
 | `full_name` | text | Yes | — | Personal | Tên tiếng Việt có dấu |
-| `date_of_birth` | date | No | — | Personal | **OWNER DECISION** có bắt buộc không (mục 32) |
-| `gender` | enum | No | `NAM` / `NỮ` / `KHÁC` hoặc NULL | Personal | Chỉ thêm nếu owner xác nhận thực sự cần (mục 32) |
+| `date_of_birth` | date | No (`OPTIONAL_MVP`) | — | Personal | Strongly recommended nếu roster hiện có sẵn dữ liệu; dùng hỗ trợ nhận diện duplicate candidate (mục 10) — KHÔNG dùng như unique key; NULL được phép |
+| `gender` | enum | No | `NAM` / `NỮ` / `KHÁC` hoặc NULL | Personal | Chỉ thêm nếu owner xác nhận thực sự cần (mục 28) |
 | `work_unit_code` | text | Yes | tham chiếu `organizations.code` (mục 6) | Internal | KHÔNG lưu UUID Supabase trực tiếp |
 | `job_title` | text | No | free text ngắn, có validate length | Internal | Chức vụ/chức danh công tác — **tách biệt** `work_unit_code` |
 | `member_status` | enum | Yes | `ACTIVE` / `INACTIVE` / `TRANSFERRED` / `ARCHIVED` (mục 17) | Internal | Default `ACTIVE` |
@@ -189,6 +189,49 @@ tự dịch UUID→code phía trong Edge Function, vì Supabase đã có toàn b
 `is_organization_in_scope`), không phải UUID. Member API chỉ so sánh string code — không bao giờ
 cần biết UUID nội bộ Supabase.
 
+**Immutability contract (bắt buộc, chốt 2026-09-04 revision).** Phương án C chỉ an toàn nếu
+`organizations.code` là:
+
+```text
+UNIQUE
+IMMUTABLE AFTER CREATION
+NEVER REPURPOSED
+```
+
+Cụ thể:
+- **Đổi tên đơn vị không được đổi `code`.** `code` và `name`/`short_name` là hai khái niệm khác
+  nhau — display name có thể đổi tự do (đúng vai trò hiện tại của nó), `code` thì không, một khi đã
+  được Member API tham chiếu.
+- **Merge/split/reorganization đơn vị phải có migration/reconciliation riêng**, không được xử lý
+  bằng cách âm thầm đổi `code` của một đơn vị đang tồn tại sang nghĩa mới (repurpose) — đây là thao
+  tác hiếm, có chủ đích, cần một task riêng phối hợp cả hai hệ thống, không phải một UPDATE thường.
+- **Member subsystem không tự invent `organization code`.** Mọi `work_unit_code` trong Member Record
+  phải khớp một `organizations.code` đã tồn tại ở Supabase (validate tại import/tạo mới, mục 10) —
+  Member API không được tự sinh code cho một đơn vị "mới" mà Supabase chưa có.
+- **Member API không tin `organization code` do browser gửi cho mục đích authorization** — đúng
+  nguyên tắc chung của mục 13: scope luôn đến từ resolver (Supabase), không bao giờ từ request của
+  client, kể cả khi giá trị đó là một `code` "trông hợp lệ".
+
+**Bằng chứng hiện tại (đã verify với source, không suy đoán):** `organizations` chỉ có
+`grant select on table public.organizations to anon, authenticated`
+(`202607300001_initial_schema.sql`); **không có INSERT/UPDATE/DELETE grant nào và không có RLS
+write policy nào** cho `organizations` ở bất kỳ migration nào tính đến `master@a775a637`. Nghĩa là
+hiện tại **chưa tồn tại đường ghi nào** (kể cả cho `SYSTEM_ADMIN`/`YOUTH_ADMIN` qua ứng dụng) có thể
+sửa `code`. Đây là bằng chứng ủng hộ Option C là an toàn tại thời điểm này — nhưng đây là một sự
+thật về hiện trạng (absence of a write path), không phải một ràng buộc database (không có CHECK/
+trigger nào chặn UPDATE nếu ai đó có quyền `service_role` hoặc quyền DB trực tiếp chạy nó).
+
+**Trạng thái ràng buộc:**
+```text
+ARCHITECTURE CONTRACT NOW
+DATABASE ENFORCEMENT IN A LATER IMPLEMENTATION TASK
+```
+Tài liệu này CHỐT contract ở tầng kiến trúc (bất kỳ tính năng tương lai nào cho phép sửa
+`organizations` đều phải tôn trọng bất biến trên, hoặc phải có một reconciliation path phối hợp
+Member API). Việc thêm ràng buộc cứng ở tầng database (ví dụ trigger chặn `UPDATE code` sau khi đã
+có Member Record tham chiếu) là việc của một implementation task sau này (không phải P5.5-00, và
+không migration nào được viết trong task này).
+
 ---
 
 ## 7. Authorization model — role/scope matrix
@@ -196,14 +239,21 @@ cần biết UUID nội bộ Supabase.
 Không tạo role mới song song trong Member API. **Member API tái sử dụng `user_roles.role_code`
 hiện có của Supabase**, được resolver dịch nghĩa cho ngữ cảnh member-management.
 
-| Role hiện có (`user_roles.role_code`) | Xem toàn bộ member? | Xem member đơn vị mình? | Sửa | Import | Export | Xoá/Archive | Mặc định thấy PII nhạy cảm (political_theory_level)? |
-|---|---|---|---|---|---|---|---|
-| `SYSTEM_ADMIN` | Có (technical administration — vận hành hệ thống) | — | Có (kể cả cross-org, cho mục đích kỹ thuật/khắc phục sự cố) | Có | Có | Có (archive, không hard delete) | **Không mặc định** — SYSTEM_ADMIN có quyền kỹ thuật, không tự động có quyền nghiệp vụ xem dữ liệu nhạy cảm; cần role nghiệp vụ đi kèm hoặc "break-glass" có audit riêng |
-| `YOUTH_ADMIN` scope-toàn-cục (`scope_organization_id IS NULL`) | Có | Có | Có | Có | Có | Có (archive) | Có, trong scope |
-| `YOUTH_ADMIN` scope theo đơn vị | Không | Có (đơn vị mình + đơn vị con theo `is_organization_in_scope`) | Có, trong scope | Có, trong scope | Có, trong scope | Có, trong scope | Có, trong scope |
-| `BRANCH_OFFICER` (Bí thư chi đoàn, ví dụ) | Không | Có, đơn vị mình | **Không** (đề xuất: chỉ xem, không sửa — MVP giữ đơn giản; owner có thể nâng lên "sửa cơ bản" sau) | Không | Không | Không | Có, đơn vị mình (cần xem để nắm tình hình) |
-| `MEMBER` | Không | Không (member thường không có nhu cầu quản lý — chỉ Ban TN/Bí thư cần) | Không | Không | Không | Không | Không |
-| `INNOVATION_MEMBER` | Không | Không | Không | Không | Không | Không | Không |
+**Export không nằm trong bảng dưới đây — Export bị `DEFERRED` khỏi P5.5 MVP (mục 9, quyết định
+2026-09-04).** Lý do: export tạo ra một bản sao thứ cấp lớn của Member PII ra ngoài ranh giới
+source-of-truth (Member API/Mắt Bão); Import là requirement, Export thì không mặc định là
+requirement. Nếu sau này thêm export, đó là một architecture/security decision riêng (authorization,
+masking, audit, file lifecycle) — không tự thêm vào P5.5 MVP.
+
+| Role hiện có (`user_roles.role_code`) | Xem toàn bộ member? | Xem member đơn vị mình? | Sửa | Import | Xoá/Archive | Mặc định thấy PII nhạy cảm (political_theory_level)? |
+|---|---|---|---|---|---|---|
+| `SYSTEM_ADMIN` (đơn lẻ, không kèm `YOUTH_ADMIN`) | **Không** | **Không** | **Không** | **Không** | **Không** | **Không** |
+| `SYSTEM_ADMIN` + `YOUTH_ADMIN` (cùng một người giữ cả hai role) | Theo scope của `YOUTH_ADMIN` đang giữ (xem hai dòng dưới) — quyền kỹ thuật của `SYSTEM_ADMIN` không tự mở rộng scope nghiệp vụ | | | | | |
+| `YOUTH_ADMIN` scope-toàn-cục (`scope_organization_id IS NULL`) | Có | Có | Có | Có | Có (archive) | Có, trong scope |
+| `YOUTH_ADMIN` scope theo đơn vị | Không | Có (đơn vị mình + đơn vị con theo `is_organization_in_scope`) | Có, trong scope | Có, trong scope | Có, trong scope | Có, trong scope |
+| `BRANCH_OFFICER` (Bí thư chi đoàn, ví dụ) | Không | Có, đơn vị mình | **Không** (đề xuất: chỉ xem, không sửa — MVP giữ đơn giản; owner có thể nâng lên "sửa cơ bản" sau) | Không | Không | Có, đơn vị mình (cần xem để nắm tình hình) |
+| `MEMBER` | Không | Không (member thường không có nhu cầu quản lý — chỉ Ban TN/Bí thư cần) | Không | Không | Không | Không |
+| `INNOVATION_MEMBER` | Không | Không | Không | Không | Không | Không |
 
 **Nguyên tắc:**
 - **Least privilege:** mặc định không ai xem được gì; quyền phải được cấp rõ ràng qua `user_roles`
@@ -211,10 +261,15 @@ hiện có của Supabase**, được resolver dịch nghĩa cho ngữ cảnh me
   `YOUTH_ADMIN`/`BRANCH_OFFICER` hiện có với ý nghĩa mở rộng sang member-management.
 - **Fail closed:** thiếu role/scope hợp lệ → 403, không trả rows rỗng kèm 200 (tránh nhầm "không có
   dữ liệu" với "không có quyền").
-- **`SYSTEM_ADMIN` không mặc định thấy PII nhạy cảm nghiệp vụ:** đúng tinh thần least-privilege —
-  quyền hạ tầng (deploy, secret, DB) khác quyền nghiệp vụ (xem trình độ lý luận chính trị của từng
-  đoàn viên). MVP: SYSTEM_ADMIN vẫn kỹ thuật xem được (cần cho vận hành/khắc phục), nhưng đây là
-  **OWNER DECISION cần xác nhận** nếu muốn tách hẳn (mục 32).
+- **`SYSTEM_ADMIN` không phải Member Data Approver và không tự động là Member PII reader (quyết định
+  chốt 2026-09-04, thay cho "MVP tạm thời cho phép" trước đó):** quyền hạ tầng (deploy, secret, DB,
+  vận hành/khắc phục sự cố) là một trục quyền hoàn toàn khác quyền nghiệp vụ quản lý đoàn viên.
+  `SYSTEM_ADMIN` **chỉ** có bất kỳ quyền Member Management nào (kể cả chỉ xem danh sách, chưa nói
+  đến trường nhạy cảm) khi đồng thời giữ `YOUTH_ADMIN` (dual-role, không tạo role mới) — và khi đó,
+  quyền/scope áp dụng đúng theo scope của `YOUTH_ADMIN` đang giữ, không phải một quyền "toàn cục" suy
+  từ `SYSTEM_ADMIN`. Một quyền emergency/support tường minh (có audit riêng) cho tình huống khắc phục
+  sự cố khẩn cấp có thể được thiết kế sau nếu vận hành thực tế cho thấy cần — **không** nằm trong
+  scope P5.5-00.
 - Không dùng ẩn nút frontend làm authorization — mọi quyết định trên nằm ở Member API (server-side),
   y hệt nguyên tắc đã áp dụng toàn bộ Phase 1–5 (`docs/brain/02-coding-rules.md`).
 
@@ -242,7 +297,7 @@ Bối cảnh hiện tại: 1 Trưởng Ban Thanh niên, 2 Phó Ban. Đánh giá 
 
 ## 9. Member API contract (MVP)
 
-Base path đề xuất: `https://<member-api-host>/v1` (host cụ thể là OWNER/INFRA DECISION, mục 32).
+Base path đề xuất: `https://<member-api-host>/v1` (host cụ thể là OWNER/INFRA DECISION, mục 28).
 
 | Endpoint | Method | Auth | Scope check | Notes |
 |---|---|---|---|---|
@@ -258,6 +313,12 @@ Base path đề xuất: `https://<member-api-host>/v1` (host cụ thể là OWNE
 **Không có DELETE vật lý trong MVP** — chỉ `archive`. Nếu sau này cần hard delete (ví dụ yêu cầu
 pháp lý xoá dữ liệu cá nhân), đó là một RPC riêng có audit + xác nhận kép, không nằm trong P5.5 MVP.
 
+**Không có endpoint export (`/members/export` hoặc tương đương) trong MVP — chủ đích, không phải
+thiếu sót.** Export bị `DEFERRED` khỏi P5.5 (xem mục 7, mục 12, mục 28): đây là điểm tạo ra một bản
+sao thứ cấp lớn của Member PII ra ngoài ranh giới source-of-truth, trong khi Import là requirement
+còn Export thì không mặc định là requirement. Thêm export sau này cần một architecture/security
+decision riêng (authorization, masking, audit, file lifecycle), không tự thêm vào P5.5-01…10.
+
 ---
 
 ## 10. Import Excel contract
@@ -266,42 +327,96 @@ pháp lý xoá dữ liệu cá nhân), đó là một RPC riêng có audit + xá
 
 ```text
 upload (file Excel) → parse → validate từng dòng → staging (chưa ghi bảng chính)
-    → preview (valid / invalid / duplicate / warning, hiển thị cho người import xem TRƯỚC khi commit)
+    → preview (valid / invalid / possible-duplicate / warning, hiển thị cho người import xem TRƯỚC
+      khi commit)
     → confirm (người dùng bấm xác nhận, có thể loại bỏ dòng lỗi) → commit (ghi member records thật)
     → audit (ai import, khi nào, bao nhiêu dòng, job nào)
 ```
 
+**Import job state machine (bổ sung 2026-09-04 revision).** Mỗi import job có một `import_job_id`
+kỹ thuật riêng và trạng thái đi qua đúng một chiều — không over-engineer thêm trạng thái ngoài những
+gì cần cho correctness ở quy mô ~3.000 dòng:
+
+```text
+UPLOADED           — file đã nhận, chưa parse
+    ↓
+PARSED              — đã parse xong, đang chạy validate/dedup từng dòng
+    ↓
+READY_FOR_CONFIRM    — preview sẵn sàng (valid/invalid/possible-duplicate/warning), chờ người dùng
+                        xác nhận; job có thể dừng ở đây vô thời hạn hoặc bị CANCELLED
+    ↓ (confirm)                              ↓ (người dùng huỷ, hoặc validate phát hiện lỗi nghiêm
+COMMITTED            — đã ghi member records   trọng ở toàn bộ file)
+  (terminal)                              CANCELLED (terminal)
+
+  (commit transaction lỗi giữa chừng)
+    ↓
+  FAILED (terminal) — không dòng nào được ghi (xem Atomicity dưới)
+```
+
 **Staging job cần lưu (tối thiểu):**
-- `import_job_id`, người tạo, thời điểm, tên file gốc (không lưu nội dung file thô vĩnh viễn sau khi
-  xử lý xong — chỉ giữ đủ để hỗ trợ điều tra sự cố trong thời gian ngắn, retention cụ thể là OWNER
-  DECISION).
-- Từng dòng: `row_number`, dữ liệu đã parse, trạng thái (`VALID`/`INVALID`/`DUPLICATE`/`WARNING`),
-  lý do nếu invalid/warning.
-- Tổng hợp: số dòng valid/invalid/duplicate/warning để preview UI hiển thị trước commit.
+- `import_job_id`, trạng thái hiện tại (theo state machine trên), người tạo, thời điểm, tên file gốc
+  (không lưu nội dung file thô vĩnh viễn sau khi xử lý xong — chỉ giữ đủ để hỗ trợ điều tra sự cố
+  trong thời gian ngắn, retention cụ thể là OWNER DECISION).
+- Từng dòng: `row_number`, dữ liệu đã parse, trạng thái (`VALID` / `INVALID` / `POSSIBLE_DUPLICATE` /
+  `WARNING`), lý do nếu invalid/warning.
+- Tổng hợp: số dòng valid/invalid/possible-duplicate/warning để preview UI hiển thị trước commit.
+
+**Confirm/commit idempotency (bổ sung 2026-09-04 revision).** `confirm` (chuyển
+`READY_FOR_CONFIRM → COMMITTED`) phải **idempotent theo `import_job_id`**:
+- Job chỉ có thể rời `READY_FOR_CONFIRM` đúng một lần theo hướng thành công (`→ COMMITTED`) — trạng
+  thái là nguồn khoá, không phải một cờ boolean có thể race.
+- Nếu `confirm` được gọi lần thứ hai trên một job **đã** `COMMITTED` (double-click, retry sau
+  timeout mạng): Member API **không** ghi thêm record, **không** sinh thêm audit row cho việc ghi
+  dữ liệu — trả lại đúng kết quả đã có của lần commit trước (job status + số record đã tạo), y hệt
+  tinh thần "request lặp trả kết quả hiện có" của `publish_report_campaign` (P2-12) và ownership
+  token của `claim_email_queue` (P3-02) đã được review trong dự án này.
+- Upload lại **cùng file** một lần nữa tạo một `import_job_id` **mới**, hoàn toàn độc lập (staging
+  riêng, preview riêng) — đây không phải vấn đề cần chặn ở tầng file, vì các dòng của job thứ hai sẽ
+  tự nhiên được validate/dedup như bất kỳ dòng nào khác, bao gồm khả năng bị đánh dấu
+  `POSSIBLE_DUPLICATE` so với các record job đầu đã commit.
 
 **Deduplication — không có "số hiệu", không invent CCCD/passport làm khoá:**
 
 Owner đã chủ động loại bỏ "số hiệu" (mục 5) — nghĩa là **không tồn tại một trường định danh duy nhất
 đáng tin cậy** trong dữ liệu hiện có để dedup tự động chắc chắn. Đây là sự thật cần nói rõ, không
-giả vờ có unique identifier:
+giả vờ có unique identifier. Ba trạng thái khi đối chiếu một dòng import (đổi terminology 2026-09-04
+để không ngụ ý chắc chắn sai chỗ):
+
+```text
+EXACT_EXISTING_RECORD  — dòng import tham chiếu tường minh một member_id đã tồn tại (ví dụ cột
+                          "cập nhật cho member" trong file, do người import điền thủ công) — đây là
+                          match kỹ thuật thật, không phải suy đoán
+POSSIBLE_DUPLICATE      — tín hiệu heuristic (xem bên dưới) — KHÔNG BAO GIỜ là một khẳng định chắc
+                          chắn, chỉ là gợi ý cần con người xem lại
+NEW                     — không khớp gì, tạo record mới
+```
 
 - **Không dùng CCCD/passport** làm dedup key — không nằm trong data model đã chốt (mục 5), và thêm
   vào chỉ để dedup sẽ tái tạo đúng vấn đề "số hiệu nhạy cảm" mà owner vừa loại bỏ.
-- **Đề xuất: deterministic soft-match + manual reconciliation**, không phải hard unique constraint:
-  - So khớp `(full_name đã chuẩn hoá, date_of_birth, work_unit_code)` làm tín hiệu "khả năng trùng"
-    (`DUPLICATE` hoặc `WARNING` tuỳ độ khớp — trùng cả 3 → `DUPLICATE`; trùng tên+đơn vị nhưng thiếu
-    ngày sinh → `WARNING`).
-  - **Không tự động ghi đè hoặc tự động gộp.** Preview hiển thị nghi vấn trùng, người import (có
-    quyền) quyết định: bỏ qua dòng mới / tạo record mới / xem đây là update cho record cũ (chọn thủ
-    công `member_id` để merge).
-  - Đây là **manual reconciliation có hỗ trợ**, không phải uniqueness đảm bảo bằng database — nói rõ
-    trong UI ("hệ thống không thể đảm bảo phát hiện 100% trùng lặp nếu thiếu định danh duy nhất").
+- **`full_name` + `date_of_birth` không bao giờ được coi là định danh duy nhất toàn cục** — đây chỉ
+  là tín hiệu `POSSIBLE_DUPLICATE`, không phải bằng chứng đủ để tự động xác định đây là cùng một
+  người. So khớp `(full_name đã chuẩn hoá, date_of_birth, work_unit_code)` chỉ tạo tín hiệu
+  `POSSIBLE_DUPLICATE` (trùng cả 3) hoặc `WARNING` (trùng tên+đơn vị nhưng thiếu ngày sinh) — không
+  bao giờ tự động nâng cấp thành `EXACT_EXISTING_RECORD`.
+- **Không tự động ghi đè hoặc tự động gộp trong mọi trường hợp, kể cả `POSSIBLE_DUPLICATE` có độ
+  khớp cao.** Preview hiển thị nghi vấn trùng, người import (có quyền) phải **human review** trước
+  khi quyết định: bỏ qua dòng mới / tạo record mới / xem đây là update cho record cũ (chọn thủ công
+  `member_id` để merge — lúc đó dòng mới trở thành một `EXACT_EXISTING_RECORD` tường minh do người
+  dùng chỉ định, không phải hệ thống tự suy ra).
+  Auto-merge sai người không bao giờ xảy ra vì không có đường code nào tự chuyển
+  `POSSIBLE_DUPLICATE → merge` mà không qua xác nhận thủ công của người có quyền.
+- Đây là **manual reconciliation có hỗ trợ**, không phải uniqueness đảm bảo bằng database — nói rõ
+  trong UI ("hệ thống không thể đảm bảo phát hiện 100% trùng lặp nếu thiếu định danh duy nhất").
 - Nếu owner sau này quyết định cần một định danh mạnh hơn (khác "số hiệu"), đó là ADR mới, không tự
   quyết trong P5.5-00.
 
-**Atomicity:** `commit` là một transaction ở PostgreSQL Mắt Bão — hoặc toàn bộ dòng đã confirm được
-ghi, hoặc không dòng nào (fail toàn bộ job, không partial-commit âm thầm). Job thất bại giữa chừng
-để lại trạng thái `FAILED` có thể xem lại, không tạo record một phần.
+**Atomicity (làm rõ 2026-09-04 revision):** `commit` là **ALL-OR-NOTHING** — một transaction duy
+nhất ở PostgreSQL Mắt Bão cho toàn bộ batch đã qua preview/validate. Nếu một dòng bất kỳ (ví dụ dòng
+742/3.000) lỗi ở bước commit, **toàn bộ transaction rollback** — 741 dòng trước đó không bị ghi dở,
+không có partial-commit dưới bất kỳ hình thức nào. Quy mô pilot (~3.000 dòng, một transaction) ưu
+tiên correctness hơn throughput — không cần streaming/batch-commit phức tạp. Job thất bại giữa
+chừng chuyển sang `FAILED` (terminal, có thể xem lại lý do), không tạo record một phần; người dùng
+sửa dữ liệu và tạo một `import_job_id` mới để thử lại (không "resume" job đã `FAILED`).
 
 ---
 
@@ -326,20 +441,22 @@ invitation email — đây là điều kiện chấp nhận bắt buộc, không
 
 ## 12. Quyền truy cập Member Management (chi tiết)
 
-Xem ma trận role/scope đầy đủ ở mục 7. Tóm tắt quyết định least-privilege:
+Xem ma trận role/scope đầy đủ ở mục 7. Tóm tắt quyết định least-privilege (chốt 2026-09-04):
 
-- **Ai được xem toàn bộ:** `SYSTEM_ADMIN` (kỹ thuật) và `YOUTH_ADMIN` scope-toàn-cục.
+- **Ai được xem toàn bộ:** `YOUTH_ADMIN` scope-toàn-cục. `SYSTEM_ADMIN` đơn lẻ — **không ai cả**
+  (không có quyền Member Management nào nếu không đồng thời giữ `YOUTH_ADMIN`).
 - **Ai chỉ xem đơn vị mình:** `YOUTH_ADMIN` scope theo đơn vị, `BRANCH_OFFICER`.
-- **Ai được sửa:** `YOUTH_ADMIN` (toàn cục hoặc trong scope), `SYSTEM_ADMIN`. `BRANCH_OFFICER` chỉ
-  xem trong MVP (owner decision nếu muốn mở sửa cơ bản sau).
-- **Ai được import:** `YOUTH_ADMIN` (toàn cục hoặc trong scope của org đích), `SYSTEM_ADMIN`.
-- **Ai được export:** như import — export tôn trọng scope hiện có (giống nguyên tắc P2-14 dashboard
-  báo cáo: RPC/API tự resolve scope, không tin filter client-side).
+- **Ai được sửa:** `YOUTH_ADMIN` (toàn cục hoặc trong scope). `BRANCH_OFFICER` chỉ xem trong MVP
+  (owner decision nếu muốn mở sửa cơ bản sau — mục 28, mục 8).
+- **Ai được import:** `YOUTH_ADMIN` (toàn cục hoặc trong scope của org đích).
+- **Export:** `DEFERRED` khỏi P5.5 MVP (mục 7, mục 9) — không có ai "được export" vì tính năng này
+  chưa tồn tại trong MVP.
 - **Ai được xoá/archive:** như sửa — không có hard delete cho ai trong MVP (mục 9, mục 17).
-- **`SYSTEM_ADMIN` mặc định thấy PII nhạy cảm?** **Không mặc định** — cần xác nhận owner (mục 32)
-  nếu muốn tách quyền kỹ thuật khỏi quyền xem `political_theory_level`; MVP tạm thời cho phép vì
-  không có role nghiệp vụ nào khác đủ rộng để vận hành hệ thống giai đoạn đầu, nhưng đánh dấu rõ đây
-  là điểm cần review lại khi có nhiều SYSTEM_ADMIN hơn 1-2 người.
+- **`SYSTEM_ADMIN` mặc định thấy PII nhạy cảm?** **Không, tuyệt đối không mặc định** — `SYSTEM_ADMIN`
+  không phải Member Data Approver. Quyền kỹ thuật (deploy, secret, DB, khắc phục sự cố) và quyền
+  nghiệp vụ (xem/sửa dữ liệu đoàn viên, kể cả `political_theory_level`) là hai trục tách biệt hoàn
+  toàn. Một `SYSTEM_ADMIN` muốn thao tác Member Management phải đồng thời được cấp `YOUTH_ADMIN` —
+  đây không còn là một owner decision đang chờ, mà là quy tắc mặc định của P5.5 kể từ bản sửa này.
 
 ---
 
@@ -377,14 +494,48 @@ Member API dùng response này (KHÔNG dùng bất kỳ giá trị nào browser 
 authorize request hiện tại theo ma trận mục 7, rồi mới query PostgreSQL Mắt Bão.
 ```
 
-**Vì sao không để Member API tự verify JWT qua JWKS trực tiếp (phương án thay thế đã cân nhắc):**
-Supabase hỗ trợ xác minh JWT độc lập qua JWKS endpoint (`/auth/v1/.well-known/jwks.json`), tránh một
-round-trip mạng. Đây là tối ưu hoá hợp lệ **cho sau này** nếu latency round-trip trở thành vấn đề
-thật (không phải với quy mô 3.000 record/pilot). MVP ưu tiên **một nguồn logic xác minh JWT duy nhất**
-(Supabase tự làm, qua Edge Function) để tránh hai implementation xác minh token có thể lệch nhau
-(ví dụ Member API dùng JWKS cache cũ trong khi Supabase đã xoay key) — đúng nguyên tắc ponytail
-("không viết lại thứ nền tảng đã làm được"). Nếu sau này cần bỏ round-trip, JWKS verification cục bộ
-tại Member API là một nâng cấp có thể làm độc lập mà không đổi contract response ở trên.
+**So sánh ba phương án authorization bridge (bổ sung 2026-09-04 revision — kết luận không đổi,
+chỉ làm rõ tradeoff):**
+
+| | Option A — Edge Function resolver mỗi request (**đã chọn**) | Option B — Member API verify JWT cục bộ (JWKS) + gọi authorization RPC | Option C — JWT custom claims (role/scope nhúng sẵn trong JWT) |
+|---|---|---|---|
+| Cơ chế | Member API forward JWT → `resolve-member-scope` → Supabase tự xác minh + resolve role/scope mỗi lần | Member API tự verify chữ ký/exp/iss/aud qua JWKS cục bộ, rồi vẫn phải gọi một RPC/API riêng để lấy role/scope hiện tại | Supabase Auth Hook nhúng role/scope vào JWT lúc mint token; Member API chỉ verify JWKS cục bộ, không gọi gì thêm |
+| Security | Cao — dùng lại `userClient.auth.getUser(token)`, cơ chế đã được toàn bộ Edge Function hiện có tin cậy | Verify chữ ký hợp lệ, nhưng vẫn cần một round-trip riêng cho phần authorization — không giảm được rủi ro, chỉ tách logic ra hai nơi | Chữ ký hợp lệ (không thể giả mạo), nhưng dữ liệu role/scope bên trong có thể đã lỗi thời |
+| **Revocation freshness** | **Xuất sắc** — `profiles.account_status`/`user_roles` được đọc lại mỗi request | Giống Option A nếu không cache role/scope (thì chỉ là A với 2 hop thay vì 1); **vi phạm invariant nếu cache** | **Kém** — role/scope "đông cứng" trong JWT tới khi token refresh (mặc định ~1h của Supabase); revoke/suspend không có hiệu lực ngay |
+| Role-change freshness | Xuất sắc, tức thời | Như trên | Kém, như trên |
+| Latency | Một network hop thêm (Member API → Edge Function) | Bằng hoặc tệ hơn A (JWKS cục bộ + vẫn cần round-trip cho role/scope) | Tốt nhất — không round-trip — **nhưng chỉ khi chấp nhận đánh đổi freshness ở trên** |
+| Availability dependency | Phụ thuộc Supabase Auth + đúng một Edge Function (đã là dependency toàn hệ thống) | Tương tự A, cộng thêm phụ thuộc JWKS endpoint | Thấp nhất khi hoạt động bình thường, nhưng nếu cần vá lỗi freshness (revocation check) thì lại quay về round-trip, mất hết lợi thế |
+| Implementation complexity | **Thấp** — tái dùng gần nguyên vẹn `_shared/auth.ts` | Cao hơn — cần xử lý JWKS caching, key rotation, clock skew ở Member API, cho lợi ích ròng gần như bằng 0 so với A | **Cao nhất** — Supabase Auth Hook (Custom Access Token hook) là tính năng CHƯA từng dùng ở đâu trong codebase này; thêm một pattern mới cần review riêng |
+| Secret requirements | Một shared secret (Vault, giống pattern P3-08) | Secret tương tự A, cộng JWKS fetch/cache | Không cần shared secret mới, nhưng cần tin cậy cấu hình Auth Hook đúng |
+| Cacheability | Không cache (mục dưới) | Có thể cache role/scope — nhưng cache chính là nguồn vi phạm invariant | Bản chất chính là một dạng cache (trong JWT) — đây là vấn đề, không phải tính năng |
+| Failure mode | Resolver lỗi/timeout → 401/403 (deny), rõ ràng | Tương tự A nếu không cache | Auth Hook cấu hình sai → claims sai lặng lẽ, không có tín hiệu lỗi rõ ràng — failure mode nguy hiểm hơn |
+
+**Invariant bắt buộc (đối chiếu cả ba phương án):** Member API không bao giờ tin role/JWT
+body/header từ browser; không tin `organization_id` do browser gửi; user hết hạn/bị revoke phải
+fail closed; profile `SUSPENDED` phải fail closed; scope phải luôn đến từ dữ liệu server-side đáng
+tin cậy tại thời điểm request — Option C vi phạm trực tiếp hai invariant cuối trừ khi được vá bằng
+một cơ chế bổ sung (short token TTL + forced refresh, hoặc một revocation-check riêng) — mà khi vá
+xong thì Option C đã quay về đúng hình dạng round-trip của Option A, chỉ phức tạp hơn (thêm Auth
+Hook) mà không có lợi ích ròng.
+
+**Chốt (không đổi so với bản gốc, nay có lập luận đầy đủ):**
+```text
+P5.5 TARGET = OPTION A
+```
+cho quy mô pilot hiện tại (~3.000 record, admin tool nội bộ, không phải hệ thống tần suất cao). Có
+thể tối ưu latency sau (JWKS cục bộ chỉ cho phần signature/exp — không cache role/scope) **nếu có
+bằng chứng thực tế** latency round-trip là vấn đề, không phải suy đoán trước.
+
+**Không cache kết quả authorization (làm rõ invariant fail-closed):** Member API **không**
+persistent-cache kết quả `resolve-member-scope` giữa các request, và **không** lưu role/scope vào
+database nội bộ như một nguồn thẩm quyền thứ hai (đúng mục 9 — không tạo `member_api_roles` hay
+tương đương). Nếu tương lai cần một in-memory micro-cache cho hiệu năng, TTL phải rất ngắn (đơn vị
+giây, không phải phút) và đây là một quyết định riêng, có đánh giá lại rủi ro fail-closed, không
+phải mặc định của P5.5-00. Hệ quả cụ thể:
+- Account bị `SUSPENDED` → resolver từ chối ngay ở lần gọi kế tiếp, không có "grace period" nhờ cache.
+- Role bị revoke → không còn hiệu lực nhờ một cache cũ, vì không có cache nào tồn tại theo mặc định.
+- Resolver/mạng lỗi (timeout, 5xx, unreachable) → Member API trả **DENY** (401/403), không bao giờ
+  fallback "allow" khi không xác minh được — fail closed tuyệt đối, không có exception.
 
 **Shared secret giữa Member API và Edge Function:** provisioning giống hệt pattern
 `email_queue_worker_url`/`email_queue_worker_cron_secret` đã có (P3-08) — lưu ở Supabase Vault, không
@@ -429,7 +580,10 @@ restore được hỗ trợ — xem mục 17).
 
 **Mỗi audit row phải trả lời:** ai (`actor_user_id`, từ resolver mục 13 — không tin actor id do
 client tự khai), làm gì (`action`), với member nào (`member_id`), khi nào (`created_at`), giá trị
-trước (`before_data`), giá trị sau (`after_data`).
+trước (`before_data`), giá trị sau (`after_data`), và **`import_job_id` (nullable)** khi thay đổi
+đến từ một bulk import (mục 10) — cho phép truy ngược một record cụ thể về đúng job đã tạo/sửa nó.
+Không cần copy `full_name`/tên hiển thị của actor vào audit row nếu `actor_user_id` đã đủ để trace
+ngược (resolver/Supabase vẫn còn giữ profile để tra cứu khi cần điều tra).
 
 **Không log:** JWT, password, secret, toàn bộ nội dung file Excel gốc (chỉ log số dòng/kết quả tổng
 hợp của import job, không log từng cell).
@@ -509,9 +663,11 @@ architecture có thể tiếp tục mà chưa có câu trả lời, nhưng P5.5-
 | Supabase hoạt động, Member API down | Frontend hiện lỗi rõ ràng ("Không thể tải dữ liệu đoàn viên, thử lại sau") ở đúng khu vực Member Management; **không** ảnh hưởng các phân hệ khác (reports/documents/AI vẫn hoạt động bình thường — hai hệ thống độc lập theo thiết kế mục 4) |
 | Member API hoạt động, Supabase Auth unavailable | Không request nào tới Member API có thể authorize được (vì cần resolver, mục 13) → toàn bộ Member Management fail closed cùng lúc với phần còn lại của app (Supabase Auth down vốn đã chặn toàn hệ thống) |
 | Mắt Bão PostgreSQL unavailable | Member API trả lỗi 503 rõ ràng cho mọi endpoint; **không** fallback sang lưu dữ liệu member ở Supabase (rule cứng — dữ liệu member không bao giờ chạm Supahost) |
-| Resolver Edge Function timeout/lỗi | Member API coi như unauthenticated, trả 401/403 — không cache kết quả resolver cũ quá lâu để tránh authorize theo quyền đã thu hồi (xem mục 26 — không cache phức tạp) |
+| Resolver Edge Function timeout/lỗi | Member API trả **DENY** (401/403) ngay — không có fallback "allow", không có cache resolver nào để dựa vào (mục 13: zero persistent cache theo mặc định) |
+| JWT hợp lệ nhưng account vừa `SUSPENDED` | Resolver re-check `profiles.account_status` mỗi request → deny ngay lần gọi kế tiếp, không có grace period (mục 13, mục 22 threat #5) |
+| Role vừa bị revoke, request đang bay tới Member API | Không có cache role/scope nào "còn sống" để dựa vào (mục 13) — request kế tiếp luôn resolve lại từ `user_roles` hiện tại |
 
-**Không cache PII member vô hạn ở browser trong mọi trường hợp trên** — xem mục 26.
+**Không cache PII member vô hạn ở browser trong mọi trường hợp trên** — xem mục 20.
 
 ---
 
@@ -522,9 +678,17 @@ Owner: "không thật cần caching cho ~3.000 records". Đồng ý — **mặc 
 - Không Redis, không cache layer riêng cho Member API trong MVP — PostgreSQL với index đúng
   (mục 14, mục 28) đủ nhanh cho pagination/search/filter ở quy mô này.
 - Nếu browser cache bất cứ gì (ví dụ React Query default in-memory cache trong phiên làm việc hiện
-  tại): **không** `localStorage`/`sessionStorage` cho dataset member, **không** persistent plaintext
-  cache qua reload. Clear mọi state Member Management khi logout (đồng bộ với cách `AuthContext`
-  hiện tại xử lý session).
+  tại): **KHÔNG** toàn bộ dataset member trong `localStorage`, **KHÔNG** `sessionStorage` cho dataset
+  member, **KHÔNG** IndexedDB mirror của dữ liệu member trừ khi được duyệt riêng bằng một quyết định
+  khác (không phải mặc định P5.5), **KHÔNG** persistent plaintext cache qua reload dưới bất kỳ hình
+  thức nào ở trên. Session/in-memory state chỉ giữ dữ liệu cần cho màn hình hiện tại (trang danh
+  sách đang xem, chi tiết một member đang mở) — không giữ toàn bộ 3.000 record trong bộ nhớ trình
+  duyệt "phòng khi cần sau".
+- Logout **hoặc** thay đổi scope (đổi vai trò/đơn vị, nếu tương lai có) phải xoá sạch mọi state
+  Member Management đang giữ ở client, đồng bộ với cách `AuthContext` hiện tại xử lý session.
+- **Không thiết kế offline Member Management trong MVP** — không service-worker cache riêng cho dữ
+  liệu member, không sync-khi-có-mạng-lại. Nếu Member API không truy cập được, UI báo lỗi rõ ràng
+  (mục 19), không cố phục vụ dữ liệu cũ từ cache.
 - Cache tối đa là in-memory, trong-phiên, mất khi refresh — đúng mức "không over-engineer" owner yêu
   cầu.
 
@@ -558,7 +722,7 @@ architecture decision mới, ngoài phạm vi P5.5.
 | 6 | Member API down/lỗi rò rỉ stack trace/thông tin hệ thống | Error response chuẩn hoá (mã lỗi + message chung), không trả raw exception/SQL error ra client — cùng nguyên tắc `errorResponse` đã có ở `_shared/http.ts` |
 | 7 | Import tạo member vào đơn vị ngoài quyền người import | `POST /members/import` validate `work_unit_code` từng dòng nằm trong scope của actor **trước khi** cho vào staging hợp lệ; dòng ngoài scope → `INVALID`, không tự động reroute |
 | 8 | Bulk operations (import, tương lai bulk update) vượt scope | Toàn bộ dòng trong một job phải cùng nằm trong scope actor; job chứa dòng ngoài scope bị đánh dấu lỗi cho đúng dòng đó, không abort toàn job một cách mơ hồ |
-| 9 | Export trả dữ liệu ngoài scope | Export dùng cùng code path filter với list (mục 14) — không có "export riêng, quên filter" (bài học từ P2-14: export luôn resolve scope qua RPC, không tin filter client-side) |
+| 9 | Export trả dữ liệu ngoài scope | **Không áp dụng trong MVP — export bị `DEFERRED`, không có endpoint (mục 9).** Nếu/khi thêm sau, mitigation bắt buộc: export dùng cùng code path filter với list (mục 14), không có "export riêng, quên filter" (bài học từ P2-14: export luôn resolve scope qua RPC, không tin filter client-side) |
 | 10 | Audit ghi sai actor (ai đó mạo danh) | `actor_user_id` luôn lấy từ resolver (Supabase xác thực), không bao giờ từ body request |
 | 11 | Shared secret giữa Member API và resolver bị lộ | Lưu Vault, không literal trong code/migration — đúng pattern Vault đã dùng P3-08; xoay được độc lập với JWT signing key |
 | 12 | Member PII vô tình vào log | Log của Member API chỉ ghi metadata (request id, endpoint, status code, actor id, entity id) — không log request/response body chứa PII, đúng nguyên tắc đã ghi ở P5 Gemini timeout logging decision |
@@ -574,7 +738,7 @@ architecture decision mới, ngoài phạm vi P5.5.
 - Import hợp lệ toàn bộ: staging → preview đúng số liệu → commit tạo đúng số record → audit job.
 - Archive rồi patch lại `ACTIVE`: hoạt động, có audit hai chiều.
 
-**Negative (bắt buộc theo yêu cầu owner, mục 27):**
+**Negative (bắt buộc theo yêu cầu owner, đối chiếu threat model mục 22):**
 
 1. Admin A không đọc được member của org B nếu không có scope rõ ràng.
 2. Bí thư chi đoàn A không sửa được member của chi đoàn B.
@@ -589,7 +753,8 @@ architecture decision mới, ngoài phạm vi P5.5.
 9. Member API unavailable không leak stack trace (response chuẩn hoá).
 10. Import không thể tạo member vào đơn vị actor không có quyền.
 11. Bulk import tôn trọng scope cho từng dòng, không phải chỉ check một lần đầu job.
-12. Export tôn trọng scope giống hệt list.
+12. ~~Export tôn trọng scope giống hệt list.~~ Không áp dụng trong MVP — export bị `DEFERRED` (mục
+    9); test case này áp dụng lại nếu/khi export được thêm bằng một decision riêng.
 13. Audit ghi đúng actor thật (không phải actor client tự khai).
 14. Nếu `BRANCH_OFFICER`/`YOUTH_ADMIN` scope-toàn-cục có quyền toàn cục: đây phải là quyền **được
     cấp rõ ràng** qua `user_roles.scope_organization_id IS NULL`, không phải một nhánh code "nếu
@@ -605,8 +770,8 @@ architecture decision mới, ngoài phạm vi P5.5.
   ├─ member count (theo scope hiện tại)
   ├─ pagination (server-side, mục 14)
   ├─ nút "Thêm đoàn viên" (role có quyền tạo)
-  ├─ nút "Import Excel" → dẫn tới /admin/quan-ly-doan-vien/import
-  └─ nút "Export" nếu owner xác nhận cần trong MVP (mục 32)
+  └─ nút "Import Excel" → dẫn tới /admin/quan-ly-doan-vien/import
+     (KHÔNG có nút "Export" trong MVP — export bị `DEFERRED`, xem mục 9)
 
 /quan-ly-doan-vien/:memberId                — chi tiết một đoàn viên
   ├─ thông tin cơ bản (full_name, date_of_birth nếu có, work_unit, job_title)
@@ -619,7 +784,7 @@ architecture decision mới, ngoài phạm vi P5.5.
 /admin/quan-ly-doan-vien/import             — luồng import Excel, RoleGuard chặt hơn (chỉ role có
                                                quyền import theo mục 12)
   ├─ bước 1: upload
-  ├─ bước 2: preview (valid/invalid/duplicate/warning — mục 10)
+  ├─ bước 2: preview (valid/invalid/possible-duplicate/warning — mục 10)
   └─ bước 3: confirm/commit + kết quả
 ```
 
@@ -657,9 +822,9 @@ một branch riêng (`docs/brain/02-coding-rules.md`: "Mỗi phase một branch"
 ### P5.5-01 — Member service foundation
 - **Objective:** Dựng PostgreSQL schema tại Mắt Bão (bảng `members`, enum types mục 5) +
   Member API skeleton (routing, health check, config/secret loading) trên hạ tầng thật đã xác nhận
-  (mục 32).
+  (mục 28).
 - **Dependencies:** P5.5-00 (tài liệu này) được review; hạ tầng Mắt Bão đã provisioned.
-- **Code surface:** repo Member API mới (ngôn ngữ/runtime — OWNER DECISION mục 32) + migration đầu
+- **Code surface:** repo Member API mới (ngôn ngữ/runtime — OWNER DECISION mục 28) + migration đầu
   tiên PostgreSQL Mắt Bão.
 - **Security contract:** chưa expose endpoint công khai nào — chỉ nội bộ/health check.
 - **Tests:** schema constraint test, enum validation test.
@@ -777,20 +942,21 @@ Chỉ liệt kê những gì không thể tự xác minh từ code/docs hiện c
    hoặc bên hạ tầng xác nhận.
 3. **Domain/TLS arrangement** cho Member API (subdomain riêng? qua Vercel rewrite? trực tiếp domain
    Mắt Bão?) — ảnh hưởng CORS/cấu hình frontend gọi Member API.
-4. **`date_of_birth` có bắt buộc không?** Data model mục 5 để `Yes` tạm thời theo suy luận nghiệp vụ
-   thông thường (cần cho các nghiệp vụ tuổi Đoàn), nhưng đây là field cá nhân nhạy cảm hơn work info
-   — owner nên xác nhận.
+4. ~~`date_of_birth` có bắt buộc không?~~ **RESOLVED (2026-09-04 revision):** `OPTIONAL_MVP`, không
+   `REQUIRED` — xem mục 5. Owner có thể ghi đè thành bắt buộc sau nếu có nhu cầu nghiệp vụ cụ thể.
 5. **`gender` có thực sự cần không?** Đã để optional/loại trừ nếu owner xác nhận không cần — hiện
    giữ như optional field chờ xác nhận thay vì mặc định thêm.
-6. **Member export có bắt buộc trong MVP không** (mục 9, mục 24 UI) — ảnh hưởng route/endpoint có
-   được implement ở P5.5-03/06 hay để P5.5+.
-7. **`SYSTEM_ADMIN` có mặc định thấy `political_theory_level` không** (mục 7, mục 12) hay cần tách
-   quyền nghiệp vụ riêng khỏi quyền kỹ thuật — ảnh hưởng authorization matrix thật thi ở P5.5-02.
+6. ~~Member export có bắt buộc trong MVP không?~~ **RESOLVED (2026-09-04 revision):** Export bị
+   `DEFERRED` khỏi P5.5 MVP theo mặc định — xem mục 9/mục 24. Owner có thể yêu cầu thêm sau như một
+   architecture/security decision riêng.
+7. ~~`SYSTEM_ADMIN` có mặc định thấy `political_theory_level` không?~~ **RESOLVED (2026-09-04
+   revision):** Không mặc định — `SYSTEM_ADMIN` chỉ thấy Member PII nếu đồng thời có `YOUTH_ADMIN`
+   (hoặc quyền emergency/support tường minh thiết kế sau) — xem mục 7/mục 12.
 8. **`BRANCH_OFFICER` có được sửa member đơn vị mình không**, hay MVP chỉ cho xem (mục 7) — ảnh hưởng
    endpoint permission ở P5.5-03.
 
-Những mục owner có thể trả lời sau, không chặn P5.5-01 bắt đầu (trừ mục 1–2, chặn trực tiếp việc chọn
-runtime/schema hosting thật).
+Những mục còn lại owner có thể trả lời sau, không chặn P5.5-01 bắt đầu (trừ mục 1–2, chặn trực tiếp
+việc chọn runtime/schema hosting thật).
 
 ---
 
