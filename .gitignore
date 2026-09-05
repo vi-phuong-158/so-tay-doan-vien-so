@@ -6,6 +6,10 @@ dist-ssr
 .env
 .env.*
 !.env.example
+# Local/CI-only fixture, not a real secret: a fixed placeholder value for MEMBER_SCOPE_RESOLVER_SECRET
+# (P5.5-02) so `supabase start` in CI/local dev can exercise the resolve-member-scope shared-secret
+# gate deterministically. Never put a production credential in this file.
+!supabase/functions/.env
 google-drive-oauth-bootstrap.local.json
 .DS_Store
 .DS_Store?

@@ -114,6 +114,7 @@ supabase/
 | `functions/ask-ai` | RAG: scope tài liệu → Gemini → chuẩn hóa nguồn → lưu lịch sử | client | `_shared/*`, `match_document_chunks` |
 | `functions/process-document` | Trích xuất → chunk → embedding → chờ duyệt | admin | `_shared/*`, Gemini |
 | `functions/send-reminder` / `process-email-queue` | Gọi reminder scan trusted / gửi email theo batch | `send-reminder`: trusted caller manual/external. `process-email-queue`: manual/external **và** `pg_cron` job `email_queue_worker` mỗi 10 phút qua `pg_net`+Vault (P3-08) | `_shared/*`, reminder RPC, email_queue |
+| `functions/resolve-member-scope` (P5.5-02) | Member Scope Authorization Bridge: xác thực JWT thật, đọc lại `profiles.account_status`/`user_roles`, trả `{user_id, roles:[{role_code,is_global,org_codes}]}` cho `member-api/` — không tin role/scope do caller gửi. `SYSTEM_ADMIN` đơn lẻ → `roles: []` | `member-api/src/memberScope.js`, server-to-server, kèm secret `x-member-api-secret` | `_shared/auth.ts` (`requireUser`), `profiles`, `user_roles`, RPC `member_scope_org_codes` |
 
 ### Luồng xử lý chính
 
@@ -372,12 +373,16 @@ in-database. `service_role` and `postgres` hold EXECUTE; `anon`/`authenticated` 
 ## Phase 5.5 — Member Management
 
 P5.5-00 (`docs/phase-5-5/00-member-management-architecture.md`) chốt kiến trúc cho một hệ **quản lý
-đoàn viên** (Member Management) tách biệt khỏi Supabase. Từ P5.5-01, code thật đã tồn tại ở
-`member-api/` (service Node.js + PostgreSQL 16 độc lập, KHÔNG phải Supabase Edge Function, KHÔNG
-migration nào trong `supabase/migrations/`) — **chỉ** schema `members` + HTTP skeleton
-(`/healthz`, `/readyz`, `/v1/members` trả 501 placeholder fail-closed). Chưa có: CRUD thật, import,
-authorization bridge (`resolve-member-scope` vẫn chưa tồn tại), frontend, deploy Mắt Bão thật. Xem
-`member-api/README.md` cho chi tiết P5.5-01 và giới hạn hiện tại.
+đoàn viên** (Member Management) tách biệt khỏi Supabase. Từ P5.5-01, code thật tồn tại ở
+`member-api/` (service Node.js + PostgreSQL 16 độc lập, KHÔNG phải Supabase Edge Function) — schema
+`members` + HTTP skeleton. Từ P5.5-02, authorization bridge thật đã tồn tại:
+`supabase/functions/resolve-member-scope/` (Edge Function, migration
+`202609050001_phase_5_5_member_scope_resolver.sql` thêm hàm `member_scope_org_codes()`) +
+`member-api/src/memberScope.js` (client phía Member API). `GET /v1/member-scope` chứng minh bridge
+hoạt động; `/v1/members` nay enforce authorization thật (401/403) rồi mới rơi về `501` — CRUD thật
+vẫn chưa có (P5.5-03). Không có migration Member nào trong `supabase/migrations/` tạo bảng dữ liệu
+đoàn viên — chỉ hàm helper đọc-only phục vụ resolver. Xem `member-api/README.md` cho chi tiết và
+giới hạn hiện tại.
 
 ```text
                     USER
@@ -403,10 +408,15 @@ authorization bridge (`resolve-member-scope` vẫn chưa tồn tại), frontend,
 **Quyết định kiến trúc chốt:** `ACCOUNT PROFILE` (Supabase Auth/`profiles`/`user_roles`, số lượng
 nhỏ, cán bộ được cấp quyền) ≠ `MEMBER RECORD` (Member API/PostgreSQL Mắt Bão, ~3.000 đoàn viên
 pilot, không auth.users, không login). Import member **không** tạo account. Member API xác thực
-người gọi bằng cách forward Supabase JWT tới một Edge Function `resolve-member-scope` (chưa tồn tại)
-dùng lại `_shared/auth.ts`; Member API không bao giờ tự tin role/scope do frontend gửi. Chi tiết đầy
-đủ (data model, API contract, import/dedup, audit, backup, threat model, test matrix, decomposition
-P5.5-01…10): xem `docs/phase-5-5/00-member-management-architecture.md`.
+người gọi bằng cách forward Supabase JWT tới Edge Function `resolve-member-scope`, dùng lại
+`_shared/auth.ts` (`requireUser`) rồi tự đọc lại `profiles.account_status`/`user_roles` — không tin
+bất kỳ role/scope nào do Member API/browser tự khai. Một `SYSTEM_ADMIN` đơn lẻ luôn nhận `roles: []`
+(zero quyền Member Management); giữ đồng thời `YOUTH_ADMIN` thì chỉ có đúng scope của `YOUTH_ADMIN`,
+không bao giờ global. Không dùng signed/internal token giữa hai bên — xác thực bằng shared secret
+(`x-member-api-secret`, cùng pattern `CRON_SECRET`/P3-08) cộng JWT thật của user, resolve lại mỗi
+request (không cache). Chi tiết đầy đủ (data model, API contract, import/dedup, audit, backup,
+threat model, test matrix, decomposition P5.5-01…10): xem
+`docs/phase-5-5/00-member-management-architecture.md`.
 
 **Gate:** `PHASE_6_BUSINESS_IMPLEMENTATION_MUST_NOT_START until PHASE_5_5_END_TO_END_ACCEPTANCE_PASS`.
 

@@ -67,3 +67,27 @@ test('member-api source contains no AI/RAG references', async () => {
     }
   }
 });
+
+test('member-api authorization code never reads a client-supplied role/organization signal (P5.5-02 muc 13/22)', async () => {
+  const srcDir = path.join(__dirname, '..', 'src');
+  const files = await readdir(srcDir);
+  // Only the Authorization header (forwarded to the resolver as-is) may ever influence an
+  // authorization decision. Any of these patterns would mean the code trusts a role/org value the
+  // client itself declared, instead of resolving it server-side via resolve-member-scope.
+  const forbiddenPatterns = [
+    /headers\[.x-role/i,
+    /headers\[.x-organization/i,
+    /headers\.get\(.x-role/i,
+    /headers\.get\(.x-organization/i,
+    /req\.body\.role/i,
+    /req\.body\.organization_id/i,
+    /req\.query\.role/i,
+    /req\.query\.organization_id/i,
+  ];
+  for (const file of files) {
+    const content = await readFile(path.join(srcDir, file), 'utf8');
+    for (const pattern of forbiddenPatterns) {
+      assert.doesNotMatch(content, pattern, `${file} must not read a client-declared role/organization signal`);
+    }
+  }
+});

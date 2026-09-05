@@ -1269,3 +1269,45 @@
   `gen_random_uuid()` built-in từ PG13+, transactional DDL). Root `npm test`/`npm run lint`/
   `npm run build` không bị ảnh hưởng vì `member-api/` là npm project riêng, không đụng `src/` hay
   root `package.json`/lockfile.
+
+## [2026-09-05] P5.5-02 — Member Scope Authorization Bridge
+- **Agent:** Claude Code
+- **Thay đổi:** Merge PR #39 (P5.5-01) vào `master` (merge commit `0f6f1e526cd374d40b45ce7d672da2ce677b27c5`,
+  head không đổi từ báo cáo trước `3373367`, exact-head CI xanh trước merge). Tạo Edge Function mới
+  `supabase/functions/resolve-member-scope/`: xác thực JWT thật qua `_shared/auth.ts` (`requireUser`,
+  không tự viết lại JWT verification), đọc lại `profiles.account_status` + `user_roles` server-side,
+  trả `{user_id, account_status, roles:[{role_code, is_global, org_codes}]}`. `SYSTEM_ADMIN` bị loại
+  hoàn toàn khỏi tập role có thể mang quyền Member Management (không special-case) — nên một
+  `SYSTEM_ADMIN` đơn lẻ luôn nhận `roles: []`, và `SYSTEM_ADMIN`+`YOUTH_ADMIN` chỉ nhận đúng scope
+  `YOUTH_ADMIN`, không bao giờ global — đúng mục 7/12 kiến trúc. Thêm migration
+  `202609050001_phase_5_5_member_scope_resolver.sql`: hàm `member_scope_org_codes(scope_org_id)`
+  (dịch scope → danh sách `organizations.code`, tái dùng recursive CTE của `is_organization_in_scope`
+  thay vì viết traversal thứ hai), revoke public/grant `service_role` only. Không dùng signed/internal
+  token giữa Member API và resolver — xác thực bằng shared secret `x-member-api-secret`
+  (`hasTrustedWorkerSecret()`, cùng pattern `CRON_SECRET`/P3-08) cộng JWT thật của user; đây là lựa
+  chọn có cân nhắc (không phải bỏ sót), vì kiến trúc mục 13 đã chọn "resolve mỗi request, zero cache"
+  chính là để tránh độ phức tạp của một token nội bộ ký số. Phía Member API: `src/memberScope.js`
+  (client gọi resolver + derive authorization, injectable cho test), `server.js` thêm
+  `GET /v1/member-scope` (trả scope đã resolve, không phải dữ liệu đoàn viên) và đổi `/v1/members`
+  từ "luôn 501" sang "enforce authorization trước (401/403), authorized rồi mới 501" — CRUD thật vẫn
+  chờ P5.5-03. `config.js` fail-closed thêm khi thiếu `MEMBER_SCOPE_RESOLVER_URL`/`_SECRET`. Thêm
+  persona synthetic mới `dualadmin@test.local` (`d0d0d0d0-...`) vào `supabase/seed.sql` để test riêng
+  case dual-role SYSTEM_ADMIN+YOUTH_ADMIN (không có sẵn trong seed cũ). Thêm
+  `supabase/functions/.env` (giá trị cố định, không nhạy cảm, chỉ dùng local/CI) để `supabase start`
+  tự nạp `MEMBER_SCOPE_RESOLVER_SECRET` cho Edge Function chạy local/CI — có thêm ngoại lệ
+  `!supabase/functions/.env` vào `.gitignore` kèm giải thích, vì đây không phải secret thật.
+- **File đã sửa:** `supabase/functions/resolve-member-scope/**` (mới), `supabase/functions/.env`
+  (mới), `.gitignore`, `supabase/migrations/202609050001_phase_5_5_member_scope_resolver.sql` (mới),
+  `supabase/seed.sql`, `member-api/src/{memberScope.js (mới), config.js, server.js, index.js}`,
+  `member-api/.env.example`, `member-api/tests/{memberScope.test.mjs (mới), server.test.mjs,
+  isolation.test.mjs}`, `member-api/README.md`, `docs/brain/01-architecture.md`,
+  `docs/brain/04-current-tasks.md`.
+- **Lý do:** P5.5-02 là cầu nối authorization bắt buộc trước khi P5.5-03 (CRUD) có thể viết đúng
+  permission matrix — đúng decomposition mục 26 P5.5-00. Không tự quyết định 28.8 (`BRANCH_OFFICER`
+  write permission) — resolver chỉ biểu diễn scope hiện hữu của role đó, không tự thêm quyền sửa.
+- **Kiểm tra:** `node --test tests/memberScope.test.mjs tests/isolation.test.mjs` chạy cục bộ (không
+  cần DB) — 26/26 pass. `server.test.mjs`/`schema.test.mjs` cần PostgreSQL 16 và
+  `supabase/functions/resolve-member-scope/{contract,index}.test.ts` cần Deno + local Supabase stack
+  — không có sẵn cục bộ (không Docker/Deno), validation thật nằm ở CI (`member-api-test` job +
+  `test-db` job, exact-head). Root `npm run lint`/`npm test`/`npm run build` chạy lại để xác nhận
+  không có regression Phase 1–6 từ các thay đổi `.gitignore`/`docs/brain/*`.
