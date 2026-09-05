@@ -86,18 +86,31 @@
   PATCH `member_status = 'ARCHIVED'` theo đúng hợp đồng mục 17 sẵn có, không thêm endpoint riêng.
 - **Không có trong subphase này:** import Excel (P5.5-05), audit table (khuyến nghị đi kèm nhưng
   owner instruction P5.5-03 không yêu cầu — để P5.5-07), frontend (P5.5-06), `/member-metadata`.
-- **Known gap (không phải bug, cần quyết định kiến trúc riêng nếu cần khắc phục):** với actor
-  `YOUTH_ADMIN` scope-toàn-cục (`is_global: true`), resolver P5.5-02 trả `org_codes: []` (không liệt
-  kê toàn bộ mã đơn vị) — Member API không có cách xác thực `work_unit_code` trên `POST` là một
-  `organizations.code` có thật đối với actor này (khác actor có scope cụ thể, nơi `org_codes` chính
-  là danh sách thẩm quyền để đối chiếu). P5.5-03 chấp nhận `work_unit_code` bất kỳ (non-blank) từ
-  actor global thay vì chặn hoàn toàn khả năng tạo member của họ. Không tự ý mở rộng
-  `resolve-member-scope` để vá — đây là quyết định của P5.5-04/P5.5-05 hoặc một quyết định owner
-  riêng nếu cần một endpoint tra cứu `organizations.code` hợp lệ.
-- **Test:** `member-api/tests/{memberValidation,scope,memberCrud,memberRoutes}.test.mjs` (mới) +
-  cập nhật `server.test.mjs`/`isolation.test.mjs`. 130/130 pass với PostgreSQL 16 thật cục bộ, phủ
-  toàn bộ ma trận bảo mật âm tính owner yêu cầu (xem `06-ai-working-log.md`).
-- **Report:** xem entry `[2026-09-05]` trong `docs/brain/06-ai-working-log.md`.
+- **Xác thực `work_unit_code` là tổ chức có thật khi tạo mới (RESOLVED, sửa trên đúng PR #41 trước
+  khi merge):** phát hiện ban đầu — với actor `YOUTH_ADMIN` scope-toàn-cục (`is_global: true`),
+  resolver P5.5-02 trả `org_codes: []` nên Member API không có danh sách để đối chiếu, chỉ chặn được
+  spoofing phạm vi chứ không chặn được mã tổ chức không tồn tại. **Đã vá**, không đổi
+  `resolve-member-scope`/logic scope, không tạo registry tổ chức thứ hai: `POST /v1/members` giờ gọi
+  `member-api/src/organizationDirectory.js` (`checkOrganizationExists`) — đọc thẳng bảng
+  `organizations` thật của Supabase qua REST endpoint đã có sẵn (`grant select ... to anon,
+  authenticated` + RLS policy "active users read organizations", `202607300001_initial_schema.sql`),
+  xác thực bằng CHÍNH bearer token của actor hiện tại (không phải service role — không vượt RLS,
+  không cấp thêm quyền nào actor chưa có). Thứ tự kiểm tra khi create: (1) mã phải tồn tại thật
+  (`400 unknown_organization` nếu không) → (2) mã phải trong scope đã resolve (`403 forbidden` nếu
+  ngoài scope, kể cả khi mã đó có thật). `is_global` giờ đúng nghĩa "không giới hạn giữa các tổ chức
+  hợp lệ", không còn là "chấp nhận chuỗi bất kỳ". Directory không cache, không tạo/sửa bảng
+  `organizations` (chỉ `SELECT`), fail-closed 503 nếu không xác thực được (không bao giờ fallback
+  "coi như hợp lệ"). Cấu hình mới (fail-closed, giống các biến bắt buộc khác):
+  `SUPABASE_URL`/`SUPABASE_ANON_KEY` trong `member-api/.env` — cùng giá trị anon key công khai
+  frontend đã dùng, không phải secret, không phải service role key.
+- **Test:** `member-api/tests/{memberValidation,scope,memberCrud,memberRoutes,organizationDirectory}.test.mjs`
+  (mới) + cập nhật `server.test.mjs`/`isolation.test.mjs`. **148/148 pass** với PostgreSQL 16 thật cục
+  bộ, phủ toàn bộ ma trận bảo mật âm tính owner yêu cầu bao gồm cả xác thực tổ chức tồn tại (global
+  YOUTH_ADMIN + mã hợp lệ/không hợp lệ, scoped YOUTH_ADMIN + mã tồn tại trong/ngoài scope,
+  BRANCH_OFFICER + mã hợp lệ/không hợp lệ, xác nhận validation không ghi/sửa bảng `organizations`)
+  (xem `06-ai-working-log.md`).
+- **Report:** xem entry `[2026-09-05]` trong `docs/brain/06-ai-working-log.md`. **Không còn blocker
+  P5.5-03 nào đã biết** tại thời điểm này — chờ merge PR #41.
 
 ### Phase 5 end-to-end closure
 - **Base:** isolated closure worktree/branch `codex/phase-5-full-closure`, based on P5-03 plus the

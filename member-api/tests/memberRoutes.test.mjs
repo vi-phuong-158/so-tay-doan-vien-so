@@ -37,8 +37,14 @@ function authorizerFor(roles) {
 const DENIED_NO_ROLE = async () => ({ authorized: false, status: 403, body: { error: 'forbidden' } });
 const DENIED_UNAUTHENTICATED = async () => ({ authorized: false, status: 401, body: { error: 'unauthenticated' } });
 
-async function withServer(authorizeMemberManagement, fn) {
-  const s = createServer(pool, { authorizeMemberManagement });
+// Default: every organization "exists" — most tests in this file are exercising scope/mass-
+// assignment/anti-enumeration behavior, not the organization-existence check itself (that has its
+// own dedicated tests below and in organizationDirectory.test.mjs), so the default stub stays
+// permissive on existence and lets those tests keep testing what they were designed to test.
+const ORG_ALWAYS_EXISTS = async () => true;
+
+async function withServer(authorizeMemberManagement, fn, { checkOrganizationExists = ORG_ALWAYS_EXISTS } = {}) {
+  const s = createServer(pool, { authorizeMemberManagement, checkOrganizationExists });
   await new Promise((resolve) => s.listen(0, '127.0.0.1', resolve));
   const port = s.address().port;
   try {
@@ -46,6 +52,12 @@ async function withServer(authorizeMemberManagement, fn) {
   } finally {
     s.close();
   }
+}
+
+// Simulates the real organizationDirectory: a fixed, finite set of "real" organization codes.
+function directoryOf(existingCodes) {
+  const set = new Set(existingCodes);
+  return async (code) => set.has(code);
 }
 
 async function jsonFetch(url, options = {}) {
@@ -166,6 +178,147 @@ test('BRANCH_OFFICER A: PATCH attempting an organization transfer is denied (400
     const unchanged = await jsonFetch(`${base}/v1/members/${created.body.member_id}`);
     assert.equal(unchanged.body.work_unit_code, branchA);
   });
+});
+
+// --- Organization existence validation (P5.5-03 fix) -----------------------------------------
+//
+// The resolved scope alone is not enough: a scope check only asks "is this code inside what the
+// caller is permitted to touch", never "does this code correspond to a real organization at all".
+// A global YOUTH_ADMIN in particular has no org_codes list to check membership against (muc 7 —
+// is_global carries an empty list, not an enumeration of every organization), so without this
+// separate existence check they could create a Member under any arbitrary string. Every test below
+// uses a stubbed directory (directoryOf) standing in for the real Supabase `organizations` table
+// lookup (organizationDirectory.js has its own dedicated tests for the real HTTP call).
+
+test('global YOUTH_ADMIN + a valid existing work_unit_code: create is allowed', async () => {
+  const validOrg = orgCode('GLOBAL-VALID');
+  const roles = [{ role_code: 'YOUTH_ADMIN', is_global: true, org_codes: [] }];
+  await withServer(
+    authorizerFor(roles),
+    async (base) => {
+      const created = await jsonFetch(`${base}/v1/members`, {
+        method: 'POST',
+        body: JSON.stringify({ full_name: 'Global Admin Created', work_unit_code: validOrg }),
+      });
+      assert.equal(created.status, 201);
+      assert.equal(created.body.work_unit_code, validOrg);
+    },
+    { checkOrganizationExists: directoryOf([validOrg]) }
+  );
+});
+
+test('global YOUTH_ADMIN + a nonexistent work_unit_code: create is rejected (400), never trusted merely because scope is global', async () => {
+  const fakeOrg = orgCode('GLOBAL-FAKE');
+  const roles = [{ role_code: 'YOUTH_ADMIN', is_global: true, org_codes: [] }];
+  await withServer(
+    authorizerFor(roles),
+    async (base) => {
+      const attempt = await jsonFetch(`${base}/v1/members`, {
+        method: 'POST',
+        body: JSON.stringify({ full_name: 'Should Not Exist', work_unit_code: fakeOrg }),
+      });
+      assert.equal(attempt.status, 400);
+      assert.equal(attempt.body.error, 'unknown_organization');
+
+      const check = await jsonFetch(`${base}/v1/members?work_unit_code=${encodeURIComponent(fakeOrg)}`);
+      assert.equal(check.body.total, 0);
+    },
+    { checkOrganizationExists: directoryOf([]) }
+  );
+});
+
+test('scoped YOUTH_ADMIN + an existing code inside scope: create is allowed', async () => {
+  const inScopeOrg = orgCode('SCOPED-EXISTS-IN');
+  const roles = [{ role_code: 'YOUTH_ADMIN', is_global: false, org_codes: [inScopeOrg] }];
+  await withServer(
+    authorizerFor(roles),
+    async (base) => {
+      const created = await jsonFetch(`${base}/v1/members`, {
+        method: 'POST',
+        body: JSON.stringify({ full_name: 'Scoped Valid', work_unit_code: inScopeOrg }),
+      });
+      assert.equal(created.status, 201);
+    },
+    { checkOrganizationExists: directoryOf([inScopeOrg]) }
+  );
+});
+
+test('scoped YOUTH_ADMIN + an existing code outside scope: create is denied (403), existing does not imply permitted', async () => {
+  const inScopeOrg = orgCode('SCOPED-EXISTS-OUT-IN');
+  const realButOutOfScopeOrg = orgCode('SCOPED-EXISTS-OUT-OUT');
+  const roles = [{ role_code: 'YOUTH_ADMIN', is_global: false, org_codes: [inScopeOrg] }];
+  await withServer(
+    authorizerFor(roles),
+    async (base) => {
+      const attempt = await jsonFetch(`${base}/v1/members`, {
+        method: 'POST',
+        body: JSON.stringify({ full_name: 'Real But Not Mine', work_unit_code: realButOutOfScopeOrg }),
+      });
+      assert.equal(attempt.status, 403);
+      assert.equal(attempt.body.error, 'forbidden');
+    },
+    // Both codes are real organizations — the directory alone would allow either; scope is what
+    // must still reject the second one.
+    { checkOrganizationExists: directoryOf([inScopeOrg, realButOutOfScopeOrg]) }
+  );
+});
+
+test('BRANCH_OFFICER + its own valid organization: create is allowed', async () => {
+  const ownOrg = orgCode('BO-VALID-OWN');
+  const roles = [{ role_code: 'BRANCH_OFFICER', is_global: false, org_codes: [ownOrg] }];
+  await withServer(
+    authorizerFor(roles),
+    async (base) => {
+      const created = await jsonFetch(`${base}/v1/members`, {
+        method: 'POST',
+        body: JSON.stringify({ full_name: 'Branch Officer Valid', work_unit_code: ownOrg }),
+      });
+      assert.equal(created.status, 201);
+    },
+    { checkOrganizationExists: directoryOf([ownOrg]) }
+  );
+});
+
+test('BRANCH_OFFICER + a nonexistent organization (even its own configured code): create is rejected (400)', async () => {
+  const ownOrg = orgCode('BO-FAKE-OWN');
+  const roles = [{ role_code: 'BRANCH_OFFICER', is_global: false, org_codes: [ownOrg] }];
+  await withServer(
+    authorizerFor(roles),
+    async (base) => {
+      const attempt = await jsonFetch(`${base}/v1/members`, {
+        method: 'POST',
+        body: JSON.stringify({ full_name: 'Should Not Exist', work_unit_code: ownOrg }),
+      });
+      assert.equal(attempt.status, 400);
+      assert.equal(attempt.body.error, 'unknown_organization');
+    },
+    { checkOrganizationExists: directoryOf([]) }
+  );
+});
+
+test('organization existence validation never creates or mutates an organization record — it is a read-only check', async () => {
+  const org = orgCode('READONLY-CHECK');
+  let callCount = 0;
+  const observingDirectory = async (code) => {
+    callCount += 1;
+    return code === org;
+  };
+  const roles = [{ role_code: 'YOUTH_ADMIN', is_global: false, org_codes: [org] }];
+  await withServer(
+    authorizerFor(roles),
+    async (base) => {
+      const created = await jsonFetch(`${base}/v1/members`, {
+        method: 'POST',
+        body: JSON.stringify({ full_name: 'Readonly Check', work_unit_code: org }),
+      });
+      assert.equal(created.status, 201);
+      assert.equal(callCount, 1);
+      // The stub itself only ever reads its fixed set and returns a boolean — it has no write
+      // capability at all, which is the point: the real implementation (organizationDirectory.js)
+      // only ever issues a GET to Supabase's REST endpoint (see its own dedicated tests).
+    },
+    { checkOrganizationExists: observingDirectory }
+  );
 });
 
 // --- YOUTH_ADMIN scope -----------------------------------------------------------------------

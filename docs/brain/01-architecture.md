@@ -391,9 +391,20 @@ enforce như nhau: global thì không lọc, không thì lọc theo union `org_c
 dòng, không bao giờ "rỗng = xem hết"). `work_unit_code` không nằm trong allowlist PATCH (bất biến
 qua endpoint này — chuyển đơn vị phải là workflow riêng có audit). `DELETE` trả `501` có chủ đích;
 archive dùng `PATCH member_status = 'ARCHIVED'` theo hợp đồng lifecycle sẵn có (mục 17), không có
-endpoint archive riêng. Phản hồi luôn allowlist field, không bao giờ trả `account_user_id`. Chưa có:
-import Excel (P5.5-05), audit table riêng (P5.5-07), frontend (P5.5-06), `/member-metadata`. Xem
-`member-api/README.md` cho chi tiết và giới hạn hiện tại.
+endpoint archive riêng. Phản hồi luôn allowlist field, không bao giờ trả `account_user_id`.
+
+`POST /v1/members` xác thực `work_unit_code` qua hai bước độc lập: (1) `member-api/src/organizationDirectory.js`
+(`checkOrganizationExists`) — đọc thẳng bảng `organizations` thật của Supabase qua REST endpoint
+sẵn có (grant + RLS "active users read organizations" từ `202607300001_initial_schema.sql`), dùng
+CHÍNH bearer token của actor (không phải service role — không vượt RLS, không cache, không tạo
+registry tổ chức thứ hai ở Member API); mã không tồn tại → `400`. (2) `assertOrgCodeInScope` như cũ
+— mã phải nằm trong scope đã resolve; ngoài scope → `403`, kể cả khi mã đó có thật. `is_global`
+nghĩa là "không giới hạn giữa các tổ chức hợp lệ", không phải "chấp nhận chuỗi bất kỳ". Cấu hình mới
+(fail-closed): `SUPABASE_URL`/`SUPABASE_ANON_KEY` trong `member-api/.env` (giá trị anon key công
+khai, không phải secret).
+
+Chưa có: import Excel (P5.5-05), audit table riêng (P5.5-07), frontend (P5.5-06), `/member-metadata`.
+Xem `member-api/README.md` cho chi tiết và giới hạn hiện tại.
 
 ```text
                     USER

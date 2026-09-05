@@ -1,5 +1,51 @@
 # 06 — AI Working Log
 
+## [2026-09-05] P5.5-03 fix — validate work_unit_code against authoritative organization data
+
+- **Agent:** Claude Code
+- **Thay đổi:** Đóng gap owner phát hiện trên PR #41 (chưa merge tại thời điểm review): `POST
+  /v1/members` trước đó chỉ chặn được organization spoofing (`assertOrgCodeInScope`) nhưng, với actor
+  `YOUTH_ADMIN` scope-toàn-cục (`is_global: true`, resolver trả `org_codes: []`), không xác thực được
+  `work_unit_code` là một `organizations.code` có thật — chấp nhận bất kỳ chuỗi non-blank nào.
+  1. Thêm `member-api/src/organizationDirectory.js`: `checkOrganizationExists(code, bearerToken)`
+     gọi thẳng REST endpoint sẵn có của bảng `organizations` (`{SUPABASE_URL}/rest/v1/organizations?
+     select=code&code=eq.<code>&limit=1`), dùng `apikey: SUPABASE_ANON_KEY` +
+     `Authorization: Bearer <chính bearer token của actor>` — KHÔNG service role, nên không bao giờ
+     vượt qua RLS policy "active users read organizations" đã có từ `202607300001_initial_schema.sql`
+     — actor chỉ xác thực được đúng những gì RLS vốn đã cho họ đọc, không có quyền mới nào phát sinh.
+     Không sửa `resolve-member-scope`, không thêm migration, không có cache/registry tổ chức thứ hai
+     ở Member API (đọc lại mỗi lần gọi). Lỗi mạng/response không hợp lệ → `ApiError(503,
+     'organization_directory_unavailable')`, không bao giờ fallback "coi như hợp lệ" (fail closed).
+  2. `member-api/src/memberRoutes.js` (POST handler): gọi `checkOrganizationExists` TRƯỚC
+     `assertOrgCodeInScope` — mã phải tồn tại thật (`400 unknown_organization`) rồi mới xét có nằm
+     trong scope hay không (`403 forbidden`). Áp dụng như nhau cho `BRANCH_OFFICER`/`YOUTH_ADMIN`
+     scoped/global — global chỉ bỏ qua bước lọc theo scope, không bao giờ bỏ qua bước xác thực tồn
+     tại.
+  3. `member-api/src/config.js`: thêm `SUPABASE_URL`/`SUPABASE_ANON_KEY` vào `loadConfig()`
+     fail-closed (cùng nguyên tắc các biến bắt buộc khác — không có "existence check disabled" mặc
+     định). `member-api/src/index.js` wire `createOrganizationDirectory` vào `createServer`.
+     `member-api/src/server.js`: nhận thêm `checkOrganizationExists` + trích `bearerToken` (tái dùng
+     `extractBearerToken` có sẵn từ `memberScope.js`) để truyền cho route handler.
+  4. Test mới `member-api/tests/organizationDirectory.test.mjs` (unit, fake HTTP server — không cần
+     Supabase thật trong CI, cùng pattern `memberScope.test.mjs`): request đúng GET + header, mã
+     không tồn tại → `false`, mã chứa ký tự query-string đặc biệt bị URL-encode đúng (không thể chèn
+     tham số thứ hai), lỗi mạng/5xx/JSON hỏng → `503` không bao giờ coi là hợp lệ/không hợp lệ nhầm.
+     Mở rộng `memberRoutes.test.mjs` với 7 test theo đúng yêu cầu owner: global YOUTH_ADMIN + mã hợp
+     lệ (allowed) / không tồn tại (rejected); scoped YOUTH_ADMIN + mã tồn tại trong/ngoài scope; 
+     BRANCH_OFFICER + mã hợp lệ/không tồn tại; xác nhận validation chỉ đọc (không ghi/sửa
+     `organizations`). Mở rộng `server.test.mjs`'s `loadConfig` tests cho hai biến mới.
+- **File đã sửa/tạo:** `member-api/src/organizationDirectory.js` (new),
+  `member-api/src/{config,index,server,memberRoutes}.js`, `member-api/.env.example`,
+  `member-api/tests/organizationDirectory.test.mjs` (new),
+  `member-api/tests/{memberRoutes,server}.test.mjs`, `docs/brain/01-architecture.md`,
+  `docs/brain/04-current-tasks.md`.
+- **Lý do:** Owner yêu cầu đóng "acceptance gap" này trước khi merge PR #41 — P5.5-03 phải validate
+  organization code tại thời điểm ghi, không chỉ chặn spoofing phạm vi.
+- **Kiểm tra:** `member-api` **148/148 pass** (PostgreSQL 16 thật cục bộ, bao gồm 18 test mới/cập
+  nhật). Root `npm run lint` (0 lỗi, 3 warning cũ), `npm test` (153/153), `npm run build` — không
+  regression, không đụng `src/`/`supabase/`. PR #41 chưa merge — chờ CI xanh trên head mới rồi chờ
+  ủy quyền merge.
+
 ## [2026-09-05] P5.5-02 merge + P5.5-03 — Member CRUD vertical slice
 
 - **Agent:** Claude Code

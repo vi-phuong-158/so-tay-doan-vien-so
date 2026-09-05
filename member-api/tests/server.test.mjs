@@ -341,14 +341,47 @@ test('loadConfig fails closed (throws) when MEMBER_SCOPE_RESOLVER_SECRET is miss
   );
 });
 
+// P5.5-03 fix: verifying work_unit_code against Supabase's own organizations table
+// (organizationDirectory.js) needs the same fail-closed startup contract as every other required
+// setting — no "existence check disabled" fallback mode.
+test('loadConfig fails closed (throws) when SUPABASE_URL is missing', () => {
+  assert.throws(
+    () =>
+      loadConfig({
+        MEMBER_DATABASE_URL: 'postgresql://x',
+        MEMBER_SCOPE_RESOLVER_URL: 'http://x',
+        MEMBER_SCOPE_RESOLVER_SECRET: 's',
+        SUPABASE_ANON_KEY: 'k',
+      }),
+    /SUPABASE_URL is required/
+  );
+});
+
+test('loadConfig fails closed (throws) when SUPABASE_ANON_KEY is missing', () => {
+  assert.throws(
+    () =>
+      loadConfig({
+        MEMBER_DATABASE_URL: 'postgresql://x',
+        MEMBER_SCOPE_RESOLVER_URL: 'http://x',
+        MEMBER_SCOPE_RESOLVER_SECRET: 's',
+        SUPABASE_URL: 'http://127.0.0.1:54321',
+      }),
+    /SUPABASE_ANON_KEY is required/
+  );
+});
+
 test('loadConfig accepts a valid minimal config and defaults PORT to 8080', () => {
   const config = loadConfig({
     MEMBER_DATABASE_URL: 'postgresql://x',
     MEMBER_SCOPE_RESOLVER_URL: 'http://127.0.0.1:54321/functions/v1/resolve-member-scope',
     MEMBER_SCOPE_RESOLVER_SECRET: 'test-secret',
+    SUPABASE_URL: 'http://127.0.0.1:54321',
+    SUPABASE_ANON_KEY: 'test-anon-key',
   });
   assert.equal(config.databaseUrl, 'postgresql://x');
   assert.equal(config.port, 8080);
   assert.equal(config.memberScopeResolverUrl, 'http://127.0.0.1:54321/functions/v1/resolve-member-scope');
   assert.equal(config.memberScopeResolverSecret, 'test-secret');
+  assert.equal(config.supabaseUrl, 'http://127.0.0.1:54321');
+  assert.equal(config.supabaseAnonKey, 'test-anon-key');
 });

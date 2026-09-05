@@ -1,7 +1,9 @@
 // P5.5-03 — Member CRUD route handlers. Called from server.js ONLY after
 // authorizeMemberManagement has already approved the request and resolveEffectiveOrgScope has
-// already computed `scope` — this module never sees a raw Authorization header and never makes an
-// authorization decision itself; it only enforces `scope` against the requested data (muc 13/22).
+// already computed `scope` — this module never makes an authorization decision itself; it only
+// enforces `scope` (and, on create, real organization existence) against the requested data
+// (muc 13/22).
+import { ApiError } from './errors.js';
 import { assertOrgCodeInScope } from './scope.js';
 import { parseCreatePayload, parseListQuery, parsePatchPayload } from './memberValidation.js';
 import { createMember, getMemberById, listMembers, updateMember } from './memberRepository.js';
@@ -15,7 +17,18 @@ export function matchMemberRoute(pathname) {
   return null;
 }
 
-export async function handleMemberRoute({ req, res, url, pool, scope, route, sendJson, readJsonBody }) {
+export async function handleMemberRoute({
+  req,
+  res,
+  url,
+  pool,
+  scope,
+  route,
+  sendJson,
+  readJsonBody,
+  checkOrganizationExists,
+  bearerToken,
+}) {
   if (route.kind === 'collection') {
     if (req.method === 'GET') {
       const { limit, offset, filters } = parseListQuery(url.searchParams);
@@ -26,10 +39,18 @@ export async function handleMemberRoute({ req, res, url, pool, scope, route, sen
     if (req.method === 'POST') {
       const body = await readJsonBody(req);
       const payload = parseCreatePayload(body);
-      // Reject organization spoofing before ever touching the database: the target
-      // work_unit_code must be inside the caller's own resolved scope, never trusted as-is just
-      // because it looks like a well-formed code (muc 6/22).
+
+      // Two independent checks, in this order, both required (P5.5-03 fix): the code must be a
+      // real organization (authoritative existence — muc 6) AND it must be inside the caller's own
+      // resolved scope (muc 7/22 — never trusted as-is just because it looks well-formed, and
+      // never skipped just because the caller is global: "is_global" means unrestricted AMONG
+      // valid organizations, not unrestricted arbitrary strings).
+      const exists = await checkOrganizationExists(payload.work_unit_code, bearerToken);
+      if (!exists) {
+        throw new ApiError(400, 'unknown_organization', 'work_unit_code does not match any existing organization.');
+      }
       assertOrgCodeInScope(scope, payload.work_unit_code);
+
       const member = await createMember(pool, { payload });
       sendJson(res, 201, member);
       return;

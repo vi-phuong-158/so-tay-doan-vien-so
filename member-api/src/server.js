@@ -1,6 +1,7 @@
 import http from 'node:http';
 import { checkConnection } from './db.js';
 import { ApiError } from './errors.js';
+import { extractBearerToken } from './memberScope.js';
 import { handleMemberRoute, matchMemberRoute } from './memberRoutes.js';
 import { resolveEffectiveOrgScope } from './scope.js';
 
@@ -42,14 +43,18 @@ async function readJsonBody(req) {
   return parsed;
 }
 
-// createServer(pool, { authorizeMemberManagement }) — the second argument is the P5.5-02
-// authorization bridge (see memberScope.js: createMemberManagementAuthorizer). It is injected
-// rather than imported directly so tests can supply a deterministic stub instead of a real network
-// call to Supabase. This function is the ONLY thing that decides whether a Member Management
-// request is authorized — it is never told anything by the request itself (no `X-Role`/
-// `X-Organization` header, no body field, is ever read for that decision; see
-// docs/phase-5-5/00-member-management-architecture.md muc 13/22, threat #1/#3).
-export function createServer(pool, { authorizeMemberManagement } = {}) {
+// createServer(pool, { authorizeMemberManagement, checkOrganizationExists }) — both are injected
+// rather than imported directly so tests can supply deterministic stubs instead of real network
+// calls to Supabase.
+// - authorizeMemberManagement (memberScope.js) is the P5.5-02 authorization bridge. It is the ONLY
+//   thing that decides whether a Member Management request is authorized — it is never told
+//   anything by the request itself (no `X-Role`/`X-Organization` header, no body field, is ever
+//   read for that decision; see docs/phase-5-5/00-member-management-architecture.md muc 13/22,
+//   threat #1/#3).
+// - checkOrganizationExists (organizationDirectory.js, P5.5-03 fix) verifies a candidate
+//   work_unit_code against Supabase's own `organizations` table before create — the ONE
+//   authoritative source, never a Member API-side copy (muc 6).
+export function createServer(pool, { authorizeMemberManagement, checkOrganizationExists } = {}) {
   return http.createServer(async (req, res) => {
     try {
       const url = new URL(req.url, 'http://localhost');
@@ -97,7 +102,19 @@ export function createServer(pool, { authorizeMemberManagement } = {}) {
           return;
         }
         const scope = resolveEffectiveOrgScope(result.roles);
-        await handleMemberRoute({ req, res, url, pool, scope, route: memberRoute, sendJson, readJsonBody });
+        const bearerToken = extractBearerToken(req.headers.authorization);
+        await handleMemberRoute({
+          req,
+          res,
+          url,
+          pool,
+          scope,
+          route: memberRoute,
+          sendJson,
+          readJsonBody,
+          checkOrganizationExists,
+          bearerToken,
+        });
         return;
       }
 
