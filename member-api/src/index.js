@@ -1,6 +1,7 @@
 import { loadConfig } from './config.js';
 import { createPool } from './db.js';
 import { createMemberManagementAuthorizer } from './memberScope.js';
+import { createOrganizationDirectory } from './organizationDirectory.js';
 import { createServer } from './server.js';
 
 const config = loadConfig();
@@ -9,7 +10,11 @@ const authorizeMemberManagement = createMemberManagementAuthorizer({
   resolverUrl: config.memberScopeResolverUrl,
   resolverSecret: config.memberScopeResolverSecret,
 });
-const server = createServer(pool, { authorizeMemberManagement });
+const checkOrganizationExists = createOrganizationDirectory({
+  supabaseUrl: config.supabaseUrl,
+  supabaseAnonKey: config.supabaseAnonKey,
+});
+const server = createServer(pool, { authorizeMemberManagement, checkOrganizationExists });
 
 server.listen(config.port, () => {
   console.log(`[member-api] listening on port ${config.port}`);

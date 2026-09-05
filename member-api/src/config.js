@@ -32,5 +32,21 @@ export function loadConfig(env = process.env) {
     );
   }
 
-  return { databaseUrl, port, memberScopeResolverUrl, memberScopeResolverSecret };
+  // P5.5-03 fix: verifying a Member's work_unit_code against Supabase's own `organizations` table
+  // (organizationDirectory.js) — the public anon key, never the service-role key, and never used
+  // for anything but this read-only RLS-protected lookup.
+  const supabaseUrl = env.SUPABASE_URL;
+  if (!supabaseUrl) {
+    throw new Error(
+      'SUPABASE_URL is required. Set it in member-api/.env (never commit real values) — see member-api/.env.example.'
+    );
+  }
+  const supabaseAnonKey = env.SUPABASE_ANON_KEY;
+  if (!supabaseAnonKey) {
+    throw new Error(
+      'SUPABASE_ANON_KEY is required. Set it in member-api/.env (never commit real values) — see member-api/.env.example.'
+    );
+  }
+
+  return { databaseUrl, port, memberScopeResolverUrl, memberScopeResolverSecret, supabaseUrl, supabaseAnonKey };
 }

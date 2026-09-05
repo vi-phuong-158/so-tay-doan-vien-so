@@ -1,5 +1,122 @@
 # 06 — AI Working Log
 
+## [2026-09-05] P5.5-03 fix — validate work_unit_code against authoritative organization data
+
+- **Agent:** Claude Code
+- **Thay đổi:** Đóng gap owner phát hiện trên PR #41 (chưa merge tại thời điểm review): `POST
+  /v1/members` trước đó chỉ chặn được organization spoofing (`assertOrgCodeInScope`) nhưng, với actor
+  `YOUTH_ADMIN` scope-toàn-cục (`is_global: true`, resolver trả `org_codes: []`), không xác thực được
+  `work_unit_code` là một `organizations.code` có thật — chấp nhận bất kỳ chuỗi non-blank nào.
+  1. Thêm `member-api/src/organizationDirectory.js`: `checkOrganizationExists(code, bearerToken)`
+     gọi thẳng REST endpoint sẵn có của bảng `organizations` (`{SUPABASE_URL}/rest/v1/organizations?
+     select=code&code=eq.<code>&limit=1`), dùng `apikey: SUPABASE_ANON_KEY` +
+     `Authorization: Bearer <chính bearer token của actor>` — KHÔNG service role, nên không bao giờ
+     vượt qua RLS policy "active users read organizations" đã có từ `202607300001_initial_schema.sql`
+     — actor chỉ xác thực được đúng những gì RLS vốn đã cho họ đọc, không có quyền mới nào phát sinh.
+     Không sửa `resolve-member-scope`, không thêm migration, không có cache/registry tổ chức thứ hai
+     ở Member API (đọc lại mỗi lần gọi). Lỗi mạng/response không hợp lệ → `ApiError(503,
+     'organization_directory_unavailable')`, không bao giờ fallback "coi như hợp lệ" (fail closed).
+  2. `member-api/src/memberRoutes.js` (POST handler): gọi `checkOrganizationExists` TRƯỚC
+     `assertOrgCodeInScope` — mã phải tồn tại thật (`400 unknown_organization`) rồi mới xét có nằm
+     trong scope hay không (`403 forbidden`). Áp dụng như nhau cho `BRANCH_OFFICER`/`YOUTH_ADMIN`
+     scoped/global — global chỉ bỏ qua bước lọc theo scope, không bao giờ bỏ qua bước xác thực tồn
+     tại.
+  3. `member-api/src/config.js`: thêm `SUPABASE_URL`/`SUPABASE_ANON_KEY` vào `loadConfig()`
+     fail-closed (cùng nguyên tắc các biến bắt buộc khác — không có "existence check disabled" mặc
+     định). `member-api/src/index.js` wire `createOrganizationDirectory` vào `createServer`.
+     `member-api/src/server.js`: nhận thêm `checkOrganizationExists` + trích `bearerToken` (tái dùng
+     `extractBearerToken` có sẵn từ `memberScope.js`) để truyền cho route handler.
+  4. Test mới `member-api/tests/organizationDirectory.test.mjs` (unit, fake HTTP server — không cần
+     Supabase thật trong CI, cùng pattern `memberScope.test.mjs`): request đúng GET + header, mã
+     không tồn tại → `false`, mã chứa ký tự query-string đặc biệt bị URL-encode đúng (không thể chèn
+     tham số thứ hai), lỗi mạng/5xx/JSON hỏng → `503` không bao giờ coi là hợp lệ/không hợp lệ nhầm.
+     Mở rộng `memberRoutes.test.mjs` với 7 test theo đúng yêu cầu owner: global YOUTH_ADMIN + mã hợp
+     lệ (allowed) / không tồn tại (rejected); scoped YOUTH_ADMIN + mã tồn tại trong/ngoài scope; 
+     BRANCH_OFFICER + mã hợp lệ/không tồn tại; xác nhận validation chỉ đọc (không ghi/sửa
+     `organizations`). Mở rộng `server.test.mjs`'s `loadConfig` tests cho hai biến mới.
+- **File đã sửa/tạo:** `member-api/src/organizationDirectory.js` (new),
+  `member-api/src/{config,index,server,memberRoutes}.js`, `member-api/.env.example`,
+  `member-api/tests/organizationDirectory.test.mjs` (new),
+  `member-api/tests/{memberRoutes,server}.test.mjs`, `docs/brain/01-architecture.md`,
+  `docs/brain/04-current-tasks.md`.
+- **Lý do:** Owner yêu cầu đóng "acceptance gap" này trước khi merge PR #41 — P5.5-03 phải validate
+  organization code tại thời điểm ghi, không chỉ chặn spoofing phạm vi.
+- **Kiểm tra:** `member-api` **148/148 pass** (PostgreSQL 16 thật cục bộ, bao gồm 18 test mới/cập
+  nhật). Root `npm run lint` (0 lỗi, 3 warning cũ), `npm test` (153/153), `npm run build` — không
+  regression, không đụng `src/`/`supabase/`. PR #41 chưa merge — chờ CI xanh trên head mới rồi chờ
+  ủy quyền merge.
+
+## [2026-09-05] P5.5-02 merge + P5.5-03 — Member CRUD vertical slice
+
+- **Agent:** Claude Code
+- **Thay đổi:**
+  1. Reviewed PR #40 (P5.5-02, `resolve-member-scope` authorization bridge) at exact HEAD
+     `b3ae656914f7a710fa5e57b7351e76b713e0be86`: CI green (`build`, `member-api-test`, `test-db`,
+     `Vercel Preview Comments` all `success`). Did not modify PR #40. Merged into `master` with
+     owner authorization (merge commit `8f03f0af8e840a30a6239bb7084e487d3d5e7014`).
+  2. Started `feat/p5-5-03-member-crud` from that merged `master`. Implemented the first complete
+     Member CRUD vertical slice in `member-api/`: `GET /v1/members` (pagination, `work_unit_code`/
+     `member_status` filter, accent-insensitive `full_name` search), `GET /v1/members/:id`,
+     `POST /v1/members`, `PATCH /v1/members/:id`. `DELETE` returns a deliberate `501` — hard delete
+     is out of scope for P5.5-03; archiving remains an ordinary `PATCH member_status = 'ARCHIVED'`
+     per the existing `muc 17` lifecycle contract, so no new `/archive` endpoint was added.
+  3. Authorization: every Member endpoint calls the injected P5.5-02
+     `authorizeMemberManagement` first, then derives one effective scope (`resolveEffectiveOrgScope`)
+     from the resolver's `roles` — `is_global` bypasses org filtering entirely, otherwise every
+     query is restricted to the union of the caller's `org_codes` (empty union = zero rows, never
+     "unrestricted"). Both `YOUTH_ADMIN` and `BRANCH_OFFICER` are enforced identically against this
+     one scope for list/read/create/update, per the owner's P5.5-03 decision closing item 28.8
+     (`BRANCH_OFFICER` may create/update, not just view, inside its permitted organization).
+  4. Mass-assignment protection: `parseCreatePayload`/`parsePatchPayload`
+     (`member-api/src/memberValidation.js`) allowlist mutable fields per operation and hard-reject
+     unknown fields (`400 unknown_field`) and protected/server-managed fields — `member_id`,
+     `created_at`, `updated_at`, `account_user_id` — everywhere (`400 protected_field`).
+     `work_unit_code` is excluded from the PATCH allowlist entirely (not merely scope-checked), so
+     organization transfer can never happen through this endpoint, spoofed or not.
+  5. Anti-enumeration: `getMemberById`/`updateMember` (`member-api/src/memberRepository.js`)
+     resolve "does not exist" and "exists but outside scope" to the identical `null` →
+     generic `404` — never a distinguishing signal. `updateMember` enforces scope and mutates in one
+     atomic `UPDATE ... WHERE id AND scope` statement (no read-then-write gap).
+  6. SQL safety: every value is a bound parameter; the only inline SQL identifiers are the fixed
+     column-name allowlists themselves (never a client-supplied key). Search uses
+     `member_immutable_unaccent(...) ILIKE ... ESCAPE '\'` with `%`/`_`/`\` escaped in the search
+     term so metacharacters match literally rather than acting as wildcards.
+  7. Response shape is an explicit allowlist (`SELECT_COLUMNS`/`serializeRow`), never
+     `SELECT *`; `account_user_id` (the auth-mapping field) is deliberately never returned — it has
+     no separate linking endpoint yet (out of scope, muc 11) so it is not exposed or writable at all
+     in P5.5-03.
+  8. Added `member-api/src/{errors,scope,memberValidation,memberRepository,memberRoutes}.js` and
+     wired them into `server.js`. Set `member-api/package.json`'s test script to
+     `--test-concurrency=1` so the DB-mutating test files (`schema.test.mjs`'s own `--fresh`
+     bootstrap plus the new DB-backed CRUD/route tests) never run concurrently against the same
+     Postgres instance.
+  9. Updated the now-superseded P5.5-02 placeholder test in `server.test.mjs` (an authorized
+     `GET /v1/members` used to assert a hard `501`; it now asserts a real empty paginated list) and
+     added a `DELETE` coverage test in its place. Extended `isolation.test.mjs` with two tests
+     confirming member-api has no Supabase client dependency and no source-level reference to
+     `auth.users`/`profiles`/`user_roles` (Member CRUD produces no Auth/User Role mutation).
+- **File đã sửa/tạo:**
+  `member-api/src/errors.js` (new), `member-api/src/scope.js` (new),
+  `member-api/src/memberValidation.js` (new), `member-api/src/memberRepository.js` (new),
+  `member-api/src/memberRoutes.js` (new), `member-api/src/server.js`, `member-api/package.json`,
+  `member-api/tests/memberValidation.test.mjs` (new), `member-api/tests/scope.test.mjs` (new),
+  `member-api/tests/memberCrud.test.mjs` (new), `member-api/tests/memberRoutes.test.mjs` (new),
+  `member-api/tests/server.test.mjs`, `member-api/tests/isolation.test.mjs`,
+  `docs/brain/01-architecture.md`, `docs/brain/04-current-tasks.md`. No new migration — P5.5-01's
+  schema already covers every field P5.5-03 reads/writes.
+- **Lý do:** P5.5-03 theo `docs/phase-5-5/00-member-management-architecture.md` muc 9/26, với owner
+  decision đóng mục 28.8 (`BRANCH_OFFICER` write permission, xem đầu task) làm permission model cho
+  `PATCH`.
+- **Kiểm tra:** `member-api` 130/130 (`node --test`, real local PostgreSQL 16 with `pg_trgm`/
+  `unaccent`), including the full owner-specified negative-security matrix (cross-org denial on
+  read/update/create for both `BRANCH_OFFICER` and `YOUTH_ADMIN`, organization-spoofing on create,
+  organization-transfer-via-PATCH rejection, `SYSTEM_ADMIN`-alone denial, `SYSTEM_ADMIN`+
+  `YOUTH_ADMIN` dual-role scoping to `YOUTH_ADMIN` only, unknown/protected field rejection,
+  SQL-metacharacter-shaped search/filter input, IDOR/existence-leak prevention, no Auth/user_roles
+  mutation). Root `npm run lint` (0 errors, 3 pre-existing warnings), `npm test` (153/153), `npm run
+  build` all pass, untouched by this branch's diff (`src/`, `supabase/` unchanged). Remaining risk
+  and next blocker recorded in the P5.5-03 completion report (see chat/PR).
+
 ## [2026-08-17] P4-06 merge + P4-R — Runtime readiness closure (P4-02R, P4-04R2)
 
 - **Agent:** Claude Code

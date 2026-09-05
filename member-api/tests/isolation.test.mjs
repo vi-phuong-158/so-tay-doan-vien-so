@@ -68,6 +68,30 @@ test('member-api source contains no AI/RAG references', async () => {
   }
 });
 
+test('member-api has no Supabase client dependency (Member CRUD cannot mutate Auth/user_roles even by accident)', async () => {
+  const pkg = JSON.parse(await readFile(path.join(__dirname, '..', 'package.json'), 'utf8'));
+  const deps = { ...(pkg.dependencies ?? {}), ...(pkg.devDependencies ?? {}) };
+  for (const name of Object.keys(deps)) {
+    assert.doesNotMatch(name.toLowerCase(), /supabase/, `member-api must not depend on a Supabase client library (found "${name}")`);
+  }
+});
+
+test('member-api source never references auth.users/profiles/user_roles (P5.5-03: Member CRUD produces no Auth/User Role mutation)', async () => {
+  // "supabase" itself is not forbidden here — memberScope.js legitimately documents that it calls
+  // the Supabase Edge Function resolve-member-scope over HTTP (no client library, no direct table
+  // access; see the dedicated "no Supabase client dependency" test above). What must never appear
+  // is any reference to the specific tables a mutation would touch.
+  const srcDir = path.join(__dirname, '..', 'src');
+  const files = await readdir(srcDir);
+  const forbidden = ['auth.users', 'profiles', 'user_roles'];
+  for (const file of files) {
+    const content = (await readFile(path.join(srcDir, file), 'utf8')).toLowerCase();
+    for (const term of forbidden) {
+      assert.ok(!content.includes(term), `${file} must not reference "${term}" — Member CRUD is isolated from Supabase Auth/roles`);
+    }
+  }
+});
+
 test('member-api authorization code never reads a client-supplied role/organization signal (P5.5-02 muc 13/22)', async () => {
   const srcDir = path.join(__dirname, '..', 'src');
   const files = await readdir(srcDir);
