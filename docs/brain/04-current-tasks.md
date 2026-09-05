@@ -58,6 +58,47 @@
   mở rộng (không đọc header/body do client tự khai để authorize).
 - **Report:** `member-api/README.md`.
 
+### P5.5-02 — Member scope authorization bridge (merged)
+- **Base:** `master` sau merge PR #39 (P5.5-01). Branch `feat/p5-5-02-member-scope-bridge`.
+- **Trạng thái:** merged qua PR #40 (merge commit `8f03f0af8e840a30a6239bb7084e487d3d5e7014`),
+  exact-head CI (`b3ae656`) xanh trước merge (`build`/`member-api-test`/`test-db`/Vercel đều
+  `success`).
+- **Nội dung:** Edge Function `supabase/functions/resolve-member-scope` (xác minh JWT thật qua
+  `requireUser`, re-check `profiles.account_status`/`user_roles`, dịch scope sang
+  `organizations.code`); migration `202609050001_phase_5_5_member_scope_resolver.sql`
+  (`member_scope_org_codes()`); `member-api/src/memberScope.js` (resolver client + derive
+  authorization) wired vào `server.js`; `GET /v1/member-scope` chứng minh bridge end-to-end.
+  `/v1/members` lúc này đã enforce authorization trước, còn CRUD thật vẫn 501 (đúng phạm vi P5.5-02).
+
+### P5.5-03 — Member CRUD vertical slice
+- **Base:** `master` sau merge PR #40 (`8f03f0af8e840a30a6239bb7084e487d3d5e7014`). Branch
+  `feat/p5-5-03-member-crud`.
+- **Owner decision áp dụng (đóng mục 28.8):** `BRANCH_OFFICER` được tạo/sửa Member (không chỉ xem)
+  trong đúng phạm vi tổ chức do P5.5-02 resolver trả về; không có quyền Account/Auth nào kèm theo.
+  `YOUTH_ADMIN` giữ nguyên quyền list/read/create/update toàn bộ scope đã resolve.
+- **Nội dung:** `GET/POST /v1/members`, `GET/PATCH /v1/members/:id` thật (không còn 501) —
+  pagination, filter `work_unit_code`/`member_status`, search tên tiếng Việt không dấu
+  (`pg_trgm`+`unaccent`, đã có từ P5.5-01); scope enforce server-side qua
+  `resolveEffectiveOrgScope(roles)` (global hoặc union `org_codes`, rỗng = 0 dòng, không bao giờ
+  "rỗng = xem hết"); allowlist mass-assignment tường minh cho create/patch; `work_unit_code` không
+  nằm trong allowlist PATCH (bất biến qua endpoint này); phản hồi allowlist field, không `SELECT *`,
+  không trả `account_user_id`. `DELETE` trả `501` có chủ đích — không hard delete; archive dùng
+  PATCH `member_status = 'ARCHIVED'` theo đúng hợp đồng mục 17 sẵn có, không thêm endpoint riêng.
+- **Không có trong subphase này:** import Excel (P5.5-05), audit table (khuyến nghị đi kèm nhưng
+  owner instruction P5.5-03 không yêu cầu — để P5.5-07), frontend (P5.5-06), `/member-metadata`.
+- **Known gap (không phải bug, cần quyết định kiến trúc riêng nếu cần khắc phục):** với actor
+  `YOUTH_ADMIN` scope-toàn-cục (`is_global: true`), resolver P5.5-02 trả `org_codes: []` (không liệt
+  kê toàn bộ mã đơn vị) — Member API không có cách xác thực `work_unit_code` trên `POST` là một
+  `organizations.code` có thật đối với actor này (khác actor có scope cụ thể, nơi `org_codes` chính
+  là danh sách thẩm quyền để đối chiếu). P5.5-03 chấp nhận `work_unit_code` bất kỳ (non-blank) từ
+  actor global thay vì chặn hoàn toàn khả năng tạo member của họ. Không tự ý mở rộng
+  `resolve-member-scope` để vá — đây là quyết định của P5.5-04/P5.5-05 hoặc một quyết định owner
+  riêng nếu cần một endpoint tra cứu `organizations.code` hợp lệ.
+- **Test:** `member-api/tests/{memberValidation,scope,memberCrud,memberRoutes}.test.mjs` (mới) +
+  cập nhật `server.test.mjs`/`isolation.test.mjs`. 130/130 pass với PostgreSQL 16 thật cục bộ, phủ
+  toàn bộ ma trận bảo mật âm tính owner yêu cầu (xem `06-ai-working-log.md`).
+- **Report:** xem entry `[2026-09-05]` trong `docs/brain/06-ai-working-log.md`.
+
 ### Phase 5 end-to-end closure
 - **Base:** isolated closure worktree/branch `codex/phase-5-full-closure`, based on P5-03 plus the
   forward-only trigger-function privilege fix `ff72ccd`.

@@ -1,5 +1,8 @@
 import http from 'node:http';
 import { checkConnection } from './db.js';
+import { ApiError } from './errors.js';
+import { handleMemberRoute, matchMemberRoute } from './memberRoutes.js';
+import { resolveEffectiveOrgScope } from './scope.js';
 
 function sendJson(res, status, body) {
   const payload = JSON.stringify(body);
@@ -8,6 +11,35 @@ function sendJson(res, status, body) {
     'Content-Length': Buffer.byteLength(payload),
   });
   res.end(payload);
+}
+
+const MAX_BODY_BYTES = 100_000;
+
+// Node's http module does not parse the request body itself. Bounded (rejects oversized bodies
+// before buffering all of it) and strict (only a JSON object, never an array/primitive) — a
+// malformed body is always a 400 ApiError, never an unhandled parse exception reaching the
+// top-level catch as a bare 500.
+async function readJsonBody(req) {
+  const chunks = [];
+  let size = 0;
+  for await (const chunk of req) {
+    size += chunk.length;
+    if (size > MAX_BODY_BYTES) {
+      throw new ApiError(400, 'payload_too_large', 'Request body exceeds the allowed size.');
+    }
+    chunks.push(chunk);
+  }
+  if (chunks.length === 0) return {};
+  let parsed;
+  try {
+    parsed = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+  } catch {
+    throw new ApiError(400, 'invalid_json', 'Request body must be valid JSON.');
+  }
+  if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new ApiError(400, 'invalid_json', 'Request body must be a JSON object.');
+  }
+  return parsed;
 }
 
 // createServer(pool, { authorizeMemberManagement }) — the second argument is the P5.5-02
@@ -20,7 +52,8 @@ function sendJson(res, status, body) {
 export function createServer(pool, { authorizeMemberManagement } = {}) {
   return http.createServer(async (req, res) => {
     try {
-      const { pathname } = new URL(req.url, 'http://localhost');
+      const url = new URL(req.url, 'http://localhost');
+      const { pathname } = url;
 
       if (req.method === 'GET' && pathname === '/healthz') {
         // Liveness only — process is up. Does not depend on the database, so a DB outage does not
@@ -53,24 +86,27 @@ export function createServer(pool, { authorizeMemberManagement } = {}) {
         return;
       }
 
-      if (pathname === '/v1/members') {
-        // Authorization is enforced first, for every method, before anything else runs. Only once
-        // a request is authenticated AND authorized does it fall through to 501 — Member CRUD/list
-        // itself is still out of scope until P5.5-03 (muc 7 of the P5.5-02 task instructions).
+      const memberRoute = matchMemberRoute(pathname);
+      if (memberRoute) {
+        // Authorization is enforced first, for every method, before any Member data access — no
+        // exception (muc 13/22). Only once a request is authenticated AND authorized does scope
+        // get resolved and the CRUD handler run.
         const result = await authorizeMemberManagement(req.headers.authorization);
         if (!result.authorized) {
           sendJson(res, result.status, result.body);
           return;
         }
-        sendJson(res, 501, {
-          error: 'not_implemented',
-          message: 'Member CRUD/list is not implemented yet (P5.5-03). This endpoint never returns member data.',
-        });
+        const scope = resolveEffectiveOrgScope(result.roles);
+        await handleMemberRoute({ req, res, url, pool, scope, route: memberRoute, sendJson, readJsonBody });
         return;
       }
 
       sendJson(res, 404, { error: 'not_found' });
-    } catch {
+    } catch (error) {
+      if (error instanceof ApiError) {
+        sendJson(res, error.status, { error: error.code, message: error.message });
+        return;
+      }
       // Structured, bounded error response — never leak stack traces or internals to the client.
       sendJson(res, 500, { error: 'internal_error' });
     }

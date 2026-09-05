@@ -379,10 +379,21 @@ P5.5-00 (`docs/phase-5-5/00-member-management-architecture.md`) chốt kiến tr
 `supabase/functions/resolve-member-scope/` (Edge Function, migration
 `202609050001_phase_5_5_member_scope_resolver.sql` thêm hàm `member_scope_org_codes()`) +
 `member-api/src/memberScope.js` (client phía Member API). `GET /v1/member-scope` chứng minh bridge
-hoạt động; `/v1/members` nay enforce authorization thật (401/403) rồi mới rơi về `501` — CRUD thật
-vẫn chưa có (P5.5-03). Không có migration Member nào trong `supabase/migrations/` tạo bảng dữ liệu
-đoàn viên — chỉ hàm helper đọc-only phục vụ resolver. Xem `member-api/README.md` cho chi tiết và
-giới hạn hiện tại.
+hoạt động; `/v1/members` enforce authorization thật (401/403) trước bất kỳ truy cập dữ liệu nào.
+Không có migration Member nào trong `supabase/migrations/` tạo bảng dữ liệu đoàn viên — chỉ hàm
+helper đọc-only phục vụ resolver.
+
+Từ P5.5-03, CRUD Member thật đã hoạt động: `GET/POST /v1/members`, `GET/PATCH /v1/members/:id`
+(`member-api/src/{memberRoutes,memberRepository,memberValidation,scope,errors}.js`) — pagination,
+filter `work_unit_code`/`member_status`, search tên tiếng Việt không dấu (`pg_trgm`+`unaccent`),
+scope server-side qua `resolveEffectiveOrgScope(roles)` (both `YOUTH_ADMIN` và `BRANCH_OFFICER`
+enforce như nhau: global thì không lọc, không thì lọc theo union `org_codes` — rỗng luôn nghĩa là 0
+dòng, không bao giờ "rỗng = xem hết"). `work_unit_code` không nằm trong allowlist PATCH (bất biến
+qua endpoint này — chuyển đơn vị phải là workflow riêng có audit). `DELETE` trả `501` có chủ đích;
+archive dùng `PATCH member_status = 'ARCHIVED'` theo hợp đồng lifecycle sẵn có (mục 17), không có
+endpoint archive riêng. Phản hồi luôn allowlist field, không bao giờ trả `account_user_id`. Chưa có:
+import Excel (P5.5-05), audit table riêng (P5.5-07), frontend (P5.5-06), `/member-metadata`. Xem
+`member-api/README.md` cho chi tiết và giới hạn hiện tại.
 
 ```text
                     USER
