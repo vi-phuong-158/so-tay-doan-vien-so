@@ -492,6 +492,168 @@ test('GET /v1/members?search=... with SQL-injection-shaped input returns a norma
   });
 });
 
+// --- P5.5-04: youth_position / youth_board_position / political_theory_level filters -------------
+
+test('GET /v1/members filters by youth_position, youth_board_position, and political_theory_level, ANDed with scope', async () => {
+  const org = orgCode('FILTERS-NEW');
+  const roles = [{ role_code: 'YOUTH_ADMIN', is_global: false, org_codes: [org] }];
+  await withServer(authorizerFor(roles), async (base) => {
+    const target = await jsonFetch(`${base}/v1/members`, {
+      method: 'POST',
+      body: JSON.stringify({
+        full_name: 'Filter Target',
+        work_unit_code: org,
+        youth_position: 'BI_THU',
+        youth_board_position: 'TRUONG_BAN_THANH_NIEN',
+        political_theory_level: 'CAO_CAP',
+      }),
+    });
+    assert.equal(target.status, 201);
+    await jsonFetch(`${base}/v1/members`, {
+      method: 'POST',
+      body: JSON.stringify({ full_name: 'Filter Non-Match', work_unit_code: org, youth_position: 'UY_VIEN' }),
+    });
+
+    const byYouthPosition = await jsonFetch(`${base}/v1/members?youth_position=BI_THU`);
+    assert.equal(byYouthPosition.body.total, 1);
+    assert.equal(byYouthPosition.body.members[0].member_id, target.body.member_id);
+
+    const byBoardPosition = await jsonFetch(`${base}/v1/members?youth_board_position=TRUONG_BAN_THANH_NIEN`);
+    assert.equal(byBoardPosition.body.total, 1);
+
+    const byTheoryLevel = await jsonFetch(`${base}/v1/members?political_theory_level=CAO_CAP`);
+    assert.equal(byTheoryLevel.body.total, 1);
+
+    const combined = await jsonFetch(
+      `${base}/v1/members?youth_position=BI_THU&youth_board_position=TRUONG_BAN_THANH_NIEN&political_theory_level=CAO_CAP`
+    );
+    assert.equal(combined.body.total, 1);
+    assert.equal(combined.body.members[0].member_id, target.body.member_id);
+  });
+});
+
+test('GET /v1/members rejects an invalid enum filter value with 400, at the HTTP layer', async () => {
+  const org = orgCode('FILTERS-INVALID');
+  const roles = [{ role_code: 'YOUTH_ADMIN', is_global: false, org_codes: [org] }];
+  await withServer(authorizerFor(roles), async (base) => {
+    assert.equal((await jsonFetch(`${base}/v1/members?youth_position=CHU_TICH`)).status, 400);
+    assert.equal((await jsonFetch(`${base}/v1/members?youth_board_position=TRUONG_BAN`)).status, 400);
+    assert.equal((await jsonFetch(`${base}/v1/members?political_theory_level=SUPER`)).status, 400);
+    assert.equal((await jsonFetch(`${base}/v1/members?member_status=DELETED`)).status, 400);
+  });
+});
+
+test('GET /v1/members: filter values matching only another organization never escape the caller\'s scope', async () => {
+  const scopedOrg = orgCode('SCOPE-FILTER-A');
+  const otherOrg = orgCode('SCOPE-FILTER-B');
+  const otherRoles = [{ role_code: 'YOUTH_ADMIN', is_global: false, org_codes: [otherOrg] }];
+  await withServer(authorizerFor(otherRoles), async (base) => {
+    await jsonFetch(`${base}/v1/members`, {
+      method: 'POST',
+      body: JSON.stringify({ full_name: 'Other Org Bi Thu', work_unit_code: otherOrg, youth_position: 'BI_THU' }),
+    });
+  });
+
+  const scopedRoles = [{ role_code: 'YOUTH_ADMIN', is_global: false, org_codes: [scopedOrg] }];
+  await withServer(authorizerFor(scopedRoles), async (base) => {
+    const attempt = await jsonFetch(`${base}/v1/members?youth_position=BI_THU`);
+    assert.equal(attempt.status, 200);
+    assert.equal(attempt.body.total, 0);
+
+    // Even naming the other org explicitly via work_unit_code must not escape scope.
+    const spoofAttempt = await jsonFetch(`${base}/v1/members?work_unit_code=${encodeURIComponent(otherOrg)}`);
+    assert.equal(spoofAttempt.body.total, 0);
+  });
+});
+
+// --- P5.5-04: search cannot escape scope -----------------------------------------------------------
+
+test('GET /v1/members?search=... matching a name that exists only in another organization returns zero for a scoped caller', async () => {
+  const scopedOrg = orgCode('SEARCH-SCOPE-A');
+  const otherOrg = orgCode('SEARCH-SCOPE-B');
+  const otherRoles = [{ role_code: 'YOUTH_ADMIN', is_global: false, org_codes: [otherOrg] }];
+  await withServer(authorizerFor(otherRoles), async (base) => {
+    await jsonFetch(`${base}/v1/members`, {
+      method: 'POST',
+      body: JSON.stringify({ full_name: 'Nguyễn Văn Chỉ Ở B', work_unit_code: otherOrg }),
+    });
+  });
+
+  const scopedRoles = [{ role_code: 'YOUTH_ADMIN', is_global: false, org_codes: [scopedOrg] }];
+  await withServer(authorizerFor(scopedRoles), async (base) => {
+    const attempt = await jsonFetch(`${base}/v1/members?search=${encodeURIComponent('nguyen van chi o b')}`);
+    assert.equal(attempt.status, 200);
+    assert.equal(attempt.body.total, 0);
+  });
+});
+
+// --- P5.5-04: sort ---------------------------------------------------------------------------------
+
+test('GET /v1/members?sort=updated_at_desc orders by most recently updated first', async () => {
+  const org = orgCode('SORT-HTTP');
+  const roles = [{ role_code: 'YOUTH_ADMIN', is_global: false, org_codes: [org] }];
+  await withServer(authorizerFor(roles), async (base) => {
+    const first = await jsonFetch(`${base}/v1/members`, {
+      method: 'POST',
+      body: JSON.stringify({ full_name: 'Sort First', work_unit_code: org }),
+    });
+    await jsonFetch(`${base}/v1/members`, { method: 'POST', body: JSON.stringify({ full_name: 'Sort Second', work_unit_code: org }) });
+    await jsonFetch(`${base}/v1/members/${first.body.member_id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ job_title: 'Touched' }),
+    });
+
+    const result = await jsonFetch(`${base}/v1/members?sort=updated_at_desc`);
+    assert.equal(result.status, 200);
+    assert.equal(result.body.members[0].member_id, first.body.member_id);
+
+    const defaultSort = await jsonFetch(`${base}/v1/members`);
+    assert.equal(defaultSort.body.members[0].full_name, 'Sort First');
+  });
+});
+
+test('GET /v1/members rejects an unsupported or SQL-injection-shaped sort value with 400, never a silent fallback', async () => {
+  const org = orgCode('SORT-INVALID');
+  const roles = [{ role_code: 'YOUTH_ADMIN', is_global: false, org_codes: [org] }];
+  await withServer(authorizerFor(roles), async (base) => {
+    const invalid = await jsonFetch(`${base}/v1/members?sort=full_name_desc`);
+    assert.equal(invalid.status, 400);
+
+    const injection = await jsonFetch(`${base}/v1/members?${new URLSearchParams({ sort: 'member_id; DROP TABLE members;--' })}`);
+    assert.equal(injection.status, 400);
+
+    // Table must still be intact and queryable afterwards.
+    const stillWorks = await jsonFetch(`${base}/v1/members`);
+    assert.equal(stillWorks.status, 200);
+  });
+});
+
+// --- P5.5-04: pagination edge cases -----------------------------------------------------------------
+
+test('GET /v1/members: negative/zero/non-numeric/oversized limit and offset never error and stay within bounds', async () => {
+  const org = orgCode('PAGINATION-EDGE');
+  const roles = [{ role_code: 'YOUTH_ADMIN', is_global: false, org_codes: [org] }];
+  await withServer(authorizerFor(roles), async (base) => {
+    await jsonFetch(`${base}/v1/members`, { method: 'POST', body: JSON.stringify({ full_name: 'Edge Person', work_unit_code: org }) });
+
+    for (const limit of ['-5', '0', 'abc', '999999']) {
+      const res = await jsonFetch(`${base}/v1/members?limit=${limit}`);
+      assert.equal(res.status, 200);
+      assert.ok(res.body.limit > 0 && res.body.limit <= 100);
+    }
+    for (const offset of ['-1', 'abc']) {
+      const res = await jsonFetch(`${base}/v1/members?offset=${offset}`);
+      assert.equal(res.status, 200);
+      assert.equal(res.body.offset, 0);
+    }
+
+    const beyondDataset = await jsonFetch(`${base}/v1/members?offset=100000`);
+    assert.equal(beyondDataset.status, 200);
+    assert.equal(beyondDataset.body.total, 1);
+    assert.deepEqual(beyondDataset.body.members, []);
+  });
+});
+
 // --- DELETE ---------------------------------------------------------------------------------------
 
 test('DELETE /v1/members/:id is authorized first, then returns a deliberate 501 (no hard delete in P5.5-03)', async () => {

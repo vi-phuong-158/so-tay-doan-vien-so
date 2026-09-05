@@ -112,6 +112,45 @@
 - **Report:** xem entry `[2026-09-05]` trong `docs/brain/06-ai-working-log.md`. **Không còn blocker
   P5.5-03 nào đã biết** tại thời điểm này — chờ merge PR #41.
 
+### P5.5-04 — Search/filter/list
+- **Base:** `master` sau merge PR #41 (P5.5-03, `56f858296bcd02c3a805d77dba2b3086cace8a4b`). Branch
+  `feat/p5-5-04-member-search-filter-list`.
+- **Audit trước khi code:** P5.5-03 đã có sẵn pagination `limit/offset`, filter
+  `work_unit_code`/`member_status`, search accent-insensitive theo `full_name` (`pg_trgm`+
+  `unaccent`), scope enforcement, parameter binding, LIKE-metacharacter escaping, và
+  `ORDER BY full_name ASC, member_id ASC` cố định. Delta còn thiếu theo mục 14/23 kiến trúc: 3
+  filter (`youth_position`, `youth_board_position`, `political_theory_level`), `sort` có thể chọn
+  (`updated_at DESC` — mục 14 chỉ có một order cứng), và performance evidence trên dataset
+  ~3.000 dòng synthetic (mục 9/25) — chưa tồn tại trước task này.
+- **Nội dung:** Thêm 3 filter còn thiếu vào `parseListQuery`/`listMembers`
+  (`member-api/src/{memberValidation,memberRepository}.js`) — cùng cơ chế bound parameter + enum
+  allowlist với 2 filter cũ, luôn `AND` với scope. Thêm query param `sort` (allowlist cố định
+  `full_name_asc` mặc định | `updated_at_desc`; giá trị ngoài allowlist → `400`, không bao giờ nối
+  trực tiếp vào SQL — map qua object literal cố định `ORDER_BY_CLAUSES`, không string-build từ giá
+  trị client). Cả hai order đều có tie-breaker `member_id` để đảm bảo stable ordering khi trùng
+  `full_name`/`updated_at` (mục 23 test #14). Không sửa `memberScope.js`/`scope.js`/resolver — không
+  phát hiện bug thật ở P5.5-02.
+- **Performance:** thêm dataset synthetic ~3.000 dòng (`member-api/tests/helpers/syntheticMembers.mjs`
+  — tên tiếng Việt tổng hợp, nhiều tổ chức/trạng thái/chức danh, có nhóm trùng `full_name` chủ đích;
+  KHÔNG phải dữ liệu đoàn viên thật) và test đo hiệu năng
+  (`member-api/tests/memberPerformance.test.mjs`) — warm-up rồi đo 15 lần, assert trên median, in
+  min/median/max ra console thay vì assert trên một sample đơn lẻ (tránh CI flaky). Kết quả cục bộ:
+  list+filter (`work_unit_code`+`member_status`, scoped) median ≈2ms; list+filter global scope theo
+  `member_status` median ≈2ms; search có dấu median ≈10ms; search không dấu median ≈10ms — toàn bộ
+  sâu dưới target `<300ms` mục 25. `EXPLAIN (ANALYZE, BUFFERS)` xác nhận filter theo
+  `work_unit_code`+`member_status` dùng `idx_members_work_unit_status`; search ở quy mô 3.000 dòng
+  planner chọn Seq Scan thay vì GIN trigram (chi phí ước tính thấp hơn ở bảng nhỏ) — cả hai đều nằm
+  trong target, **không cần migration/index mới** (đúng chỉ dẫn mục 10: benchmark trước, chỉ thêm
+  index khi có bằng chứng cần).
+- **Không có trong subphase này:** import Excel (P5.5-05), audit table (P5.5-07), frontend
+  (P5.5-06), `/member-metadata`, mọi thay đổi resolver/scope P5.5-02.
+- **Test:** cập nhật `member-api/tests/{memberValidation,memberCrud,memberRoutes}.test.mjs` (filter
+  mới, sort hợp lệ/không hợp lệ/injection-shaped, pagination edge case: negative/zero/non-number/
+  oversized limit, offset vượt dataset, cross-org isolation cho filter/search mới) + test file mới
+  `memberPerformance.test.mjs`. Toàn bộ `member-api` test suite (`npm test`) PASS cục bộ với
+  PostgreSQL 16 thật (xem `06-ai-working-log.md` cho số liệu chính xác).
+- **Report:** xem entry `[2026-09-05]` (P5.5-04) trong `docs/brain/06-ai-working-log.md`.
+
 ### Phase 5 end-to-end closure
 - **Base:** isolated closure worktree/branch `codex/phase-5-full-closure`, based on P5-03 plus the
   forward-only trigger-function privilege fix `ff72ccd`.

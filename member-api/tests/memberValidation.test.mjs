@@ -217,3 +217,50 @@ test('parseListQuery: SQL-metacharacter-laden search/filter values are accepted 
   assert.equal(filters.search, "'; DROP TABLE members; --");
   assert.equal(filters.workUnitCode, "CDA' OR '1'='1");
 });
+
+// --- P5.5-04: youth_position / youth_board_position / political_theory_level filters ------------
+
+test('parseListQuery: accepts valid youth_position/youth_board_position/political_theory_level filters', () => {
+  const { filters } = parseListQuery(
+    searchParamsOf({
+      youth_position: 'BI_THU',
+      youth_board_position: 'TRUONG_BAN_THANH_NIEN',
+      political_theory_level: 'CAO_CAP',
+    })
+  );
+  assert.equal(filters.youthPosition, 'BI_THU');
+  assert.equal(filters.youthBoardPosition, 'TRUONG_BAN_THANH_NIEN');
+  assert.equal(filters.politicalTheoryLevel, 'CAO_CAP');
+});
+
+test('parseListQuery: rejects an invalid youth_position/youth_board_position/political_theory_level filter value', () => {
+  assertApiError(() => parseListQuery(searchParamsOf({ youth_position: 'CHU_TICH' })), { status: 400 });
+  assertApiError(() => parseListQuery(searchParamsOf({ youth_board_position: 'TRUONG_BAN' })), { status: 400 });
+  assertApiError(() => parseListQuery(searchParamsOf({ political_theory_level: 'SUPER' })), { status: 400 });
+});
+
+test('parseListQuery: omits youth_position/youth_board_position/political_theory_level filters when absent or blank', () => {
+  assert.deepEqual(parseListQuery(searchParamsOf({})).filters, {});
+  assert.deepEqual(
+    parseListQuery(searchParamsOf({ youth_position: '', youth_board_position: ' ', political_theory_level: '' })).filters,
+    {}
+  );
+});
+
+// --- P5.5-04: sort ----------------------------------------------------------------------------
+
+test('parseListQuery: defaults sort to full_name_asc when absent or blank', () => {
+  assert.equal(parseListQuery(searchParamsOf({})).sort, 'full_name_asc');
+  assert.equal(parseListQuery(searchParamsOf({ sort: '' })).sort, 'full_name_asc');
+});
+
+test('parseListQuery: accepts the allowlisted sort values', () => {
+  assert.equal(parseListQuery(searchParamsOf({ sort: 'full_name_asc' })).sort, 'full_name_asc');
+  assert.equal(parseListQuery(searchParamsOf({ sort: 'updated_at_desc' })).sort, 'updated_at_desc');
+});
+
+test('parseListQuery: rejects an unsupported or injection-shaped sort value with 400, never a silent fallback', () => {
+  assertApiError(() => parseListQuery(searchParamsOf({ sort: 'full_name_desc' })), { status: 400 });
+  assertApiError(() => parseListQuery(searchParamsOf({ sort: 'member_id; DROP TABLE members;--' })), { status: 400 });
+  assertApiError(() => parseListQuery(searchParamsOf({ sort: '1=1' })), { status: 400 });
+});

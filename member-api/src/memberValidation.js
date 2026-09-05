@@ -202,6 +202,14 @@ const DEFAULT_LIST_LIMIT = 20;
 const MAX_SEARCH_LENGTH = 200;
 const MAX_WORK_UNIT_CODE_FILTER_LENGTH = 100;
 
+// P5.5-04 mục 14/23 — fixed sort allowlist. `sort` is never concatenated into SQL text; it only
+// ever selects one of these two named orderings in memberRepository.js. Default matches the
+// architecture default (full_name ASC); any value outside this allowlist is a hard 400, never a
+// silent fallback to the default (an invalid/injection-shaped sort must be visibly rejected, not
+// quietly ignored).
+export const SORT_VALUES = ['full_name_asc', 'updated_at_desc'];
+const DEFAULT_SORT = 'full_name_asc';
+
 // GET /v1/members query string. Every value here ends up as a bound query parameter, never
 // interpolated into SQL text (see memberRepository.js) — validation here is about shape/bounds,
 // not injection safety, which parameterization already guarantees.
@@ -224,11 +232,36 @@ export function parseListQuery(searchParams) {
     filters.memberStatus = validateOptionalEnum(memberStatus, 'member_status', MEMBER_STATUS_VALUES);
   }
 
+  const youthPosition = searchParams.get('youth_position');
+  if (youthPosition !== null && youthPosition.trim() !== '') {
+    filters.youthPosition = validateOptionalEnum(youthPosition, 'youth_position', YOUTH_POSITION_VALUES);
+  }
+
+  const youthBoardPosition = searchParams.get('youth_board_position');
+  if (youthBoardPosition !== null && youthBoardPosition.trim() !== '') {
+    filters.youthBoardPosition = validateOptionalEnum(youthBoardPosition, 'youth_board_position', YOUTH_BOARD_POSITION_VALUES);
+  }
+
+  const politicalTheoryLevel = searchParams.get('political_theory_level');
+  if (politicalTheoryLevel !== null && politicalTheoryLevel.trim() !== '') {
+    filters.politicalTheoryLevel = validateOptionalEnum(
+      politicalTheoryLevel,
+      'political_theory_level',
+      POLITICAL_THEORY_LEVEL_VALUES
+    );
+  }
+
   const search = searchParams.get('search');
   if (search !== null) {
     const trimmed = search.trim().slice(0, MAX_SEARCH_LENGTH);
     if (trimmed !== '') filters.search = trimmed;
   }
 
-  return { limit, offset, filters };
+  const sortRaw = searchParams.get('sort');
+  const sort = sortRaw === null || sortRaw.trim() === '' ? DEFAULT_SORT : sortRaw;
+  if (!SORT_VALUES.includes(sort)) {
+    throw new ApiError(400, 'validation_error', `Query param "sort" must be one of: ${SORT_VALUES.join(', ')}.`);
+  }
+
+  return { limit, offset, filters, sort };
 }
