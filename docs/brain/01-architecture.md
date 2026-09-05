@@ -393,6 +393,18 @@ qua endpoint này — chuyển đơn vị phải là workflow riêng có audit).
 archive dùng `PATCH member_status = 'ARCHIVED'` theo hợp đồng lifecycle sẵn có (mục 17), không có
 endpoint archive riêng. Phản hồi luôn allowlist field, không bao giờ trả `account_user_id`.
 
+Từ P5.5-04, `GET /v1/members` (mục 14/23/25) đầy đủ contract filter/search/sort: thêm 3 filter còn
+thiếu — `youth_position`, `youth_board_position`, `political_theory_level` (cùng cơ chế bound
+parameter + enum allowlist với `work_unit_code`/`member_status` đã có, luôn `AND` với scope, không
+bao giờ mở rộng scope của caller). Thêm `sort` (query param, allowlist cố định
+`full_name_asc`|`updated_at_desc`, mặc định `full_name_asc`; giá trị ngoài allowlist → `400`, không
+bao giờ nối trực tiếp vào SQL) — cả hai chiều sort đều có tie-breaker `member_id` để đảm bảo stable
+ordering khi trùng `full_name`/`updated_at`. Không thêm migration/index mới: benchmark trên dataset
+synthetic 3.000 dòng (`member-api/tests/memberPerformance.test.mjs`,
+`tests/helpers/syntheticMembers.mjs`) cho thấy index composite `(work_unit_code, member_status)` và
+GIN trigram `idx_members_full_name_trgm` từ P5.5-01 đã đủ — list/filter ~2ms, search ~10ms server-side
+(median), nằm sâu dưới target `<300ms` mục 25.
+
 `POST /v1/members` xác thực `work_unit_code` qua hai bước độc lập: (1) `member-api/src/organizationDirectory.js`
 (`checkOrganizationExists`) — đọc thẳng bảng `organizations` thật của Supabase qua REST endpoint
 sẵn có (grant + RLS "active users read organizations" từ `202607300001_initial_schema.sql`), dùng

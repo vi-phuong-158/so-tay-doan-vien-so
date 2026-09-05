@@ -51,7 +51,17 @@ function escapeLikePattern(term) {
   return term.replace(/[\\%_]/g, (match) => `\\${match}`);
 }
 
-export async function listMembers(pool, { scope, filters, limit, offset }) {
+// P5.5-04 mục 14/23 — fixed allowlist mapping a validated `sort` key (memberValidation.js) to a
+// literal ORDER BY clause. `sort` is never interpolated as a raw client value; it can only ever
+// select one of these two hardcoded strings. Both include `member_id ASC` as a deterministic
+// tie-breaker so ordering stays stable across pages even when many rows share the same
+// full_name/updated_at (muc 23 negative test #14 — stable ordering for duplicate names).
+const ORDER_BY_CLAUSES = {
+  full_name_asc: 'full_name ASC, member_id ASC',
+  updated_at_desc: 'updated_at DESC, member_id ASC',
+};
+
+export async function listMembers(pool, { scope, filters, limit, offset, sort }) {
   const conditions = [];
   const params = [];
 
@@ -69,19 +79,32 @@ export async function listMembers(pool, { scope, filters, limit, offset }) {
     params.push(filters.memberStatus);
     conditions.push(`member_status = $${params.length}`);
   }
+  if (filters.youthPosition) {
+    params.push(filters.youthPosition);
+    conditions.push(`youth_position = $${params.length}`);
+  }
+  if (filters.youthBoardPosition) {
+    params.push(filters.youthBoardPosition);
+    conditions.push(`youth_board_position = $${params.length}`);
+  }
+  if (filters.politicalTheoryLevel) {
+    params.push(filters.politicalTheoryLevel);
+    conditions.push(`political_theory_level = $${params.length}`);
+  }
   if (filters.search) {
     params.push(`%${escapeLikePattern(filters.search)}%`);
     conditions.push(`member_immutable_unaccent(full_name) ILIKE member_immutable_unaccent($${params.length}) ESCAPE '\\'`);
   }
 
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+  const orderByClause = ORDER_BY_CLAUSES[sort] ?? ORDER_BY_CLAUSES.full_name_asc;
 
   const countResult = await pool.query(`SELECT count(*)::int AS total FROM members ${whereClause}`, params);
   const total = countResult.rows[0].total;
 
   const listParams = [...params, limit, offset];
   const { rows } = await pool.query(
-    `SELECT ${SELECT_COLUMNS} FROM members ${whereClause} ORDER BY full_name ASC, member_id ASC LIMIT $${listParams.length - 1} OFFSET $${listParams.length}`,
+    `SELECT ${SELECT_COLUMNS} FROM members ${whereClause} ORDER BY ${orderByClause} LIMIT $${listParams.length - 1} OFFSET $${listParams.length}`,
     listParams
   );
 

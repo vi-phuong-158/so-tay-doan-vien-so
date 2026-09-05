@@ -31,8 +31,8 @@ export async function handleMemberRoute({
 }) {
   if (route.kind === 'collection') {
     if (req.method === 'GET') {
-      const { limit, offset, filters } = parseListQuery(url.searchParams);
-      const result = await listMembers(pool, { scope, filters, limit, offset });
+      const { limit, offset, filters, sort } = parseListQuery(url.searchParams);
+      const result = await listMembers(pool, { scope, filters, limit, offset, sort });
       sendJson(res, 200, result);
       return;
     }
