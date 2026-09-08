@@ -18,7 +18,12 @@ const checkOrganizationCodesExist = createOrganizationDirectoryBatch({
   supabaseUrl: config.supabaseUrl,
   supabaseAnonKey: config.supabaseAnonKey,
 });
-const server = createServer(pool, { authorizeMemberManagement, checkOrganizationExists, checkOrganizationCodesExist });
+const server = createServer(pool, {
+  authorizeMemberManagement,
+  checkOrganizationExists,
+  checkOrganizationCodesExist,
+  corsAllowedOrigin: config.corsAllowedOrigin,
+});
 
 server.listen(config.port, () => {
   console.log(`[member-api] listening on port ${config.port}`);

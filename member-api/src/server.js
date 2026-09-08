@@ -67,9 +67,34 @@ const readImportConfirmBody = makeJsonBodyReader(MAX_IMPORT_CONFIRM_BODY_BYTES);
 //   authoritative source, never a Member API-side copy (muc 6).
 // - checkOrganizationCodesExist (organizationDirectory.js, P5.5-05) is the same authoritative
 //   source, batched for bulk import.
-export function createServer(pool, { authorizeMemberManagement, checkOrganizationExists, checkOrganizationCodesExist } = {}) {
+// P5.5-06 — CORS for the browser frontend. `corsAllowedOrigin` is optional here (tests construct
+// `createServer` directly and never pass it, so their behavior is unchanged); `index.js` always
+// supplies it from the fail-closed `loadConfig()` value in every real deployment. Only ever echoes
+// the configured origin back, and only on an EXACT match against the request's `Origin` header —
+// never a wildcard, since these requests carry a real Authorization bearer token.
+function applyCorsHeaders(req, res, corsAllowedOrigin) {
+  if (!corsAllowedOrigin) return;
+  const origin = req.headers.origin;
+  if (origin !== corsAllowedOrigin) return;
+  res.setHeader('Access-Control-Allow-Origin', corsAllowedOrigin);
+  res.setHeader('Vary', 'Origin');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Import-Filename');
+  res.setHeader('Access-Control-Max-Age', '600');
+}
+
+export function createServer(pool, { authorizeMemberManagement, checkOrganizationExists, checkOrganizationCodesExist, corsAllowedOrigin } = {}) {
   return http.createServer(async (req, res) => {
     try {
+      applyCorsHeaders(req, res, corsAllowedOrigin);
+      if (req.method === 'OPTIONS') {
+        // Preflight only — never routed further, never authorized/authenticated (it carries no
+        // Member data and browsers never send credentials-bearing headers on it).
+        res.writeHead(204);
+        res.end();
+        return;
+      }
+
       const url = new URL(req.url, 'http://localhost');
       const { pathname } = url;
 

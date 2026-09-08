@@ -1,5 +1,89 @@
 # 06 — AI Working Log
 
+## [2026-09-08] P5.5-06 — Admin/Member Frontend
+
+- **Agent:** Claude Code
+- **Base:** `master@9f89ba808911d8a7f6c9413436e596b239ffa87c` (PR #43, P5.5-05 merged — owner
+  authorized and confirmed merge after CI/mergeability verification). Branch
+  `feat/p5-5-06-member-frontend`.
+- **Đọc trước khi code:** `docs/01-product-spec.md`, `docs/02-design-system.md` (đã dùng lại toàn
+  bộ token/class CSS sẵn có, không viết CSS mới), `src/components/Guards.jsx`,
+  `src/services/documentService.js`/`documentAdminService.js` (convention `create*Service(client)`),
+  `src/pages/AdminDocuments.jsx`/`DocumentDetail.jsx` (pattern list/form/detail để tái dùng),
+  `src/contexts/AuthContext.jsx` (phát hiện `hasRole()` có bypass `SYSTEM_ADMIN` baked-in — không
+  dùng cho Member Management), `src/App.jsx`, `src/components/Layout.jsx`, `vercel.json` (CSP
+  `connect-src` hiện chỉ cho phép `'self'` + `*.supabase.co` — ghi nhận là giới hạn đã biết, xem
+  dưới).
+- **Thay đổi:**
+  1. Member API (backend enabler tối thiểu, cần thiết để UI gọi được qua trình duyệt — xem
+     P5.5-D12 `03-decisions.md`): `config.js` thêm `CORS_ALLOWED_ORIGIN` (required, fail-closed);
+     `server.js` thêm `applyCorsHeaders`/xử lý `OPTIONS` preflight (exact-origin echo, không
+     wildcard, preflight không đi qua authorization); `index.js` truyền `config.corsAllowedOrigin`;
+     `.env.example` thêm biến mới. Test mới trong `server.test.mjs`: không có header khi chưa cấu
+     hình, echo đúng khi origin khớp, không reflect khi không khớp, preflight không gọi
+     `authorizeMemberManagement`. Cập nhật `loadConfig` test hiện có (thêm `CORS_ALLOWED_ORIGIN`
+     vào fixture "valid minimal config", thêm test fail-closed mới) — không sửa logic P5.5-01…05.
+  2. `.env.example` (root) — thêm `VITE_MEMBER_API_URL` (không phải secret, giống
+     `VITE_SUPABASE_URL`).
+  3. `src/services/memberService.js` (mới) — `createMemberService(client, {baseUrl, fetchImpl})`;
+     `client` chỉ dùng lấy access token (`auth.getSession()`) + đọc bảng `organizations` (RLS sẵn
+     có) — không bao giờ dùng để tính authorization. `baseUrl`/`fetchImpl` là tham số tường minh,
+     không đọc `import.meta.env` trong file này (giữ module testable dưới `node --test` thuần,
+     đúng convention `createDocumentService(client)`). Bọc toàn bộ Member API endpoint P5.5-02…05.
+     Lỗi HTTP chuẩn hoá thành `MemberServiceError` với `code` từ allowlist server trả về
+     (`BUSINESS_ERROR_CODES`), giữ nguyên body gốc ở `error.cause` (cần cho `import_job_id` khi
+     upload workbook lỗi).
+  4. `src/lib/memberDisplay.mjs` (mới) — nhãn tiếng Việt + tone cho mọi enum/status, tách biệt
+     khỏi service (đúng convention `documentAdminDisplay.mjs`).
+  5. `src/components/Guards.jsx` — thêm `getMemberManagementGuardAction` (pure function, cùng
+     pattern `getAuthGuardAction` đã có) + component `MemberManagementGuard`. Điều kiện
+     `roles.includes('YOUTH_ADMIN') || roles.includes('BRANCH_OFFICER')`, KHÔNG có nhánh
+     `SYSTEM_ADMIN` — đúng cảnh báo mục 24 fix F1 của kiến trúc (RoleGuard nguyên trạng có bypass
+     `SYSTEM_ADMIN`, không được dùng cho Member Management). `requireImportRole` prop giới hạn
+     route import chỉ `YOUTH_ADMIN` (khớp `importRoutes.js` P5.5-05).
+  6. `src/pages/MemberManagement.jsx` (mới) — `/quan-ly-doan-vien`: list + search + đủ 5 filter
+     (`work_unit_code`, `member_status`, `youth_position`, sort — youth_board_position/
+     political_theory_level filter chưa lên UI nhưng service đã hỗ trợ, có thể bổ sung UI sau nếu
+     cần) + pagination "Tải thêm" (server-side, không tải hết 3.000 dòng về client) + form tạo mới
+     inline (toggle, giống `AdminDocuments.jsx`). Nút "Import Excel" chỉ hiện khi actor có
+     `YOUTH_ADMIN` (đọc từ `getScope()`).
+  7. `src/pages/MemberDetail.jsx` (mới) — `/quan-ly-doan-vien/:memberId`: xem/sửa field, nút
+     lưu trữ/khôi phục (`PATCH member_status`) có confirm dialog. Không có mục lịch sử audit (chưa
+     có audit table — P5.5-07).
+  8. `src/pages/MemberImport.jsx` (mới) — `/admin/quan-ly-doan-vien/import`: chọn file → upload
+     (hiển thị tổng/hợp lệ/lỗi/nghi trùng/cảnh báo) → tab lọc theo `row_status` → mỗi dòng
+     `POSSIBLE_DUPLICATE`/`WARNING` có checkbox "Vẫn tạo mới" (chỉ CREATE_NEW, KHÔNG merge, khớp
+     P5.5-D9) → xác nhận/hủy → kết quả. Workbook lỗi (400 `malformed_workbook`) vẫn hiển thị job
+     `FAILED` có `failure_reason` (đọc từ `error.cause.import_job_id`).
+  9. `src/App.jsx`/`src/components/Layout.jsx` — wire 3 route mới, thêm mục sidebar "Quản lý đoàn
+     viên" dùng trực tiếp `roles` (không dùng `hasRole()` — đã xác nhận `hasRole()` có bypass
+     `SYSTEM_ADMIN` baked-in, không phù hợp Member Management).
+- **Quyết định kỹ thuật mới:** P5.5-D12 (CORS exact-origin, không wildcard), P5.5-D13 (không xây
+  `/member-metadata`, tái dùng `organizations` + `/v1/member-scope` có sẵn) — chi tiết
+  `03-decisions.md`.
+- **Kiểm tra:**
+  - Member API: `npm run migrate:fresh`, `npm test` → **226/226 pass** (221 baseline P5.5-01…05
+    không đổi + 5 CORS test mới).
+  - Root: `npm install` (postgresql service cần khởi động lại giữa các lần chạy do môi trường
+    không giữ service state qua các turn — không phải lỗi code), `npm run lint` → 0 error (4
+    warning: 3 warning "fast refresh" cũ + 1 warning cùng loại mới ở `getMemberManagementGuardAction`,
+    không phải baseline mới xấu đi — cùng bản chất với warning đã tồn tại ở `getAuthGuardAction`
+    cùng file); phát hiện 1 lỗi lint thật (`react-hooks/set-state-in-effect` ở `MemberDetail.jsx`)
+    và vá bằng đúng pattern "deferred setTimeout" đã dùng ở `AdminDocuments.jsx`/`MemberManagement.jsx`.
+  - Root `npm test` → **173/173 pass** (153 baseline + 20 mới: 12 `member_service.test.mjs` + 8
+    `MemberManagementGuard.test.mjs`).
+  - Root `npm run build` → PASS (không lỗi import/module).
+  - Smoke check bổ sung: khởi động `npm run dev`, `curl` xác nhận HTTP 200 + đúng HTML shell tại
+    `/`. KHÔNG cài Playwright riêng cho việc này (không có trong dependency dự án, không cân xứng
+    chỉ để một lần kiểm tra) — không thực hiện được click-through trình duyệt thật vì môi trường
+    này không có Supabase project thật để đăng nhập, và Member API chưa được deploy. Đây là giới
+    hạn được ghi nhận rõ ràng, không tự nhận đã kiểm thử UI qua trình duyệt với dữ liệu thật.
+- **Không có trong subphase này:** `/member-metadata` thật, audit/lịch sử thay đổi (P5.5-07), export,
+  hard delete UI, merge/update-existing qua import UI, runtime rehearsal trình duyệt thật (giới hạn
+  môi trường viết code, không phải bị bỏ qua có chủ đích).
+- **Lý do:** Hoàn thành P5.5-06 theo đúng chỉ dẫn owner (mục 3 của prompt DEV MODE), tuân thủ mục
+  24 kiến trúc (route, guard không bypass SYSTEM_ADMIN, mobile-first dùng token sẵn có).
+
 ## [2026-09-08] P5.5-05 — Excel Import
 
 - **Agent:** Claude Code
