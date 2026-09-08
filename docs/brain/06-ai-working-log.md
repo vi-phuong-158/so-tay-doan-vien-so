@@ -1,5 +1,80 @@
 # 06 — AI Working Log
 
+## [2026-09-05] P5.5-04 — Member Search/Filter/List
+
+- **Agent:** Claude Code
+- **Base:** `master@56f858296bcd02c3a805d77dba2b3086cace8a4b` (PR #41, P5.5-03 merged). Branch
+  `feat/p5-5-04-member-search-filter-list`.
+- **Audit trước khi code:** đọc `docs/phase-5-5/00-member-management-architecture.md` mục 9/14/23/25
+  và toàn bộ `member-api/src/{memberRepository,memberValidation,memberRoutes,server,scope}.js` +
+  test hiện có. P5.5-03 đã đúng: pagination `limit/offset` (kể cả bound/clamp cho negative/zero/
+  non-number/oversized), filter `work_unit_code`/`member_status`, search accent-insensitive
+  (`pg_trgm`+`unaccent`), scope enforcement, parameter binding, LIKE-escaping,
+  `ORDER BY full_name ASC, member_id ASC` cố định. Thiếu theo mục 14/23: filter
+  `youth_position`/`youth_board_position`/`political_theory_level`; `sort` có thể chọn
+  (`updated_at DESC`); performance evidence trên dataset ~3.000 dòng.
+- **Thay đổi:**
+  1. `member-api/src/memberValidation.js`: `parseListQuery` thêm parse+validate 3 filter còn thiếu
+     (cùng `validateOptionalEnum` với enum canonical đã export sẵn) và query param `sort` — allowlist
+     cố định `SORT_VALUES = ['full_name_asc', 'updated_at_desc']`, mặc định `full_name_asc`, giá trị
+     ngoài allowlist ném `ApiError(400, 'validation_error', ...)`.
+  2. `member-api/src/memberRepository.js`: `listMembers` thêm 3 điều kiện `AND` bound-parameter cho
+     filter mới (cùng pattern `params.push(...)` + `$n` như 2 filter cũ — không có filter nào override
+     hay mở rộng điều kiện scope đã build trước đó). Thêm `ORDER_BY_CLAUSES` — object literal cố định
+     map `sort` đã validate sang đúng một trong hai chuỗi `ORDER BY` literal (`full_name ASC,
+     member_id ASC` / `updated_at DESC, member_id ASC`) — không bao giờ nối giá trị `sort` của client
+     trực tiếp vào SQL text. Cả hai order đều có tie-breaker `member_id` (mục 23 test #14 — stable
+     ordering khi trùng `full_name`/`updated_at`).
+  3. `member-api/src/memberRoutes.js`: truyền `sort` (từ `parseListQuery`) xuống `listMembers`.
+  4. Không sửa `memberScope.js`/`scope.js`/Edge Function `resolve-member-scope` — không phát hiện bug
+     thật ở resolver P5.5-02 trong quá trình audit; scope predicate của P5.5-03 (`work_unit_code =
+     ANY($n::text[])` khi không global, rỗng luôn = 0 dòng) áp dụng nguyên trạng cho mọi filter mới.
+  5. **Không thêm migration/index mới.** Benchmark trước bằng dataset synthetic (mục 10 chỉ dẫn: chỉ
+     thêm index khi có bằng chứng) — xem mục Performance dưới.
+- **Performance dataset & benchmark (mục 9/25):**
+  - `member-api/tests/helpers/syntheticMembers.mjs` (mới) — sinh 3.000 dòng deterministic (không
+    `Math.random()`, không dữ liệu đoàn viên thật): tên tiếng Việt tổng hợp từ tổ hợp họ/đệm/tên phổ
+    biến, 30 mã tổ chức test-only (`P554-PERF-ORG-00`..`29`), cycle qua toàn bộ 4 `member_status`,
+    xen `NULL` thực tế cho `youth_position`/`youth_board_position`/`political_theory_level`, và một
+    pool tên cố định lặp lại (~1/12 số dòng) để đảm bảo có nhóm trùng `full_name` thật sự (không phải
+    ngẫu nhiên may rủi) phục vụ test stable-ordering. Insert bằng một câu `INSERT ... SELECT * FROM
+    UNNEST(...)` duy nhất (một round-trip cho toàn bộ 3.000 dòng).
+  - `member-api/tests/memberPerformance.test.mjs` (mới) — seed dataset một lần trong `before()`, mỗi
+    kịch bản warm-up 3 lần rồi đo 15 lần, sort thời gian, báo cáo min/median/max ra console, assert
+    trên **median** so với target `<300ms` (mục 25) — tránh một sample đơn lẻ làm CI flaky.
+  - Kết quả cục bộ (PostgreSQL 16 thật, 3.000 dòng synthetic):
+    - List+filter (`work_unit_code`+`member_status`, scoped 1 tổ chức): min≈1.6ms median≈2.0ms
+      max≈3.0ms.
+    - List+filter (`member_status` only, global scope, quét cả 3.000 dòng): min≈1.7ms median≈2.2ms
+      max≈2.5ms.
+    - Search có dấu (`"Nguyễn Văn"`): min≈9.7ms median≈10.5ms max≈15.5ms.
+    - Search không dấu (`"nguyen van"`): min≈9.2ms median≈9.8ms max≈10.3ms.
+    Toàn bộ sâu dưới target 300ms (hệ số an toàn ≈30–150 lần).
+  - `EXPLAIN (ANALYZE, BUFFERS)` xác nhận: filter `work_unit_code`+`member_status` dùng Index Scan
+    trên `idx_members_work_unit_status` (đã có từ P5.5-01); search dùng Seq Scan (planner ước tính
+    chi phí Seq Scan thấp hơn GIN trigram scan ở quy mô 3.000 dòng — hành vi PostgreSQL bình thường
+    cho bảng nhỏ, không phải lỗi cấu hình index) — cả hai đều đạt target, nên **không cần
+    migration/index mới**. Ghi lại làm bằng chứng "không over-engineer" theo đúng mục 10.
+- **File đã sửa/tạo:**
+  `member-api/src/{memberValidation,memberRepository,memberRoutes}.js`,
+  `member-api/tests/helpers/syntheticMembers.mjs` (new),
+  `member-api/tests/memberPerformance.test.mjs` (new),
+  `member-api/tests/{memberValidation,memberCrud,memberRoutes}.test.mjs` (mở rộng),
+  `member-api/README.md`, `docs/brain/01-architecture.md`, `docs/brain/04-current-tasks.md`,
+  `docs/brain/06-ai-working-log.md` (entry này).
+- **Lý do:** Hoàn thành đúng phạm vi P5.5-04 (mục 26 decomposition) — chỉ bổ sung delta còn thiếu so
+  với P5.5-03, không viết lại phần đã đúng, không mở rộng sang P5.5-05 (import Excel).
+- **Kiểm tra:** `member-api` **173/173 pass** cục bộ (PostgreSQL 16 thật, `npm test`) — 148 test
+  P5.5-01…03 không regress + 25 test mới/mở rộng cho filter/sort/pagination-edge-case/performance.
+  Negative/security: cross-org isolation cho 3 filter mới, filter/search không thể escape scope
+  (kể cả khi client cố tình gửi `work_unit_code` của tổ chức khác), invalid enum filter → `400`,
+  invalid/injection-shaped `sort` → `400` và không chạm SQL (bảng vẫn nguyên vẹn sau đó), pagination
+  cực trị (negative/zero/non-number/oversized limit, offset vượt dataset) → luôn `200` với giá trị đã
+  clamp, không bao giờ lỗi hay leak toàn bộ dữ liệu. Root `npm run lint` (0 lỗi, 3 warning cũ có sẵn),
+  root `npm test` (153/153), root `npm run build` — không regression, không đụng `src/`/`supabase/`.
+  Không chạy được `test-db` (Supabase local stack) cục bộ trong sandbox này (không có Supabase CLI) —
+  không cần vì P5.5-04 không đụng `supabase/`; chờ CI thật trên PR để xác nhận job này.
+
 ## [2026-09-05] P5.5-03 fix — validate work_unit_code against authoritative organization data
 
 - **Agent:** Claude Code
