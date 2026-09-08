@@ -4,6 +4,7 @@
 // every response row is built field-by-field (never `SELECT *` flowing to the client — muc 9 of the
 // P5.5-03 task instructions).
 import { isUuid } from './memberValidation.js';
+import { buildCreateAuditPayload, buildUpdateAuditPayload, insertAuditLog } from './memberAudit.js';
 
 // account_user_id is intentionally excluded from the response shape: it is an authorization
 // mapping (muc 11), not part of the member profile surface, and is set only via a separate,
@@ -129,33 +130,94 @@ export async function getMemberById(pool, { scope, id }) {
 // `payload` keys always come from parseCreatePayload's fixed, allowlist-checked output — never
 // arbitrary client-supplied keys — so building the column list from Object.keys here cannot become
 // a SQL-injection or mass-assignment vector.
-export async function createMember(pool, { payload }) {
-  const columns = Object.keys(payload);
-  const values = columns.map((column) => payload[column]);
-  const placeholders = values.map((_, index) => `$${index + 1}`);
-  const { rows } = await pool.query(
-    `INSERT INTO members (${columns.join(', ')}) VALUES (${placeholders.join(', ')}) RETURNING ${SELECT_COLUMNS}`,
-    values
-  );
-  return serializeRow(rows[0]);
+//
+// P5.5-07: the INSERT and its audit row are one transaction — a mutation is never visible without
+// its audit row, and a rolled-back mutation never leaves a dangling "success" audit row behind
+// (muc 16: audit must not depend on a fragile distributed transaction; the fix here is simpler —
+// there IS no second database, so an ordinary local transaction is sufficient).
+export async function createMember(pool, { payload, actorUserId }) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const columns = Object.keys(payload);
+    const values = columns.map((column) => payload[column]);
+    const placeholders = values.map((_, index) => `$${index + 1}`);
+    const { rows } = await client.query(
+      `INSERT INTO members (${columns.join(', ')}) VALUES (${placeholders.join(', ')}) RETURNING ${SELECT_COLUMNS}`,
+      values
+    );
+    const created = rows[0];
+    await insertAuditLog(client, {
+      actorUserId,
+      action: 'CREATE',
+      memberId: created.member_id,
+      beforeData: null,
+      afterData: buildCreateAuditPayload(payload),
+    });
+    await client.query('COMMIT');
+    return serializeRow(created);
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
-// Single atomic UPDATE ... WHERE id AND (scope) — scope enforcement and the mutation happen in one
-// statement, so there is no read-then-write gap an out-of-scope row could slip through. Returns
-// null uniformly for "no such id" and "id exists but out of scope", same anti-enumeration
-// contract as getMemberById. `patch` keys always come from parsePatchPayload's allowlist-checked
-// output (work_unit_code can never appear here — muc 6 immutability contract).
-export async function updateMember(pool, { scope, id, patch }) {
+// P5.5-07: locks the target row first (`SELECT ... FOR UPDATE`, same scope predicate as the UPDATE
+// itself) so the audit row's `before_data` reflects the exact state this transaction is about to
+// change from — not a stale read from before some concurrent request, and not a second unscoped
+// path to the row (a lock outside `scope` never happens; the lock query returns nothing, same as
+// today's "not found or out of scope" 404 parity). Returns null uniformly for "no such id" and "id
+// exists but out of scope", same anti-enumeration contract as getMemberById. `patch` keys always
+// come from parsePatchPayload's allowlist-checked output (work_unit_code can never appear here —
+// muc 6 immutability contract).
+export async function updateMember(pool, { scope, id, patch, actorUserId }) {
   if (!isUuid(id)) return null;
-  const columns = Object.keys(patch);
-  const setClauses = columns.map((column, index) => `${column} = $${index + 2}`);
-  const params = [id, ...columns.map((column) => patch[column])];
-  let sql = `UPDATE members SET ${setClauses.join(', ')} WHERE member_id = $1`;
-  if (!scope.isGlobal) {
-    params.push(scope.orgCodes);
-    sql += ` AND work_unit_code = ANY($${params.length}::text[])`;
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const lockParams = [id];
+    let lockSql = `SELECT ${SELECT_COLUMNS} FROM members WHERE member_id = $1`;
+    if (!scope.isGlobal) {
+      lockParams.push(scope.orgCodes);
+      lockSql += ` AND work_unit_code = ANY($2::text[])`;
+    }
+    lockSql += ' FOR UPDATE';
+    const beforeResult = await client.query(lockSql, lockParams);
+    if (beforeResult.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return null;
+    }
+    const beforeRow = beforeResult.rows[0];
+
+    const columns = Object.keys(patch);
+    const setClauses = columns.map((column, index) => `${column} = $${index + 2}`);
+    const params = [id, ...columns.map((column) => patch[column])];
+    const { rows } = await client.query(
+      `UPDATE members SET ${setClauses.join(', ')} WHERE member_id = $1 RETURNING ${SELECT_COLUMNS}`,
+      params
+    );
+    const updated = rows[0];
+
+    const auditPayload = buildUpdateAuditPayload(beforeRow, patch);
+    if (auditPayload) {
+      await insertAuditLog(client, {
+        actorUserId,
+        action: 'UPDATE',
+        memberId: id,
+        beforeData: auditPayload.beforeData,
+        afterData: auditPayload.afterData,
+      });
+    }
+
+    await client.query('COMMIT');
+    return serializeRow(updated);
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
   }
-  sql += ` RETURNING ${SELECT_COLUMNS}`;
-  const { rows } = await pool.query(sql, params);
-  return rows.length > 0 ? serializeRow(rows[0]) : null;
 }

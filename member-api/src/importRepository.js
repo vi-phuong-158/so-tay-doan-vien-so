@@ -6,6 +6,7 @@
 // inside one BEGIN/COMMIT — reusing memberRepository's pool-based single-statement helpers here
 // would silently break that guarantee.
 import { ApiError } from './errors.js';
+import { buildCreateAuditPayload, insertAuditLog } from './memberAudit.js';
 
 const JOB_ROW_CHUNK_SIZE = 500;
 
@@ -187,7 +188,7 @@ async function insertCommittedMember(client, normalizedData) {
 // correctness hon throughput... khong can streaming/batch-commit phuc tap" for a ~3,000-row pilot
 // commit) over a harder-to-verify set-based bulk insert that would still need a reliable
 // row_number<->member_id correlation for `committed_member_id`/audit traceability.
-export async function confirmImportJob(pool, { importJobId, scope, rowOverrides }) {
+export async function confirmImportJob(pool, { importJobId, scope, rowOverrides, actorUserId }) {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -260,6 +261,17 @@ export async function confirmImportJob(pool, { importJobId, scope, rowOverrides 
     for (const row of candidateRows) {
       const memberId = await insertCommittedMember(client, row.normalized_data);
       committed.push({ rowNumber: row.row_number, memberId });
+      // P5.5-07: one audit row per committed member, in the SAME transaction as its INSERT, with
+      // import_job_id set — lets one committed record be traced back to the exact job/row that
+      // created it (muc 16), the same as an ordinary POST /v1/members CREATE audit row otherwise.
+      await insertAuditLog(client, {
+        actorUserId,
+        action: 'CREATE',
+        memberId,
+        importJobId,
+        beforeData: null,
+        afterData: buildCreateAuditPayload(row.normalized_data),
+      });
     }
 
     if (committed.length > 0) {

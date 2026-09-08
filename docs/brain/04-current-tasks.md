@@ -281,6 +281,86 @@
   Không tự bịa hostname vào `vercel.json` trong task này vì Member API production domain chưa được
   quyết định (mục 28.3 "OWNER/DEPLOYMENT DECISION REQUIRED").
 - **Report:** xem entry mới nhất trong `docs/brain/06-ai-working-log.md`.
+- **Trạng thái:** merged qua PR #44 (merge commit `03e765e234d4b0bc310629e8bda0e7407fa7c966`),
+  exact-head CI (`91872e4`) xanh trước merge (`build`/`test-db`/`member-api-test`/Vercel đều
+  `success`), owner đã xác nhận merge.
+
+### P5.5-07 — Audit + Backup/Restore readiness
+- **Base:** `master` sau merge PR #44 (P5.5-06, `03e765e234d4b0bc310629e8bda0e7407fa7c966`). Branch
+  `feat/p5-5-07-member-audit-backup`.
+- **Phạm vi:** hai lớp tách biệt theo đúng chỉ dẫn — (A) application audit, (B) infra backup/restore.
+
+**A. APPLICATION AUDIT — hoàn thành.**
+- Migration `migrations/0003_member_audit.sql`: `member_audit_logs` (bảng riêng tại Member API,
+  KHÔNG dùng chung `audit_logs` Supabase — tránh distributed transaction, đúng mục 16).
+- `src/memberAudit.js` (mới): `buildCreateAuditPayload`/`buildUpdateAuditPayload` (pure, chỉ audit
+  9 field nghiệp vụ, loại `external_ref_note`), `insertAuditLog` (luôn nhận `client` trong
+  transaction đang mở), `listMemberAuditLogs` (đọc phân trang).
+- `src/memberRepository.js`: `createMember`/`updateMember` chuyển từ `pool.query` đơn sang
+  transaction thật; `updateMember` thêm `SELECT ... FOR UPDATE` trước để lấy `before_data` chính
+  xác (cùng scope predicate với UPDATE — không có đường lock nào ngoài scope).
+- `src/importRepository.js`: `confirmImportJob` ghi 1 audit row/member được commit (không phải
+  1 row/job — mục P5.5-D15), cùng transaction với insert member, có `import_job_id`.
+- `src/memberRoutes.js`/`src/server.js`: route mới `GET /v1/members/:id/audit` (cùng scope check
+  với GET member thường); `userId` (actor thật từ resolver) giờ được truyền xuống
+  `createMember`/`updateMember` qua toàn bộ chuỗi gọi (trước đây KHÔNG được truyền — đây không phải
+  bug cũ, P5.5-03 chưa cần actor identity vì chưa có audit).
+- **Quyết định kỹ thuật mới:** P5.5-D14 (không có cột `outcome` — row tồn tại = thành công),
+  P5.5-D15 (audit granularity: 1 row/member kể cả bulk import) — xem `03-decisions.md`.
+- **Sửa fixture test cũ (không phải defect P5.5-01…06, chỉ là cập nhật contract):**
+  `createMember`/`updateMember` giờ yêu cầu `actorUserId` (cột UUID `NOT NULL`) — `memberCrud.test.mjs`
+  và `importDedup.test.mjs` (gọi repository trực tiếp) thêm wrapper nội bộ cung cấp actor cố định,
+  không đổi bất kỳ call site nào trong ~43 test case sẵn có. `memberRoutes.test.mjs`'s
+  `authorizerFor` đổi `userId: 'test-user'` (không phải UUID hợp lệ) sang một UUID cố định thật.
+- **Test:** `tests/memberAudit.test.mjs` (mới, 11 test) — 1 audit row/mutation thành công, before/
+  after đúng field đã đổi, patch chỉ đổi `external_ref_note` → 0 audit row, mutation bị từ chối
+  (out-of-scope/not-found) → 0 audit row, mutation rollback giữa chừng (vi phạm CHECK constraint) →
+  0 audit row dangling, pagination/ordering, field không audit không leak vào `after_data`. Thêm 3
+  test vào `memberRoutes.test.mjs` (endpoint `GET /v1/members/:id/audit`: trail đúng, 404 ngoài
+  scope, PATCH bị từ chối không audit) và 3 test vào `memberImportRoutes.test.mjs` (1 audit
+  row/member commit có `import_job_id` đúng, confirm lặp không nhân đôi audit, job bị cancel có 0
+  audit row). **243/243 pass** (`npm test`, PostgreSQL 16 thật cục bộ) — 226 baseline P5.5-01…06
+  không đổi + 17 mới.
+- **Performance:** benchmark lại `memberImportPerformance.test.mjs` sau khi thêm audit insert —
+  confirm/commit cho ~2.580 member từ ~550ms (P5.5-05) lên ~1.670ms (audit tăng gấp đôi số INSERT
+  trong transaction) — vẫn sâu dưới target "dưới vài giây" mục 25, không cần tối ưu thêm.
+- **Root validation:** không đổi file frontend nào trong P5.5-07 — `npm run lint`/`npm test`
+  (173/173)/`npm run build` chạy lại để xác nhận không ảnh hưởng, đều PASS như trước.
+
+**B. BACKUP/RESTORE HẠ TẦNG — BLOCKED, không có bằng chứng mới.**
+
+Audit lại đúng 5 câu hỏi checklist mục 18 tài liệu kiến trúc:
+
+| # | Câu hỏi | Trả lời |
+|---|---|---|
+| 1 | Gói Mắt Bão cụ thể đang dùng có automated backup không, tần suất thế nào? | Không có gói nào "đang dùng" — chưa provisioning (đã ghi từ P5.5-01: "CHƯA THỰC HIỆN — hành động mua dịch vụ"). Chỉ có bằng chứng cấp tài liệu vendor (`CAPABILITY_VERIFIED` mức tồn tại tính năng, không phải cấu hình thật). |
+| 2 | Có point-in-time recovery hay chỉ snapshot theo lịch? | `NOT VERIFIED` — không đổi từ P5.5-01. |
+| 3 | Backup có encrypted at rest không? | `NOT VERIFIED` — không đổi. |
+| 4 | Ai có quyền trigger restore, quy trình xác thực yêu cầu restore là gì? | Không thể trả lời — chưa có instance/tài khoản nào để có "quyền" trên đó; đây là chính sách owner/infra phải định nghĩa khi provisioning. |
+| 5 | Đã từng test restore thật chưa? | `RESTORE_REHEARSAL_NOT_RUN` — không thể chạy vì không có instance non-production nào tồn tại. |
+
+- **Không có quyền/hạ tầng thật:** agent không có tài khoản Mắt Bão, không có billing access, không
+  thể tự provisioning một instance để test. Đây đúng như dự đoán ở P5.5-01 (`docs/phase-5-5/01-member-infrastructure-decision.md`
+  mục 15: "Hạ tầng đã provisioned... CHƯA THỰC HIỆN").
+- **Không tự ý provisioning** — nằm ngoài phạm vi một agent code, đúng cảnh báo "hành động vận
+  hành/mua sắm riêng" đã ghi từ P5.5-01.
+- **Blocker cụ thể owner/infra cần cung cấp trước khi P5.5-07 phần B (và P5.5-09 sau này) PASS:**
+  1. Quyết định + thực hiện provisioning Mắt Bão Vibe Host v2 (hoặc phương án khác nếu đổi ý) —
+     mua gói, tạo app instance, tạo PostgreSQL database, lấy connection string.
+  2. Xác nhận cấu hình backup thật trên instance đó: tần suất, retention (đề xuất tối thiểu 30 ngày
+     rolling — mục 18), có PITR hay chỉ snapshot.
+  3. Xác nhận backup có encrypted at rest.
+  4. Định nghĩa chính sách "ai được trigger restore" + quy trình xác thực yêu cầu.
+  5. Cho phép một `AUTHENTICATED_EXTERNAL_OPERATOR` (hoặc tương đương) chạy restore rehearsal thật
+     trên một instance non-production, dùng dữ liệu synthetic — theo đúng mô hình runtime rehearsal
+     đã dùng ở Phase 3/4 (`P3-08A`/`P4-02R` là tiền lệ).
+  6. Domain/TLS cho Member API (mục 28.3) — cùng nhóm quyết định, ảnh hưởng cả `CORS_ALLOWED_ORIGIN`
+     (P5.5-D12) và CSP `connect-src` của `vercel.json` (đã ghi ở entry P5.5-06).
+- **Không tuyên bố PASS cho phần B** — verdict cuối P5.5-07 phản ánh đúng: phần A (application
+  audit) PASS, phần B (infra) BLOCKED chờ owner/infra.
+- **Report:** xem entry mới nhất trong `docs/brain/06-ai-working-log.md`;
+  `member-api/README.md` mục "P5.5-07 — Application audit" + "Backup / restore — infrastructure
+  audit".
 
 ### Phase 5 end-to-end closure
 - **Base:** isolated closure worktree/branch `codex/phase-5-full-closure`, based on P5-03 plus the

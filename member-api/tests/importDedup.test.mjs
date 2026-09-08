@@ -7,7 +7,7 @@ import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createPool } from '../src/db.js';
-import { createMember } from '../src/memberRepository.js';
+import { createMember as createMemberRaw } from '../src/memberRepository.js';
 import { detectDuplicates } from '../src/importDedup.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -30,6 +30,13 @@ after(async () => {
 const PREFIX = 'P555-DEDUP';
 function orgCode(suffix) {
   return `${PREFIX}-${suffix}`;
+}
+
+// P5.5-07: createMember now requires actorUserId. Dedup fixtures here don't exercise the audit
+// trail itself (see memberAudit.test.mjs) — a fixed test actor keeps every call site unchanged.
+const TEST_ACTOR_ID = '00000000-0000-0000-0000-000000000002';
+function createMember(pool, args) {
+  return createMemberRaw(pool, { actorUserId: TEST_ACTOR_ID, ...args });
 }
 
 function row(rowNumber, fullName, workUnitCode, dateOfBirth = null) {

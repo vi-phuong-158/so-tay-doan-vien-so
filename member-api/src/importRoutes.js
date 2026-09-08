@@ -257,7 +257,7 @@ export async function handleImportRoute({ req, res, url, pool, scope, route, sen
     }
     const body = await readJsonBody(req);
     const rowOverrides = parseConfirmPayload(body);
-    const result = await confirmImportJob(pool, { importJobId: route.id, scope, rowOverrides });
+    const result = await confirmImportJob(pool, { importJobId: route.id, scope, rowOverrides, actorUserId: userId });
     if (result.outcome === 'not_found') {
       sendJson(res, 404, { error: 'not_found' });
       return;

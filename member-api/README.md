@@ -196,6 +196,62 @@ regardless of how correct the authorization is.
   once the frontend's production origin and this API's production origin are both known. Never
   guessed/hardcoded here.
 
+## P5.5-07 — Application audit
+
+Implemented — every important Member mutation writes an audit row in the SAME transaction as the
+mutation itself (mục 16), against a new `member_audit_logs` table (migration
+`migrations/0003_member_audit.sql`), separate from Supabase's own `audit_logs` on purpose (Member
+API is the system of record for Member data; a cross-database audit write would need a fragile
+distributed transaction this architecture avoids):
+
+- `src/memberAudit.js` — `buildCreateAuditPayload`/`buildUpdateAuditPayload` (pure), `insertAuditLog`
+  (always called with a `client` already inside an open transaction, never the bare `pool`),
+  `listMemberAuditLogs` (paginated read for one member's own trail).
+- `src/memberRepository.js`'s `createMember`/`updateMember` are now transactions (`pool.connect()` +
+  `BEGIN`/`COMMIT`/`ROLLBACK`), not single `pool.query` calls — the member write and its audit row
+  commit or roll back together. `updateMember` does a `SELECT ... FOR UPDATE` (same scope predicate
+  as the eventual `UPDATE`) first, so `before_data` reflects the exact pre-transaction state, and a
+  lock outside `scope` returns nothing — no new unscoped read path.
+- `src/importRepository.js`'s `confirmImportJob` writes one `CREATE` audit row per committed member
+  (not one row per job — decision P5.5-D15), with `import_job_id` set, inside the same commit
+  transaction — idempotent replay (an already-`COMMITTED` job) writes nothing further, same as the
+  member writes themselves.
+- **Only business fields are audited** — `full_name`, `date_of_birth`, `gender`, `work_unit_code`,
+  `job_title`, `member_status`, `political_theory_level`, `youth_position`, `youth_board_position`.
+  `external_ref_note` is deliberately excluded (mục 16: "không cần audit thay đổi cosmetic như ghi
+  chú") — a patch touching only that field writes no audit row at all.
+- **No `outcome` column** (decision P5.5-D14) — a row's mere existence IS the success signal. A
+  rejected mutation (out of scope, validation error, not found) or a rolled-back transaction never
+  produces a row, not even one marked "failed".
+- **Never logged, structurally** — bearer tokens, shared secrets, DB credentials, raw Excel file
+  bytes are not Member fields and have no path into `before_data`/`after_data`; `actor_user_id`
+  always comes from the P5.5-02 resolver result for the request, never a client-supplied value.
+- **New read endpoint:** `GET /v1/members/:id/audit` — paginated, same scope check as
+  `GET /v1/members/:id` (a member outside the caller's scope is `404`, identical to the member
+  itself — no second, unscoped way to reach the same data).
+
+### Backup / restore — infrastructure audit (mục 18)
+
+`BLOCKS_RUNTIME_ACCEPTANCE` + `BLOCKS_PRODUCTION`, confirmed still open. No new evidence was
+produced in this task — Mắt Bão Vibe Host v2 remains architecturally selected
+(`docs/phase-5-5/01-member-infrastructure-decision.md`) but **not provisioned** (no purchase, no
+instance, no database, no connection string exists anywhere), and this agent has no account/access
+to Mắt Bão to provision or inspect anything. The mục 18 checklist is answered exactly as it was
+after P5.5-01:
+
+| Question | Status |
+|---|---|
+| Gói Mắt Bão cụ thể đang dùng có automated backup không, tần suất thế nào? | `CAPABILITY_VERIFIED` at the vendor-documentation level only (manual snapshot + Daily/Weekly/Monthly schedule) — **not configured on any real instance**, because no instance exists. |
+| PITR hay chỉ snapshot theo lịch? | `NOT VERIFIED`. |
+| Backup có encrypted at rest không? | `NOT VERIFIED`. |
+| Ai có quyền trigger restore, quy trình xác thực? | Unanswerable without a provisioned account/instance and an owner-defined access policy. |
+| Đã test restore thật chưa? | `RESTORE_REHEARSAL_NOT_RUN` — cannot run without a provisioned, non-production instance. |
+
+**This is not a P5.5-07 gap** — provisioning real infrastructure and running a restore rehearsal
+against it is explicitly `OWNER/DEPLOYMENT DECISION REQUIRED` + `BLOCKS_RUNTIME_ACCEPTANCE`, not
+`BLOCKS_IMPLEMENTATION_START`, per the architecture document itself. See
+`docs/brain/04-current-tasks.md`'s P5.5-07 entry for the full blocker report.
+
 ## Local setup
 
 Requires PostgreSQL 16 (or compatible) reachable locally — **never** point this at production data
@@ -288,7 +344,20 @@ Test files:
   (all-or-nothing abort, `409 scope_changed`, if the actor's scope narrowed between upload and
   confirm).
 - `tests/memberImportPerformance.test.mjs` (P5.5-05) — the ~3,000-row synthetic import benchmark
-  described above.
+  described above (numbers there predate P5.5-07's audit writes — see the updated commit timing in
+  this README's P5.5-07 section).
+- `tests/memberAudit.test.mjs` (P5.5-07) — `createMember`/`updateMember` write exactly one audit row
+  per successful mutation with the correct actor/before/after; a patch touching only
+  `external_ref_note` writes none; a rejected (out-of-scope) or not-found update writes none; a
+  mutation that fails mid-transaction (a `CHECK` constraint violation) rolls back with no dangling
+  audit row; `listMemberAuditLogs` pagination/ordering; and that a field never audited
+  (`external_ref_note`) never leaks into `after_data` even when set at create time.
+- `tests/memberRoutes.test.mjs` also covers (P5.5-07 additions): `GET /v1/members/:id/audit` returns
+  the expected trail newest-first; a member outside the caller's scope is `404` on the audit
+  endpoint too (no second unscoped read path); a rejected PATCH never adds a row to the trail.
+- `tests/memberImportRoutes.test.mjs` also covers (P5.5-07 additions): confirm/commit writes one
+  `CREATE` audit row per committed member with `import_job_id` set and the real actor; a duplicate
+  (idempotent) confirm never doubles the audit rows; a cancelled job (never confirmed) has zero.
 
 The Supabase-side resolver (`resolve-member-scope`) has its own tests under
 `supabase/functions/resolve-member-scope/` — `contract.test.ts` (pure role/scope derivation) and
@@ -311,7 +380,13 @@ real values (`.env` is gitignored; only `.env.example` is checked in).
 
 ## Known limitations / deferred to later subphases
 
-- No audit table (P5.5-07), no frontend (P5.5-06), no `/member-metadata` endpoint yet.
+- No `/member-metadata` endpoint yet (decision P5.5-D13 — deferred, not missing).
+- The frontend does not yet render the audit trail (`GET /v1/members/:id/audit` exists as of
+  P5.5-07, but `src/pages/MemberDetail.jsx` from P5.5-06 predates it and has no history section) —
+  a small frontend-only follow-up, not a backend gap.
+- Backup/restore for the Member PostgreSQL instance is `BLOCKS_RUNTIME_ACCEPTANCE`/
+  `BLOCKS_PRODUCTION` and remains unresolved — see "Backup / restore — infrastructure audit" above.
+  Not a code gap: there is no provisioned instance to configure backup on yet.
 - Import does not support merging/updating an existing member from an import row — a
   `POSSIBLE_DUPLICATE`/`WARNING` row can only be excluded (default) or explicitly created as a
   brand-new, separate record (`CREATE_NEW` override); it can never be linked to/merged into the

@@ -484,6 +484,38 @@ không nới, không skip bất kỳ assertion nào**; test 14/15/16/26 vẫn đ
   mục 5 kiến trúc chốt cứng, không phải dữ liệu thay đổi thường xuyên).
 - **Người quyết định:** Claude Code, theo yêu cầu P5.5-06 (giữ đúng phạm vi frontend-only).
 
+## [2026-09-08] P5.5-D14 — Audit: sự tồn tại của row chính là tín hiệu thành công, không có cột `outcome`
+
+- **Quyết định:** `member_audit_logs` không có cột `outcome`/`status`. Một audit row CHỈ được ghi
+  sau khi mutation thật sự thành công, trong CÙNG transaction — một mutation bị từ chối (scope sai,
+  validation lỗi, not found) hoặc rollback giữa chừng không bao giờ tạo ra bất kỳ row nào, kể cả một
+  row đánh dấu `outcome='FAILED'`.
+- **Lý do:** Test requirement gốc là "rejected mutation → không có audit 'success' giả" — cách chắc
+  chắn nhất để không bao giờ có audit "success" giả là không có khái niệm audit "thành công/thất
+  bại" song song; sự tồn tại của row = đã thành công. Thêm cột `outcome` sẽ tạo ra một trạng thái
+  thứ ba (row tồn tại nhưng outcome=FAILED) không map với bất kỳ yêu cầu nghiệp vụ nào và tự nó là
+  một nguồn nhầm lẫn ("tôi có audit nghĩa là đã xảy ra" không còn đúng nữa).
+- **Đánh đổi:** Không audit được các LẦN THỬ bị từ chối (ví dụ ai đó cố sửa member ngoài scope nhiều
+  lần) — nếu sau này cần audit cả các lần thử bị từ chối vì lý do bảo mật/điều tra, đó là một loại
+  audit khác (security event log), không phải mutation audit, và là quyết định riêng.
+- **Người quyết định:** Claude Code, theo đúng yêu cầu test P5.5-07 (mục 4.A của prompt DEV MODE).
+
+## [2026-09-08] P5.5-D15 — Audit import commit: một row mỗi member được tạo, không phải một row mỗi job
+
+- **Quyết định:** `confirmImportJob` ghi MỘT audit row riêng cho MỖI member được tạo trong lần
+  commit (action=`CREATE`, `member_id` = id thật của member đó, `import_job_id` = job đã tạo nó) —
+  không phải một row tổng hợp duy nhất cho cả job.
+- **Lý do:** Kiến trúc mục 16 yêu cầu rõ: "Mỗi audit row phải trả lời... với member nào (member_id)"
+  và "cho phép truy ngược MỘT record cụ thể về đúng job đã tạo/sửa nó" — nghĩa là truy vấn theo
+  member_id phải luôn ra đúng lịch sử của riêng người đó, kể cả khi họ được tạo qua import hàng
+  loạt. Một row tổng hợp cấp job sẽ không trả lời được "record CỤ THỂ này được tạo khi nào, bởi
+  hành động nào" khi tra cứu từ trang chi tiết member.
+- **Đánh đổi:** Tăng số lượng INSERT trong transaction commit (đo thực tế: ~2.580 member → confirm
+  từ ~550ms lên ~1.670ms cục bộ — vẫn sâu dưới target "dưới vài giây" mục 25, không cần tối ưu
+  thêm). `member_import_jobs` (đã có từ P5.5-05) vẫn là nơi trả lời "job-level: bao nhiêu dòng, ai,
+  khi nào" tổng hợp — hai bảng bổ sung cho nhau, không trùng lặp.
+- **Người quyết định:** Claude Code, theo đúng mục 16 tài liệu kiến trúc.
+
 ## Template cho entry mới
 
 ```
