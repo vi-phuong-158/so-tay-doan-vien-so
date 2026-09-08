@@ -397,6 +397,57 @@ không nới, không skip bất kỳ assertion nào**; test 14/15/16/26 vẫn đ
 - **Người quyết định:** Claude Code (nghiên cứu độc lập theo yêu cầu owner), chờ owner xác nhận khi
   provisioning thật.
 
+## [2026-09-08] P5.5-D9 — Excel import: không hỗ trợ merge/update-existing từ dòng import
+
+- **Quyết định:** `POST /v1/members/import/:jobId/confirm` chỉ có hai kết quả cho một dòng:
+  `CREATE_NEW` (tạo member mới, mặc định cho dòng `VALID`, hoặc override thủ công cho dòng
+  `POSSIBLE_DUPLICATE`/`WARNING`) hoặc `SKIP` (mặc định cho dòng nghi trùng chưa được xác nhận, và
+  luôn luôn cho dòng `INVALID`). Không có action nào cho phép một dòng import ghi đè/merge vào một
+  Member đã tồn tại — kể cả khi người dùng chọn override một dòng `POSSIBLE_DUPLICATE`, kết quả luôn
+  là một record MỚI, tách biệt hoàn toàn khỏi candidate đã tìm thấy.
+- **Lý do:** `member_id` (mục 5 kiến trúc) chủ đích không phải business identifier và không hiển thị
+  cho người dùng như một mã định danh nghiệp vụ — cho phép người import chọn `member_id` để "update
+  cho member này" qua Excel sẽ biến `member_id` thành một identifier nghiệp vụ trên thực tế. Đây
+  cũng đúng tinh thần mục E kiến trúc: dedup là soft-match, "auto-merge sai người không bao giờ xảy
+  ra vì không có đường code nào tự chuyển POSSIBLE_DUPLICATE → merge" — không xây feature merge thay
+  vì chỉ chặn auto-merge là lựa chọn an toàn hơn và đơn giản hơn cho MVP.
+- **Đánh đổi:** Nếu sau này Ban Thanh niên cần "cập nhật hàng loạt cho member đã có" qua Excel, đó là
+  một workflow riêng (ví dụ cần một cột `member_id` tường minh trong file, cảnh báo rủi ro rõ ràng,
+  và audit riêng) — một architecture/security decision mới, không tự thêm vào P5.5-05.
+- **Người quyết định:** Claude Code, theo đúng phạm vi P5.5-05 (mục E/F/G) và bất biến mục 5.
+
+## [2026-09-08] P5.5-D10 — Excel import: chỉ `YOUTH_ADMIN` được import, không mở rộng cho `BRANCH_OFFICER`
+
+- **Quyết định:** Dù P5.5-03 đã cho `BRANCH_OFFICER` quyền tạo/sửa Member trong scope (owner decision
+  mục 28.8), quyền đó KHÔNG tự động mở rộng sang import hàng loạt. `member-api/src/importRoutes.js`
+  kiểm tra riêng `roles.some(r => r.role_code === 'YOUTH_ADMIN')` cho MỌI route import (upload, xem
+  job, xem dòng, confirm, cancel) — độc lập với check "có role Member-Management-capable nào không"
+  mà `server.js` đã làm chung cho toàn bộ `/v1/members*`.
+- **Lý do:** Bảng ma trận role/scope ở mục 7/12 tài liệu kiến trúc ghi rõ "Ai được import: `YOUTH_ADMIN`
+  (toàn cục hoặc trong scope của org đích)" — không có dòng nào cho `BRANCH_OFFICER`. Import hàng
+  loạt có bán kính ảnh hưởng lớn hơn nhiều một thao tác CRUD đơn lẻ (tạo hàng nghìn record một lúc),
+  nên owner đã chủ động giữ quyền này hẹp hơn CRUD thường — không tự suy luận ngược từ quyền CRUD.
+- **Đánh đổi:** Không có — đây là enforce đúng những gì tài liệu đã chốt, không phải một giới hạn mới
+  tự đặt ra. Có test riêng (`memberImportRoutes.test.mjs`) chứng minh `BRANCH_OFFICER` bị từ chối
+  `403` dù có quyền CRUD.
+- **Người quyết định:** Claude Code, theo đúng mục 7/12 tài liệu kiến trúc P5.5-00.
+
+## [2026-09-08] P5.5-D11 — Excel import: parse/validate/dedup chạy đồng bộ, không có worker nền
+
+- **Quyết định:** Không triển khai trạng thái `PARSED` như một checkpoint durable riêng biệt trong
+  `member_import_job_status`. Toàn bộ parse workbook + validate từng dòng + dedup chạy trong đúng một
+  HTTP request (`POST /v1/members/import`), job chuyển thẳng từ `UPLOADED` (ghi ngay khi nhận file,
+  trước khi parse) sang `READY_FOR_CONFIRM` hoặc `FAILED`.
+- **Lý do:** Ở quy mô pilot ~3.000 dòng, benchmark thực đo được toàn bộ upload (parse+validate+dedup+
+  stage) chỉ mất ~280ms — không có lý do nghiệp vụ nào cần một worker nền/queue riêng cho việc này ở
+  quy mô hiện tại (mục 25: "vài giây tới dưới 1 phút" đã dư sức đạt được đồng bộ). Xây một job queue
+  bất đồng bộ cho một thao tác dưới 1 giây là over-engineer.
+- **Đánh đổi:** Nếu quy mô dữ liệu tăng đáng kể trong tương lai (ví dụ vượt xa 3.000 người, hoặc
+  server chậm hơn nhiều so với môi trường benchmark), việc này có thể cần một worker nền thật — đó là
+  một quyết định kiến trúc riêng khi có bằng chứng thực tế, không phải suy đoán trước.
+- **Người quyết định:** Claude Code, theo đúng mục 10/25 tài liệu kiến trúc và nguyên tắc "không
+  over-engineer" của dự án.
+
 ## Template cho entry mới
 
 ```

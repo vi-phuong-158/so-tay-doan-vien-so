@@ -150,6 +150,75 @@
   `memberPerformance.test.mjs`. Toàn bộ `member-api` test suite (`npm test`) PASS cục bộ với
   PostgreSQL 16 thật (xem `06-ai-working-log.md` cho số liệu chính xác).
 - **Report:** xem entry `[2026-09-05]` (P5.5-04) trong `docs/brain/06-ai-working-log.md`.
+- **Trạng thái:** merged qua PR #42 (merge commit `ac2bf2c263934366f5bc3eae0ad44ebffc981f62`),
+  exact-head CI (`b27f783d`) xanh trước merge (`build`/`test-db`/`member-api-test`/Vercel đều
+  `success`), owner đã xác nhận merge.
+
+### P5.5-05 — Excel import
+- **Base:** `master` sau merge PR #42 (P5.5-04, `ac2bf2c263934366f5bc3eae0ad44ebffc981f62`). Branch
+  `feat/p5-5-05-member-excel-import`.
+- **Audit trước khi code:** xác nhận `member-api/` chưa có parser Excel, staging schema, import job
+  state machine, dedup helper, import route, test fixture hay audit scaffold nào (README/
+  `04-current-tasks.md` P5.5-01…04 đều ghi rõ "chưa có import Excel" — xác minh lại trực tiếp bằng
+  `grep -rli "xlsx\|staging\|import_job"` trên `member-api/` trước khi viết dòng code đầu tiên,
+  đúng bằng chứng thật, không tin mô tả cũ).
+- **Nội dung:** Vertical slice đầy đủ mục 9/10:
+  `upload → parse → validate → stage → preview → confirm → commit`.
+  - Migration `migrations/0002_member_import_staging.sql`: `member_import_jobs`
+    (`UPLOADED → READY_FOR_CONFIRM → COMMITTED`, hoặc `→ CANCELLED`/`→ FAILED`) và
+    `member_import_job_rows` (`VALID`/`INVALID`/`POSSIBLE_DUPLICATE`/`WARNING` từng dòng, dữ liệu
+    chuẩn hoá, lỗi, candidate trùng, `committed_member_id`). `PARSED` không phải trạng thái durable
+    riêng — xem P5.5-D11 `03-decisions.md`.
+  - `src/importParser.js` (`exceljs`) — không tin Content-Type browser, formula cell chỉ đọc cached
+    `result`, header contract cố định (`full_name`/`work_unit_code` bắt buộc, 8 field optional cùng
+    tên với CRUD payload), bound 10MB/10.000 dòng.
+  - `src/importValidation.js` — tái dùng nguyên constant enum từ `memberValidation.js`.
+  - `src/importDedup.js` — soft-match qua `member_immutable_unaccent()` (cùng hàm search đã dùng),
+    hai query set-based (existing-member + in-batch), KHÔNG BAO GIỜ tự merge — xem P5.5-D9.
+  - `src/importRepository.js` — `confirmImportJob`/`cancelImportJob` transaction atomic + idempotent
+    qua `SELECT ... FOR UPDATE` trên job row; confirm re-authorize scope MỚI NHẤT (không tin scope
+    lúc upload) — scope co hẹp giữa upload/confirm → toàn bộ commit abort `409 scope_changed`
+    (all-or-nothing, không partial-commit).
+  - `src/importRoutes.js` — 5 route (`POST /v1/members/import`,
+    `GET /v1/members/import/:jobId[/rows]`, `POST /v1/members/import/:jobId/{confirm,cancel}`), match
+    TRƯỚC `matchMemberRoute` trong `server.js` (tránh `/v1/members/import` bị nhầm `:id="import"`).
+    Chỉ `YOUTH_ADMIN` được import (mục 7/12 — không mở rộng cho `BRANCH_OFFICER` dù role này có
+    quyền CRUD từ P5.5-03) — xem P5.5-D10.
+  - `organizationDirectory.js` thêm `createOrganizationDirectoryBatch` (một request PostgREST
+    `in.()` cho toàn bộ mã tổ chức khác nhau trong file); `scope.js` thêm `isOrgCodeInScope` (biến
+    thể không throw).
+  - Dependency mới: `exceljs@^4.4.0` (`member-api/package.json`), cộng `overrides.uuid: ^11.1.1` để
+    đóng advisory `GHSA-w5hq-g745-h8pq` trong dependency bắc cầu của `exceljs` (0 vulnerabilities sau
+    khi override — `npm audit` xác nhận).
+- **Không có trong subphase này:** merge/update-existing member từ dòng import (xem P5.5-D9), audit
+  table cross-cutting (P5.5-07 — job table tự nó đủ cho acceptance mục 23 của P5.5-05), frontend
+  (P5.5-06), `/member-metadata`, mọi thay đổi resolver/scope P5.5-02.
+- **Phát hiện + vá trong quá trình viết test (không phải defect P5.5-01…04):** `getImportJob`'s
+  `serializeJob` ban đầu không trả `created_by_user_id`, khiến `canAccessImportJob` (dùng để quyết
+  định 404 cho job ownership) luôn nhận `undefined` và từ chối CHÍNH người tạo job (trừ khi actor là
+  `YOUTH_ADMIN` scope toàn cục — che giấu bug ở path đó). `memberImportRoutes.test.mjs` (test
+  ownership isolation + test global-admin-can-view) bắt được lỗi này trước khi mở PR; đã vá bằng
+  cách thêm `created_by_user_id` vào output `serializeJob` (P5.5-05 chỉ, không sửa gì P5.5-01…04).
+- **Test:** file mới `{importValidation,importDedup,memberImportRoutes,memberImportPerformance}.test.mjs`
+  + `tests/helpers/syntheticImportWorkbook.mjs`. **221/221 pass** (`npm test`, PostgreSQL 16 thật cục
+  bộ) — 173 baseline P5.5-01…04 không đổi + 48 mới (17 validation/parser + 10 dedup + 20 HTTP route/
+  security matrix + 1 performance). Ma trận bảo mật âm tính bao gồm: cross-scope row → `INVALID`
+  không bao giờ commit; unknown organization → `INVALID`; chỉ `YOUTH_ADMIN` import
+  (`BRANCH_OFFICER` → `403`); malformed workbook → job `FAILED` có thể truy vết; oversized upload →
+  `413` trước khi tạo job; double-confirm/concurrent-confirm/retry đều idempotent (đúng 1 record,
+  không nhân bản); confirm job đã `CANCELLED` → `409`; cancel idempotent; override
+  `POSSIBLE_DUPLICATE` chỉ tạo record MỚI tách biệt, không bao giờ merge; override row không hợp lệ
+  → `400`; job ownership isolation (user B → `404` trên mọi sub-route của job user A); global
+  `YOUTH_ADMIN` xem được job người khác; unknown job id → `404` mọi sub-route (không `500`); confirm
+  re-check scope mới (all-or-nothing khi scope co hẹp). Root `npm test` (153/153), `npm run lint` (0
+  error/3 warning cũ), `npm run build` đều PASS, không đổi baseline.
+- **Performance (mục 25):** synthetic ~3.000 dòng
+  (`tests/helpers/syntheticImportWorkbook.mjs`, KHÔNG phải dữ liệu đoàn viên thật) — upload
+  (parse+validate+dedup+stage) ≈280ms, confirm/commit ≈550ms cho ~2.580 dòng, list sau import ≈4ms —
+  toàn bộ sâu dưới target. Không cần migration/index mới (index P5.5-01/04 đã đủ cho join shape của
+  dedup query).
+- **Report:** xem entry `[2026-09-08]` (P5.5-05) trong `docs/brain/06-ai-working-log.md`;
+  `member-api/README.md` mục "P5.5-05 — Excel import".
 
 ### Phase 5 end-to-end closure
 - **Base:** isolated closure worktree/branch `codex/phase-5-full-closure`, based on P5-03 plus the

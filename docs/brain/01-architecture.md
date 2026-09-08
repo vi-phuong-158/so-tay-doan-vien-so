@@ -415,7 +415,35 @@ nghĩa là "không giới hạn giữa các tổ chức hợp lệ", không ph�
 (fail-closed): `SUPABASE_URL`/`SUPABASE_ANON_KEY` trong `member-api/.env` (giá trị anon key công
 khai, không phải secret).
 
-Chưa có: import Excel (P5.5-05), audit table riêng (P5.5-07), frontend (P5.5-06), `/member-metadata`.
+Từ P5.5-05, Excel import thật đã hoạt động — vertical slice đầy đủ mục 9/10:
+`upload → parse → validate → stage → preview → confirm → commit`, không "đọc Excel rồi insert
+thẳng". Migration `member-api/migrations/0002_member_import_staging.sql` thêm `member_import_jobs`
+(state machine `UPLOADED → READY_FOR_CONFIRM → COMMITTED`, hoặc `→ CANCELLED`/`→ FAILED`; `PARSED`
+không phải trạng thái durable riêng — parse+validate/dedup chạy đồng bộ trong cùng request tạo job)
+và `member_import_job_rows` (từng dòng `VALID`/`INVALID`/`POSSIBLE_DUPLICATE`/`WARNING`, dữ liệu đã
+chuẩn hoá, lỗi, candidate trùng). Module mới: `member-api/src/importParser.js` (dùng `exceljs`,
+không tin Content-Type từ browser, formula cell chỉ đọc cached `result` chứ không bao giờ evaluate,
+bound file 10MB/10.000 dòng), `importValidation.js` (tái dùng nguyên constant enum từ
+`memberValidation.js`), `importDedup.js` (soft-match qua chính `member_immutable_unaccent()` đã
+dùng cho search — không bao giờ tự động merge), `importRepository.js` (transaction
+confirm/commit atomic + idempotent qua `SELECT ... FOR UPDATE` trên job row), `importRoutes.js`
+(route matching đặt TRƯỚC `matchMemberRoute` để `/v1/members/import...` không bị nhầm thành
+`:id="import"`). Chỉ `YOUTH_ADMIN` được import (mục 7/12) — `BRANCH_OFFICER` có quyền CRUD từ
+P5.5-03 nhưng KHÔNG được import, enforce riêng trong `importRoutes.js`. `organizationDirectory.js`
+thêm `createOrganizationDirectoryBatch`/`checkOrganizationCodesExist` (một request PostgREST
+`in.()` cho toàn bộ mã tổ chức khác nhau trong file, không phải một request/dòng); `scope.js` thêm
+`isOrgCodeInScope` (biến thể không throw của `assertOrgCodeInScope`, dùng trong vòng lặp validate
+từng dòng). Confirm re-authorize scope MỚI NHẤT tại thời điểm confirm (không tin scope lúc upload);
+nếu scope co hẹp giữa upload và confirm, toàn bộ commit abort `409 scope_changed` (all-or-nothing).
+Dòng `POSSIBLE_DUPLICATE`/`WARNING` mặc định bị loại khỏi commit; người dùng có thể override từng
+dòng để vẫn tạo mới (KHÔNG BAO GIỜ merge vào candidate — merge/update-existing bị defer, giống cách
+Export bị defer ở mục 9). Benchmark synthetic ~3.000 dòng
+(`member-api/tests/memberImportPerformance.test.mjs`) không cần index mới: upload ~280ms, confirm
+~550ms, đều sâu dưới target mục 25. Audit table cross-cutting (mọi mutation) vẫn để P5.5-07 — job
+table tự nó đã đủ ghi "ai import gì, khi nào, bao nhiêu dòng, kết quả" cho acceptance mục 23 của
+P5.5-05.
+
+Chưa có: audit table riêng (P5.5-07), frontend (P5.5-06), `/member-metadata`.
 Xem `member-api/README.md` cho chi tiết và giới hạn hiện tại.
 
 ```text

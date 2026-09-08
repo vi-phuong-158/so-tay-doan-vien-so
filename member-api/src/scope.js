@@ -39,3 +39,11 @@ export function assertOrgCodeInScope(scope, code) {
     throw new ApiError(403, 'forbidden', 'Organization code is outside your permitted scope.');
   }
 }
+
+// Non-throwing variant for P5.5-05 bulk import row validation, where an out-of-scope
+// work_unit_code must become a per-row INVALID entry in the preview (muc 22 threat #7) rather than
+// aborting the whole request with an exception.
+export function isOrgCodeInScope(scope, code) {
+  if (scope.isGlobal) return true;
+  return scope.orgCodes.includes(code);
+}
