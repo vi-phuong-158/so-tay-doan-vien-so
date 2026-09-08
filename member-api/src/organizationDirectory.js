@@ -67,3 +67,49 @@ export function createOrganizationDirectory(config, fetchImpl = fetch) {
     return Array.isArray(rows) && rows.length > 0 && typeof rows[0]?.code === 'string';
   };
 }
+
+// P5.5-05 — batched variant for Excel import, where checking 3,000 rows one HTTP call at a time
+// would be both slow and an easy way to trip Supabase rate limiting. One PostgREST `in.(...)` call
+// resolves every distinct work_unit_code in the batch at once. Same trust boundary as the
+// single-code function above: the caller's own bearer token, RLS still applies, no service role.
+//
+// Returns a function (codes: string[], bearerToken) => Promise<Set<string>> of the codes that
+// really exist. Fails closed with the same ApiError(503) as the single-code lookup — a caller that
+// cannot verify a code must never treat it as valid.
+export function createOrganizationDirectoryBatch(config, fetchImpl = fetch) {
+  return async function organizationCodesExist(codes, bearerToken) {
+    const distinct = [...new Set(codes)].filter((code) => typeof code === 'string' && code.length > 0);
+    if (distinct.length === 0) return new Set();
+
+    // PostgREST `in.()` needs comma-separated values; each is a plain work_unit_code (already
+    // length/shape validated by importValidation.js before this is ever called), URL-encoded
+    // individually so a code containing a comma or special character cannot desync the filter list.
+    const inList = distinct.map((code) => encodeURIComponent(code)).join(',');
+    const url = `${config.supabaseUrl}/rest/v1/organizations?select=code&code=in.(${inList})&limit=${distinct.length}`;
+    let response;
+    try {
+      response = await fetchImpl(url, {
+        method: 'GET',
+        headers: {
+          apikey: config.supabaseAnonKey,
+          Authorization: `Bearer ${bearerToken}`,
+        },
+      });
+    } catch {
+      throw new ApiError(503, 'organization_directory_unavailable', 'Could not verify organization codes. Try again later.');
+    }
+    if (!response.ok) {
+      throw new ApiError(503, 'organization_directory_unavailable', 'Could not verify organization codes. Try again later.');
+    }
+    let rows;
+    try {
+      rows = await response.json();
+    } catch {
+      throw new ApiError(503, 'organization_directory_unavailable', 'Could not verify organization codes. Try again later.');
+    }
+    if (!Array.isArray(rows)) {
+      throw new ApiError(503, 'organization_directory_unavailable', 'Could not verify organization codes. Try again later.');
+    }
+    return new Set(rows.filter((row) => typeof row?.code === 'string').map((row) => row.code));
+  };
+}

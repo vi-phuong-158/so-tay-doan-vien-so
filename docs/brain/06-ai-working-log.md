@@ -1,5 +1,73 @@
 # 06 — AI Working Log
 
+## [2026-09-08] P5.5-05 — Excel Import
+
+- **Agent:** Claude Code
+- **Base:** `master@ac2bf2c263934366f5bc3eae0ad44ebffc981f62` (PR #42, P5.5-04 merged — owner
+  authorized and confirmed merge after CI/mergeability verification). Branch
+  `feat/p5-5-05-member-excel-import`.
+- **Baseline audit (mục 0 của prompt):** đọc lại toàn bộ `docs/phase-5-5/00-member-management-architecture.md`
+  (mục 1, 9, 10, 22, 23, 25, 26 — import contract, dedup, atomicity/idempotency, threat model, test
+  matrix, performance target), `docs/phase-5-5/01-member-infrastructure-decision.md`,
+  `docs/brain/01-architecture.md`/`03-decisions.md`/`04-current-tasks.md`, lịch sử PR #38→#42, và
+  toàn bộ `member-api/src/*.js` hiện có. Xác nhận trực tiếp bằng `grep`/`find`: KHÔNG có parser
+  Excel, staging schema, import job state machine, dedup helper, import route hay audit scaffold nào
+  tồn tại trước task này — README/`04-current-tasks.md` đã đúng khi nói "chưa có import Excel".
+- **Thay đổi:**
+  1. `member-api/migrations/0002_member_import_staging.sql` — `member_import_jobs` +
+     `member_import_job_rows`, 2 enum type mới (`member_import_job_status`,
+     `member_import_row_status`), index, trigger `updated_at` tái dùng `member_set_updated_at()` đã
+     có từ P5.5-01.
+  2. `member-api/src/importParser.js` (mới) — parse workbook bằng `exceljs`, header contract cố
+     định, formula cell chỉ đọc cached `result`, bound file/row size.
+  3. `member-api/src/importValidation.js` (mới) — field validation tái dùng enum constant từ
+     `memberValidation.js`.
+  4. `member-api/src/importDedup.js` (mới) — soft-match dedup, 2 query set-based dùng
+     `member_immutable_unaccent()`.
+  5. `member-api/src/importRepository.js` (mới) — staging persistence + `confirmImportJob`/
+     `cancelImportJob` (transaction atomic + idempotent, `SELECT ... FOR UPDATE`).
+  6. `member-api/src/importRoutes.js` (mới) — 5 route, gate riêng "chỉ `YOUTH_ADMIN`".
+  7. `member-api/src/organizationDirectory.js` — thêm `createOrganizationDirectoryBatch`
+     (không sửa `createOrganizationDirectory` hiện có).
+  8. `member-api/src/scope.js` — thêm `isOrgCodeInScope` (không sửa `assertOrgCodeInScope`).
+  9. `member-api/src/server.js` — wire import routes (check TRƯỚC `matchMemberRoute`), thêm
+     `readImportConfirmBody` (cap 2MB riêng cho confirm payload có thể chứa nhiều `row_overrides`,
+     tách khỏi `MAX_BODY_BYTES` 100KB dùng cho CRUD thường).
+  10. `member-api/src/index.js` — inject `checkOrganizationCodesExist` vào `createServer`.
+  11. `member-api/package.json` — thêm dependency `exceljs@^4.4.0` + `overrides.uuid: ^11.1.1`
+      (đóng `npm audit` advisory `GHSA-w5hq-g745-h8pq` trong dependency bắc cầu của `exceljs` —
+      xác minh riêng: `exceljs` chỉ gọi `uuid.v4()` không tham số, không bao giờ chạm code path có
+      lỗ hổng, nhưng vẫn pin version vá cho sạch thay vì dựa vào lý luận "không dùng tới path đó").
+- **Quyết định kỹ thuật mới (ghi ở `03-decisions.md`):** P5.5-D9 (không hỗ trợ merge/update-existing
+  từ import), P5.5-D10 (chỉ `YOUTH_ADMIN` được import, không mở rộng `BRANCH_OFFICER`), P5.5-D11
+  (parse/validate/dedup đồng bộ, không có `PARSED` state durable/worker nền).
+- **Bug tự phát hiện + tự vá trong quá trình viết test:** `importRepository.js`'s `serializeJob`
+  ban đầu không trả `created_by_user_id` trong response — khiến `canAccessImportJob` (quyết định
+  404 cho job ownership) luôn coi actor KHÔNG PHẢI chủ job, kể cả khi họ chính là người tạo job
+  (path `scope.isGlobal` che giấu bug này cho actor `YOUTH_ADMIN` toàn cục, nên chỉ lộ ra khi test
+  scoped-actor-views-own-job thất bại với `404`). Phát hiện bằng chính test suite
+  (`memberImportRoutes.test.mjs`) trước khi mở PR, vá bằng cách thêm field vào `serializeJob` —
+  không sửa gì khác của P5.5-01…04.
+- **Kiểm tra:**
+  - `member-api`: reset `MEMBER_DATABASE_URL` trỏ PostgreSQL 16 cục bộ thật (không Docker sẵn có
+    trong môi trường viết code này — dùng `postgresql-16` cài trực tiếp qua `apt`/`service
+    postgresql start`), `npm run migrate:fresh`, `npm test` → **221/221 pass** (173 baseline P5.5-01
+    …04 không đổi + 48 test mới: 17 `importValidation.test.mjs`, 10 `importDedup.test.mjs`, 20
+    `memberImportRoutes.test.mjs`, 1 `memberImportPerformance.test.mjs`).
+  - Root: `npm install` (lần đầu trong phiên này, `node_modules` chưa tồn tại), `npm run lint` → 0
+    error/3 warning cũ (không đổi baseline), `npm test` → 153/153 pass, `npm run build` → PASS.
+  - `git diff --check` sạch (không whitespace error); secret scan trên `member-api/src/*.js` mới/sửa
+    (`grep` các pattern `sk-`/`AIza`/`PRIVATE KEY`/`service_role`/`password=`/`secret=`) → không có
+    kết quả; `supabase/functions/.env` placeholder không đổi (đã có từ P5.5-02/04, không phải secret
+    thật).
+  - Performance evidence: xem mục P5.5-05 trong `04-current-tasks.md`/`member-api/README.md`.
+- **Không có trong subphase này:** merge/update-existing member từ import (P5.5-D9), audit table
+  cross-cutting (P5.5-07), frontend (P5.5-06), `/member-metadata`, deploy Mắt Bão, mọi thay đổi
+  resolver/scope P5.5-02, mọi thay đổi P5.5-01…04 ngoài phát hiện bug thật ở trên.
+- **Lý do:** Hoàn thành P5.5-05 theo đúng chỉ dẫn owner (mục 2 của prompt DEV MODE), tuân thủ toàn bộ
+  invariant P5.5 (không Auth/Profile, không RAG/Gemini, không hard delete, không số hiệu, fail-closed
+  scope).
+
 ## [2026-09-05] P5.5-04 — Member Search/Filter/List
 
 - **Agent:** Claude Code
