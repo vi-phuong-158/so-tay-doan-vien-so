@@ -177,6 +177,80 @@ test('parseImportWorkbook: a formula cell with an error result is treated as emp
   assert.equal(rows[0].data.work_unit_code, null);
 });
 
+// P5.5-07R — import edge-case regression, closing gaps the P5.5-05 suite didn't cover yet.
+
+test('parseImportWorkbook: with multiple sheets, only the first sheet is parsed — a second sheet with valid data is silently ignored, never merged in', async () => {
+  const workbook = new ExcelJS.Workbook();
+  const first = workbook.addWorksheet('Members');
+  first.addRow(['full_name', 'work_unit_code']);
+  first.addRow(['Nguyễn Văn A', 'ORG-1']);
+  const second = workbook.addWorksheet('AlsoMembers');
+  second.addRow(['full_name', 'work_unit_code']);
+  second.addRow(['Trần Thị B', 'ORG-2']);
+  const buffer = await workbook.xlsx.writeBuffer();
+
+  const { rows } = await parseImportWorkbook(buffer);
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].data.full_name, 'Nguyễn Văn A');
+});
+
+test('parseImportWorkbook: a hidden data row is still parsed, never silently dropped just because it is hidden', async () => {
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet('Members');
+  sheet.addRow(['full_name', 'work_unit_code']);
+  sheet.addRow(['Nguyễn Văn A', 'ORG-1']);
+  const hiddenRow = sheet.addRow(['Trần Thị Hidden', 'ORG-2']);
+  hiddenRow.hidden = true;
+  const buffer = await workbook.xlsx.writeBuffer();
+
+  const { rows } = await parseImportWorkbook(buffer);
+  assert.equal(rows.length, 2);
+  assert.ok(rows.some((r) => r.data.full_name === 'Trần Thị Hidden'), 'a hidden row must still be included, not skipped');
+});
+
+test('parseImportWorkbook: a hidden FIRST sheet is still parsed (sheet selection is by position, not visibility — no silent bypass)', async () => {
+  const workbook = new ExcelJS.Workbook();
+  const first = workbook.addWorksheet('Members', { state: 'hidden' });
+  first.addRow(['full_name', 'work_unit_code']);
+  first.addRow(['Nguyễn Văn Hidden Sheet', 'ORG-1']);
+  const buffer = await workbook.xlsx.writeBuffer();
+
+  const { rows } = await parseImportWorkbook(buffer);
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].data.full_name, 'Nguyễn Văn Hidden Sheet');
+});
+
+test('parseImportWorkbook: an oversized single cell (tens of thousands of characters) is parsed without crashing — length enforcement happens at validateImportRow, not the parser', async () => {
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet('Members');
+  sheet.addRow(['full_name', 'work_unit_code', 'job_title']);
+  const hugeValue = 'A'.repeat(50_000);
+  sheet.addRow(['Nguyễn Văn A', 'ORG-1', hugeValue]);
+  const buffer = await workbook.xlsx.writeBuffer();
+
+  const { rows } = await parseImportWorkbook(buffer);
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].data.job_title.length, 50_000);
+
+  // The parser itself does not enforce length — validateImportRow does, and correctly rejects it.
+  const validated = validateImportRow(rows[0].data);
+  assert.equal(validated.status, 'INVALID');
+  assert.ok(validated.errors.some((e) => e.field === 'job_title' && e.code === 'too_long'));
+});
+
+test('validateImportRow: NFC and NFD Unicode forms of the same Vietnamese name both validate cleanly and are preserved byte-for-byte (no silent re-normalization that could shift matching)', () => {
+  const nfc = 'Nguyễn Văn A'.normalize('NFC');
+  const nfd = 'Nguyễn Văn A'.normalize('NFD');
+  assert.notEqual(nfc, nfd, 'test fixture sanity: NFC and NFD must actually differ byte-for-byte');
+
+  const resultNfc = validateImportRow({ full_name: nfc, work_unit_code: 'ORG-1' });
+  const resultNfd = validateImportRow({ full_name: nfd, work_unit_code: 'ORG-1' });
+  assert.equal(resultNfc.status, 'VALID');
+  assert.equal(resultNfd.status, 'VALID');
+  assert.equal(resultNfc.normalized.full_name, nfc);
+  assert.equal(resultNfd.normalized.full_name, nfd);
+});
+
 test('parseImportWorkbook: an oversized workbook (more than MAX_IMPORT_ROWS data rows) fails closed as too_many_rows', async () => {
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet('Members');

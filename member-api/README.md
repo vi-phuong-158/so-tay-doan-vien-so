@@ -381,9 +381,10 @@ real values (`.env` is gitignored; only `.env.example` is checked in).
 ## Known limitations / deferred to later subphases
 
 - No `/member-metadata` endpoint yet (decision P5.5-D13 — deferred, not missing).
-- The frontend does not yet render the audit trail (`GET /v1/members/:id/audit` exists as of
-  P5.5-07, but `src/pages/MemberDetail.jsx` from P5.5-06 predates it and has no history section) —
-  a small frontend-only follow-up, not a backend gap.
+- ~~The frontend does not yet render the audit trail~~ — closed in P5.5-07R:
+  `src/pages/MemberDetail.jsx` now has a "Lịch sử thay đổi" section backed by
+  `memberService.getMemberAuditHistory` (own loading/empty/error+retry/pagination state, allowlisted
+  fields only, no invented actor names from raw UUIDs).
 - Backup/restore for the Member PostgreSQL instance is `BLOCKS_RUNTIME_ACCEPTANCE`/
   `BLOCKS_PRODUCTION` and remains unresolved — see "Backup / restore — infrastructure audit" above.
   Not a code gap: there is no provisioned instance to configure backup on yet.

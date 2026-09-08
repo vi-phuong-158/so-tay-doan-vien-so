@@ -4,6 +4,7 @@ import {
   MemberServiceError,
   buildMemberPayload,
   createMemberService,
+  mapAuditLog,
   mapImportJob,
   mapImportJobRow,
   mapMemberRow,
@@ -200,6 +201,111 @@ test('createMemberService.updateMember: PATCH payload never includes work_unit_c
   await service.updateMember('m1', { fullName: 'A', workUnitCode: 'SHOULD-NOT-BE-SENT' });
   const sentBody = JSON.parse(fetchImpl.calls[0].options.body);
   assert.ok(!('work_unit_code' in sentBody));
+});
+
+// P5.5-07R — frontend audit history gap closure.
+
+test('mapAuditLog: converts server snake_case to camelCase and never invents an actor display name', () => {
+  const mapped = mapAuditLog({
+    audit_id: 'a1',
+    actor_user_id: '11111111-1111-1111-1111-111111111111',
+    action: 'UPDATE',
+    member_id: 'm1',
+    import_job_id: null,
+    before_data: { full_name: 'Old Name' },
+    after_data: { full_name: 'New Name' },
+    created_at: '2026-01-01T00:00:00Z',
+  });
+  assert.equal(mapped.id, 'a1');
+  assert.equal(mapped.actorUserId, '11111111-1111-1111-1111-111111111111');
+  assert.equal(mapped.action, 'UPDATE');
+  assert.deepEqual(mapped.beforeData, { full_name: 'Old Name' });
+  assert.deepEqual(mapped.afterData, { full_name: 'New Name' });
+  // The raw UUID is exposed as-is (actorUserId) — the mapper never adds an "actorName"/"actor"
+  // field that could look like an invented display name.
+  assert.ok(!('actorName' in mapped) && !('actor' in mapped));
+});
+
+test('mapAuditLog: null passthrough', () => {
+  assert.equal(mapAuditLog(null), null);
+});
+
+test('mapAuditLog: strips any field outside the audited allowlist from before/after data (defense in depth)', () => {
+  const mapped = mapAuditLog({
+    audit_id: 'a1',
+    actor_user_id: 'u1',
+    action: 'UPDATE',
+    member_id: 'm1',
+    import_job_id: null,
+    before_data: { full_name: 'A', external_ref_note: 'should not render', account_user_id: 'leak' },
+    after_data: { full_name: 'B', account_user_id: 'leak' },
+    created_at: '2026-01-01T00:00:00Z',
+  });
+  assert.deepEqual(mapped.beforeData, { full_name: 'A' });
+  assert.deepEqual(mapped.afterData, { full_name: 'B' });
+  assert.ok(!('external_ref_note' in mapped.beforeData));
+  assert.ok(!('account_user_id' in mapped.afterData));
+});
+
+test('createMemberService.getMemberAuditHistory: sends bounded pagination params and maps the response', async () => {
+  const fetchImpl = fakeFetch([{
+    status: 200,
+    body: {
+      logs: [{ audit_id: 'a1', actor_user_id: 'u1', action: 'CREATE', member_id: 'm1', import_job_id: null, before_data: null, after_data: { full_name: 'A' }, created_at: '2026-01-01T00:00:00Z' }],
+      total: 1,
+      limit: 20,
+      offset: 0,
+    },
+  }]);
+  const service = createMemberService(fakeClient(), { baseUrl: 'http://member-api.test', fetchImpl });
+
+  const result = await service.getMemberAuditHistory('m1');
+  assert.equal(result.logs.length, 1);
+  assert.equal(result.logs[0].action, 'CREATE');
+  assert.equal(result.total, 1);
+
+  const requestedUrl = new URL(fetchImpl.calls[0].url);
+  assert.equal(requestedUrl.pathname, '/v1/members/m1/audit');
+  assert.equal(requestedUrl.searchParams.get('limit'), '20');
+  assert.equal(requestedUrl.searchParams.get('offset'), '0');
+});
+
+test('createMemberService.getMemberAuditHistory: an out-of-range limit is clamped to the server ceiling, never sent as-is', async () => {
+  const fetchImpl = fakeFetch([{ status: 200, body: { logs: [], total: 0, limit: 100, offset: 0 } }]);
+  const service = createMemberService(fakeClient(), { baseUrl: 'http://member-api.test', fetchImpl });
+  await service.getMemberAuditHistory('m1', { limit: 99999, offset: -5 });
+  const requestedUrl = new URL(fetchImpl.calls[0].url);
+  assert.equal(requestedUrl.searchParams.get('limit'), '100');
+  assert.equal(requestedUrl.searchParams.get('offset'), '0');
+});
+
+test('createMemberService.getMemberAuditHistory: an empty result maps to an empty logs array, not an error', async () => {
+  const fetchImpl = fakeFetch([{ status: 200, body: { logs: [], total: 0, limit: 20, offset: 0 } }]);
+  const service = createMemberService(fakeClient(), { baseUrl: 'http://member-api.test', fetchImpl });
+  const result = await service.getMemberAuditHistory('m1');
+  assert.deepEqual(result.logs, []);
+  assert.equal(result.total, 0);
+});
+
+test('createMemberService.getMemberAuditHistory: a member outside scope (server 404) normalizes to NOT_FOUND, same as getMember', async () => {
+  const fetchImpl = fakeFetch([{ status: 404, body: { error: 'not_found' } }]);
+  const service = createMemberService(fakeClient(), { baseUrl: 'http://member-api.test', fetchImpl });
+  await assert.rejects(() => service.getMemberAuditHistory('out-of-scope-id'), (error) => {
+    assert.ok(error instanceof MemberServiceError);
+    assert.equal(error.code, 'NOT_FOUND');
+    return true;
+  });
+});
+
+test('createMemberService.getMemberAuditHistory: a network failure normalizes to REQUEST_FAILED like every other call', async () => {
+  const service = createMemberService(fakeClient(), {
+    baseUrl: 'http://member-api.test',
+    fetchImpl: async () => { throw new Error('network down'); },
+  });
+  await assert.rejects(() => service.getMemberAuditHistory('m1'), (error) => {
+    assert.equal(error.code, 'REQUEST_FAILED');
+    return true;
+  });
 });
 
 test('getOrganizationDirectory: reads Supabase organizations table, never the Member API', async () => {

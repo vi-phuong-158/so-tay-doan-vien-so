@@ -131,6 +131,48 @@ function buildMemberPayload(form, { includeWorkUnitCode }) {
 
 export { buildMemberPayload };
 
+// P5.5-07R — fields this layer will ever surface from an audit row. Independent of, and narrower
+// than, whatever the server response happens to contain — an unlisted field (e.g. if a future
+// server change ever put something unexpected into before_data/after_data) is silently dropped
+// here rather than reaching the UI, same defense-in-depth spirit as BUSINESS_ERROR_CODES above.
+const AUDIT_FIELD_ALLOWLIST = new Set([
+  'full_name',
+  'date_of_birth',
+  'gender',
+  'work_unit_code',
+  'job_title',
+  'member_status',
+  'political_theory_level',
+  'youth_position',
+  'youth_board_position',
+]);
+
+function filterAuditFields(data) {
+  if (!data || typeof data !== 'object') return null;
+  const filtered = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (AUDIT_FIELD_ALLOWLIST.has(key)) filtered[key] = value;
+  }
+  return filtered;
+}
+
+// actor_user_id is deliberately kept as a raw id, never turned into a display "name" here — this
+// layer has no directory to resolve a UUID to a person, and inventing one would misattribute
+// changes (P5.5-07R requirement: "không invent tên actor nếu chỉ có UUID").
+export function mapAuditLog(row) {
+  if (!row) return null;
+  return {
+    id: row.audit_id,
+    action: row.action,
+    memberId: row.member_id,
+    importJobId: row.import_job_id,
+    actorUserId: row.actor_user_id,
+    beforeData: filterAuditFields(row.before_data),
+    afterData: filterAuditFields(row.after_data),
+    createdAt: row.created_at,
+  };
+}
+
 function normalizeMemberError(error) {
   if (error instanceof MemberServiceError) return error;
   return new MemberServiceError('REQUEST_FAILED', 'Không thể kết nối tới Member API. Thử lại sau.', error);
@@ -352,6 +394,30 @@ export function createMemberService(client, options = {}) {
           body: { row_overrides: rowOverrides },
         });
         return mapImportJob(row);
+      } catch (error) {
+        throw normalizeMemberError(error);
+      }
+    },
+
+    // P5.5-07R — closes the frontend gap left by P5.5-06 shipping before the P5.5-07 audit
+    // endpoint existed. Bounded pagination (same MAX_LIST_LIMIT ceiling as listMembers/
+    // listImportJobRows); out-of-scope/not-found members surface as the same NOT_FOUND normalized
+    // error as getMember (the server returns 404 for both, muc 22 threat #3 — no separate leak).
+    async getMemberAuditHistory(memberId, { limit = 20, offset = 0 } = {}) {
+      const boundedLimit = Math.max(1, Math.min(limit, MAX_LIST_LIMIT));
+      const boundedOffset = Math.max(0, offset);
+      const params = new URLSearchParams();
+      params.set('limit', String(boundedLimit));
+      params.set('offset', String(boundedOffset));
+      try {
+        const result = await request(`/v1/members/${encodeURIComponent(memberId)}/audit?${params.toString()}`);
+        const logs = (result?.logs ?? []).map(mapAuditLog);
+        return {
+          logs,
+          total: result?.total ?? logs.length,
+          limit: result?.limit ?? boundedLimit,
+          offset: result?.offset ?? boundedOffset,
+        };
       } catch (error) {
         throw normalizeMemberError(error);
       }
