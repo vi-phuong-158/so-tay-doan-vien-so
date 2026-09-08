@@ -6,8 +6,13 @@ import { NotificationBell } from './NotificationBell';
 
 function Sidebar() {
   const navigate = useNavigate();
-  const { profile, hasRole } = useAuth();
-  
+  const { profile, hasRole, roles } = useAuth();
+  // P5.5-06: deliberately NOT `hasRole` — `hasRole` bakes in a SYSTEM_ADMIN bypass
+  // (`roles.includes(role) || roles.includes('SYSTEM_ADMIN')`), which mục 7/12 explicitly forbids
+  // for Member Management (see Guards.jsx's MemberManagementGuard for the same rule enforced on
+  // the routes themselves — this is UX-only, the Member API re-checks regardless).
+  const canManageMembers = (roles || []).includes('YOUTH_ADMIN') || (roles || []).includes('BRANCH_OFFICER');
+
   const items = [
     ['/', 'home', 'Trang chủ'], 
     ['/cong-viec', 'work', 'Công việc'], 
@@ -30,6 +35,12 @@ function Sidebar() {
         <div className="sidebar-admin">
           <span>Quản trị nội dung</span>
           <button onClick={() => navigate('/admin')}><Icon name="shield" />Bảng điều hành</button>
+        </div>
+      )}
+      {canManageMembers && (
+        <div className="sidebar-admin">
+          <span>Đoàn viên</span>
+          <button onClick={() => navigate('/quan-ly-doan-vien')}><Icon name="users" />Quản lý đoàn viên</button>
         </div>
       )}
       {profile && (

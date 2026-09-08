@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
-import { AuthGuard, RoleGuard } from './components/Guards';
+import { AuthGuard, MemberManagementGuard, RoleGuard } from './components/Guards';
 import { AppShell } from './components/Layout';
 
 import { Login } from './pages/auth/Login';
@@ -29,6 +29,9 @@ import { AdminLearningTopics } from './pages/AdminLearningTopics';
 import { AdminLearningTopicDetail } from './pages/AdminLearningTopicDetail';
 import { AdminQuizEditor } from './pages/AdminQuizEditor';
 import { AdminKnowledgeArticle } from './pages/AdminKnowledgeArticle';
+import { MemberManagement } from './pages/MemberManagement';
+import { MemberDetail } from './pages/MemberDetail';
+import { MemberImport } from './pages/MemberImport';
 
 import { EmptyState } from './components/common';
 
@@ -66,6 +69,12 @@ export default function App() {
             <Route path="tri-thuc/trac-nghiem/:quizId" element={<Quiz />} />
             <Route path="doi-moi-sang-tao" element={<Innovation />} />
             <Route path="ca-nhan" element={<Profile />} />
+
+            {/* P5.5-06 — Member Management. MemberManagementGuard (NOT RoleGuard — see Guards.jsx)
+                is the UX boundary; the Member API re-checks authorization on every request regardless. */}
+            <Route path="quan-ly-doan-vien" element={<MemberManagementGuard><MemberManagement /></MemberManagementGuard>} />
+            <Route path="quan-ly-doan-vien/:memberId" element={<MemberManagementGuard><MemberDetail /></MemberManagementGuard>} />
+            <Route path="admin/quan-ly-doan-vien/import" element={<MemberManagementGuard requireImportRole><MemberImport /></MemberManagementGuard>} />
 
             {/* Profile Routes */}
             <Route path="ca-nhan/thong-bao" element={<Notifications />} />

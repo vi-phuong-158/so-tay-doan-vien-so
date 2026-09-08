@@ -219,6 +219,68 @@
   dedup query).
 - **Report:** xem entry `[2026-09-08]` (P5.5-05) trong `docs/brain/06-ai-working-log.md`;
   `member-api/README.md` mục "P5.5-05 — Excel import".
+- **Trạng thái:** merged qua PR #43 (merge commit `9f89ba808911d8a7f6c9413436e596b239ffa87c`),
+  exact-head CI (`3839b80`) xanh trước merge (`build`/`test-db`/`member-api-test`/Vercel đều
+  `success`), owner đã xác nhận merge.
+
+### P5.5-06 — Admin/Member Frontend
+- **Base:** `master` sau merge PR #43 (P5.5-05, `9f89ba808911d8a7f6c9413436e596b239ffa87c`). Branch
+  `feat/p5-5-06-member-frontend`.
+- **Nội dung:**
+  - Backend enabler tối thiểu (ngoài scope "frontend-only" nhưng bắt buộc để UI gọi được Member
+    API thật qua trình duyệt — xem P5.5-D12): CORS trên Member API
+    (`CORS_ALLOWED_ORIGIN` required fail-closed, `member-api/src/server.js` `applyCorsHeaders`
+    exact-origin echo, `OPTIONS` preflight `204` không đi qua authorization).
+  - `src/services/memberService.js` (mới) — data boundary, factory `createMemberService(client,
+    {baseUrl, fetchImpl})`, không đọc `import.meta.env` trong module (testable dưới `node --test`).
+    Bọc toàn bộ endpoint P5.5-02…05: `getScope`, `getOrganizationDirectory` (đọc `organizations`
+    Supabase, không phải Member API), `listMembers`/`getMember`/`createMember`/`updateMember`/
+    `setMemberStatus`, `uploadImport`/`getImportJob`/`listImportJobRows`/`confirmImport`/
+    `cancelImport`.
+  - `src/lib/memberDisplay.mjs` (mới) — nhãn tiếng Việt + tone màu cho mọi enum, tách biệt khỏi
+    service theo đúng convention `documentAdminDisplay.mjs`.
+  - `src/components/Guards.jsx` — thêm `MemberManagementGuard`/`getMemberManagementGuardAction`
+    (pure function, cùng pattern `getAuthGuardAction`) — KHÔNG dùng `RoleGuard` (bypass
+    `SYSTEM_ADMIN`), điều kiện `YOUTH_ADMIN || BRANCH_OFFICER`; `requireImportRole` chỉ
+    `YOUTH_ADMIN`. Không sửa `RoleGuard`/`hasRole` hiện có (dùng nguyên cho mọi route khác).
+  - `src/pages/{MemberManagement,MemberDetail,MemberImport}.jsx` (mới) — route
+    `/quan-ly-doan-vien` (danh sách: search/filter đủ 5 field + sort, pagination "Tải thêm", tạo
+    mới), `/quan-ly-doan-vien/:memberId` (chi tiết/sửa/lưu trữ-khôi phục), `/admin/quan-ly-doan-vien/import`
+    (upload→preview theo tab row_status→override từng dòng nghi trùng (chỉ CREATE_NEW, không
+    merge)→confirm→kết quả). Toàn bộ card-list/form dùng lại class CSS sẵn có
+    (`campaign-list`, `campaign-form`, `content-card`/`info-grid`, `confirm-overlay`, `status-*`) —
+    không viết CSS mới, không redesign.
+  - `src/App.jsx`/`src/components/Layout.jsx` — wire route + nav sidebar mới ("Quản lý đoàn viên"),
+    điều kiện hiện nav dùng trực tiếp `roles` (không dùng `hasRole` vì có bypass `SYSTEM_ADMIN`).
+- **Quyết định kỹ thuật mới:** P5.5-D12 (CORS exact-origin), P5.5-D13 (không xây `/member-metadata`,
+  tái dùng `organizations` + `/v1/member-scope` có sẵn) — xem `03-decisions.md`.
+- **Không có trong subphase này:** `/member-metadata` thật, audit/lịch sử thay đổi trên trang chi
+  tiết (chưa có audit table — để P5.5-07), export, hard delete UI, merge/update-existing qua import
+  UI (khớp P5.5-D9).
+- **Test:** `tests/member_service.test.mjs` (12 test — mapping, payload allowlist, lỗi HTTP
+  401/403/404/network, `NOT_CONFIGURED`/`AUTHENTICATION_REQUIRED` fail trước khi gọi fetch,
+  `error.cause` giữ `import_job_id` cho lỗi malformed workbook), `tests/MemberManagementGuard.test.mjs`
+  (8 test — cùng kỹ thuật regex-extract như `AuthGuard.test.mjs`; xác nhận KHÔNG có bypass
+  `SYSTEM_ADMIN` ở cả hai chế độ guard). Root `npm test` **173/173 pass** (153 baseline + 20 mới).
+  `member-api` **226/226 pass** (221 baseline P5.5-01…05 + 5 CORS test mới). Root `npm run lint`
+  0 error (4 warning — 3 cũ + 1 warning "fast refresh" mới cùng loại với `getAuthGuardAction` sẵn
+  có, không phải lỗi mới). Root `npm run build` PASS.
+- **Giới hạn xác minh runtime:** Không có Supabase project thật hoặc Member API đã deploy trong môi
+  trường viết code này, nên KHÔNG thực hiện được đăng nhập thật + click-through trình duyệt trên
+  các route mới (`/quan-ly-doan-vien*`) — chỉ xác minh: `vite build` thành công, dev server phục vụ
+  đúng shell (`curl` xác nhận HTTP 200 + đúng HTML), lint sạch, toàn bộ unit test pure-logic pass.
+  Đây là giới hạn đã biết, khớp đúng pattern "technical acceptance PASS, runtime rehearsal riêng"
+  đã dùng xuyên suốt các phase trước (P4-02, P4-04...) — không tự nhận đã kiểm thử UI thật trên
+  trình duyệt với dữ liệu thật.
+- **Residual gap cần owner xử lý trước production (KHÔNG chặn P5.5-06 technical acceptance, cùng
+  nhóm với mục 28.3 kiến trúc):** `vercel.json`'s Content-Security-Policy hiện có
+  `connect-src 'self' https://*.supabase.co wss://*.supabase.co` — KHÔNG bao gồm hostname Member
+  API thật. Khi Member API được deploy thật (Vibe Host v2, mục 28.3), phải thêm hostname đó vào
+  `connect-src` (và `CORS_ALLOWED_ORIGIN` phía Member API phải trỏ đúng origin production của
+  frontend) — nếu không, trình duyệt sẽ tự chặn mọi request tới Member API dù CORS/auth đều đúng.
+  Không tự bịa hostname vào `vercel.json` trong task này vì Member API production domain chưa được
+  quyết định (mục 28.3 "OWNER/DEPLOYMENT DECISION REQUIRED").
+- **Report:** xem entry mới nhất trong `docs/brain/06-ai-working-log.md`.
 
 ### Phase 5 end-to-end closure
 - **Base:** isolated closure worktree/branch `codex/phase-5-full-closure`, based on P5-03 plus the

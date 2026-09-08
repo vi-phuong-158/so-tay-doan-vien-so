@@ -448,6 +448,42 @@ không nới, không skip bất kỳ assertion nào**; test 14/15/16/26 vẫn đ
 - **Người quyết định:** Claude Code, theo đúng mục 10/25 tài liệu kiến trúc và nguyên tắc "không
   over-engineer" của dự án.
 
+## [2026-09-08] P5.5-D12 — Member API CORS: exact-origin echo, không wildcard
+
+- **Quyết định:** Member API thêm `CORS_ALLOWED_ORIGIN` (required, fail-closed) và chỉ echo lại
+  đúng giá trị đó vào `Access-Control-Allow-Origin` khi request's `Origin` header khớp CHÍNH XÁC —
+  không bao giờ wildcard `*`, không bao giờ reflect một Origin bất kỳ. `OPTIONS` preflight trả
+  `204` kèm header CORS và KHÔNG BAO GIỜ đi qua `authorizeMemberManagement`/chạm database.
+- **Lý do:** P5.5-06 lần đầu tiên cần trình duyệt gọi Member API cross-origin (frontend và Member
+  API là hai origin khác nhau). Không có CORS, trình duyệt chặn response trước khi frontend nhận
+  được, bất kể authorization đúng hay sai. Vì mọi request thật đều mang bearer token JWT, reflect
+  wildcard hoặc reflect Origin bất kỳ sẽ là một lỗ hổng — exact-match là mức tối thiểu an toàn.
+- **Đánh đổi:** Giá trị production của `CORS_ALLOWED_ORIGIN` là cùng một open item với mục 28.3
+  (domain/TLS của Member API) — cả hai sẽ được owner quyết định cùng lúc khi provisioning thật,
+  không tự bịa hostname production. `createServer(pool, {...})` giữ nguyên hành vi cũ (không có
+  CORS header) khi không truyền `corsAllowedOrigin` — toàn bộ test P5.5-01…05 không cần sửa.
+- **Người quyết định:** Claude Code, theo yêu cầu P5.5-06 (frontend cần gọi được Member API thật).
+
+## [2026-09-08] P5.5-D13 — Frontend không xây `/member-metadata`; tái dùng `organizations` + `/v1/member-scope` có sẵn
+
+- **Quyết định:** Bộ chọn đơn vị công tác (work_unit_code) trên form tạo/sửa đoàn viên đọc trực
+  tiếp bảng `organizations` của Supabase (đã có RLS cho phép `active users read organizations` từ
+  `202607300001_initial_schema.sql`, đúng cách `Admin.jsx` đã làm) kết hợp với `GET /v1/member-scope`
+  (đã có từ P5.5-02) để lọc UX theo scope hiện tại. Enum hiển thị (`member_status`,
+  `political_theory_level`, `youth_position`, `youth_board_position`, `gender`) được hardcode ở
+  frontend (`src/services/memberService.js`, `src/lib/memberDisplay.mjs`), khớp chính xác với
+  `member-api/src/memberValidation.js`, thay vì gọi một endpoint `/member-metadata` mới.
+- **Lý do:** `/member-metadata` đã được liệt kê là "chưa có" xuyên suốt P5.5-02…05 và không nằm
+  trong phạm vi frontend-only của P5.5-06 (xây thêm một endpoint Member API mới là backend work,
+  ngoài scope). Cả hai nguồn dữ liệu tái dùng (organizations, `/v1/member-scope`) đã tồn tại và
+  đã qua review bảo mật ở các subphase trước — không tạo registry/bản sao dữ liệu tổ chức thứ hai.
+- **Đánh đổi:** Bộ lọc theo scope ở UI là UX convenience thuần túy, không phải security control —
+  Member API vẫn tự re-validate `work_unit_code` tồn tại + trong scope trên mọi request ghi (mục
+  13/24). Nếu enum server-side thay đổi trong tương lai, phải cập nhật đồng bộ cả hai phía (rủi ro
+  drift đã biết, chấp nhận được ở quy mô/tần suất thay đổi enum hiện tại — các enum này đã được
+  mục 5 kiến trúc chốt cứng, không phải dữ liệu thay đổi thường xuyên).
+- **Người quyết định:** Claude Code, theo yêu cầu P5.5-06 (giữ đúng phạm vi frontend-only).
+
 ## Template cho entry mới
 
 ```

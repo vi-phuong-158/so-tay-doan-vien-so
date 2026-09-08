@@ -174,6 +174,28 @@ count.
 **Not implemented in P5.5-02/03/04/05** (later subphases): audit table (P5.5-07), frontend
 (P5.5-06), `/member-metadata`, any deploy to Mắt Bão, any purchase/provisioning of hosting.
 
+## P5.5-06 — CORS for the browser frontend
+
+The one Member API change needed to make the P5.5-06 frontend possible: the browser now calls this
+API cross-origin (a separate Vite dev server / deployed frontend origin, never the same origin as
+this Node process). Without CORS the browser blocks the response before the frontend ever sees it,
+regardless of how correct the authorization is.
+
+- New required config: `CORS_ALLOWED_ORIGIN` (fail-closed like every other required setting — the
+  process refuses to start without it). `src/server.js`'s `applyCorsHeaders` only ever echoes this
+  exact configured value back as `Access-Control-Allow-Origin`, and only when it matches the
+  request's `Origin` header exactly — **never** a wildcard, since every real request carries a
+  bearer token.
+- `OPTIONS` preflight requests are answered with `204` + the CORS headers and are **never** routed
+  further — they never reach `authorizeMemberManagement` or touch the database.
+- `createServer(pool, {...})` still works exactly as before when `corsAllowedOrigin` is omitted (no
+  CORS headers at all) — every existing test file that constructs the server directly needed no
+  changes.
+- The production value of `CORS_ALLOWED_ORIGIN` is the same open item as mục 28.3 (Member API
+  domain/TLS arrangement) — both are `OWNER/DEPLOYMENT DECISION REQUIRED` and get resolved together
+  once the frontend's production origin and this API's production origin are both known. Never
+  guessed/hardcoded here.
+
 ## Local setup
 
 Requires PostgreSQL 16 (or compatible) reachable locally — **never** point this at production data
@@ -221,7 +243,8 @@ Test files:
   role/organization signal ever read for an authorization decision.
 - `tests/server.test.mjs` — health/readiness behavior, fail-closed database-unavailable handling,
   the `/v1/member-scope` and `/v1/members` authorization boundary (401/403/501 matrix), config
-  fail-fast behavior.
+  fail-fast behavior, and (P5.5-06) CORS: no headers when unconfigured, exact-origin-match echo,
+  no reflection for a mismatched origin, and an `OPTIONS` preflight never reaching authorization.
 - `tests/memberScope.test.mjs` — the resolver HTTP client and authorization-derivation logic:
   malformed/unreachable/non-2xx resolver responses, bearer-token parsing, role/scope shape
   validation.
@@ -281,6 +304,7 @@ by the root `test-db` CI job alongside the other Edge Function tests.
 | `PORT` | No (default `8080`) | HTTP port. |
 | `MEMBER_SCOPE_RESOLVER_URL` | Yes | URL of the Supabase Edge Function `resolve-member-scope`. Missing → the process refuses to start. |
 | `MEMBER_SCOPE_RESOLVER_SECRET` | Yes | Shared server-to-server secret with that Edge Function. Missing → the process refuses to start. Never a real production value in `.env.example` or `supabase/functions/.env` (local/CI use a fixed non-sensitive placeholder — see that file). |
+| `CORS_ALLOWED_ORIGIN` | Yes | The one browser origin allowed to call this API cross-origin (P5.5-06). Missing → the process refuses to start. Echoed back only on an exact match — never a wildcard. |
 
 No secret is ever read from or written to a `VITE_*` variable, and nothing here is committed with
 real values (`.env` is gitignored; only `.env.example` is checked in).

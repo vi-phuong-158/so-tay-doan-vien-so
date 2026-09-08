@@ -443,7 +443,27 @@ Export bị defer ở mục 9). Benchmark synthetic ~3.000 dòng
 table tự nó đã đủ ghi "ai import gì, khi nào, bao nhiêu dòng, kết quả" cho acceptance mục 23 của
 P5.5-05.
 
-Chưa có: audit table riêng (P5.5-07), frontend (P5.5-06), `/member-metadata`.
+Từ P5.5-06, frontend thật đã hoạt động qua Member API — không còn mock. Member API thêm CORS
+(`CORS_ALLOWED_ORIGIN` required fail-closed, exact-origin echo, không wildcard — mục P5.5-D12) vì
+đây là lần đầu trình duyệt gọi Member API cross-origin; `createServer(pool, {...})` giữ nguyên hành
+vi cũ khi không truyền `corsAllowedOrigin` nên P5.5-01…05 test không đổi. `src/services/memberService.js`
+(mới) là data boundary — nhận `client` (Supabase client, chỉ dùng lấy access token + đọc bảng
+`organizations` đã RLS-cho-phép, KHÔNG dùng để tính authorization) và `baseUrl` làm tham số tường
+minh (không đọc `import.meta.env` trong module, giữ import.meta.env chỉ ở page component, đúng
+convention `createDocumentService(client)` sẵn có — testable dưới `node --test` thuần). Route mới:
+`/quan-ly-doan-vien` (danh sách + tạo mới), `/quan-ly-doan-vien/:memberId` (chi tiết/sửa/lưu trữ),
+`/admin/quan-ly-doan-vien/import` (luồng import). Guard mới `MemberManagementGuard`
+(`src/components/Guards.jsx`) — KHÔNG dùng `RoleGuard` (có bypass `SYSTEM_ADMIN`, đúng cảnh báo mục
+24 F1 của kiến trúc); điều kiện `roles.includes('YOUTH_ADMIN') || roles.includes('BRANCH_OFFICER')`,
+route import dùng `requireImportRole` chỉ cho `YOUTH_ADMIN`. Guard chỉ là UX boundary — Member API
+vẫn tự re-check authorization mọi request (mục 13/24), không có ngoại lệ. Không xây
+`/member-metadata` (mục P5.5-D13) — bộ chọn đơn vị đọc thẳng `organizations` (Supabase, đã RLS) +
+`GET /v1/member-scope` (đã có từ P5.5-02) để lọc UX; enum hiển thị hardcode khớp
+`memberValidation.js`. Import UX (`src/pages/MemberImport.jsx`) đi đúng luồng
+upload→preview(tab theo row_status)→override từng dòng nghi trùng (chỉ CREATE_NEW, không merge, khớp
+P5.5-05)→confirm→kết quả; không coi upload là commit.
+
+Chưa có: audit table riêng (P5.5-07), `/member-metadata` (deferred, mục P5.5-D13).
 Xem `member-api/README.md` cho chi tiết và giới hạn hiện tại.
 
 ```text

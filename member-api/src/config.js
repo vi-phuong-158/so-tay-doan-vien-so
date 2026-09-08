@@ -48,5 +48,23 @@ export function loadConfig(env = process.env) {
     );
   }
 
-  return { databaseUrl, port, memberScopeResolverUrl, memberScopeResolverSecret, supabaseUrl, supabaseAnonKey };
+  // P5.5-06 — the browser calls this API cross-origin; without an explicit allowed origin the
+  // frontend cannot use it at all. Fail-closed like every other required value here: no wildcard
+  // fallback (a bearer-token-carrying API must never reflect an arbitrary Origin).
+  const corsAllowedOrigin = env.CORS_ALLOWED_ORIGIN;
+  if (!corsAllowedOrigin) {
+    throw new Error(
+      'CORS_ALLOWED_ORIGIN is required. Set it in member-api/.env (never commit real values) — see member-api/.env.example.'
+    );
+  }
+
+  return {
+    databaseUrl,
+    port,
+    memberScopeResolverUrl,
+    memberScopeResolverSecret,
+    supabaseUrl,
+    supabaseAnonKey,
+    corsAllowedOrigin,
+  };
 }
