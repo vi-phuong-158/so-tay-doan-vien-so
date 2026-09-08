@@ -30,8 +30,11 @@ after(async () => {
   await pool.end();
 });
 
+// P5.5-07: actor_user_id is a real UUID column in member_audit_logs now that CREATE/PATCH write an
+// audit row in the same transaction — this must be a valid UUID, not an arbitrary test string.
+const TEST_ACTOR_ID = '00000000-0000-0000-0000-000000000003';
 function authorizerFor(roles) {
-  return async () => ({ authorized: true, userId: 'test-user', roles });
+  return async () => ({ authorized: true, userId: TEST_ACTOR_ID, roles });
 }
 
 const DENIED_NO_ROLE = async () => ({ authorized: false, status: 403, body: { error: 'forbidden' } });
@@ -674,5 +677,55 @@ test('DELETE /v1/members/:id is authorized first, then returns a deliberate 501 
     });
     assert.equal(archived.status, 200);
     assert.equal(archived.body.member_status, 'ARCHIVED');
+  });
+});
+
+// ---- P5.5-07: GET /v1/members/:id/audit ----
+
+test('GET /v1/members/:id/audit: create then patch produces the expected audit trail, newest first', async () => {
+  const org = orgCode('AUDIT-TRAIL');
+  const roles = [{ role_code: 'YOUTH_ADMIN', is_global: false, org_codes: [org] }];
+  await withServer(authorizerFor(roles), async (base) => {
+    const created = await jsonFetch(`${base}/v1/members`, { method: 'POST', body: JSON.stringify({ full_name: 'Audit Trail Person', work_unit_code: org }) });
+    await jsonFetch(`${base}/v1/members/${created.body.member_id}`, { method: 'PATCH', body: JSON.stringify({ job_title: 'Đội trưởng' }) });
+
+    const res = await jsonFetch(`${base}/v1/members/${created.body.member_id}/audit`);
+    assert.equal(res.status, 200);
+    assert.equal(res.body.total, 2);
+    assert.equal(res.body.logs[0].action, 'UPDATE');
+    assert.equal(res.body.logs[0].after_data.job_title, 'Đội trưởng');
+    assert.equal(res.body.logs[1].action, 'CREATE');
+  });
+});
+
+test('GET /v1/members/:id/audit: a member outside the caller\'s scope is 404, same as the member itself (no second unscoped read path)', async () => {
+  const orgIn = orgCode('AUDIT-IN');
+  const orgOut = orgCode('AUDIT-OUT');
+  let memberId;
+  await withServer(authorizerFor([{ role_code: 'YOUTH_ADMIN', is_global: true, org_codes: [] }]), async (base) => {
+    const created = await jsonFetch(`${base}/v1/members`, { method: 'POST', body: JSON.stringify({ full_name: 'Out Of Scope Audit', work_unit_code: orgOut }) });
+    memberId = created.body.member_id;
+  });
+  await withServer(authorizerFor([{ role_code: 'YOUTH_ADMIN', is_global: false, org_codes: [orgIn] }]), async (base) => {
+    const res = await jsonFetch(`${base}/v1/members/${memberId}/audit`);
+    assert.equal(res.status, 404);
+  });
+});
+
+test('GET /v1/members/:id/audit: a rejected PATCH (out of scope) never adds a row to the trail', async () => {
+  const org = orgCode('AUDIT-REJECT');
+  const otherOrg = orgCode('AUDIT-REJECT-OTHER');
+  let memberId;
+  await withServer(authorizerFor([{ role_code: 'YOUTH_ADMIN', is_global: false, org_codes: [org] }]), async (base) => {
+    const created = await jsonFetch(`${base}/v1/members`, { method: 'POST', body: JSON.stringify({ full_name: 'Reject Audit Person', work_unit_code: org }) });
+    memberId = created.body.member_id;
+  });
+  await withServer(authorizerFor([{ role_code: 'YOUTH_ADMIN', is_global: false, org_codes: [otherOrg] }]), async (base) => {
+    const patchRes = await jsonFetch(`${base}/v1/members/${memberId}`, { method: 'PATCH', body: JSON.stringify({ job_title: 'Should not apply' }) });
+    assert.equal(patchRes.status, 404); // out of scope, same anti-enumeration contract as the member itself
+  });
+  await withServer(authorizerFor([{ role_code: 'YOUTH_ADMIN', is_global: false, org_codes: [org] }]), async (base) => {
+    const res = await jsonFetch(`${base}/v1/members/${memberId}/audit`);
+    assert.equal(res.body.total, 1); // only the original CREATE
   });
 });

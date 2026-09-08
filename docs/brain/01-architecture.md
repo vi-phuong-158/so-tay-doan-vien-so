@@ -463,7 +463,34 @@ vẫn tự re-check authorization mọi request (mục 13/24), không có ngoạ
 upload→preview(tab theo row_status)→override từng dòng nghi trùng (chỉ CREATE_NEW, không merge, khớp
 P5.5-05)→confirm→kết quả; không coi upload là commit.
 
-Chưa có: audit table riêng (P5.5-07), `/member-metadata` (deferred, mục P5.5-D13).
+Từ P5.5-07, application audit thật đã hoạt động. Migration
+`member-api/migrations/0003_member_audit.sql` thêm `member_audit_logs` (bảng riêng, KHÔNG dùng
+chung `audit_logs` của Supabase — Member API là system of record, tránh distributed transaction
+giữa hai database, đúng mục 16). `member-api/src/memberAudit.js` là module duy nhất build audit
+payload/ghi audit row — `insertAuditLog` luôn nhận một `client` đã ở trong transaction đang mở
+(không bao giờ `pool` trần), gọi từ `memberRepository.js` và `importRepository.js`.
+`createMember`/`updateMember` trong `memberRepository.js` chuyển từ một `pool.query` đơn sang
+transaction thật (`BEGIN`/`COMMIT`/`ROLLBACK`) — member write và audit row cùng commit/rollback.
+`updateMember` làm `SELECT ... FOR UPDATE` (cùng scope predicate với `UPDATE`) trước để lấy
+`before_data` chính xác, không phải một lần đọc cũ/stale. Chỉ audit field nghiệp vụ (`full_name`,
+`date_of_birth`, `gender`, `work_unit_code`, `job_title`, `member_status`,
+`political_theory_level`, `youth_position`, `youth_board_position`) — `external_ref_note` chủ đích
+loại trừ (mục 16, "cosmetic"). KHÔNG có cột `outcome` (mục P5.5-D14) — sự tồn tại của row = tín
+hiệu thành công; mutation bị từ chối/rollback không bao giờ tạo row. `importRepository.js`'s
+`confirmImportJob` ghi MỘT audit row mỗi member được commit (không phải một row/job — mục P5.5-D15)
+với `import_job_id` set, trong CÙNG transaction với insert member đó; idempotent replay không tạo
+thêm row nào. Route mới: `GET /v1/members/:id/audit` (cùng scope check với `GET /v1/members/:id` —
+ngoài scope → 404 y hệt, không có đường đọc thứ hai không qua scope).
+
+**Backup/restore hạ tầng (mục 18):** vẫn `BLOCKS_RUNTIME_ACCEPTANCE`/`BLOCKS_PRODUCTION`, không có
+bằng chứng mới trong P5.5-07 — Mắt Bão Vibe Host v2 vẫn CHƯA được provisioned (không có instance,
+không có connection string), và agent không có tài khoản/quyền truy cập Mắt Bão để tự provisioning
+hay kiểm tra. Xem `member-api/README.md` mục "Backup / restore — infrastructure audit" và
+`docs/brain/04-current-tasks.md` cho checklist đầy đủ chưa trả lời được.
+
+Chưa có: `/member-metadata` (deferred, mục P5.5-D13); UI hiển thị lịch sử audit trên trang chi tiết
+member (endpoint đã có, frontend P5.5-06 làm trước khi endpoint tồn tại nên chưa render — follow-up
+nhỏ, không phải gap backend).
 Xem `member-api/README.md` cho chi tiết và giới hạn hiện tại.
 
 ```text

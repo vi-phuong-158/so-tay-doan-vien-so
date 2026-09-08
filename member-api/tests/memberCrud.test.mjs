@@ -4,7 +4,12 @@ import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import pg from 'pg';
-import { createMember, getMemberById, listMembers, updateMember } from '../src/memberRepository.js';
+import {
+  createMember as createMemberRaw,
+  getMemberById,
+  listMembers,
+  updateMember as updateMemberRaw,
+} from '../src/memberRepository.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const databaseUrl = process.env.MEMBER_DATABASE_URL;
@@ -24,6 +29,18 @@ after(async () => {
 });
 
 const GLOBAL_SCOPE = { isGlobal: true, orgCodes: null };
+
+// P5.5-07: createMember/updateMember now require actorUserId (a real UUID column in
+// member_audit_logs). Every fixture in this file exercises scope/pagination/search behavior, not
+// the audit trail itself (see memberAudit.test.mjs) — this wrapper supplies a fixed test actor so
+// none of the ~35 call sites below need to change.
+const TEST_ACTOR_ID = '00000000-0000-0000-0000-000000000001';
+function createMember(pool, args) {
+  return createMemberRaw(pool, { actorUserId: TEST_ACTOR_ID, ...args });
+}
+function updateMember(pool, args) {
+  return updateMemberRaw(pool, { actorUserId: TEST_ACTOR_ID, ...args });
+}
 
 // Every fixture in this file uses work_unit_code values under this unique prefix so list/pagination
 // assertions never depend on total row counts in the shared test database (other test files insert

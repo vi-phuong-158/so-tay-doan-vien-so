@@ -7,11 +7,17 @@ import { ApiError } from './errors.js';
 import { assertOrgCodeInScope } from './scope.js';
 import { parseCreatePayload, parseListQuery, parsePatchPayload } from './memberValidation.js';
 import { createMember, getMemberById, listMembers, updateMember } from './memberRepository.js';
+import { listMemberAuditLogs } from './memberAudit.js';
 
 const MEMBER_ID_PATTERN = /^\/v1\/members\/([^/]+)$/;
+const MEMBER_AUDIT_PATTERN = /^\/v1\/members\/([^/]+)\/audit$/;
 
 export function matchMemberRoute(pathname) {
   if (pathname === '/v1/members') return { kind: 'collection' };
+  // Checked before the generic item pattern, same reason as importRoutes.js's ordering — otherwise
+  // `/v1/members/<id>/audit` would be swallowed by MEMBER_ID_PATTERN with a bogus id.
+  const auditMatch = MEMBER_AUDIT_PATTERN.exec(pathname);
+  if (auditMatch) return { kind: 'audit', id: decodeURIComponent(auditMatch[1]) };
   const match = MEMBER_ID_PATTERN.exec(pathname);
   if (match) return { kind: 'item', id: decodeURIComponent(match[1]) };
   return null;
@@ -28,6 +34,7 @@ export async function handleMemberRoute({
   readJsonBody,
   checkOrganizationExists,
   bearerToken,
+  userId,
 }) {
   if (route.kind === 'collection') {
     if (req.method === 'GET') {
@@ -51,11 +58,35 @@ export async function handleMemberRoute({
       }
       assertOrgCodeInScope(scope, payload.work_unit_code);
 
-      const member = await createMember(pool, { payload });
+      const member = await createMember(pool, { payload, actorUserId: userId });
       sendJson(res, 201, member);
       return;
     }
     sendJson(res, 404, { error: 'not_found' });
+    return;
+  }
+
+  if (route.kind === 'audit') {
+    if (req.method !== 'GET') {
+      sendJson(res, 404, { error: 'not_found' });
+      return;
+    }
+    // Same scope check as reading the member itself (muc 22 threat #3) — audit history for a
+    // member outside the caller's scope is exactly as invisible as the member itself, never a
+    // second, unscoped way to reach the same data.
+    const member = await getMemberById(pool, { scope, id: route.id });
+    if (!member) {
+      sendJson(res, 404, { error: 'not_found' });
+      return;
+    }
+    const limitRaw = Number(url.searchParams.get('limit'));
+    const offsetRaw = Number(url.searchParams.get('offset'));
+    const result = await listMemberAuditLogs(pool, {
+      memberId: route.id,
+      limit: Number.isFinite(limitRaw) ? limitRaw : undefined,
+      offset: Number.isFinite(offsetRaw) ? offsetRaw : undefined,
+    });
+    sendJson(res, 200, result);
     return;
   }
 
@@ -73,7 +104,7 @@ export async function handleMemberRoute({
   if (req.method === 'PATCH') {
     const body = await readJsonBody(req);
     const patch = parsePatchPayload(body);
-    const member = await updateMember(pool, { scope, id: route.id, patch });
+    const member = await updateMember(pool, { scope, id: route.id, patch, actorUserId: userId });
     if (!member) {
       sendJson(res, 404, { error: 'not_found' });
       return;

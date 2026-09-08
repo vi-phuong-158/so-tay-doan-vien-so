@@ -485,6 +485,71 @@ test('a suspended/unauthenticated actor is denied before ever touching the uploa
   });
 });
 
+// ---- P5.5-07: import commit audit ----
+
+test('confirm/commit writes exactly one CREATE audit row per committed member, each with import_job_id set and the real actor', async () => {
+  await withServer(
+    authorizerFor('uploader-audit', YOUTH_ADMIN_GLOBAL),
+    async (baseUrl) => {
+      const buffer = await buildWorkbookBuffer(HEADERS, [
+        ['Audit Person One', orgCode('IMPORTAUDIT'), null],
+        ['Audit Person Two', orgCode('IMPORTAUDIT'), null],
+      ]);
+      const upload = await uploadFetch(baseUrl, buffer);
+      const jobId = upload.body.import_job_id;
+      const confirm = await jsonFetch(`${baseUrl}/v1/members/import/${jobId}/confirm`, { method: 'POST', body: '{}' });
+      assert.equal(confirm.body.committed_count, 2);
+
+      const { rows } = await pool.query(
+        `SELECT * FROM member_audit_logs WHERE import_job_id = $1 ORDER BY created_at ASC`,
+        [jobId]
+      );
+      assert.equal(rows.length, 2);
+      for (const row of rows) {
+        assert.equal(row.action, 'CREATE');
+        assert.equal(row.actor_user_id, uidFor('uploader-audit'));
+        assert.equal(row.import_job_id, jobId);
+        assert.equal(row.before_data, null);
+        assert.ok(row.after_data.full_name.startsWith('Audit Person'));
+      }
+    },
+    { checkOrganizationCodesExist: directoryBatchOf([orgCode('IMPORTAUDIT')]) }
+  );
+});
+
+test('a duplicate confirm (idempotent replay) never doubles the audit rows for the same job', async () => {
+  await withServer(
+    authorizerFor('uploader-audit-idem', YOUTH_ADMIN_GLOBAL),
+    async (baseUrl) => {
+      const buffer = await buildWorkbookBuffer(HEADERS, [['Idem Audit Person', orgCode('IDEMAUDIT'), null]]);
+      const upload = await uploadFetch(baseUrl, buffer);
+      const jobId = upload.body.import_job_id;
+      await jsonFetch(`${baseUrl}/v1/members/import/${jobId}/confirm`, { method: 'POST', body: '{}' });
+      await jsonFetch(`${baseUrl}/v1/members/import/${jobId}/confirm`, { method: 'POST', body: '{}' });
+
+      const { rows } = await pool.query(`SELECT count(*)::int AS n FROM member_audit_logs WHERE import_job_id = $1`, [jobId]);
+      assert.equal(rows[0].n, 1);
+    },
+    { checkOrganizationCodesExist: directoryBatchOf([orgCode('IDEMAUDIT')]) }
+  );
+});
+
+test('a cancelled job (never confirmed) has zero audit rows — nothing was ever committed', async () => {
+  await withServer(
+    authorizerFor('uploader-audit-cancel', YOUTH_ADMIN_GLOBAL),
+    async (baseUrl) => {
+      const buffer = await buildWorkbookBuffer(HEADERS, [['Cancel Audit Person', orgCode('CANCELAUDIT'), null]]);
+      const upload = await uploadFetch(baseUrl, buffer);
+      const jobId = upload.body.import_job_id;
+      await jsonFetch(`${baseUrl}/v1/members/import/${jobId}/cancel`, { method: 'POST' });
+
+      const { rows } = await pool.query(`SELECT count(*)::int AS n FROM member_audit_logs WHERE import_job_id = $1`, [jobId]);
+      assert.equal(rows[0].n, 0);
+    },
+    { checkOrganizationCodesExist: directoryBatchOf([orgCode('CANCELAUDIT')]) }
+  );
+});
+
 test('import never creates a Supabase auth user or profile: no such capability exists anywhere in this codebase/dependency graph', () => {
   // Structural guarantee, not a runtime assertion: this Member API process has no Supabase
   // service-role credential (config.js/organizationDirectory.js only ever load the public anon

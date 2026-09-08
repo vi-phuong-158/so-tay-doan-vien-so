@@ -180,6 +180,7 @@ export function createServer(pool, { authorizeMemberManagement, checkOrganizatio
           readJsonBody,
           checkOrganizationExists,
           bearerToken,
+          userId: result.userId,
         });
         return;
       }

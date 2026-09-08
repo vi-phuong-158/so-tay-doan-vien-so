@@ -1,5 +1,64 @@
 # 06 — AI Working Log
 
+## [2026-09-08] P5.5-07 — Audit + Backup/Restore Readiness
+
+- **Agent:** Claude Code
+- **Base:** `master@03e765e234d4b0bc310629e8bda0e7407fa7c966` (PR #44, P5.5-06 merged — owner
+  authorized and confirmed merge after CI/mergeability verification). Branch
+  `feat/p5-5-07-member-audit-backup`.
+- **Đọc trước khi code:** `docs/phase-5-5/00-member-management-architecture.md` mục 16 (audit
+  contract) và mục 18 (backup/restore contract, checklist), `docs/phase-5-5/01-member-infrastructure-decision.md`
+  (xác nhận lại: provisioning Mắt Bão Vibe Host v2 vẫn CHƯA thực hiện), toàn bộ
+  `member-api/src/{memberRepository,importRepository,memberRoutes,importRoutes,server}.js` hiện có.
+- **Thay đổi (Phần A — application audit):**
+  1. `member-api/migrations/0003_member_audit.sql` — `member_audit_logs` (enum
+     `member_audit_action`, không có cột `outcome` — mục P5.5-D14), index theo `member_id` và
+     `import_job_id`.
+  2. `member-api/src/memberAudit.js` (mới) — build payload chỉ 9 field nghiệp vụ (loại
+     `external_ref_note`), `insertAuditLog` luôn nhận `client` trong transaction mở, đọc phân
+     trang `listMemberAuditLogs`.
+  3. `member-api/src/memberRepository.js` — `createMember`/`updateMember` viết lại thành
+     transaction thật (trước đây là một `pool.query` đơn); `updateMember` thêm `SELECT ... FOR
+     UPDATE` (cùng scope predicate) để lấy `before_data` chính xác trước khi ghi.
+  4. `member-api/src/importRepository.js` — `confirmImportJob` ghi 1 audit row/member được commit
+     (mục P5.5-D15), có `import_job_id`, cùng transaction với insert.
+  5. `member-api/src/memberRoutes.js` — route mới `GET /v1/members/:id/audit` (route match trước
+     pattern `:id` chung, cùng kiểu importRoutes.js); truyền `userId` xuống
+     `createMember`/`updateMember`.
+  6. `member-api/src/server.js` — truyền `userId: result.userId` vào `handleMemberRoute` (trước đó
+     không truyền — P5.5-03 chưa cần vì chưa có audit).
+  7. `member-api/src/importRoutes.js` — truyền `actorUserId: userId` vào `confirmImportJob`.
+- **Cập nhật fixture test cũ (không phải sửa bug P5.5-01…06):** `createMember`/`updateMember` giờ
+  đòi `actorUserId` (cột UUID NOT NULL mới). `memberCrud.test.mjs`/`importDedup.test.mjs` (gọi
+  repository trực tiếp, ~43 call site) thêm một wrapper nội bộ cùng tên hàm (`createMember`/
+  `updateMember` shadow lại import gốc `as createMemberRaw`) tự động cung cấp actor cố định — không
+  sửa một call site nào trong hai file. `memberRoutes.test.mjs`'s `authorizerFor` đổi
+  `userId: 'test-user'` (chuỗi không phải UUID, trước đây vô hại vì chưa ghi vào cột UUID nào) sang
+  một UUID test cố định thật.
+- **Test mới:** `member-api/tests/memberAudit.test.mjs` (11 test, repository-level) + 3 test thêm
+  vào `memberRoutes.test.mjs` (HTTP-level: endpoint audit, scope 404, rejected-PATCH-no-audit) + 3
+  test thêm vào `memberImportRoutes.test.mjs` (HTTP-level: audit theo import_job_id, idempotent
+  không nhân đôi, cancel không tạo audit). **243/243 pass** (`npm test`, PostgreSQL 16 thật cục bộ)
+  — 226 baseline P5.5-01…06 không đổi + 17 mới.
+- **Performance re-check:** `memberImportPerformance.test.mjs` (không sửa file, chỉ chạy lại) —
+  confirm/commit ~2.580 member từ ~550ms (P5.5-05, trước khi có audit) lên ~1.670ms (audit tăng gấp
+  đôi số INSERT/transaction) — vẫn sâu dưới target mục 25 ("dưới vài giây"), ghi nhận số liệu mới,
+  không sửa test.
+- **Root validation:** không đổi file `src/`/`supabase/` nào trong P5.5-07 — chạy lại `npm run
+  lint` (0 error/4 warning, không đổi), `npm test` (173/173, không đổi), `npm run build` (PASS) để
+  xác nhận không ảnh hưởng gì, đúng thực tế không có thay đổi.
+- **Thay đổi (Phần B — infra backup/restore audit):** KHÔNG có provisioning, KHÔNG có thay đổi hạ
+  tầng nào được thực hiện — agent không có tài khoản/quyền truy cập Mắt Bão. Audit lại 5 câu hỏi
+  checklist mục 18, xác nhận cả 5 vẫn chưa trả lời được (không có bằng chứng mới so với P5.5-01),
+  và lập danh sách 6 blocker cụ thể owner/infra cần làm trước khi phần B được coi PASS (xem chi
+  tiết đầy đủ trong `docs/brain/04-current-tasks.md` mục P5.5-07). Không tự nhận "đã kiểm tra hạ
+  tầng" theo bất kỳ nghĩa nào ngoài việc đọc lại tài liệu đã có.
+- **Verdict:** `P5_5_07_APPLICATION_AUDIT_PASS_INFRA_RUNTIME_BLOCKED` — phần A (application audit)
+  PASS đầy đủ có test chứng minh; phần B (infra backup/restore) BLOCKED, không có quyền/hạ tầng
+  thật để tiếp tục, đã ghi rõ blocker cho owner.
+- **Lý do:** Hoàn thành đúng phạm vi P5.5-07 (mục 4 prompt DEV MODE) — không tuyên bố PASS cho phần
+  không thể tự xác minh, không invent capability của Mắt Bão.
+
 ## [2026-09-08] P5.5-06 — Admin/Member Frontend
 
 - **Agent:** Claude Code
