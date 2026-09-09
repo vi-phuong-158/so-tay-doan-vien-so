@@ -1,5 +1,113 @@
 # 06 — AI Working Log
 
+## [2026-09-08] P5.5-07R — Pre-Runtime Product Closure
+
+- **Agent:** Claude Code
+- **Base:** `master@02a49f08419ae0e5545e95b9e4b5a2bf2f2c164d` (PR #45, P5.5-07 merged — owner
+  authorized and confirmed merge). Branch `feat/p5-5-07r-pre-runtime-closure`.
+- **Phạm vi:** hoàn thiện những gì còn có thể hoàn thiện ở code/local trước khi Astra chạy P5.5-08,
+  Mắt Bão được provision, và P5.5-09 runtime rehearsal có thể chạy. KHÔNG phải P5.5-08. Không tuyên
+  bố Security Acceptance PASS, không tuyên bố Runtime Readiness PASS, không bắt đầu Phase 6, không
+  deploy production.
+- **Đọc trước khi code:** toàn bộ `member-api/src/{memberAudit,memberRoutes,server,memberRepository,
+  memberValidation,importParser,importValidation}.js`, `src/services/memberService.js`,
+  `src/pages/{MemberDetail,MemberImport}.jsx`, `src/components/Guards.jsx`, PR #43/#44/#45,
+  `docs/brain/03-decisions.md` (P5.5-D8…D15), `docs/phase-5-5/{00-member-management-architecture,
+  01-member-infrastructure-decision}.md`.
+- **Thay đổi:**
+  1. **Đóng gap frontend audit history** (backend `GET /v1/members/:id/audit` có sẵn từ P5.5-07,
+     frontend triển khai trước đó ở P5.5-06 nên chưa dùng): `src/services/memberService.js` thêm
+     `mapAuditLog`/`getMemberAuditHistory` (bounded pagination, allowlist 9 field nghiệp vụ trên
+     `before_data`/`after_data`, không expose field lạ, không invent actor name từ UUID);
+     `src/lib/memberDisplay.mjs` thêm `AUDIT_ACTION_LABELS`/`AUDIT_FIELD_LABELS`/
+     `describeAuditEntry` (pure, format enum → nhãn tiếng Việt, before/after chỉ hiện khi UPDATE);
+     `src/pages/MemberDetail.jsx` thêm section "Lịch sử thay đổi" với state độc lập
+     (`auditLoading`/`auditError`/`auditLogs`/pagination "Tải thêm") — lỗi audit không làm mất phần
+     thông tin Member chính (hai panel tách state hoàn toàn).
+  2. **Audit integrity regression** (mới): `member-api/tests/memberAuditIntegrity.test.mjs` (16
+     test) — PATCH/POST crafted chứa `before_data`/`after_data`/`actor_user_id`/`audit_id`/
+     `import_job_id`/nested `audit` object đều bị `unknown_field`/`protected_field` chặn (allowlist
+     `memberValidation.js` sẵn có, không cần sửa); actor luôn từ `authorizeMemberManagement`
+     resolver, không bao giờ từ body; rejected/out-of-scope/validation-error request → 0 audit row
+     mới; test atomicity trực tiếp (`updateMember` với `pool` giả lập audit INSERT lỗi) chứng minh
+     mutation + audit rollback cùng nhau, không dangling. **Không sửa architecture/implementation**
+     — toàn bộ pass trên code hiện có, xác nhận đã đúng từ P5.5-07.
+  3. **CORS pre-runtime hardening** (mới, `member-api/tests/server.test.mjs` +9 test): trailing
+     slash, prefix/suffix trick domain, `Origin: null`, thiếu Origin (vẫn xử lý bình thường, không
+     bị CORS chặn — đúng cho caller non-browser), case-sensitivity, không bao giờ echo `*`, bearer
+     token không lộ qua response header khi Origin không khớp. Production hostname vẫn giữ
+     `RUNTIME_PENDING` — không tự bịa domain vào `applyCorsHeaders`/test.
+  4. **Import edge-case regression** (mới): `member-api/tests/importValidation.test.mjs` +5 test
+     (nhiều sheet → chỉ đọc sheet đầu; hidden row vẫn đọc được, không bị bỏ qua; hidden sheet đầu
+     vẫn được đọc — chọn sheet theo vị trí, không theo visibility; cell 50.000 ký tự không crash
+     parser, length enforcement ở `validateImportRow`; NFC/NFD Unicode giữ nguyên byte qua
+     validate). `member-api/tests/importDedup.test.mjs` +1 test (soft-match nhận diện đúng dù tên
+     NFC vs NFD khác byte, dùng `member_immutable_unaccent()` thật qua Postgres). Đã có sẵn từ
+     P5.5-05 (không làm lại): malformed workbook, oversized upload, duplicate header, formula cell,
+     concurrent confirm, retry sau confirm, stale scope giữa preview/commit.
+  5. **Data-plane isolation regression** (mới): `tests/member_data_plane_isolation.test.mjs` (8
+     test, static source-scan, không cần DB) — Member frontend files + toàn bộ `member-api/src/`
+     không tham chiếu Gemini/RAG/embeddings/`document_chunks`/localStorage/sessionStorage/
+     IndexedDB/email-provider/analytics; `member-api/package.json` không có dependency AI/embeddings
+     nào; các Edge Function AI (`ask-ai`, `generate-knowledge-article`, `process-document`,
+     `run-ingestion-jobs`) không tham chiếu bảng/biến môi trường Member Record; `resolve-member-scope`
+     (cầu nối hợp lệ duy nhất) không tham chiếu Gemini/RAG.
+  6. **Deployment readiness:** `member-api/package.json` thêm `engines.node: ">=20.0.0"`. Audit xác
+     nhận `/healthz`/`/readyz`/graceful shutdown (`SIGTERM`/`SIGINT`)/`npm run migrate`
+     (forward-only, tracked qua `schema_migrations`)/`.env.example` (chỉ tên biến, không giá trị
+     secret) đã đúng từ trước — không sửa. **Không tạo `Dockerfile`/`.dockerignore`** — cơ chế build
+     Vibe Host v2 (Dockerfile vs buildpack/git-push) chưa xác minh được từ tài liệu chính thức
+     Mắt Bão; tạo Dockerfile khi chưa xác nhận cần sẽ là bề mặt không xác minh thứ hai phải giữ đồng
+     bộ. Ghi rõ trong runbook mới, không tự bịa.
+  7. `docs/phase-5-5/02-member-api-deployment-runbook.md` (mới) — runbook provider-neutral đầy đủ:
+     deployment mechanism (chưa xác nhận Dockerfile hay không), bảng env var (secret/public),
+     provisioning + migration DB, CORS/CSP/domain wiring (mục 28.3), readiness contract, graceful
+     shutdown, smoke test 5 bước, rollback (app/migration/database), pointer sang backup/restore
+     rehearsal. Không ghi giá trị production giả ở bất kỳ đâu (mọi ô chưa quyết định ghi
+     `RUNTIME_PENDING`/`<...>`).
+  8. `member-api/scripts/backup-restore-rehearsal.mjs` (mới) — harness chuẩn bị rehearsal
+     backup/restore, 4 subcommand (`seed`/`mutate`/`verify`/`cleanup`) thao tác trên bảng riêng
+     `_rehearsal_markers` (không đụng `members`/`member_audit_logs`/`member_import_jobs`). Fail
+     closed: từ chối chạy nếu thiếu `--confirm-non-production`; connection string CHỈ đọc từ
+     `MEMBER_DATABASE_URL` (không nhận qua CLI arg — tránh lộ vào shell history); checksum lưu file
+     local (ngoài DB) để sống sót qua chính thao tác restore đang được rehearsal. Không tự động
+     trigger backup/restore thật (không có quyền truy cập Mắt Bão) — hai bước đó vẫn thủ công, script
+     chỉ verify kết quả phía DB. Smoke-test cục bộ: `seed`→`mutate`→`verify` báo đúng `MISMATCH` (vì
+     chưa có restore thật xảy ra giữa hai bước) — chứng minh script phát hiện đúng tình trạng thật,
+     không tự động báo PASS giả; `cleanup` dọn sạch. Restore thật vẫn `BLOCKED_PENDING_INFRA`.
+  9. `docs/brain/04-current-tasks.md` — sửa dòng stale "chờ merge PR #41" (đã merged từ lâu) thành
+     trạng thái đã merged; thêm section P5.5-07R đầy đủ (current state, không tuyên bố PASS ngoài
+     phạm vi).
+- **Local full-stack/browser acceptance: BLOCKED (ghi đúng thực tế, không invent PASS).** Docker
+  daemon không khởi động được trong sandbox này (`service docker start` → lỗi `ulimit: Operation
+  not permitted`; `dockerd` không tạo được socket). `supabase start` (Supabase CLI qua `npx`, chạy
+  được) phụ thuộc Docker để dựng Postgres/Auth/Storage local — không dựng được. Không có Supabase
+  Auth local nghĩa là không thể "đăng nhập synthetic actor" (bước 1 của 15-bước journey yêu cầu) —
+  toàn bộ chuỗi phụ thuộc (bearer token thật cho Member API, `resolve-member-scope` Edge Function)
+  không thể rehearsal. Không có ảnh chụp màn hình nào được tạo. Đây KHÔNG thay thế P5.5-09 hosted
+  rehearsal — giữ nguyên `BLOCKED`.
+- **Repository governance audit:** `mcp__github__list_branches` xác nhận toàn bộ branch kiểm tra
+  được (bao gồm `master` và mọi `feat/p5-5-*`) đều `protected: false`. Khuyến nghị owner bật branch
+  protection cho `master` (require PR trước merge, require CI checks pass, prevent force-push,
+  prevent deletion) khi sẵn sàng — **không tự thay đổi GitHub settings** (ngoài phạm vi P5.5
+  application blocker, cần owner quyết định).
+- **Test:** `member-api` **273/273 pass** (`npm test`, PostgreSQL 16 thật cục bộ — 243 baseline
+  P5.5-01…07 không đổi + 30 mới: 16 audit integrity + 9 CORS + 5 import edge-case). Root **197/197
+  pass** (`npm test` — 173 baseline không đổi + 24 mới: 8 audit-history service + 8 audit-history UI
+  + 8 data-plane isolation). Root `npm run lint`: 0 error, 4 warning (không đổi so với trước, cùng
+  loại `react-refresh/only-export-components` đã có). Root `npm run build`: PASS. `npm audit
+  --omit=dev` cả root và `member-api`: **0 vulnerabilities**. `git diff --check`: sạch. Secret scan
+  thủ công trên diff: không phát hiện credential/secret hardcode.
+- **Kiểm tra:** chạy lại toàn bộ test suite sau mỗi thay đổi (không chỉ test mới); xác nhận build
+  frontend biên dịch được với `MemberDetail.jsx`/`memberService.js`/`memberDisplay.mjs` mới; xác
+  nhận script rehearsal backup/restore chạy đúng logic qua smoke test cục bộ (không phải chạy giả
+  định); xác nhận qua GitHub API thay vì suy đoán cho phần branch protection.
+- **Verdict:** `P5_5_PRE_RUNTIME_CLOSURE_PASS_BROWSER_RUNTIME_PENDING` (code/local closure hoàn
+  tất; browser/local stack không chạy được do hạn chế Docker của sandbox, không phải do lỗi trong
+  code Member Management). Giữ riêng, không gộp: `ASTRA_SECURITY_ACCEPTANCE_PENDING`,
+  `HOSTED_RUNTIME_AND_RESTORE_PENDING`. Không dùng `PHASE_5_5_SECURITY_ACCEPTANCE_PASS`/
+  `PHASE_5_5_RUNTIME_READINESS_PASS`/`PHASE_5_5_END_TO_END_ACCEPTANCE_PASS`.
+
 ## [2026-09-08] P5.5-07 — Audit + Backup/Restore Readiness
 
 - **Agent:** Claude Code

@@ -83,6 +83,115 @@ test('CORS: an OPTIONS preflight from the allowed origin gets 204 with the right
   }
 });
 
+// P5.5-07R — pre-runtime CORS hardening regression. The production Member API hostname is not yet
+// decided (RUNTIME_PENDING — see the deployment runbook); these tests only harden the EXISTING
+// exact-match contract in applyCorsHeaders, they invent no hostname of their own.
+
+test('CORS: a trailing slash on Origin does not match the configured origin (exact-match contract, not prefix)', async () => {
+  const pool = createPool(UNREACHABLE_DATABASE_URL);
+  const server = createServer(pool, { corsAllowedOrigin: 'http://localhost:5173' });
+  const port = await listenEphemeral(server);
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/healthz`, { headers: { Origin: 'http://localhost:5173/' } });
+    assert.equal(res.headers.get('access-control-allow-origin'), null);
+  } finally {
+    server.close();
+  }
+});
+
+test('CORS: a prefix-trick Origin (configured origin as a subdomain prefix of an attacker domain) does not match', async () => {
+  const pool = createPool(UNREACHABLE_DATABASE_URL);
+  const server = createServer(pool, { corsAllowedOrigin: 'http://localhost:5173' });
+  const port = await listenEphemeral(server);
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/healthz`, { headers: { Origin: 'http://localhost:5173.evil.example' } });
+    assert.equal(res.headers.get('access-control-allow-origin'), null);
+  } finally {
+    server.close();
+  }
+});
+
+test('CORS: a suffix-trick Origin (attacker domain suffixed onto the configured origin) does not match', async () => {
+  const pool = createPool(UNREACHABLE_DATABASE_URL);
+  const server = createServer(pool, { corsAllowedOrigin: 'http://localhost:5173' });
+  const port = await listenEphemeral(server);
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/healthz`, { headers: { Origin: 'http://localhost:5173.evil.example/' } });
+    assert.equal(res.headers.get('access-control-allow-origin'), null);
+  } finally {
+    server.close();
+  }
+});
+
+test('CORS: literal "Origin: null" (sandboxed iframe / file:// / opaque origin) never matches', async () => {
+  const pool = createPool(UNREACHABLE_DATABASE_URL);
+  const server = createServer(pool, { corsAllowedOrigin: 'http://localhost:5173' });
+  const port = await listenEphemeral(server);
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/healthz`, { headers: { Origin: 'null' } });
+    assert.equal(res.headers.get('access-control-allow-origin'), null);
+  } finally {
+    server.close();
+  }
+});
+
+test('CORS: a request with no Origin header at all gets no CORS headers, but is still processed normally (non-browser / same-origin callers are not CORS-blocked)', async () => {
+  const pool = createPool(UNREACHABLE_DATABASE_URL);
+  const server = createServer(pool, { corsAllowedOrigin: 'http://localhost:5173' });
+  const port = await listenEphemeral(server);
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/healthz`);
+    assert.equal(res.headers.get('access-control-allow-origin'), null);
+    assert.equal(res.status, 200);
+    assert.deepEqual(await res.json(), { status: 'ok' });
+  } finally {
+    server.close();
+  }
+});
+
+test('CORS: origin comparison is case-sensitive exact match — a differently-cased Origin does not match', async () => {
+  const pool = createPool(UNREACHABLE_DATABASE_URL);
+  const server = createServer(pool, { corsAllowedOrigin: 'http://localhost:5173' });
+  const port = await listenEphemeral(server);
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/healthz`, { headers: { Origin: 'HTTP://LOCALHOST:5173' } });
+    assert.equal(res.headers.get('access-control-allow-origin'), null);
+  } finally {
+    server.close();
+  }
+});
+
+test('CORS: Access-Control-Allow-Origin is never "*" under any Origin input, matching or not', async () => {
+  const pool = createPool(UNREACHABLE_DATABASE_URL);
+  const server = createServer(pool, { corsAllowedOrigin: 'http://localhost:5173' });
+  const port = await listenEphemeral(server);
+  try {
+    for (const origin of ['http://localhost:5173', 'https://evil.example', 'null']) {
+      const res = await fetch(`http://127.0.0.1:${port}/healthz`, { headers: { Origin: origin } });
+      assert.notEqual(res.headers.get('access-control-allow-origin'), '*');
+    }
+  } finally {
+    server.close();
+  }
+});
+
+test('CORS: a mismatched-Origin request never reflects the caller\'s bearer token back in any response header', async () => {
+  const pool = createPool(UNREACHABLE_DATABASE_URL);
+  const server = createServer(pool, { corsAllowedOrigin: 'http://localhost:5173' });
+  const port = await listenEphemeral(server);
+  try {
+    const secretToken = 'super-secret-bearer-value-should-never-appear-in-response';
+    const res = await fetch(`http://127.0.0.1:${port}/healthz`, {
+      headers: { Origin: 'https://evil.example', Authorization: `Bearer ${secretToken}` },
+    });
+    for (const [, value] of res.headers.entries()) {
+      assert.ok(!value.includes(secretToken), `bearer token leaked into a response header: ${value}`);
+    }
+  } finally {
+    server.close();
+  }
+});
+
 test('GET /healthz returns 200 without depending on the database', async () => {
   const pool = createPool(UNREACHABLE_DATABASE_URL);
   const server = createServer(pool);

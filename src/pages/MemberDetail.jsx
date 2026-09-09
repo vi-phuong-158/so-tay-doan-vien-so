@@ -16,9 +16,12 @@ import {
   POLITICAL_THEORY_LEVEL_LABELS,
   YOUTH_BOARD_POSITION_LABELS,
   YOUTH_POSITION_LABELS,
+  describeAuditEntry,
   memberErrorMessage,
   memberStatusTone,
 } from '../lib/memberDisplay.mjs';
+
+const AUDIT_PAGE_SIZE = 20;
 
 const memberService = createMemberService(supabase, { baseUrl: import.meta.env.VITE_MEMBER_API_URL });
 const LIST_PATH = '/quan-ly-doan-vien';
@@ -64,6 +67,12 @@ export function MemberDetail() {
   const [confirmArchive, setConfirmArchive] = useState(false);
   const [statusBusy, setStatusBusy] = useState(false);
 
+  const [auditLogs, setAuditLogs] = useState([]);
+  const [auditTotal, setAuditTotal] = useState(0);
+  const [auditOffset, setAuditOffset] = useState(0);
+  const [auditLoading, setAuditLoading] = useState(true);
+  const [auditError, setAuditError] = useState(null);
+
   const loadMember = useCallback(() => {
     let mounted = true;
     setLoading(true);
@@ -95,6 +104,42 @@ export function MemberDetail() {
       cleanup?.();
     };
   }, [loadMember]);
+
+  // Independent load path (own loading/error state) so an audit-history failure never blanks the
+  // Member's own info — the two panels degrade separately (P5.5-07R requirement).
+  const loadAudit = useCallback((offset = 0) => {
+    let mounted = true;
+    setAuditLoading(true);
+    setAuditError(null);
+    memberService
+      .getMemberAuditHistory(memberId, { limit: AUDIT_PAGE_SIZE, offset })
+      .then((result) => {
+        if (!mounted) return;
+        setAuditLogs((current) => (offset === 0 ? result.logs : [...current, ...result.logs]));
+        setAuditTotal(result.total);
+        setAuditOffset(result.offset);
+      })
+      .catch((requestError) => {
+        if (mounted) setAuditError(requestError);
+      })
+      .finally(() => {
+        if (mounted) setAuditLoading(false);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [memberId]);
+
+  useEffect(() => {
+    let cleanup;
+    const timer = setTimeout(() => {
+      cleanup = loadAudit(0);
+    }, 0);
+    return () => {
+      clearTimeout(timer);
+      cleanup?.();
+    };
+  }, [loadAudit]);
 
   const openEdit = () => {
     setForm(toForm(member));
@@ -188,6 +233,57 @@ export function MemberDetail() {
             ) : (
               <Button variant="secondary" disabled={statusBusy} onClick={() => setConfirmArchive(true)}>
                 Lưu trữ
+              </Button>
+            )}
+          </div>
+
+          <div className="content-card" style={{ marginTop: 16 }}>
+            <h2>Lịch sử thay đổi</h2>
+
+            {auditLoading && auditLogs.length === 0 && <Skeleton lines={3} />}
+
+            {!auditLoading && auditError && (
+              <div className="form-error" role="alert">
+                <p>{memberErrorMessage(auditError)}</p>
+                <Button variant="secondary" onClick={() => loadAudit(0)}>Thử lại</Button>
+              </div>
+            )}
+
+            {!auditError && !auditLoading && auditLogs.length === 0 && (
+              <p>Chưa có thay đổi nào được ghi nhận.</p>
+            )}
+
+            {!auditError && auditLogs.length > 0 && (
+              <ul className="campaign-list">
+                {auditLogs.map((entry) => {
+                  const described = describeAuditEntry(entry);
+                  return (
+                    <li key={entry.id} className="campaign-list-item">
+                      <div className="doc-tags">
+                        <span>{new Date(entry.createdAt).toLocaleString('vi-VN')}</span>
+                        <span className={`status status-${entry.action === 'CREATE' ? 'success' : 'info'}`}>
+                          {described.actionLabel}
+                        </span>
+                        {entry.importJobId && <span>Tạo qua import</span>}
+                      </div>
+                      {described.changes.length === 0 && <p>Không có trường nào được ghi nhận thay đổi.</p>}
+                      {described.changes.map((change) => (
+                        <p key={change.field}>
+                          <strong>{change.label}:</strong>{' '}
+                          {entry.action === 'CREATE' ? change.after : `${change.before} → ${change.after}`}
+                        </p>
+                      ))}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+
+            {!auditError && auditLoading && auditLogs.length > 0 && <p>Đang tải…</p>}
+
+            {!auditError && !auditLoading && auditOffset + auditLogs.length < auditTotal && (
+              <Button variant="secondary" className="document-load-more" onClick={() => loadAudit(auditOffset + auditLogs.length)}>
+                Tải thêm
               </Button>
             )}
           </div>

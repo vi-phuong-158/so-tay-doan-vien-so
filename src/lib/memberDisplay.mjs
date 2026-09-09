@@ -90,6 +90,62 @@ export function importRowStatusTone(status) {
   }
 }
 
+export const AUDIT_ACTION_LABELS = { CREATE: 'Tạo mới', UPDATE: 'Cập nhật' };
+
+// P5.5-07R — mirrors member-api/src/memberAudit.js's AUDITED_FIELDS allowlist. Kept as an
+// independent list here (not imported cross-package — this file ships in the frontend bundle, the
+// other in a separate Node service) so the UI never renders a field the backend didn't intend to
+// audit, even if a future response shape changes underneath it.
+export const AUDIT_FIELD_LABELS = {
+  full_name: 'Họ và tên',
+  date_of_birth: 'Ngày sinh',
+  gender: 'Giới tính',
+  work_unit_code: 'Đơn vị công tác',
+  job_title: 'Chức vụ',
+  member_status: 'Trạng thái',
+  political_theory_level: 'Trình độ lý luận chính trị',
+  youth_position: 'Chức danh Đoàn',
+  youth_board_position: 'Chức danh Ban Thanh niên',
+};
+
+function formatAuditFieldValue(field, value) {
+  if (value === null || value === undefined || value === '') return '—';
+  switch (field) {
+    case 'member_status':
+      return MEMBER_STATUS_LABELS[value] ?? value;
+    case 'political_theory_level':
+      return POLITICAL_THEORY_LEVEL_LABELS[value] ?? value;
+    case 'youth_position':
+      return YOUTH_POSITION_LABELS[value] ?? value;
+    case 'youth_board_position':
+      return YOUTH_BOARD_POSITION_LABELS[value] ?? value;
+    case 'gender':
+      return GENDER_LABELS[value] ?? value;
+    default:
+      return String(value);
+  }
+}
+
+/** Pure, testable shape for one audit history entry. `entry` is already service-mapped
+ * (memberService.mapAuditLog — beforeData/afterData already allowlist-filtered there); this only
+ * adds display labels/formatting, and independently filters to AUDIT_FIELD_LABELS again so a
+ * field with no known label is never rendered even if the service layer's allowlist ever drifts. */
+export function describeAuditEntry(entry) {
+  const fieldNames = new Set([...Object.keys(entry.beforeData ?? {}), ...Object.keys(entry.afterData ?? {})]);
+  const changes = [...fieldNames]
+    .filter((field) => field in AUDIT_FIELD_LABELS)
+    .map((field) => ({
+      field,
+      label: AUDIT_FIELD_LABELS[field],
+      before: entry.action === 'CREATE' ? null : formatAuditFieldValue(field, entry.beforeData?.[field]),
+      after: formatAuditFieldValue(field, entry.afterData?.[field]),
+    }));
+  return {
+    actionLabel: AUDIT_ACTION_LABELS[entry.action] ?? entry.action,
+    changes,
+  };
+}
+
 /** Admin-facing message for a MemberServiceError. Deliberately free of database/HTTP vocabulary. */
 export function memberErrorMessage(error) {
   switch (error?.code) {

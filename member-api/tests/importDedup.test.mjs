@@ -108,6 +108,22 @@ test('detectDuplicates: two rows in the SAME batch with matching name+work_unit_
   assert.ok(result.get(2).reason.includes('#1'));
 });
 
+// P5.5-07R — import edge-case regression: NFC vs NFD Unicode forms of the same Vietnamese name
+// (identical when read by a human, different bytes) must still be recognized as a duplicate —
+// otherwise a re-imported roster typed on a different OS/keyboard (which can produce either
+// normalization form) would silently create a second record instead of flagging a possible dupe.
+test('detectDuplicates: NFC and NFD Unicode forms of the same name are recognized as the same person (soft-match survives Unicode normalization form)', async () => {
+  const nfc = 'Nguyễn Thị Unicode'.normalize('NFC');
+  const nfd = 'Nguyễn Thị Unicode'.normalize('NFD');
+  assert.notEqual(nfc, nfd, 'test fixture sanity: NFC and NFD must actually differ byte-for-byte');
+
+  const existing = await createMember(pool, { payload: { full_name: nfc, work_unit_code: orgCode('UNICODE'), date_of_birth: '1990-01-01' } });
+  const result = await detectDuplicates(pool, [row(1, nfd, orgCode('UNICODE'), '1990-01-01')]);
+  const signal = result.get(1);
+  assert.equal(signal?.status, 'POSSIBLE_DUPLICATE');
+  assert.equal(signal.candidateMemberId, existing.member_id);
+});
+
 test('detectDuplicates: an existing-member match takes priority over an in-batch match for the same row', async () => {
   const existing = await createMember(pool, {
     payload: { full_name: 'Hoàng Văn Priority', work_unit_code: orgCode('H'), date_of_birth: '1991-02-02' },

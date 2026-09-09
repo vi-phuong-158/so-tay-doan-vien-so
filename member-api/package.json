@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "description": "P5.5 Member Management API — separate service/database from the main Supabase-backed app. See docs/phase-5-5/00-member-management-architecture.md.",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
     "start": "node src/index.js",
     "migrate": "node scripts/migrate.mjs",
