@@ -1822,3 +1822,52 @@
   — không có sẵn cục bộ (không Docker/Deno), validation thật nằm ở CI (`member-api-test` job +
   `test-db` job, exact-head). Root `npm run lint`/`npm test`/`npm run build` chạy lại để xác nhận
   không có regression Phase 1–6 từ các thay đổi `.gitignore`/`docs/brain/*`.
+
+## [2026-09-11] UI-Modern-Civic-Glass (phase 1/2 — Trang chủ + Tri thức)
+
+- **Agent:** Claude Code
+- **Bối cảnh:** Bàn giao thiết kế từ một phiên Claude Design khác (`Sổ tay đoàn viên số`,
+  4 chat transcript + `.dc.html` mockup 14 màn, xem README bàn giao) — visual redesign đã được
+  chốt trong chat ("APPROVED — lock this design direction... 75% modern soft / 25% editorial").
+  Nhánh làm việc: `feat/ui-modern-civic-glass`, base `master` sau merge PR #46 (P5.5-07R).
+- **Thay đổi:** Áp dụng hệ thị giác "Modern Civic Glass" cho Trang chủ và Tri thức (+ card báo
+  cáo dùng chung ở Công việc) — KHÔNG đổi nghiệp vụ/route/service layer, chỉ token + markup thị
+  giác:
+  - `src/index.css`: thêm `@import` font `Archivo`, token `--accent-navy-label`/`--font-display`;
+    thêm `.section-eyebrow` (section header đánh số "01 —"), `.tabs`/`.tab` (tab switcher —
+    trước đó KHÔNG có CSS dù `Work.jsx`/`Knowledge.jsx` đã dùng class này, xem phát hiện phụ ở
+    `03-decisions.md`), `.metric-info`/`.metric-card.accent-yellow`, `.campaign-card-head`/
+    `.campaign-card-code`/`.campaign-card.accent`, `.featured-document*`, `.doc-index-list*`.
+    Sửa tại chỗ `.document-list`/`.document-card` (bỏ shadow/border từng dòng, gộp thành 1 khối
+    bo góc chung có hairline chia dòng — giảm cardification theo §5/§7 đặc tả).
+  - `src/pages/Home.jsx`: viết lại markup — dùng đúng `.home-hero`/`.hero-top`/`.hero-greeting`
+    đã có sẵn CSS (trước đó dùng class `hero`/`hero-content` không có style, xem phát hiện phụ);
+    3 metric card trắng độc lập (bỏ icon 3 màu, chỉ "Việc sắp hạn" có vạch vàng); section đánh số
+    01 (việc cần làm) / 02 (quản lý đoàn viên, ẩn nếu không có quyền — tái dùng đúng điều kiện
+    `canManageMembers` như `Layout.jsx`) / 03 (tri thức, featured document card + danh sách rút
+    gọn). Vẫn dùng `src/data/mock.js`, giữ nguyên badge "Dữ liệu minh họa".
+  - `src/pages/Knowledge.jsx`: tab văn bản hiển thị 1 featured document card (tài liệu đầu danh
+    sách thật từ `documentService`) + danh sách còn lại trong `.document-list` mới; không đổi
+    logic tải dữ liệu/tab chuyên đề.
+  - `src/pages/Work.jsx`: `AssignmentCard` đổi `card-header`/`card-meta` (không có CSS) sang
+    `campaign-card-head`/`campaign-meta` (có CSS) + class `accent`; không đổi data/service layer.
+- **File đã sửa:** `src/index.css`, `src/pages/Home.jsx`, `src/pages/Knowledge.jsx`,
+  `src/pages/Work.jsx`, `docs/02-design-system.md` (addendum), `docs/brain/03-decisions.md`.
+- **Lý do:** Đúng yêu cầu bàn giao thiết kế; đồng thời vá một gap thị giác có sẵn (class không
+  có CSS trên Trang chủ/Công việc/Tri thức khiến các khu vực đó gần như không có style thật).
+- **Kiểm tra:** `npm run lint` — 0 error, 4 warning cũ (không đổi). `npm test` — 197/197 pass
+  (không đổi baseline, không file test nào bị sửa). `npm run build` — PASS (chunk CSS tăng từ
+  phần rule mới, không có lỗi PostCSS sau khi di chuyển `@import` lên đầu file).
+- **Giới hạn đã biết:** Không có Supabase project/browser thật trong môi trường viết code này —
+  đã thử dựng SSR preview (`vite.ssrLoadModule` + `ReactDOMServer.renderToStaticMarkup`, không
+  commit vào repo) để tự kiểm tra thị giác nhưng gặp lỗi CJS/ESM interop của `react-router-dom`
+  trong module runner của Vite 6 SSR và dừng ở đó thay vì tiếp tục vá công cụ ngoài phạm vi task;
+  KHÔNG tự nhận đã xem UI mới chạy thật trên trình duyệt. Xác minh dựa trên: build/lint/test
+  PASS, đối chiếu thủ công từng class name được dùng với rule CSS tương ứng (đọc toàn bộ
+  `src/index.css` trước khi sửa), và tái dùng pattern CSS đã chạy thật trong chính codebase này
+  (`.home-hero`, `.metrics-grid.overlap`, `.featured-project`, `.list-card`/`.notice-row`) thay
+  vì phát minh layout mới không có tiền lệ.
+- **Chưa làm (rollout phase 2, chờ owner xác nhận baseline trước khi tiếp — đúng gate của bản
+  thiết kế gốc):** Chi tiết báo cáo, Hỏi AI, Quản lý đoàn viên (danh sách/hồ sơ/import), Thông
+  báo, Trắc nghiệm, Đổi mới sáng tạo, Cá nhân, toàn bộ trang Admin. Không tạo PR/không push lên
+  remote trong lượt này — chờ owner xác nhận trước khi mở PR.

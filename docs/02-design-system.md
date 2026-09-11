@@ -776,3 +776,38 @@ Phong cách chính thức của sản phẩm là:
 > **Xanh thanh niên — tối giản — hiện đại — chính thống — mobile-first.**
 
 Thiết kế giữ cấu trúc dashboard dễ sử dụng, kết hợp card bo tròn, độ nổi nhẹ và kính mờ có kiểm soát. Logo xanh, đỏ, vàng là điểm nhận diện; toàn bộ icon chức năng phải chuyển sang dạng line tối giản để giao diện trưởng thành, rõ ràng và phù hợp triển khai thực tế.
+
+---
+
+# Addendum — Modern Civic Glass (2026-09-11)
+
+Bản tinh chỉnh visual redesign, chốt qua phiên thiết kế Claude Design (`Sổ tay đoàn viên số`),
+tỷ lệ **75% Modern Soft/Glass hiện có ở trên + 25% điểm nhấn Editorial** dưới đây. Không đổi
+nghiệp vụ/route/API — chỉ token, component thị giác. Xem quyết định kỹ thuật ở
+`docs/brain/03-decisions.md` mục `[2026-09-11]`.
+
+- **Font hiển thị số/nhãn mục:** `Archivo` (700/800), chỉ dùng cho eyebrow label và số liệu —
+  KHÔNG thay `Be Vietnam Pro` cho nội dung thường. Token `--font-display` trong `src/index.css`.
+- **Section header đánh số** (`.section-eyebrow`): mẫu `01 — VIỆC CẦN LÀM` + đường kẻ mảnh +
+  link "TẤT CẢ →", màu `--accent-navy-label` (`#1237A6`). Thay cho `SectionHeader` phẳng ở các
+  khu vực có nhiều section (Trang chủ). `SectionHeader` (component cũ) vẫn giữ cho nơi chỉ có
+  một section (không đổi).
+- **Metric card Trang chủ:** 3 card trắng độc lập, KHÔNG dùng 3 màu nền icon khác nhau (đã bỏ
+  icon nhiều màu). Chỉ "Việc sắp hạn" nhận vạch vàng trái (`.metric-card.accent-yellow`) — đúng
+  §12.3 gốc "chỉ metric Sắp hạn có thể dùng vàng làm accent".
+- **Card báo cáo/campaign** (`.campaign-card.accent`): vạch trái 3px `--brand-700` (không viền
+  mực dày), mã biểu mẫu nhỏ phía trên tiêu đề (`.campaign-card-code`, ví dụ `BM-01`) khi có mã
+  thật; nếu không có mã (đa số báo cáo thật không có mã biểu mẫu) thì bỏ dòng này.
+- **Featured document card** (`.featured-document`): card navy→brand-800 gradient, số hiệu +
+  ngày màu vàng, badge vàng "MỚI BAN HÀNH", 2 CTA pill. Đây là **điểm neo editorial duy nhất**
+  của khu vực Tri thức — danh sách văn bản còn lại (`.document-list`/`.document-card`) đã được
+  "de-card" thành các dòng phân cách bằng hairline trong một khối bo góc chung, không còn mỗi
+  văn bản một card viền/bóng riêng (giảm cardification theo §5/§7).
+- **Tab switcher** (`.tabs`/`.tab`): pill track xám nhạt + pill trắng active, dùng cho
+  Công việc/Tri thức. (Lưu ý: các class này đã có trong markup từ trước nhưng thiếu CSS — bản vá
+  này bổ sung style thật, không phải đổi hành vi.)
+- **Đã áp dụng cho:** Trang chủ (`Home.jsx`), Tri thức (`Knowledge.jsx`), danh sách văn bản
+  (`Documents.jsx`/`DocumentCard`), card báo cáo dùng chung ở Công việc (`Work.jsx`).
+- **Chưa áp dụng (rollout tiếp theo, chờ xác nhận trước khi làm toàn bộ theo đúng tinh thần
+  "không sửa tất cả cùng một lúc" của brief gốc):** Chi tiết báo cáo, Hỏi AI, Quản lý đoàn viên,
+  Import Excel, Thông báo, Trắc nghiệm, Đổi mới sáng tạo, Cá nhân, các trang Admin.
