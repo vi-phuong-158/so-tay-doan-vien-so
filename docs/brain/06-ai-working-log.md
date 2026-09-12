@@ -19,6 +19,9 @@
      dùng trong `Knowledge.jsx` từ trước nhưng chưa từng có rule CSS nào (kể cả trước PR47), nên nút
      render không style, không fixed-position, đè lệch vào nội dung/bottom-nav. Đã thêm fixed
      bottom-right, hình tròn, `--brand-800`, và offset riêng cho mobile để không đè bottom-nav.
+  4. `src/index.css`: `.featured-document-actions a,button{min-height:38px}` → `44px` — CTA "Hỏi AI
+     về văn bản"/"Xem văn bản" (class mới của PR47) thấp hơn ngưỡng 44×44px accessibility mà chính
+     `docs/02-design-system.md` §17 yêu cầu; đo bằng `getBoundingClientRect()` qua browser thật.
 - **File đã sửa:** `src/pages/Home.jsx`, `src/index.css`.
 - **Ảnh chụp:** `docs/screenshots/ui-modern-civic-glass/{home,work,knowledge}-{desktop,mobile}.png`
   (Chromium thật, dev server exact-head, không chỉnh sửa sau khi chụp).
