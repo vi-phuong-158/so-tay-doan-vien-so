@@ -32,19 +32,19 @@ export function Home() {
       </div>
 
       <div className="home-body">
-        <span className="status status-warning" style={{ marginBottom: 14, display: 'inline-flex' }}>Dữ liệu minh họa</span>
-
         <div className="metrics-grid overlap">
           <div className="metric-card"><div className="metric-info"><strong>3</strong><small>THÔNG BÁO MỚI</small></div></div>
           <div className="metric-card accent-yellow"><div className="metric-info"><strong>{urgentCount}</strong><small>VIỆC SẮP HẠN</small></div></div>
           <button type="button" className="metric-card" onClick={() => navigate('/tri-thuc')}><div className="metric-info"><strong>1</strong><small>CHUYÊN ĐỀ MỚI</small></div></button>
         </div>
 
+        <span className="status status-warning" style={{ margin: '14px 0', display: 'inline-flex' }}>Dữ liệu minh họa</span>
+
         <div className="section-eyebrow"><span>01 — VIỆC CẦN LÀM</span><i /><Link to="/cong-viec">TẤT CẢ →</Link></div>
         <Link className="card campaign-card accent" to="/cong-viec">
           <div className="campaign-card-head">
             <div>
-              <span className="campaign-card-code">BM-01</span>
+              {primaryCampaign.code && <span className="campaign-card-code">{primaryCampaign.code}</span>}
               <h3>{primaryCampaign.title}</h3>
             </div>
             <StatusBadge status={primaryCampaign.status} />

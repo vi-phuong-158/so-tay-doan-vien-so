@@ -1,5 +1,36 @@
 # 06 — AI Working Log
 
+## [2026-09-12] PR47 — Modern Civic Glass browser acceptance + closure fixes
+
+- **Agent:** Claude Code
+- **Base:** PR #47 (`feat/ui-modern-civic-glass`) exact head `9406da8ef05d9c0e7bb9059adf46a326a225afdc`
+  (base `master@3854196`).
+- **Thay đổi:** Xác minh Trang chủ/Công việc/Tri thức bằng browser Chromium thật (dev server, session
+  Supabase giả lập tại tầng network — vì môi trường không có Docker/egress tới Supabase/Vercel —
+  không sửa `AuthContext`/`supabaseClient`, chỉ mock response REST qua Playwright `page.route`).
+  Phát hiện và sửa 3 lỗi visual thật:
+  1. `src/pages/Home.jsx`: bỏ mã `BM-01` hard-code trên campaign card (dữ liệu `campaigns` không có
+     field mã thật) — theo đúng quyết định `docs/02-design-system.md` addendum "chỉ hiện mã biểu mẫu
+     khi có mã thật".
+  2. `src/pages/Home.jsx`: chuyển badge "Dữ liệu minh họa" xuống SAU `metrics-grid` — trước đó badge
+     nằm ngay trước `.metrics-grid.overlap` (margin-top:-45px kéo card đè lên header), khiến card đầu
+     tiên "chồng" lên đúng vị trí badge, làm chữ badge hiện mờ/lem qua nền card bán trong suốt.
+  3. `src/index.css`: thêm CSS còn thiếu cho `.fab` (nút nổi "Hỏi AI" ở Tri thức) — class này được
+     dùng trong `Knowledge.jsx` từ trước nhưng chưa từng có rule CSS nào (kể cả trước PR47), nên nút
+     render không style, không fixed-position, đè lệch vào nội dung/bottom-nav. Đã thêm fixed
+     bottom-right, hình tròn, `--brand-800`, và offset riêng cho mobile để không đè bottom-nav.
+- **File đã sửa:** `src/pages/Home.jsx`, `src/index.css`.
+- **Ảnh chụp:** `docs/screenshots/ui-modern-civic-glass/{home,work,knowledge}-{desktop,mobile}.png`
+  (Chromium thật, dev server exact-head, không chỉnh sửa sau khi chụp).
+- **Kiểm tra:** `npm run lint` 0 lỗi/4 warning cũ (không đổi), `npm test` 197/197 pass, `npm run build`
+  PASS — không regression. Smoke test tương tác thật (điều hướng Trang chủ/Công việc/Tri thức, đổi
+  tab, CTA "Xem văn bản", back/forward) không phát sinh lỗi console ngoài lỗi tải Google Fonts do
+  chính sách mạng của môi trường thi công (không phải lỗi code).
+- **Giới hạn còn lại:** môi trường thi công không có Docker/egress internet nên không đăng nhập được
+  Supabase/Vercel Preview thật — bằng chứng browser dùng session/API response giả lập ở tầng network
+  (không giả lập UI). Owner nên xác nhận lại nhanh trên Vercel Preview thật trước khi merge, đặc biệt
+  hiệu ứng `backdrop-filter` (không kiểm chứng được độ nét blur trong Chromium headless sandbox).
+
 ## [2026-09-08] P5.5-07R — Pre-Runtime Product Closure
 
 - **Agent:** Claude Code
