@@ -840,3 +840,41 @@ không nới, không skip bất kỳ assertion nào**; test 14/15/16/26 vẫn đ
   idle timeout hosted 150 giây.
 - **Đảm bảo:** Log chỉ chứa provider, model, attempt, elapsed time, outcome và HTTP status thực tế;
   không chứa prompt, key/JWT, source content, signed URL hoặc storage locator.
+
+## [2026-09-11] Modern Civic Glass — thêm font Archivo cho label/số liệu, không đổi stack
+
+- **Bối cảnh:** Bàn giao thiết kế từ Claude Design (`Sổ tay đoàn viên số`) — visual redesign
+  "Modern Civic Glass" (75% soft/glass hiện có + 25% điểm nhấn editorial: section header đánh
+  số, featured document card navy/vàng, mã biểu mẫu). Bàn giao gồm README + 4 chat transcript +
+  `.dc.html` mockup 14 màn — không phải code chạy được, chỉ là đặc tả thị giác.
+- **Quyết định:** Thêm `@import` Google Fonts `Archivo` (700/800) trong `src/index.css`, dùng
+  QUA token `--font-display`, CHỈ cho eyebrow label đánh số và số liệu tabular (không thay
+  `Be Vietnam Pro` cho nội dung thường/đọc dài). Đây là bổ sung typography trong design system
+  hiện có, không phải đổi framework/dependency — không cần thêm package, chỉ thêm 1 dòng
+  `@import` (đặt đầu file, cạnh `@import` Be Vietnam Pro sẵn có, để tránh lỗi PostCSS
+  "@import must precede all other statements").
+- **Quyết định:** KHÔNG đổi token `--surface-card`/`#fff` hiện có trên toàn app. Card mới
+  (`.featured-document`, `.doc-index-list`, hero) dùng nguyên `var(--surface-card)`/gradient
+  brand hiện có — không thêm token "warm white" riêng như bản mockup gốc (`#FFFCF5`), vì chênh
+  lệch thị giác với `#fff` gần như không đáng kể và tránh phân mảnh token màu nền.
+  `--accent-navy-label` (`#1237A6`) là token mới duy nhất cần thêm — không trùng token nào có
+  sẵn trong bảng màu `docs/02-design-system.md` §3.
+- **Quyết định:** Chỉ áp dụng cho Trang chủ + Tri thức (+ card báo cáo dùng chung ở Công việc)
+  trong lượt này, đúng tinh thần phased rollout của bản thiết kế gốc ("không sửa tất cả cùng một
+  lúc nếu chưa xác nhận ở Trang chủ + Tri thức"). 10 màn còn lại (Chi tiết báo cáo, Hỏi AI, Quản
+  lý đoàn viên, Import Excel, Thông báo, Trắc nghiệm, Đổi mới sáng tạo, Cá nhân, Admin) CHƯA áp
+  dụng — chờ xác nhận trước khi rollout tiếp, xem `docs/brain/04-current-tasks.md`.
+- **Phát hiện phụ (không phải do lượt sửa này gây ra):** `Home.jsx`/`Work.jsx` trước đó dùng một
+  số className (`hero`, `metric-info`, `card-header`, `card-meta`) không khớp với bất kỳ rule
+  nào trong `src/index.css` (xác nhận bằng grep toàn file) — tức phần đó gần như không có style
+  thật trước bản sửa này. Đã sửa bằng cách đổi các trang này sang đúng className đã có sẵn CSS
+  (`home-hero`, `metric-card`/`metric-info` mới thêm, `campaign-card-head`/`campaign-meta`) thay
+  vì thêm CSS mới cho tên class cũ — giảm số class trùng lặp.
+- **Đảm bảo:** Không đổi service/data layer của `Work.jsx`/`Knowledge.jsx` (vẫn nguyên
+  `reportService`/`documentService`/`learningService`); `Home.jsx` vẫn dùng `src/data/mock.js`
+  như trước (một trong 5 trang chính "chưa nối Supabase" theo `00-project-overview.md`) và giữ
+  nguyên badge "Dữ liệu minh họa" hiển thị cho người dùng.
+- **Kiểm tra:** `npm run lint` (0 error, 4 warning cũ không đổi), `npm test` (197/197 pass, không
+  đổi baseline), `npm run build` PASS. Không có Supabase/browser thật trong môi trường viết code
+  này nên KHÔNG click-through được UI mới trên trình duyệt — xem giới hạn ở
+  `docs/brain/06-ai-working-log.md` entry cùng ngày.

@@ -1,5 +1,39 @@
 # 06 — AI Working Log
 
+## [2026-09-12] PR47 — Modern Civic Glass browser acceptance + closure fixes
+
+- **Agent:** Claude Code
+- **Base:** PR #47 (`feat/ui-modern-civic-glass`) exact head `9406da8ef05d9c0e7bb9059adf46a326a225afdc`
+  (base `master@3854196`).
+- **Thay đổi:** Xác minh Trang chủ/Công việc/Tri thức bằng browser Chromium thật (dev server, session
+  Supabase giả lập tại tầng network — vì môi trường không có Docker/egress tới Supabase/Vercel —
+  không sửa `AuthContext`/`supabaseClient`, chỉ mock response REST qua Playwright `page.route`).
+  Phát hiện và sửa 3 lỗi visual thật:
+  1. `src/pages/Home.jsx`: bỏ mã `BM-01` hard-code trên campaign card (dữ liệu `campaigns` không có
+     field mã thật) — theo đúng quyết định `docs/02-design-system.md` addendum "chỉ hiện mã biểu mẫu
+     khi có mã thật".
+  2. `src/pages/Home.jsx`: chuyển badge "Dữ liệu minh họa" xuống SAU `metrics-grid` — trước đó badge
+     nằm ngay trước `.metrics-grid.overlap` (margin-top:-45px kéo card đè lên header), khiến card đầu
+     tiên "chồng" lên đúng vị trí badge, làm chữ badge hiện mờ/lem qua nền card bán trong suốt.
+  3. `src/index.css`: thêm CSS còn thiếu cho `.fab` (nút nổi "Hỏi AI" ở Tri thức) — class này được
+     dùng trong `Knowledge.jsx` từ trước nhưng chưa từng có rule CSS nào (kể cả trước PR47), nên nút
+     render không style, không fixed-position, đè lệch vào nội dung/bottom-nav. Đã thêm fixed
+     bottom-right, hình tròn, `--brand-800`, và offset riêng cho mobile để không đè bottom-nav.
+  4. `src/index.css`: `.featured-document-actions a,button{min-height:38px}` → `44px` — CTA "Hỏi AI
+     về văn bản"/"Xem văn bản" (class mới của PR47) thấp hơn ngưỡng 44×44px accessibility mà chính
+     `docs/02-design-system.md` §17 yêu cầu; đo bằng `getBoundingClientRect()` qua browser thật.
+- **File đã sửa:** `src/pages/Home.jsx`, `src/index.css`.
+- **Ảnh chụp:** `docs/screenshots/ui-modern-civic-glass/{home,work,knowledge}-{desktop,mobile}.png`
+  (Chromium thật, dev server exact-head, không chỉnh sửa sau khi chụp).
+- **Kiểm tra:** `npm run lint` 0 lỗi/4 warning cũ (không đổi), `npm test` 197/197 pass, `npm run build`
+  PASS — không regression. Smoke test tương tác thật (điều hướng Trang chủ/Công việc/Tri thức, đổi
+  tab, CTA "Xem văn bản", back/forward) không phát sinh lỗi console ngoài lỗi tải Google Fonts do
+  chính sách mạng của môi trường thi công (không phải lỗi code).
+- **Giới hạn còn lại:** môi trường thi công không có Docker/egress internet nên không đăng nhập được
+  Supabase/Vercel Preview thật — bằng chứng browser dùng session/API response giả lập ở tầng network
+  (không giả lập UI). Owner nên xác nhận lại nhanh trên Vercel Preview thật trước khi merge, đặc biệt
+  hiệu ứng `backdrop-filter` (không kiểm chứng được độ nét blur trong Chromium headless sandbox).
+
 ## [2026-09-08] P5.5-07R — Pre-Runtime Product Closure
 
 - **Agent:** Claude Code
@@ -1822,3 +1856,52 @@
   — không có sẵn cục bộ (không Docker/Deno), validation thật nằm ở CI (`member-api-test` job +
   `test-db` job, exact-head). Root `npm run lint`/`npm test`/`npm run build` chạy lại để xác nhận
   không có regression Phase 1–6 từ các thay đổi `.gitignore`/`docs/brain/*`.
+
+## [2026-09-11] UI-Modern-Civic-Glass (phase 1/2 — Trang chủ + Tri thức)
+
+- **Agent:** Claude Code
+- **Bối cảnh:** Bàn giao thiết kế từ một phiên Claude Design khác (`Sổ tay đoàn viên số`,
+  4 chat transcript + `.dc.html` mockup 14 màn, xem README bàn giao) — visual redesign đã được
+  chốt trong chat ("APPROVED — lock this design direction... 75% modern soft / 25% editorial").
+  Nhánh làm việc: `feat/ui-modern-civic-glass`, base `master` sau merge PR #46 (P5.5-07R).
+- **Thay đổi:** Áp dụng hệ thị giác "Modern Civic Glass" cho Trang chủ và Tri thức (+ card báo
+  cáo dùng chung ở Công việc) — KHÔNG đổi nghiệp vụ/route/service layer, chỉ token + markup thị
+  giác:
+  - `src/index.css`: thêm `@import` font `Archivo`, token `--accent-navy-label`/`--font-display`;
+    thêm `.section-eyebrow` (section header đánh số "01 —"), `.tabs`/`.tab` (tab switcher —
+    trước đó KHÔNG có CSS dù `Work.jsx`/`Knowledge.jsx` đã dùng class này, xem phát hiện phụ ở
+    `03-decisions.md`), `.metric-info`/`.metric-card.accent-yellow`, `.campaign-card-head`/
+    `.campaign-card-code`/`.campaign-card.accent`, `.featured-document*`, `.doc-index-list*`.
+    Sửa tại chỗ `.document-list`/`.document-card` (bỏ shadow/border từng dòng, gộp thành 1 khối
+    bo góc chung có hairline chia dòng — giảm cardification theo §5/§7 đặc tả).
+  - `src/pages/Home.jsx`: viết lại markup — dùng đúng `.home-hero`/`.hero-top`/`.hero-greeting`
+    đã có sẵn CSS (trước đó dùng class `hero`/`hero-content` không có style, xem phát hiện phụ);
+    3 metric card trắng độc lập (bỏ icon 3 màu, chỉ "Việc sắp hạn" có vạch vàng); section đánh số
+    01 (việc cần làm) / 02 (quản lý đoàn viên, ẩn nếu không có quyền — tái dùng đúng điều kiện
+    `canManageMembers` như `Layout.jsx`) / 03 (tri thức, featured document card + danh sách rút
+    gọn). Vẫn dùng `src/data/mock.js`, giữ nguyên badge "Dữ liệu minh họa".
+  - `src/pages/Knowledge.jsx`: tab văn bản hiển thị 1 featured document card (tài liệu đầu danh
+    sách thật từ `documentService`) + danh sách còn lại trong `.document-list` mới; không đổi
+    logic tải dữ liệu/tab chuyên đề.
+  - `src/pages/Work.jsx`: `AssignmentCard` đổi `card-header`/`card-meta` (không có CSS) sang
+    `campaign-card-head`/`campaign-meta` (có CSS) + class `accent`; không đổi data/service layer.
+- **File đã sửa:** `src/index.css`, `src/pages/Home.jsx`, `src/pages/Knowledge.jsx`,
+  `src/pages/Work.jsx`, `docs/02-design-system.md` (addendum), `docs/brain/03-decisions.md`.
+- **Lý do:** Đúng yêu cầu bàn giao thiết kế; đồng thời vá một gap thị giác có sẵn (class không
+  có CSS trên Trang chủ/Công việc/Tri thức khiến các khu vực đó gần như không có style thật).
+- **Kiểm tra:** `npm run lint` — 0 error, 4 warning cũ (không đổi). `npm test` — 197/197 pass
+  (không đổi baseline, không file test nào bị sửa). `npm run build` — PASS (chunk CSS tăng từ
+  phần rule mới, không có lỗi PostCSS sau khi di chuyển `@import` lên đầu file).
+- **Giới hạn đã biết:** Không có Supabase project/browser thật trong môi trường viết code này —
+  đã thử dựng SSR preview (`vite.ssrLoadModule` + `ReactDOMServer.renderToStaticMarkup`, không
+  commit vào repo) để tự kiểm tra thị giác nhưng gặp lỗi CJS/ESM interop của `react-router-dom`
+  trong module runner của Vite 6 SSR và dừng ở đó thay vì tiếp tục vá công cụ ngoài phạm vi task;
+  KHÔNG tự nhận đã xem UI mới chạy thật trên trình duyệt. Xác minh dựa trên: build/lint/test
+  PASS, đối chiếu thủ công từng class name được dùng với rule CSS tương ứng (đọc toàn bộ
+  `src/index.css` trước khi sửa), và tái dùng pattern CSS đã chạy thật trong chính codebase này
+  (`.home-hero`, `.metrics-grid.overlap`, `.featured-project`, `.list-card`/`.notice-row`) thay
+  vì phát minh layout mới không có tiền lệ.
+- **Chưa làm (rollout phase 2, chờ owner xác nhận baseline trước khi tiếp — đúng gate của bản
+  thiết kế gốc):** Chi tiết báo cáo, Hỏi AI, Quản lý đoàn viên (danh sách/hồ sơ/import), Thông
+  báo, Trắc nghiệm, Đổi mới sáng tạo, Cá nhân, toàn bộ trang Admin. Không tạo PR/không push lên
+  remote trong lượt này — chờ owner xác nhận trước khi mở PR.

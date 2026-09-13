@@ -15,16 +15,16 @@ function AssignmentCard({ assignment }) {
 
   return (
     <Link
-      className="card campaign-card"
+      className="card campaign-card accent"
       to={`/cong-viec/bao-cao/${assignment.id}`}
       aria-label={`Mở nhiệm vụ ${campaign.title || 'báo cáo'}`}
     >
-      <div className="card-header">
+      <div className="campaign-card-head">
         <h3>{campaign.title || 'Nhiệm vụ báo cáo'}</h3>
         <StatusBadge status={assignment.status} />
       </div>
       {campaign.issuer && <p>{campaign.issuer}</p>}
-      <div className="card-meta">
+      <div className="campaign-meta">
         <span><Icon name="clock" size={15} />Hạn nộp: {formatReportDate(dueAt)}</span>
       </div>
     </Link>

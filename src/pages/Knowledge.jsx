@@ -8,7 +8,7 @@ import { TopicCard } from './LearningTopics';
 import { createDocumentService } from '../services/documentService';
 import { createLearningService } from '../services/learningService';
 import { supabase } from '../services/supabaseClient';
-import { documentErrorMessage } from '../lib/documentDisplay.mjs';
+import { documentErrorMessage, formatDocumentDate } from '../lib/documentDisplay.mjs';
 import { learningErrorMessage } from '../lib/learningDisplay.mjs';
 
 const documentService = createDocumentService(supabase);
@@ -139,9 +139,30 @@ export function Knowledge() {
               />
             )}
 
-            {!loading && !error && documents.map((item) => (
-              <DocumentCard key={item.id} item={item} />
-            ))}
+            {!loading && !error && documents.length > 0 && (
+              <div className="featured-document">
+                <div className="featured-document-head">
+                  <span className="featured-document-code">
+                    {documents[0].documentNumber || documents[0].documentType} · {formatDocumentDate(documents[0].issuedDate)}
+                  </span>
+                  <span className="featured-document-badge">MỚI BAN HÀNH</span>
+                </div>
+                <h3>{documents[0].title}</h3>
+                <p>{documents[0].issuingAuthority || '—'}</p>
+                <div className="featured-document-actions">
+                  <Link className="primary" to="/tri-thuc/hoi-ai"><Icon name="sparkles" size={15} />Hỏi AI về văn bản</Link>
+                  <Link className="secondary" to={`/tri-thuc/van-ban/${documents[0].id}`}>Xem văn bản</Link>
+                </div>
+              </div>
+            )}
+
+            {!loading && !error && documents.length > 1 && (
+              <div className="document-list">
+                {documents.slice(1).map((item) => (
+                  <DocumentCard key={item.id} item={item} />
+                ))}
+              </div>
+            )}
 
             {!loading && !error && documents.length > 0 && (
               <Link className="button button-secondary" to="/tri-thuc/van-ban">
