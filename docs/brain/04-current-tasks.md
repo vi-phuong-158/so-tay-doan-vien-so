@@ -7,6 +7,25 @@
 
 ## Đang làm
 
+### UI Modern Civic Glass — Phase 2 rollout
+- **Base:** `master` sau merge PR #47 (`22ba73e47d2f449dbab762cfba80e1d01f688cd3`). Branch
+  `feat/ui-modern-civic-glass-phase2`.
+- **Phạm vi:** Mở rộng Modern Civic Glass (đã chốt ở PR47: Trang chủ/Công việc/Tri thức) sang các
+  màn còn lại theo đúng danh sách rollout đã ghi trong `docs/02-design-system.md` addendum. Chỉ
+  CSS/JSX presentation — không đổi route/schema/RLS/API/business logic.
+- **Nội dung:** Sửa dead-CSS/touch-target/layout defect thật tìm được qua browser Chromium thật
+  (Playwright, network Supabase/Member API mocked — sandbox không có backend thật/Docker) ở
+  `Guards.jsx` (loading/forbidden state dùng chung mọi route), `Profile.jsx`,
+  `ReportAssignmentDetail.jsx`, `Innovation.jsx`, `Admin.jsx`, và 3 touch-target/select sizing gap
+  trong `index.css`. Các màn còn lại (Notifications, MemberManagement/Detail/Import, AskAi,
+  LearningTopics/Detail, Quiz, phần lớn Admin) được audit và xác nhận `ALREADY_COMPLIANT` — đã dùng
+  đúng component/token sẵn có, không cần sửa.
+- **Chi tiết đầy đủ:** entry `[2026-09-13] PR47 closure + Modern Civic Glass Phase 2 rollout` trong
+  `docs/brain/06-ai-working-log.md`; bảng audit + rủi ro còn lại trong PR body.
+- **Không có trong round này:** modal "Gửi bài toán, điểm nghẽn" (chưa từng xây — feature gap, không
+  phải style bug), `pages/auth/*` (dead-class riêng, để round sau), Vercel Preview click-through
+  thật với backend thật (không có egress trong sandbox này).
+
 ### P5.5-00 — Member Management Architecture & Data Contract (architecture only) — CLOSED
 - **Base:** `master@a775a637a29217dbce6d658086935fd1b64da5c9` (Phase 1–5 đã đóng). Branch
   `docs/p5-5-member-management-architecture`, merged vào `master` qua PR #38 (merge commit
