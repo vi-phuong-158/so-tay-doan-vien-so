@@ -446,7 +446,7 @@ export function ReportAssignmentDetail() {
                 {submissionHistory.map((submission) => {
                   const expanded = expandedSubmissionIds.has(submission.id);
                   return (
-                    <div className="history-item" key={submission.id}>
+                    <div className="submission-history-row" key={submission.id}>
                       <button
                         type="button"
                         className="file-row"

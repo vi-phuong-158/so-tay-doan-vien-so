@@ -1,5 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { EmptyState } from './common';
 
 export const getAuthGuardAction = ({ loading, user, profileError, profile }) => {
   if (loading) return 'LOADING_SESSION';
@@ -16,28 +17,30 @@ export const AuthGuard = ({ children }) => {
 
   const action = getAuthGuardAction({ loading, user, profileError, profile });
 
-  if (action === 'LOADING_SESSION') return <div className="page"><div className="loading-skeleton">Đang kiểm tra phiên làm việc...</div></div>;
+  if (action === 'LOADING_SESSION') {
+    return <div className="page" style={{ padding: '40px 16px', display: 'flex', justifyContent: 'center' }}><EmptyState icon="clock" title="Đang kiểm tra phiên làm việc..." description="Vui lòng chờ trong giây lát." /></div>;
+  }
   if (action === 'NAVIGATE_LOGIN') return <Navigate to="/login" state={{ from: location }} replace />;
   if (action === 'ERROR_PROFILE') {
     return (
-      <div className="page">
-        <div className="unauthorized-state">
-          <h2>Lỗi tải hồ sơ</h2>
-          <p>{profileError}</p>
-          <button className="btn btn-primary" onClick={logout}>Đăng xuất</button>
-        </div>
+      <div className="page" style={{ padding: '40px 16px', display: 'flex', justifyContent: 'center' }}>
+        <EmptyState icon="alert" title="Lỗi tải hồ sơ" description={profileError} action="Đăng xuất" onAction={logout} />
       </div>
     );
   }
-  if (action === 'LOADING_PROFILE') return <div className="page"><div className="loading-skeleton">Đang tải hồ sơ...</div></div>;
+  if (action === 'LOADING_PROFILE') {
+    return <div className="page" style={{ padding: '40px 16px', display: 'flex', justifyContent: 'center' }}><EmptyState icon="clock" title="Đang tải hồ sơ..." description="Vui lòng chờ trong giây lát." /></div>;
+  }
   if (action === 'ERROR_INACTIVE') {
     return (
-      <div className="page">
-        <div className="unauthorized-state">
-          <h2>Tài khoản không hợp lệ</h2>
-          <p>Tài khoản của bạn đang ở trạng thái {profile.account_status}. Vui lòng liên hệ quản trị viên.</p>
-          <button className="btn btn-primary" onClick={logout}>Đăng xuất</button>
-        </div>
+      <div className="page" style={{ padding: '40px 16px', display: 'flex', justifyContent: 'center' }}>
+        <EmptyState
+          icon="alert"
+          title="Tài khoản không hợp lệ"
+          description={`Tài khoản của bạn đang ở trạng thái ${profile.account_status}. Vui lòng liên hệ quản trị viên.`}
+          action="Đăng xuất"
+          onAction={logout}
+        />
       </div>
     );
   }
@@ -66,18 +69,19 @@ export const MemberManagementGuard = ({ children, requireImportRole = false }) =
   const { roles, loading } = useAuth();
   const action = getMemberManagementGuardAction({ loading, roles, requireImportRole });
 
-  if (action === 'LOADING_SESSION') return <div className="page"><div className="loading-skeleton">Đang tải quyền hạn...</div></div>;
+  if (action === 'LOADING_SESSION') {
+    return <div className="page" style={{ padding: '40px 16px', display: 'flex', justifyContent: 'center' }}><EmptyState icon="clock" title="Đang tải quyền hạn..." description="Vui lòng chờ trong giây lát." /></div>;
+  }
   if (action === 'FORBIDDEN') {
     return (
-      <div className="page">
-        <div className="unauthorized-state">
-          <h2>Không có quyền truy cập</h2>
-          <p>
-            {requireImportRole
-              ? 'Cần quyền YOUTH_ADMIN để truy cập chức năng import đoàn viên.'
-              : 'Cần quyền YOUTH_ADMIN hoặc BRANCH_OFFICER để truy cập Quản lý đoàn viên.'}
-          </p>
-        </div>
+      <div className="page" style={{ padding: '40px 16px', display: 'flex', justifyContent: 'center' }}>
+        <EmptyState
+          icon="shield"
+          title="Không có quyền truy cập"
+          description={requireImportRole
+            ? 'Cần quyền YOUTH_ADMIN để truy cập chức năng import đoàn viên.'
+            : 'Cần quyền YOUTH_ADMIN hoặc BRANCH_OFFICER để truy cập Quản lý đoàn viên.'}
+        />
       </div>
     );
   }
@@ -88,17 +92,16 @@ export const MemberManagementGuard = ({ children, requireImportRole = false }) =
 export const RoleGuard = ({ allowedRoles, children }) => {
   const { roles, loading } = useAuth();
 
-  if (loading) return <div className="page"><div className="loading-skeleton">Đang tải quyền hạn...</div></div>;
+  if (loading) {
+    return <div className="page" style={{ padding: '40px 16px', display: 'flex', justifyContent: 'center' }}><EmptyState icon="clock" title="Đang tải quyền hạn..." description="Vui lòng chờ trong giây lát." /></div>;
+  }
 
   const hasPermission = roles.includes('SYSTEM_ADMIN') || allowedRoles.some(role => roles.includes(role));
 
   if (!hasPermission) {
     return (
-      <div className="page">
-        <div className="unauthorized-state">
-          <h2>Không có quyền truy cập</h2>
-          <p>Bạn không có quyền xem trang này.</p>
-        </div>
+      <div className="page" style={{ padding: '40px 16px', display: 'flex', justifyContent: 'center' }}>
+        <EmptyState icon="shield" title="Không có quyền truy cập" description="Bạn không có quyền xem trang này." />
       </div>
     );
   }

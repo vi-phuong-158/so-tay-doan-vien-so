@@ -1,5 +1,127 @@
 # 06 — AI Working Log
 
+## [2026-09-13] PR47 closure + Modern Civic Glass Phase 2 rollout
+
+- **Agent:** Claude Code
+- **PR47 closure:** Re-verified PR #47 from source of truth before any mutation — head
+  `927786dfabfca07669d2f17a348470f34c19d47e` (unchanged), base `master@3854196fe8ce6ac599a2fa6e564e8f4a15c3f9c6`,
+  `mergeable_state: clean`, all 4 CI checks `success`. Confirmed already `merged: true`
+  (`merged_by: vi-phuong-158`, merge commit `22ba73e47d2f449dbab762cfba80e1d01f688cd3`,
+  `merged_at: 2026-09-13T14:18:21Z`) from an earlier turn in this same session — no new merge
+  action was needed or taken in this round. Synced local `master` to `22ba73e` and re-ran the
+  post-merge gate (`npm run lint` 0 error/4 pre-existing warnings, `npm test` 197/197, `npm run
+  build` PASS) before branching. `member-api` tests skipped — no Docker daemon/reachable
+  PostgreSQL in this sandbox (unchanged limitation from PR47 round), and Phase 2 does not touch
+  `member-api/`.
+- **Phase 2 branch:** `feat/ui-modern-civic-glass-phase2` from exact post-merge `master@22ba73e`.
+- **Scope:** Rollout the Modern Civic Glass design language (approved on PR47: Home/Work/Knowledge)
+  to the remaining screens named in `docs/02-design-system.md`'s addendum rollout list. Audited all
+  24 page components against the addendum + component library before touching anything; classified
+  each RESTYLE/SHARED_COMPONENT_UPDATE/ALREADY_COMPLIANT/DO_NOT_TOUCH per the task brief's table
+  (see PR description for the full table). No route/schema/RLS/API/business-logic changes anywhere
+  in this round — every fix below is CSS or a JSX className/semantic-element change only.
+- **Method for finding real defects:** systematically diffed every `className` string used across
+  `src/**/*.jsx` against every class selector actually defined in `src/index.css` (Python regex
+  script, not manual reading) to find dead/undefined CSS classes app-wide, then verified each
+  candidate in real Chromium (Playwright, `/opt/pw-browsers/chromium-1194`) with Supabase/Member API
+  responses mocked at the network boundary (`context.route`) — same Level-3 synthetic-network
+  acceptance method as the PR47 round, since this sandbox still has no reachable Supabase project,
+  Member API instance, or Docker daemon. Component tree and CSS are the real, unmodified production
+  code; only network responses are synthetic. Measured real touch-target sizes via
+  `getBoundingClientRect()` in-browser rather than reading CSS by eye.
+- **Real defects found and fixed (all pre-existing, not introduced by PR47):**
+  1. `src/components/Guards.jsx` — `AuthGuard`/`MemberManagementGuard`/`RoleGuard`'s
+     loading/error/forbidden states referenced `.loading-skeleton`/`.unauthorized-state`/`.btn`/
+     `.btn-primary`, none of which have ever had any CSS — every route's loading flash and every
+     permission-denied screen in the whole app rendered as unstyled plain text. Fixed by reusing the
+     existing, already-styled `EmptyState`/`Button` components instead of writing new CSS
+     (Component First, task §10) — zero new CSS classes added for this fix.
+  2. `src/pages/Profile.jsx` (Cá nhân) — `.avatar-large`/`.list`/`.list-item`/`.menu-list`/
+     `.org-name`/`.text-danger`/`.text-muted`/`.ms-auto` were all completely unstyled; the whole
+     screen rendered with no card, no avatar circle, no row dividers. Added the missing CSS and
+     converted the `<div onClick>` menu rows to semantic `<button>` (keyboard-operable, task §13).
+  3. `src/pages/Innovation.jsx` (Đổi mới sáng tạo) — same dead-class pattern
+     (`.card`/`.card-header`/`.card-desc`/`.card-meta`/`.problem-update`), **plus** a genuine
+     rendering bug found only by inspecting real computed styles in-browser: the project card's
+     `.project-card` modifier class collided with a completely different, orphaned legacy component
+     (`.project-list`/`.project-card{display:grid;grid-template-columns:auto 1fr auto}`/
+     `.project-symbol`/`.project-content`/`.project-progress`, confirmed zero JSX usage anywhere)
+     that forced the real card into a broken 3-column grid, wrapping the title/description into
+     single-word vertical columns. Renamed the real card to `.innovation-project-card` and deleted
+     the now-fully-orphaned legacy block. Also added the missing "Dữ liệu minh họa" label (this page
+     reads `src/data/mock.js`, same as Home — the label was missing here) and wired the already-
+     -unused `Progress` component to the `progress` field the mock data already has (no invented
+     data, task §12).
+  4. `src/pages/ReportAssignmentDetail.jsx` (Chi tiết/Nộp/Lịch sử báo cáo) — the submission-history
+     accordion row reused the class name `.history-item`, which already existed in CSS but for a
+     *different*, entirely unrelated, currently-unused markup shape (`display:flex` icon+h3+p+button
+     row). The mismatch made the expand/collapse detail panel lay out beside the toggle button
+     instead of below it. Renamed to `.submission-history-row` + `.history-detail` and deleted the
+     orphaned `.history-item`/`.history-icon` rule (confirmed zero other JSX usage).
+  5. `src/index.css` global touch-target sizes, measured under 44px by
+     `getBoundingClientRect()` in real Chromium and appearing on every screen in the app:
+     `.mobile-topbar .icon-button` (the header notification bell, 40→44px) and `.tabs .tab`
+     (Work/Knowledge/Innovation tab switcher, 40→44px). Also `.dashboard-filters select` (used by
+     MemberManagement/MemberImport/Documents/AdminDocuments filter rows) was completely unstyled at
+     the browser's native ~20px height; added base sizing matching `.dashboard-search input`'s
+     existing 44px pattern.
+  6. `src/pages/Admin.jsx` (Bảng điều hành, `/admin`) — the whole page used inline `style={{...}}`
+     referencing CSS custom properties that do not exist in this project's token set
+     (`var(--surface)`, `var(--background)`, `var(--border)`, `var(--error)` — the real tokens are
+     `--surface-card`/`--surface-page`/`--border-default`/`--danger`) plus a tab toggle built from
+     `.btn`/`.btn-primary`/`.btn-outline` (also never styled) and a `Button` `variant="outline"` that
+     the shared `Button` component has never supported (only `primary`/`secondary` have CSS). Fixed
+     by swapping the tab toggle for the existing `.tabs`/`.tab` component (same pattern as
+     Work/Knowledge/Innovation), the two panel wrappers for the existing `.content-card`, the wrong
+     variable names for the real tokens, and `variant="outline"` for `variant="secondary"`. The raw
+     `<table>` markup for the users/orgs list was deliberately left as-is — Wave D guidance
+     (`docs/02-design-system.md` §11.4/§Admin) explicitly wants density/scanability over
+     decoration for admin surfaces, and a dense native table already serves that.
+- **Explicitly found but NOT fixed (reported, not silently expanded into scope):**
+  - `Innovation.jsx`'s "Gửi bài toán" button has no `onClick` at all — the "Gửi bài toán, điểm
+    nghẽn" modal (`docs/02-design-system.md` §11.5) was never built. This is a missing feature, not
+    a style defect; building it would be new business/UI functionality outside a visual-rollout
+    round. Left as-is, flagged for a product decision.
+  - `Profile.jsx`'s "Thông tin cá nhân" and "Thống kê hoạt động" rows both navigate to `/ca-nhan`
+    (the current page — a no-op). Looked like unfinished placeholders for future subpages; left
+    untouched rather than silently deleting rows, since removing them would be a scope-widening
+    functional change this round wasn't asked to make.
+  - `AdminLearningTopics.jsx`/`AdminQuizEditor.jsx` reference undefined modifier classes
+    (`.learning-admin-form`/`.learning-admin-list`/`.question-form`/`.quiz-admin-page`), but each
+    rides alongside an already-fully-styled base class (`.campaign-form`/`.campaign-list`/
+    `.admin-reports-page`) — fixing them would produce zero visible difference, so left alone.
+  - Report-history accordion's "Xem chi tiết"/"Thu gọn" trailing label wraps awkwardly to two lines
+    on 390px width inside the `.file-row` toggle button — readable, not overlapping, not a hard-rule
+    violation; noted as a minor cosmetic nit rather than fixed.
+- **Screens classified `ALREADY_COMPLIANT`** after static+browser review (no dead CSS found, no
+  Modern Civic Glass gap that needed restyling): Work, Knowledge, Home, Documents (already done on
+  PR47); Notifications; MemberManagement, MemberDetail, MemberImport (all reuse `campaign-*`/
+  `content-card`/`confirm-overlay` correctly, per the P5.5-06 convention already documented in
+  `04-current-tasks.md`); AskAi, LearningTopics, LearningTopicDetail, Quiz (all reuse `document-card`/
+  `detail-hero`/`info-grid`/`quiz-*` correctly); AdminReports, AdminDocuments, AdminReportDashboard,
+  AdminLearningTopics, AdminLearningTopicDetail, AdminQuizEditor, AdminKnowledgeArticle (Wave D —
+  dense/functional already, no decoration needed per design system).
+- **`DO_NOT_TOUCH` this round:** `pages/auth/*` (Login/ForgotPassword/ResetPassword/ChangePassword)
+  — not named in the design-system addendum's rollout list or the task's 14-screen inventory;
+  `ChangePassword.jsx`/`Login.jsx` do have their own dead-class findings (`auth-container`/
+  `auth-form`/`auth-header`/`error-message`/`success-message`/`link-button`) but fixing them is a
+  separate, out-of-scope round.
+- **File đã sửa:** `src/components/Guards.jsx`, `src/pages/Profile.jsx`, `src/pages/Innovation.jsx`,
+  `src/pages/ReportAssignmentDetail.jsx`, `src/pages/Admin.jsx`, `src/index.css`.
+- **Kiểm tra:** `npm run lint` (0 error/4 warning cũ, không đổi), `npm test` (197/197, không đổi),
+  `npm run build` (PASS) sau mỗi wave thay đổi. Browser: Chromium thật, viewport 390×844 và
+  1440×900, network Supabase/Member API mocked qua `context.route` (không có backend thật/Docker
+  trong sandbox này); đo touch-target thật bằng `getBoundingClientRect()` — 0 phần tử dưới 44px sau
+  fix trên Home/Work/Knowledge/Innovation/Profile/Notifications/MemberManagement; console sạch (chỉ
+  lỗi tải font Google Fonts do sandbox chặn egress, không phải lỗi ứng dụng). Ảnh chụp màn hình:
+  `docs/screenshots/ui-modern-civic-glass-phase2/`.
+- **Rủi ro còn lại:** Vercel Preview thật với Supabase/Member API thật chưa được click-through
+  (môi trường này không có egress tới các host đó) — xem báo cáo PR để biết verdict runtime chính
+  xác. `AdminReports`/`AdminReportDashboard`/`AdminDocuments`/`AdminKnowledgeArticle`/
+  `AdminLearningTopicDetail` được xếp `ALREADY_COMPLIANT` dựa trên đọc code + việc không có dead CSS
+  class, nhưng KHÔNG được chụp ảnh màn hình thật trong vòng này (giới hạn effort) — nên coi là
+  "chưa xác nhận bằng browser" chứ không phải "đã kiểm chứng".
+
 ## [2026-09-12] PR47 — Modern Civic Glass browser acceptance + closure fixes
 
 - **Agent:** Claude Code

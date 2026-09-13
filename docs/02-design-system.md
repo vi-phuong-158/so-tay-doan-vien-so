@@ -808,6 +808,28 @@ nghiệp vụ/route/API — chỉ token, component thị giác. Xem quyết đ�
   này bổ sung style thật, không phải đổi hành vi.)
 - **Đã áp dụng cho:** Trang chủ (`Home.jsx`), Tri thức (`Knowledge.jsx`), danh sách văn bản
   (`Documents.jsx`/`DocumentCard`), card báo cáo dùng chung ở Công việc (`Work.jsx`).
-- **Chưa áp dụng (rollout tiếp theo, chờ xác nhận trước khi làm toàn bộ theo đúng tinh thần
-  "không sửa tất cả cùng một lúc" của brief gốc):** Chi tiết báo cáo, Hỏi AI, Quản lý đoàn viên,
-  Import Excel, Thông báo, Trắc nghiệm, Đổi mới sáng tạo, Cá nhân, các trang Admin.
+
+## Phase 2 rollout (2026-09-13)
+
+Mở rộng sang các màn còn lại — không đổi nghiệp vụ/route/API, chỉ CSS/JSX presentation. Xem chi
+tiết đầy đủ (defect tìm được, file sửa, bằng chứng browser) ở entry
+`[2026-09-13] PR47 closure + Modern Civic Glass Phase 2 rollout` trong
+`docs/brain/06-ai-working-log.md`.
+
+- **RESTYLE (đã sửa):** Cá nhân (`Profile.jsx`), Đổi mới sáng tạo (`Innovation.jsx`), Chi tiết/Nộp/
+  Lịch sử báo cáo (`ReportAssignmentDetail.jsx`), Bảng điều hành admin (`Admin.jsx`), cùng trạng thái
+  loading/permission-denied dùng chung của mọi route (`Guards.jsx`, chuyển sang tái dùng
+  `EmptyState`/`Button` thay vì CSS chết).
+- **ALREADY_COMPLIANT (đã dùng đúng component/token sẵn có, không cần sửa):** Thông báo
+  (`Notifications.jsx`), Quản lý/Chi tiết đoàn viên/Import Excel (`MemberManagement.jsx`,
+  `MemberDetail.jsx`, `MemberImport.jsx`), Hỏi AI (`AskAi.jsx`), Chuyên đề + chi tiết
+  (`LearningTopics.jsx`, `LearningTopicDetail.jsx`), Trắc nghiệm (`Quiz.jsx`), các trang Admin còn
+  lại (`AdminReports.jsx`, `AdminDocuments.jsx`, `AdminReportDashboard.jsx`, `AdminLearningTopics.jsx`,
+  `AdminLearningTopicDetail.jsx`, `AdminQuizEditor.jsx`, `AdminKnowledgeArticle.jsx`) — đúng tinh
+  thần Wave D: admin ưu tiên density/scanability, không trang trí như Trang chủ.
+- **DO_NOT_TOUCH round này:** `pages/auth/*` (không nằm trong danh sách rollout gốc; có dead-class
+  riêng, để round sau).
+- **NEEDS_PRODUCT_DECISION (ghi nhận, chưa sửa):** modal "Gửi bài toán, điểm nghẽn" (§11.5) chưa
+  từng được xây — nút bấm tương ứng ở `Innovation.jsx` hiện không có `onClick`; hai mục menu ở
+  `Profile.jsx` ("Thông tin cá nhân", "Thống kê hoạt động") điều hướng về chính trang hiện tại
+  (no-op) — có vẻ là placeholder cho màn hình tương lai chưa xây.

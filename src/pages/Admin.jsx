@@ -101,20 +101,20 @@ export function AdminDashboard() {
           <Link className="button button-secondary" to="/admin/chuyen-de">Quản trị chuyên đề & trắc nghiệm</Link>
         </div>
 
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>
-          <button className={`btn ${tab === 'users' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setTab('users')}>Người dùng</button>
-          <button className={`btn ${tab === 'orgs' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setTab('orgs')}>Đơn vị trực thuộc</button>
+        <div className="tabs" style={{ marginBottom: '16px' }}>
+          <button className={`tab ${tab === 'users' ? 'active' : ''}`} onClick={() => setTab('users')}>Người dùng</button>
+          <button className={`tab ${tab === 'orgs' ? 'active' : ''}`} onClick={() => setTab('orgs')}>Đơn vị trực thuộc</button>
         </div>
 
         {tab === 'users' && (
-          <div style={{ background: 'var(--surface)', padding: '24px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+          <div className="content-card">
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
               <h3>Danh sách người dùng</h3>
               <Button onClick={() => setShowInvite(!showInvite)}><Icon name="plus" size={16} /> Mời thành viên</Button>
             </div>
-            
+
             {showInvite && (
-              <form onSubmit={handleInviteSubmit} style={{ padding: '16px', background: 'var(--background)', marginBottom: '16px', borderRadius: '4px' }}>
+              <form onSubmit={handleInviteSubmit} style={{ padding: '16px', background: 'var(--surface-page)', marginBottom: '16px', borderRadius: '14px' }}>
                 <h4 style={{ marginBottom: '12px' }}>Gửi lời mời thành viên mới</h4>
                 <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
                   <input required placeholder="Email" type="email" value={inviteForm.email} onChange={e => setInviteForm({...inviteForm, email: e.target.value})} style={{ flex: 1, padding: '8px' }} />
@@ -126,14 +126,14 @@ export function AdminDashboard() {
                   </select>
                 </div>
                 <Button type="submit" variant="primary">Gửi lời mời</Button>
-                <Button type="button" variant="outline" onClick={() => setShowInvite(false)} style={{ marginLeft: '8px' }}>Hủy</Button>
+                <Button type="button" variant="secondary" onClick={() => setShowInvite(false)} style={{ marginLeft: '8px' }}>Hủy</Button>
               </form>
             )}
             
             {loading ? <p>Đang tải...</p> : (
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
                 <thead>
-                  <tr style={{ borderBottom: '2px solid var(--border)', textAlign: 'left' }}>
+                  <tr style={{ borderBottom: '2px solid var(--border-default)', textAlign: 'left' }}>
                     <th style={{ padding: '8px' }}>Họ tên</th>
                     <th style={{ padding: '8px' }}>Đơn vị</th>
                     <th style={{ padding: '8px' }}>Trạng thái</th>
@@ -142,11 +142,11 @@ export function AdminDashboard() {
                 </thead>
                 <tbody>
                   {users.map(user => (
-                    <tr key={user.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                    <tr key={user.id} style={{ borderBottom: '1px solid var(--border-default)' }}>
                       <td style={{ padding: '8px' }}>{user.full_name}</td>
                       <td style={{ padding: '8px' }}>{user.organizations?.name || '---'}</td>
                       <td style={{ padding: '8px' }}>
-                        <span style={{ color: user.account_status === 'ACTIVE' ? 'var(--success)' : 'var(--error)' }}>
+                        <span style={{ color: user.account_status === 'ACTIVE' ? 'var(--success)' : 'var(--danger)' }}>
                           {user.account_status}
                         </span>
                       </td>
@@ -178,7 +178,7 @@ export function AdminDashboard() {
         )}
 
         {tab === 'orgs' && (
-          <div style={{ background: 'var(--surface)', padding: '24px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+          <div className="content-card">
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
               <h3>Đơn vị trực thuộc</h3>
               <Button disabled title="Chức năng đang phát triển"><Icon name="plus" size={16} /> Thêm đơn vị</Button>
@@ -186,14 +186,14 @@ export function AdminDashboard() {
             {loading ? <p>Đang tải...</p> : (
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
                 <thead>
-                  <tr style={{ borderBottom: '2px solid var(--border)', textAlign: 'left' }}>
+                  <tr style={{ borderBottom: '2px solid var(--border-default)', textAlign: 'left' }}>
                     <th style={{ padding: '8px' }}>Tên đơn vị</th>
                     <th style={{ padding: '8px' }}>Loại</th>
                   </tr>
                 </thead>
                 <tbody>
                   {orgs.map(org => (
-                    <tr key={org.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                    <tr key={org.id} style={{ borderBottom: '1px solid var(--border-default)' }}>
                       <td style={{ padding: '8px' }}>{org.name}</td>
                       <td style={{ padding: '8px' }}>{org.organization_type}</td>
                     </tr>
