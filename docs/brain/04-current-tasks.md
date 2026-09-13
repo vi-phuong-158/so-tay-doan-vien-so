@@ -7,7 +7,28 @@
 
 ## Đang làm
 
-### UI Modern Civic Glass — Phase 2 rollout
+### P5.5 — Production Runtime Closure (partial)
+- **Base:** `master` sau merge PR #48 (`be128d320bdde7e6c0d5fea2d51e90954b950003`). Branch
+  `feat/p5-5-production-runtime-closure`.
+- **Kết quả:** `SOTAY_P5_5_PRODUCTION_RUNTIME_CLOSURE_PARTIAL`. Lần đầu sandbox này có PostgreSQL 16
+  server thật (trước đây chỉ có client tools) — dùng để chạy `member-api` test suite thật (273/273),
+  chạy `member-api` process thật cho smoke test CORS/auth (health/ready/401/403/CORS exact-origin
+  đều đúng, không cần sửa code), và chạy rehearsal backup(`pg_dump`)/restore end-to-end thật.
+- **Defect thật tìm được + đã vá:** restore một `pg_dump` của Member DB luôn lỗi
+  `function unaccent(unknown, text) does not exist` (search_path rỗng lúc restore không resolve được
+  lời gọi `unaccent(...)` không schema-qualify trong migration 0001). Vá bằng migration mới
+  `member-api/migrations/0004_fix_unaccent_restore_qualification.sql` — không sửa migration cũ,
+  regression test lại 273/273, chạy lại toàn bộ rehearsal backup→restore→verify PASS sau vá.
+- **Còn `BLOCKED` (hạ tầng/credential, không phải bỏ qua):** Mắt Bão chưa provisioning
+  (`MATBAO_RUNTIME_BLOCKED_NOT_PROVISIONED`, không đổi); sandbox này không có egress ra
+  `*.vercel.app`/Supabase thật (`connect_rejected` từ agent proxy, xác nhận bằng curl trực tiếp) nên
+  browser acceptance với runtime thật + Supabase/Member API runtime + CORS/CSP runtime thật + config
+  drift thật đều `BLOCKED_NO_EGRESS`/`BLOCKED_NO_CREDENTIALS`; Email `BLOCKED` (chưa cấu hình
+  provider, đúng theo policy).
+- **Chi tiết đầy đủ:** entry `[2026-09-13] PR48 closure + P5.5 Production Runtime Closure (partial)`
+  trong `docs/brain/06-ai-working-log.md`; ma trận acceptance đầy đủ trong PR body.
+
+### UI Modern Civic Glass — Phase 2 rollout (CLOSED — merged qua PR #48)
 - **Base:** `master` sau merge PR #47 (`22ba73e47d2f449dbab762cfba80e1d01f688cd3`). Branch
   `feat/ui-modern-civic-glass-phase2`.
 - **Phạm vi:** Mở rộng Modern Civic Glass (đã chốt ở PR47: Trang chủ/Công việc/Tri thức) sang các
