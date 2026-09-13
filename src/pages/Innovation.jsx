@@ -5,7 +5,7 @@ import { projects, problems, problemStatus } from '../data/mock';
 
 function ProjectCard({ item }) {
   return (
-    <div className="card project-card">
+    <div className="card innovation-project-card">
       <div className="card-header">
         <span className="status status-info">{item.status}</span>
       </div>
