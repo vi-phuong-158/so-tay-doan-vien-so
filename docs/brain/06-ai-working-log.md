@@ -1,5 +1,90 @@
 # 06 — AI Working Log
 
+## [2026-09-13] PR48 closure + P5.5 Production Runtime Closure (partial)
+
+- **Agent:** Claude Code
+- **PR48 closure:** Re-verified PR #48 from source of truth — head `ccd207416c7162b98c622dbf0a0fca46e752f068`
+  (unchanged), base `master@22ba73e47d2f449dbab762cfba80e1d01f688cd3`, `mergeable_state: clean`, all
+  4 checks (`build`/`member-api-test`/`test-db`/`Vercel Preview Comments`) `success`, no unresolved
+  review threads. Merged with exact-head protection → merge commit
+  `be128d320bdde7e6c0d5fea2d51e90954b950003`. Post-merge gate on synced `master`: lint 0 err/4
+  pre-existing warnings, test 197/197, build PASS.
+- **Runtime branch:** `feat/p5-5-production-runtime-closure`, from `master@be128d3`.
+- **What is genuinely different this round vs. prior P5.5 sessions:** this sandbox has local
+  PostgreSQL 16 server binaries (`postgresql-16` package, previously never started) in addition to
+  the client tools used before. Started the cluster and used it for real (not mocked) backend
+  verification: real `member-api` test run against real Postgres (273/273, matching CI's own
+  `postgres:16` service-container setup), a real running `member-api` HTTP process for live
+  positive/negative/CORS checks, and a real `pg_dump`/restore rehearsal — all firsts for this
+  project's runtime acceptance history, previously blocked as "no Docker/DB in sandbox."
+- **Real defect found + fixed via the backup/restore rehearsal (not hypothetical):** restoring a
+  plain `pg_dump` of the Member DB into a fresh database reproducibly failed with `ERROR: function
+  unaccent(unknown, text) does not exist` while rebuilding `idx_members_full_name_trgm`. Root cause:
+  pg_dump's restore preamble sets `search_path` to `''` (standard pg_dump security convention) and
+  schema-qualifies everything it emits *except* literal SQL inside a function body, which is dumped
+  verbatim. Migration `0001`'s `member_immutable_unaccent()` calls the bare, unqualified
+  `unaccent('unaccent', $1)` — unresolvable under an empty search_path. This would have blocked
+  every future restore of this database, real infra or not.
+  - **Fix:** new forward-fix migration `member-api/migrations/0004_fix_unaccent_restore_qualification.sql`
+    — `CREATE OR REPLACE FUNCTION public.member_immutable_unaccent` calling
+    `public.unaccent('public.unaccent'::regdictionary, $1)` (fully schema-qualified). Never edited
+    the already-applied `0001` migration.
+  - **Regression test:** re-ran the full `member-api` suite after applying `0004` — still 273/273.
+  - **Runtime re-test:** re-ran the entire seed → backup (`pg_dump`) → mutate → restore
+    (fresh DB, `psql -f`) → verify cycle end-to-end against a freshly-migrated (fixed) rehearsal
+    database. Restore completed with zero errors (previously reproducible on every attempt before
+    the fix); `verify` step: `PASS: the restored database matches the state at backup time` (marker
+    checksum `8fd1a092d3ef8d920603a2d4813d6f9271f9e9aa12283de3beefdd65116ca4ed` on the fixed backup
+    file, `member_api_rehearsal_fixed_20260913T232748Z.sql`, 21,389 bytes); integrity checks on the
+    restored DB: `members` empty (expected — synthetic/no seed data), 0 orphaned `member_audit_logs`
+    rows, all 4 `schema_migrations` rows present including `0004`.
+  - **Scope note:** this rehearsal was run against a **local, disposable PostgreSQL 16 instance**
+    started in this sandbox — not against Mắt Bão (still not provisioned; see below). The defect
+    itself is schema-level and would reproduce identically on any PostgreSQL 16 target, Mắt Bão
+    included, so fixing it now (rather than waiting for provisioning) is in scope per the runtime
+    closure task's fix policy (clear deployment defect, minimal fix, regression-tested,
+    runtime-re-tested).
+- **Real CORS/auth smoke test against a live `member-api` process** (not mocked): `GET /healthz` →
+  200, `GET /readyz` → 200 (proves live DB connectivity), `GET /v1/members` no token → 401,
+  malformed bearer → 403 (fail-closed via the scope resolver call failing, not an information leak),
+  CORS preflight for the exact configured origin → `Access-Control-Allow-Origin` echoed correctly;
+  arbitrary/`null`/prefix-trick/trailing-slash Origins → no `Access-Control-Allow-Origin` header at
+  all (fail-closed, exact-match only, matching `member-api/src/server.js`'s existing
+  `applyCorsHeaders` implementation — no code change needed here, behavior was already correct).
+  "Wrong role"/"out-of-scope org" matrices were not re-derived live (no reachable
+  `resolve-member-scope` instance in this sandbox to stand behind a real Supabase JWT) — already
+  covered by the 273 passing tests against real Postgres, which is stronger evidence than a live
+  HTTP call with a stubbed resolver would have been.
+- **Confirmed BLOCKED (infrastructure/credentials, not skipped):**
+  - `MATBAO_RUNTIME_BLOCKED_NOT_PROVISIONED` — re-confirmed from
+    `docs/phase-5-5/01-member-infrastructure-decision.md`/`02-member-api-deployment-runbook.md`: no
+    Mắt Bão account, instance, or connection string exists; Member API has never been deployed to
+    any real host, only tested locally/CI.
+  - Direct network test (`curl` to the live Vercel Preview host) returned
+    `connect_rejected (organization policy)` from this sandbox's egress proxy — confirmed real
+    Supabase project, Member API production host, and Vercel deployment are all unreachable from
+    here regardless of credentials. Authenticated real-runtime browser acceptance (task §23-25) is
+    therefore `BLOCKED_NO_EGRESS`, not re-attempted as a synthetic/mocked substitute under the name
+    "runtime acceptance" (the task explicitly forbids that framing) — no UI changed in this round
+    that would need re-verifying anyway.
+  - Email: `EMAIL_DELIVERY_MODE` defaults to `OFF`, no provider key configured anywhere in this
+    repo/environment → `BLOCKED` per the task's own rule (never simulate and call it a pass).
+  - Supabase runtime (Auth/RLS/Storage/Edge Function *deployed* versions), CORS/CSP *at the real
+    runtime* (only the `vercel.json` source and local `member-api` process were verifiable),
+    production Member API hostname, production custom domain, config drift against actual
+    Vercel/Supabase secrets: all `BLOCKED_NO_CREDENTIALS`/`BLOCKED_NO_EGRESS` — no Vercel/Supabase
+    API token or project ref available to this session.
+  - Log security: reviewed `member-api/src/*.js` (only 2 `console.log` lines total, neither
+    interpolates a secret) and grepped all Edge Function sources for `console.*` lines mentioning
+    token/jwt/secret/password/key — zero matches. No HIGH finding.
+  - CSP source review: `vercel.json`'s `Content-Security-Policy` has no `*`, no `unsafe-eval`; the
+    Member API host is deliberately absent from `connect-src` because no production hostname is
+    decided yet — matches the deployment runbook's own documented open item, not a defect.
+- **Files changed:** `member-api/migrations/0004_fix_unaccent_restore_qualification.sql` (new),
+  `docs/brain/06-ai-working-log.md`, `docs/brain/04-current-tasks.md`.
+- **Verdict:** `SOTAY_P5_5_PRODUCTION_RUNTIME_CLOSURE_PARTIAL` — see the runtime closure PR body for
+  the full acceptance matrix.
+
 ## [2026-09-13] PR47 closure + Modern Civic Glass Phase 2 rollout
 
 - **Agent:** Claude Code

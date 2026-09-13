@@ -62,6 +62,14 @@ names and safe local-dev defaults only, never real values.
    `member_immutable_unaccent()` and a trigram index that depend on them) — if Vibe Host v2's
    managed Postgres restricts `CREATE EXTENSION`, this blocks migration `0001` and must be resolved
    with the vendor first.
+   - **Restore rehearsal finding (2026-09-13, P5.5 Production Runtime Closure):** a plain `pg_dump`
+     of this schema failed to restore into a fresh database (`function unaccent(unknown, text) does
+     not exist`) because migration `0001`'s function body calls the unqualified `unaccent(...)`,
+     which does not resolve under the empty `search_path` a `pg_dump` restore runs with. Fixed by
+     migration `0004_fix_unaccent_restore_qualification.sql` (schema-qualifies the call) — verified
+     by re-running the full seed→backup→restore→verify cycle end-to-end against a local rehearsal
+     Postgres 16 instance. Apply migrations through `0004` (not just `0001`-`0003`) before trusting
+     any restore of this schema, Mắt Bão included.
 3. Set `MEMBER_DATABASE_URL` to the new instance's connection string in Vibe Host v2's env store.
 4. Run migrations **before** starting the application for the first time (and before every deploy
    that ships new migration files): `npm run migrate` (never `migrate:fresh` — that drops the
