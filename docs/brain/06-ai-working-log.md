@@ -2112,3 +2112,30 @@
   thiết kế gốc):** Chi tiết báo cáo, Hỏi AI, Quản lý đoàn viên (danh sách/hồ sơ/import), Thông
   báo, Trắc nghiệm, Đổi mới sáng tạo, Cá nhân, toàn bộ trang Admin. Không tạo PR/không push lên
   remote trong lượt này — chờ owner xác nhận trước khi mở PR.
+
+## [2026-09-16] P5.5 End-to-End Runtime Closure — Codex
+- **Agent:** Codex
+- **Thay đổi:** Audit exact `master@a5b92b7` against GitHub/Vercel and the non-production Supabase
+  rehearsal. Applied missing P5.5-02 migration and deployed `resolve-member-scope` v1 with JWT
+  verification, plus the user-facing admin/report Edge Functions required by the acceptance surface.
+  Found and fixed two real rehearsal privilege defects: the innovation transition
+  `SECURITY DEFINER` RPC lacked scope/assignment enforcement, and direct default grants exposed
+  `member_scope_org_codes`; also pinned search paths on 10 trigger helpers as defense-in-depth.
+- **File đã sửa:** `supabase/migrations/202609160001_phase_5_5_innovation_rpc_scope_hardening.sql`,
+  `202609160002_phase_5_5_member_scope_rpc_privilege_hardening.sql`,
+  `202609160003_phase_5_5_trigger_search_path_hardening.sql`, three new pgTAP test files,
+  `docs/phase-5-5/03-phase-5-5-end-to-end-acceptance.md`, `docs/brain/01-architecture.md`,
+  `03-decisions.md`, `04-current-tasks.md`.
+- **Lý do:** P5.5 acceptance requires runtime evidence and catalog-level Supabase security checks;
+  source migrations alone did not describe the rehearsal's direct grants/default privilege drift.
+- **Kiểm tra:** Rehearsal migration list and function catalog re-queried; transaction-only synthetic
+  authorization probe passed assigned-member allow, unassigned-member deny, out-of-scope-admin deny,
+  and system-admin allow, then rolled back with zero fixture rows retained. Post-fix Security Advisor
+  cleared mutable-search-path findings and reduced anonymous SECURITY DEFINER findings by one. Vercel
+  production deployment was READY on the exact master SHA. Full local/CI/browser gates remain to be
+  run or are blocked by the missing Mắt Bão runtime; verdict is
+  `PHASE_5_5_END_TO_END_ACCEPTANCE_BLOCKED_MATBAO_RUNTIME_NOT_PROVISIONED`.
+- **Bổ sung:** Sửa lỗi portability của test isolation trên Windows (`URL.pathname` giữ `%20` trong
+  đường dẫn repo), không thay đổi production behavior hay security assertions. Ba pgTAP file mới
+  được chạy trực tiếp trên rehearsal trong transaction rollback và trả về `ok`; full Supabase reset/
+  Deno gate vẫn không chạy được vì CLI chưa có trong môi trường.

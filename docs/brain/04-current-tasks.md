@@ -28,6 +28,30 @@
 - **Chi tiết đầy đủ:** entry `[2026-09-13] PR48 closure + P5.5 Production Runtime Closure (partial)`
   trong `docs/brain/06-ai-working-log.md`; ma trận acceptance đầy đủ trong PR body.
 
+### P5.5 — End-to-End Runtime Closure (Codex audit 2026-09-16)
+- **Branch:** `codex/p5-5-end-to-end-runtime-closure`, base `origin/master@a5b92b7e50dd70475becc177e8ce594726b2cf97`.
+- **Verdict:** `PHASE_5_5_END_TO_END_ACCEPTANCE_BLOCKED_MATBAO_RUNTIME_NOT_PROVISIONED`.
+- **Đã xác minh:** GitHub master đúng SHA; PR #49 đã merged và không còn PR mở; Vercel production
+  deployment READY chạy đúng merge SHA; rehearsal Supabase `znexculhbdjiflkczpyu` ACTIVE_HEALTHY,
+  PostgreSQL 17.6.1.155. Rehearsal đã nhận các migration P5.5-02 và ba forward security migrations;
+  `resolve-member-scope` đã deploy ACTIVE v1 với `verify_jwt=true`; các Edge Functions user-facing cần
+  cho admin/report surface cũng đã deploy ACTIVE v1 với JWT verification. `run-ingestion-jobs`/
+  `send-reminder` còn deferred worker; innovation submit/update không deploy vì Phase 6 chưa được mở.
+  Không có dữ liệu thật được tạo.
+- **Security delta:** audit catalog tìm thấy defect scope/assignment trong `transition_problem_status`
+  và direct grants ngoài ý muốn trên `member_scope_org_codes`; đã sửa bằng migration forward và
+  regression pgTAP. Security Advisor sau hardening còn: 14 RLS-no-policy (intentional backend-only/
+  deny-by-default), 2 extension-in-public (accepted project layout), 16 anon + 66 authenticated
+  SECURITY DEFINER warnings (helper/RPC contracts có auth/scope checks), và 1 leaked-password
+  protection (configuration pending — chưa có quyền cấu hình Auth để xác minh).
+- **Blocker owner/infra:** chưa có instance Mắt Bão Vibe Host v2, Member API hostname/TLS,
+  `MEMBER_DATABASE_URL`, `MEMBER_SCOPE_RESOLVER_SECRET`/runtime secret sync, `CORS_ALLOWED_ORIGIN`,
+  `VITE_MEMBER_API_URL`, và CSP `connect-src` entry cho hostname thật. Vì vậy chưa thể chạy
+  authenticated browser matrix, Member API hosted health/ready/auth/CORS, cross-system bridge, hay
+  backup/restore thật. Không dùng placeholder hostname, không deploy/mutate production, không mở Phase 6.
+- **Report:** `docs/phase-5-5/03-phase-5-5-end-to-end-acceptance.md` và entry mới trong
+  `docs/brain/06-ai-working-log.md`.
+
 ### UI Modern Civic Glass — Phase 2 rollout (CLOSED — merged qua PR #48)
 - **Base:** `master` sau merge PR #47 (`22ba73e47d2f449dbab762cfba80e1d01f688cd3`). Branch
   `feat/ui-modern-civic-glass-phase2`.

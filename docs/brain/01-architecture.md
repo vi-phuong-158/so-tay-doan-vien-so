@@ -115,6 +115,10 @@ supabase/
 | `functions/process-document` | Trích xuất → chunk → embedding → chờ duyệt | admin | `_shared/*`, Gemini |
 | `functions/send-reminder` / `process-email-queue` | Gọi reminder scan trusted / gửi email theo batch | `send-reminder`: trusted caller manual/external. `process-email-queue`: manual/external **và** `pg_cron` job `email_queue_worker` mỗi 10 phút qua `pg_net`+Vault (P3-08) | `_shared/*`, reminder RPC, email_queue |
 | `functions/resolve-member-scope` (P5.5-02) | Member Scope Authorization Bridge: xác thực JWT thật, đọc lại `profiles.account_status`/`user_roles`, trả `{user_id, roles:[{role_code,is_global,org_codes}]}` cho `member-api/` — không tin role/scope do caller gửi. `SYSTEM_ADMIN` đơn lẻ → `roles: []` | `member-api/src/memberScope.js`, server-to-server, kèm secret `x-member-api-secret` | `_shared/auth.ts` (`requireUser`), `profiles`, `user_roles`, RPC `member_scope_org_codes` |
+| `supabase/migrations/202609160001_phase_5_5_innovation_rpc_scope_hardening.sql` | Forward-fix kiểm tra active user + scope YOUTH_ADMIN/SYSTEM_ADMIN hoặc assignment INNOVATION_MEMBER bên trong `transition_problem_status` (SECURITY DEFINER); thu hồi anon EXECUTE | Supabase reset/rehearsal migration | `innovation_problems`, `innovation_problem_assignments`, auth helpers |
+| `supabase/migrations/202609160002_phase_5_5_member_scope_rpc_privilege_hardening.sql` | Thu hồi grant trực tiếp `anon`/`authenticated` trên `member_scope_org_codes`; giữ service-role-only | Supabase reset/rehearsal migration | `member_scope_org_codes` |
+| `supabase/migrations/202609160003_phase_5_5_trigger_search_path_hardening.sql` | Pin `search_path=public` cho 10 trigger helper functions theo Security Advisor defense-in-depth | Supabase reset/rehearsal migration | P5 trigger functions |
+| `supabase/tests/{innovation_problem_rpc_security,member_scope_rpc_security,security_advisor_hardening}.sql` | Regression cho scope/assignment, function ACL và search_path; fixture innovation chỉ synthetic + rollback | `supabase test db` | seed + P5.5 hardening migrations |
 
 ### Luồng xử lý chính
 
@@ -492,6 +496,16 @@ Chưa có: `/member-metadata` (deferred, mục P5.5-D13); UI hiển thị lịch
 member (endpoint đã có, frontend P5.5-06 làm trước khi endpoint tồn tại nên chưa render — follow-up
 nhỏ, không phải gap backend).
 Xem `member-api/README.md` cho chi tiết và giới hạn hiện tại.
+
+### P5.5 runtime-closure security delta (2026-09-16)
+
+Audit rehearsal phát hiện hai vấn đề không thể suy ra chỉ từ source migration: (1)
+`transition_problem_status` là `SECURITY DEFINER` nhưng trước đó cho mọi `INNOVATION_MEMBER` cập
+nhật mọi bài toán, không kiểm tra assignment/scope; (2) default privileges của project cấp trực tiếp
+EXECUTE cho `anon`/`authenticated` trên `member_scope_org_codes`, dù migration chỉ revoke `PUBLIC`.
+Ba forward migrations `202609160001`–`003` sửa hai boundary này và pin search path cho trigger helpers.
+Không sửa migration đã chạy; mọi thay đổi đều có pgTAP regression. Resolver function được deploy trên
+rehearsal với JWT verification bật, nhưng shared secret của runtime Member API chưa được xác minh.
 
 ```text
                     USER
