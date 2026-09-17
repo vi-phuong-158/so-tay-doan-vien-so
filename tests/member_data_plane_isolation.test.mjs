@@ -9,8 +9,11 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
+import { fileURLToPath } from 'node:url';
 
-const repoRoot = path.resolve(new URL('..', import.meta.url).pathname);
+// URL.pathname leaves spaces percent-encoded on Windows (for example `%20`),
+// which makes every source-level isolation assertion look like a missing file.
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 function readIfExists(relativePath) {
   const full = path.join(repoRoot, relativePath);

@@ -516,6 +516,21 @@ không nới, không skip bất kỳ assertion nào**; test 14/15/16/26 vẫn đ
   khi nào" tổng hợp — hai bảng bổ sung cho nhau, không trùng lặp.
 - **Người quyết định:** Claude Code, theo đúng mục 16 tài liệu kiến trúc.
 
+## [2026-09-16] P5.5-D16 — Security hardening phải thu hồi direct grants và enforce scope trong SECURITY DEFINER
+
+- **Quyết định:** Forward migrations `202609160001`–`003` sửa các boundary tìm thấy bằng audit trực tiếp
+  rehearsal: `transition_problem_status` chỉ cho `SYSTEM_ADMIN`, `YOUTH_ADMIN` trong scope hoặc
+  `INNOVATION_MEMBER` được assignment; `member_scope_org_codes` chỉ còn `service_role` EXECUTE;
+  mười trigger helper functions pin `search_path=public`.
+- **Lý do:** RLS không bảo vệ được thân `SECURITY DEFINER`; trước đó mọi `INNOVATION_MEMBER` có thể
+  chuyển trạng thái problem bất kỳ. Ngoài ra `REVOKE ... FROM public` không xóa direct grant do
+  default privileges, nên helper resolver có thể bị gọi trực tiếp để enumerate organization codes.
+  Đây là drift chỉ lộ ra khi đọc catalog rehearsal, không thể kết luận an toàn từ source migration.
+- **Đánh đổi:** Security Advisor vẫn giữ các cảnh báo đã phân loại là intentional-safe (backend-only
+  tables/RLS deny-by-default, helper auth checks, extension placement) và configuration-pending
+  (leaked-password protection); không mở rộng thành migration dọn toàn bộ schema ngoài phạm vi.
+- **Người quyết định:** Codex, theo yêu cầu P5.5 runtime closure và role matrix đã chốt.
+
 ## Template cho entry mới
 
 ```
