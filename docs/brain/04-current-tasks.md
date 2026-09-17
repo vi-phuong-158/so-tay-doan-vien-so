@@ -52,6 +52,22 @@
 - **Report:** `docs/phase-5-5/03-phase-5-5-end-to-end-acceptance.md` và entry mới trong
   `docs/brain/06-ai-working-log.md`.
 
+### P5.5 — Hosted Runtime Final Acceptance (Codex audit 2026-09-17)
+- **Base:** `master@7f468a5111df54486f7e98688b4c16057668a519` (PR #50 đã merge). Branch
+  acceptance: `codex/p5-5-hosted-runtime-final-acceptance`.
+- **Verdict giữ nguyên:** `PHASE_5_5_END_TO_END_ACCEPTANCE_BLOCKED_MATBAO_RUNTIME_NOT_PROVISIONED`.
+  Gate-level: `P5_5_HOSTED_RUNTIME_BLOCKED_INFRASTRUCTURE_NOT_READY`.
+- **Đã xác minh lại:** root tests `197/197 PASS`, Member API targeted tests `73/73 PASS`,
+  lint `0 errors` (4 warning Fast Refresh đã có), build `PASS`; rehearsal Supabase vẫn
+  `ACTIVE_HEALTHY`, đã reconcile migration/function catalog và giữ nguyên security delta
+  của PR #50.
+- **Không thể chạy:** full Member API suite vì chưa có `MEMBER_DATABASE_URL` và local
+  `exceljs`; Supabase CLI/Deno gate vì CLI không có trong môi trường; hosted health/ready,
+  auth/authz/CORS, authenticated browser, hosted backup/restore vì Mắt Bão Vibe Host v2
+  chưa provisioned. Không dùng placeholder để giả lập gate.
+- **Không thay đổi:** không sửa feature, migration, production config, hoặc runtime thật;
+  không mở Phase 6. Báo cáo: `docs/phase-5-5/04-hosted-runtime-final-acceptance.md`.
+
 ### UI Modern Civic Glass — Phase 2 rollout (CLOSED — merged qua PR #48)
 - **Base:** `master` sau merge PR #47 (`22ba73e47d2f449dbab762cfba80e1d01f688cd3`). Branch
   `feat/ui-modern-civic-glass-phase2`.

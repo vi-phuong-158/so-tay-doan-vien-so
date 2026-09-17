@@ -2139,3 +2139,20 @@
   đường dẫn repo), không thay đổi production behavior hay security assertions. Ba pgTAP file mới
   được chạy trực tiếp trên rehearsal trong transaction rollback và trả về `ok`; full Supabase reset/
   Deno gate vẫn không chạy được vì CLI chưa có trong môi trường.
+
+## [2026-09-17] P5.5 Hosted Runtime Final Acceptance — Codex
+- **Agent:** Codex
+- **Thay đổi:** Thực hiện preflight và acceptance audit trên baseline `master@7f468a5` sau merge
+  PR #50; ghi nhận báo cáo hosted-runtime final acceptance với verdict giữ nguyên
+  `PHASE_5_5_END_TO_END_ACCEPTANCE_BLOCKED_MATBAO_RUNTIME_NOT_PROVISIONED`. Không sửa feature,
+  migration, production configuration, hoặc gọi hosted deployment.
+- **File đã sửa:** `docs/phase-5-5/04-hosted-runtime-final-acceptance.md`,
+  `docs/brain/04-current-tasks.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Mắt Bão Vibe Host v2, hosted Member PostgreSQL, hostname/TLS, runtime secrets và
+  deployment access chưa được provision; không được giả lập các gate bị thiếu hoặc biến BLOCKED
+  thành PASS. Báo cáo cần lưu rõ các gate hosted còn thiếu trước khi Phase 6 được mở.
+- **Kiểm tra:** current branch là `codex/p5-5-hosted-runtime-final-acceptance`, HEAD baseline
+  `7f468a5111df54486f7e98688b4c16057668a519`, worktree tracked sạch với các untracked user-owned
+  files được giữ nguyên; root tests `197/197 PASS`, Member API targeted tests `73/73 PASS`, lint
+  `0 errors` (4 warning cũ), build `PASS`. Full Member API, Supabase CLI/Deno, hosted runtime,
+  authenticated browser và hosted backup/restore vẫn `BLOCKED`/chưa chạy đúng theo hạ tầng hiện có.
