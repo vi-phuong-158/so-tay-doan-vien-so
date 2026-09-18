@@ -1,5 +1,19 @@
 # Trạng thái thi công
 
+## P5.5 — End-to-End Final Closure (2026-09-18)
+
+- Base `master@7f468a5111df54486f7e98688b4c16057668a519`; PR #51 được giữ làm historical
+  artifact, không merge thêm. Closure branch áp dụng public-first auth: Home/demo public và các
+  route dữ liệu thật hiển thị login on demand qua `AuthGuard`.
+- Local source gates: root `200/200`, targeted Member API `73/73`, lint `0 errors`, build PASS.
+  Full Member API local chưa thể kết luận PASS do thiếu `MEMBER_DATABASE_URL` và `exceljs` chưa
+  cài được vì Windows npm cache trả `EPERM`; CI artifact vẫn có full Member API `273/273`.
+- Supabase rehearsal/security hardening và CI test-db/Deno evidence giữ nguyên; không có mutation
+  mới trong vòng này. Mắt Bão, hosted Member API, authenticated browser và hosted backup/restore
+  vẫn chưa provision/chưa chạy.
+- Verdict: `PHASE_5_5_END_TO_END_ACCEPTANCE_BLOCKED_MATBAO_RUNTIME_NOT_PROVISIONED`. Phase 6 chưa
+  được mở.
+
 ## Đã làm
 
 - Design tokens, responsive mobile/tablet/desktop.

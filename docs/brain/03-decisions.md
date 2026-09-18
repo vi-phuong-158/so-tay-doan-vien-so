@@ -893,3 +893,18 @@ không nới, không skip bất kỳ assertion nào**; test 14/15/16/26 vẫn đ
   đổi baseline), `npm run build` PASS. Không có Supabase/browser thật trong môi trường viết code
   này nên KHÔNG click-through được UI mới trên trình duyệt — xem giới hạn ở
   `docs/brain/06-ai-working-log.md` entry cùng ngày.
+
+## [2026-09-18] P5.5-D17 — Public-first auth, login on demand
+
+- **Quyết định:** App shell và Home/demo surface được render cho anonymous user. Các route có
+  dữ liệu thật hoặc thao tác được bảo vệ bằng `AuthGuard`; guest thấy CTA đăng nhập tại điểm cần
+  quyền thay vì bị redirect toàn app sang `/login`.
+- **Ranh giới:** Đây không phải public hóa dữ liệu. Documents, learning, reports, notifications,
+  member management, admin và `ask-ai` tiếp tục yêu cầu authenticated active user theo RLS/Edge
+  Function hiện hữu. Không mở anonymous retrieval hoặc AI.
+- **Account ≠ Member Record:** Supabase Auth/profile/roles giữ identity và authorization; Member
+  API/PostgreSQL giữ hồ sơ đoàn viên và không đọc `auth.users`, `profiles` hay `user_roles`. Member
+  API tiếp tục re-check JWT, role và organization scope ở server.
+- **Lý do:** Public-first là yêu cầu sản phẩm cho lần closure này nhưng phải tương thích với RLS
+  hiện tại. Chỉ Home đang dùng dữ liệu minh họa nên có thể public an toàn; mọi surface dữ liệu thật
+  giữ nguyên fail-closed boundary.

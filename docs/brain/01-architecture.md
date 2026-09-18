@@ -81,7 +81,7 @@ supabase/
 | `src/contexts/AuthContext.jsx` | Session/user/profile/roles, `login/logout/hasRole` | `App`, mọi component gọi `useAuth` | `services/supabaseClient` |
 | `src/services/supabaseClient.js` | Client Supabase (anon key) | `AuthContext`, `pages/auth/*`, `pages/Admin` | `VITE_SUPABASE_URL/ANON_KEY` |
 | `src/components/Guards.jsx` | `AuthGuard` (chặn chưa đăng nhập/inactive), `RoleGuard` | `App.jsx` | `useAuth`, react-router |
-| `src/components/Layout.jsx` | `AppShell`: Sidebar + BottomNav + `<Outlet/>` | `App.jsx` (trong AuthGuard) | `useAuth`, `Icon`, `common` |
+| `src/components/Layout.jsx` | `AppShell`: Sidebar + BottomNav + `<Outlet/>`; public-first shell giữ Home/demo surface truy cập được khi chưa đăng nhập | `App.jsx` (Home public, protected routes trong AuthGuard) | `useAuth`, `Icon`, `common` |
 | `src/pages/*` (5 khu vực) | UI khu vực | routes trong `App.jsx` | `data/mock.js`, `useAuth`, `common` |
 | `src/data/mock.js` | Dữ liệu demo | 5 pages chính | — (⚠ thay bằng service khi nối Supabase) |
 | `src/lib/status.mjs` | Nhãn/tone trạng thái báo cáo, tính hạn, chuẩn hóa tên tệp | pages hiển thị báo cáo | — (thuần, có unit test) |
@@ -123,10 +123,18 @@ supabase/
 ### Luồng xử lý chính
 
 ```
-# Auth + phân quyền (đang hoạt động thật)
+# Auth + phân quyền (public-first, đang hoạt động thật)
 main.jsx → App(BrowserRouter) → AuthProvider(getSession + onAuthStateChange
-         → fetch profiles + user_roles) → AuthGuard(getAuthGuardAction)
-         → RoleGuard(allowedRoles | SYSTEM_ADMIN) → AppShell → <page>
+         → fetch profiles + user_roles) → AppShell → Home/demo public surface
+                                      └→ AuthGuard(on-demand login CTA)
+                                           → RoleGuard(allowedRoles | SYSTEM_ADMIN)
+                                           → protected page
+
+# Public-first boundary
+Home chỉ hiển thị dữ liệu minh họa và không bypass RLS. Documents, learning, reports,
+notifications, member management, admin và ask-ai vẫn đi qua AuthGuard rồi RLS/Edge Function;
+anonymous AI/retrieval không được mở. Account Supabase/Auth và Member Record trong Member API
+tiếp tục là hai model độc lập; Member API tự kiểm tra JWT/scope/role ở server.
 
 # Nộp báo cáo (đích, khi frontend hết mock)
 Page nộp → reportService (Storage private upload dưới prefix assignment/staging)

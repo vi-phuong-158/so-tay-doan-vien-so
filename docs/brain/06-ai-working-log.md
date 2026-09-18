@@ -1,5 +1,28 @@
 # 06 — AI Working Log
 
+## [2026-09-18] P5.5 — End-to-End Final Closure / Public-first auth
+
+- **Agent:** Codex
+- **Base/branch:** `origin/master@7f468a5111df54486f7e98688b4c16057668a519`; closure branch
+  `codex/p5-5-final-e2e-closure`. PR #51 was audited and retained as a historical artifact; it
+  was not merged and no Phase 6 work was started.
+- **Thay đổi:** `src/App.jsx` now exposes the Home/demo shell publicly and groups data-bearing
+  routes under `AuthGuard`; `src/components/Guards.jsx` presents an on-demand login CTA instead of
+  redirecting the whole app; auth tests cover the new contract. Added the final acceptance report
+  and reconciled architecture, decision, implementation-status and current-task documentation.
+- **Bảo mật/ranh giới:** Supabase RLS remains the boundary for documents/learning/reports; `ask-ai`
+  and retrieval stay protected. Account/Auth remains distinct from Member Record; Member API
+  server-side role/scope checks remain authoritative. Existing P5.5 hardening is unchanged:
+  transition scope/assignment validation, revoked direct `member_scope_org_codes` execution, and
+  pinned trigger `search_path=public`.
+- **Kiểm tra:** root tests `200/200`, targeted auth/public-first `17/17`, Member API targeted
+  `73/73`, lint `0 errors` with 4 existing warnings, build PASS. Existing CI evidence: full Member
+  API `273/273`, Deno `116 passed / 0 failed`, test-db job PASS, Vercel PASS on PR #51 head.
+- **Giới hạn:** local full Member API remains blocked by missing `MEMBER_DATABASE_URL` and npm
+  cache `EPERM` while installing `exceljs`; Mắt Bão/hosted Member API/hosted browser/hosted
+  backup-restore were not provisioned or run. Verdict remains
+  `PHASE_5_5_END_TO_END_ACCEPTANCE_BLOCKED_MATBAO_RUNTIME_NOT_PROVISIONED`.
+
 ## [2026-09-13] PR48 closure + P5.5 Production Runtime Closure (partial)
 
 - **Agent:** Claude Code
