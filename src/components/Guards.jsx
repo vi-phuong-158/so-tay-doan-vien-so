@@ -1,10 +1,10 @@
-import { Navigate, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { EmptyState } from './common';
 
 export const getAuthGuardAction = ({ loading, user, profileError, profile }) => {
   if (loading) return 'LOADING_SESSION';
-  if (!user) return 'NAVIGATE_LOGIN';
+  if (!user) return 'AUTHENTICATION_REQUIRED';
   if (profileError) return 'ERROR_PROFILE';
   if (!profile) return 'LOADING_PROFILE';
   if (profile.account_status !== 'ACTIVE') return 'ERROR_INACTIVE';
@@ -14,13 +14,26 @@ export const getAuthGuardAction = ({ loading, user, profileError, profile }) => 
 export const AuthGuard = ({ children }) => {
   const { user, profile, profileError, loading, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const action = getAuthGuardAction({ loading, user, profileError, profile });
 
   if (action === 'LOADING_SESSION') {
     return <div className="page" style={{ padding: '40px 16px', display: 'flex', justifyContent: 'center' }}><EmptyState icon="clock" title="Đang kiểm tra phiên làm việc..." description="Vui lòng chờ trong giây lát." /></div>;
   }
-  if (action === 'NAVIGATE_LOGIN') return <Navigate to="/login" state={{ from: location }} replace />;
+  if (action === 'AUTHENTICATION_REQUIRED') {
+    return (
+      <div className="page" style={{ padding: '40px 16px', display: 'flex', justifyContent: 'center' }}>
+        <EmptyState
+          icon="shield"
+          title="Nội dung dành cho tài khoản được phân quyền"
+          description="Bạn cần đăng nhập để tiếp tục đến khu vực này."
+          action="Đăng nhập để tiếp tục"
+          onAction={() => navigate('/login', { state: { from: location } })}
+        />
+      </div>
+    );
+  }
   if (action === 'ERROR_PROFILE') {
     return (
       <div className="page" style={{ padding: '40px 16px', display: 'flex', justifyContent: 'center' }}>
@@ -45,7 +58,7 @@ export const AuthGuard = ({ children }) => {
     );
   }
 
-  return children;
+  return children || <Outlet />;
 };
 
 // P5.5-06 — Member Management routes deliberately do NOT reuse `RoleGuard` as-is (architecture

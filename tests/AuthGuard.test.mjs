@@ -27,8 +27,8 @@ test('AuthGuard logic: loading session', () => {
   assert.equal(getAuthGuardAction({ loading: true }), 'LOADING_SESSION');
 });
 
-test('AuthGuard logic: missing user redirects to login', () => {
-  assert.equal(getAuthGuardAction({ loading: false, user: null }), 'NAVIGATE_LOGIN');
+test('AuthGuard logic: missing user receives an on-demand login gate', () => {
+  assert.equal(getAuthGuardAction({ loading: false, user: null }), 'AUTHENTICATION_REQUIRED');
 });
 
 test('AuthGuard logic: profile error shows error state', () => {

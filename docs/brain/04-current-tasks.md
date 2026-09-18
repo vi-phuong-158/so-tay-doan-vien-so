@@ -7,6 +7,24 @@
 
 ## Đang làm
 
+### P5.5 — End-to-End Final Closure (2026-09-18)
+- **Base:** `origin/master@7f468a5111df54486f7e98688b4c16057668a519`. PR #51 giữ nguyên như
+  historical hosted-runtime acceptance artifact; không merge vì không có Mắt Bão runtime.
+  Branch closure mới: `codex/p5-5-final-e2e-closure`.
+- **Phạm vi vòng này:** sửa auth architecture sang `PUBLIC_FIRST_AUTH_ON_DEMAND`: Home/demo shell
+  public, route dữ liệu thật vẫn AuthGuard/RLS; guest nhận CTA đăng nhập tại điểm cần quyền. Không
+  mở anonymous AI/retrieval và không tách Account khỏi Member Record đã chốt ở P5.5-D1…D4.
+- **Đã xác minh:** root `200/200`, auth/public-first tests `17/17`, lint `0 errors` (4 warning cũ),
+  build PASS, Member API targeted `73/73`; CI artifact trước đó full Member API `273/273`, Deno
+  `116 passed / 0 failed`, test-db job PASS, Vercel PASS trên exact PR #51 head.
+- **Còn BLOCKED:** full local Member API không chạy đủ vì thiếu `MEMBER_DATABASE_URL` và npm cache
+  Windows trả `EPERM` khi cài `exceljs`; Mắt Bão chưa provision; không có hosted Member API
+  hostname/database/secrets; authenticated browser, hosted CORS/CSP và hosted backup/restore chưa
+  chạy. Không giả lập các gate này và không bắt đầu Phase 6.
+- **Verdict bắt buộc giữ nguyên:**
+  `PHASE_5_5_END_TO_END_ACCEPTANCE_BLOCKED_MATBAO_RUNTIME_NOT_PROVISIONED`.
+- **Report:** `docs/phase-5-5/05-p5-5-end-to-end-final-closure.md`.
+
 ### P5.5 — Production Runtime Closure (partial)
 - **Base:** `master` sau merge PR #48 (`be128d320bdde7e6c0d5fea2d51e90954b950003`). Branch
   `feat/p5-5-production-runtime-closure`.
