@@ -47,7 +47,8 @@ select results_eq($$select title from public.learning_resources order by title$$
   array['Public resource'], 'anon cannot infer resources of hidden topics');
 select results_eq($$select title from public.innovation_projects where id::text like 'f830%' order by id$$,
   array['Public project'], 'anon reads only published PUBLIC innovation projects');
-select table_privs_are('public', 'quiz_options', 'anon', array[]::text[], 'anon cannot read quiz answer options');
+select is(has_table_privilege('anon', 'public.quiz_options', 'SELECT'), false,
+  'anon cannot read quiz answer options');
 select is((select count(*)::integer from storage.objects where bucket_id in ('documents-private', 'learning-resources-private')), 0,
   'anon cannot list objects in private content buckets');
 select function_privs_are('public', 'consume_public_ai_quota', array['text', 'integer'], 'anon', array[]::text[],

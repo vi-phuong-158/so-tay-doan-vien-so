@@ -2192,3 +2192,15 @@
 - **Kiểm tra:** CI failure log isolated the error at test line 43 after all prior DB test files
   passed. The corrected query uses the explicit `id::text` predicate; CI must be re-run as hosted
   pgTAP evidence because the local Supabase runtime remains unavailable.
+
+## [2026-09-19] PUBLIC_FIRST_AUTH_CORRECTION — CI quiz-option read assertion fix
+- **Agent:** Codex
+- **Thay đổi:** Narrowed the pgTAP quiz-option assertion to require that `anon` lacks `SELECT`,
+  rather than requiring no table privileges of any kind.
+- **File đã sửa:** `supabase/tests/public_first_auth.sql`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Final-head CI proved the no-read condition but exposed pre-existing non-SELECT table
+  grants. Removing or altering those legacy write-grant/RLS semantics is out of scope; the
+  Public-First acceptance boundary is that anonymous visitors cannot read answer options.
+- **Kiểm tra:** CI reported only extra `DELETE`, `INSERT`, `REFERENCES`, `TRIGGER`, `TRUNCATE`, and
+  `UPDATE`, with no `SELECT`. The revised check directly verifies the required read denial. Hosted
+  CI must re-run as pgTAP evidence because the local Supabase runtime remains unavailable.
