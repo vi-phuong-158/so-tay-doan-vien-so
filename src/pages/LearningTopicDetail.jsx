@@ -6,6 +6,7 @@ import Skeleton from '../components/Skeleton';
 import { createLearningService, topicAvailability } from '../services/learningService';
 import { createQuizService } from '../services/quizService';
 import { supabase } from '../services/supabaseClient';
+import { useAuth } from '../contexts/AuthContext';
 import {
   AVAILABILITY_LABELS,
   availabilityTone,
@@ -61,6 +62,7 @@ function ResourceItem({ resource, onDownload, downloadingId }) {
 export function LearningTopicDetail() {
   const { topicId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [topic, setTopic] = useState(null);
   const [resources, setResources] = useState([]);
@@ -120,7 +122,9 @@ export function LearningTopicDetail() {
     setDownloadingId(resource.id);
     setDownloadError(null);
     try {
-      const url = await learningService.getResourceDownloadUrl(resource.storagePath);
+      const url = user
+        ? await learningService.getResourceDownloadUrl(resource.storagePath)
+        : await learningService.getPublicResourceDownloadUrl(resource.id);
       window.open(url, '_blank', 'noopener,noreferrer');
     } catch (requestError) {
       setDownloadError(requestError);

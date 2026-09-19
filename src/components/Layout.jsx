@@ -6,20 +6,16 @@ import { NotificationBell } from './NotificationBell';
 
 function Sidebar() {
   const navigate = useNavigate();
-  const { profile, hasRole, roles } = useAuth();
+  const { user, profile, hasRole, roles } = useAuth();
   // P5.5-06: deliberately NOT `hasRole` — `hasRole` bakes in a SYSTEM_ADMIN bypass
   // (`roles.includes(role) || roles.includes('SYSTEM_ADMIN')`), which mục 7/12 explicitly forbids
   // for Member Management (see Guards.jsx's MemberManagementGuard for the same rule enforced on
   // the routes themselves — this is UX-only, the Member API re-checks regardless).
   const canManageMembers = (roles || []).includes('YOUTH_ADMIN') || (roles || []).includes('BRANCH_OFFICER');
 
-  const items = [
-    ['/', 'home', 'Trang chủ'], 
-    ['/cong-viec', 'work', 'Công việc'], 
-    ['/tri-thuc', 'book', 'Tri thức'], 
-    ['/doi-moi-sang-tao', 'bulb', 'Đổi mới sáng tạo'], 
-    ['/ca-nhan', 'user', 'Cá nhân']
-  ];
+  const items = user
+    ? [['/', 'home', 'Trang chủ'], ['/cong-viec', 'work', 'Công việc'], ['/tri-thuc', 'book', 'Tri thức'], ['/doi-moi-sang-tao', 'bulb', 'Đổi mới sáng tạo'], ['/ca-nhan', 'user', 'Cá nhân']]
+    : [['/', 'home', 'Trang chủ'], ['/tri-thuc', 'book', 'Tri thức'], ['/doi-moi-sang-tao', 'bulb', 'Đổi mới sáng tạo'], ['/login', 'user', 'Đăng nhập']];
   
   return (
     <aside className="sidebar">
@@ -27,7 +23,7 @@ function Sidebar() {
       <nav>
         {items.map(([url, icon, label]) => (
           <NavLink key={url} to={url} end={url === '/'} className={({isActive}) => isActive ? 'active' : ''}>
-            <Icon name={icon} /><span>{label}</span>{url === '/cong-viec' && <b>2</b>}
+            <Icon name={icon} /><span>{label}</span>{user && url === '/cong-viec' && <b>2</b>}
           </NavLink>
         ))}
       </nav>
@@ -54,18 +50,15 @@ function Sidebar() {
 }
 
 function BottomNav() {
-  const items = [
-    ['/', 'home', 'Trang chủ'], 
-    ['/cong-viec', 'work', 'Công việc'], 
-    ['/tri-thuc', 'book', 'Tri thức'], 
-    ['/doi-moi-sang-tao', 'bulb', 'Đổi mới'], 
-    ['/ca-nhan', 'user', 'Cá nhân']
-  ];
+  const { user } = useAuth();
+  const items = user
+    ? [['/', 'home', 'Trang chủ'], ['/cong-viec', 'work', 'Công việc'], ['/tri-thuc', 'book', 'Tri thức'], ['/doi-moi-sang-tao', 'bulb', 'Đổi mới'], ['/ca-nhan', 'user', 'Cá nhân']]
+    : [['/', 'home', 'Trang chủ'], ['/tri-thuc', 'book', 'Tri thức'], ['/doi-moi-sang-tao', 'bulb', 'Đổi mới'], ['/login', 'user', 'Đăng nhập']];
   return (
     <nav className="bottom-nav">
       {items.map(([url, icon, label]) => (
         <NavLink key={url} to={url} end={url === '/'} className={({isActive}) => isActive ? 'active' : ''}>
-          <span className="nav-icon"><Icon name={icon} size={22} />{url === '/cong-viec' && <i>2</i>}</span><small>{label}</small>
+          <span className="nav-icon"><Icon name={icon} size={22} />{user && url === '/cong-viec' && <i>2</i>}</span><small>{label}</small>
         </NavLink>
       ))}
     </nav>
@@ -73,13 +66,14 @@ function BottomNav() {
 }
 
 export function AppShell() {
+  const { user } = useAuth();
   return (
     <div className="app-layout">
       <Sidebar />
       <main className="main-content">
         <div className="mobile-topbar">
           <Brand compact />
-          <NotificationBell />
+          {user && <NotificationBell />}
         </div>
         <Outlet />
       </main>

@@ -2162,3 +2162,21 @@
   đường dẫn repo), không thay đổi production behavior hay security assertions. Ba pgTAP file mới
   được chạy trực tiếp trên rehearsal trong transaction rollback và trả về `ok`; full Supabase reset/
   Deno gate vẫn không chạy được vì CLI chưa có trong môi trường.
+
+## [2026-09-18] PUBLIC_FIRST_AUTH_CORRECTION — code closure
+- **Agent:** Codex
+- **Thay đổi:** Tách public routes khỏi `AuthGuard`; guest chỉ thấy navigation/content public và
+  thao tác private vẫn login-on-demand. Thêm RLS public-read hẹp cho documents, learning, quiz
+  metadata và innovation; thêm public AI retrieval fixed-predicate/quota và Edge Function ký URL
+  cho file public mà vẫn giữ private buckets. Chuyển Innovation khỏi mock data, cập nhật service
+  worker để active deployment mới ngay khi phát hiện update.
+- **File đã sửa:** `src/App.jsx`, `src/components/Layout.jsx`, `src/pages/{Home,Innovation,DocumentDetail,LearningTopicDetail}.jsx`,
+  `src/services/{documentService,learningService,innovationService}.js`, `public/sw.js`,
+  `supabase/migrations/202609180001_public_first_auth.sql`, `supabase/functions/{ask-ai,public-content-url}/index.ts`,
+  `supabase/tests/public_first_auth.sql`, `tests/public_first_auth.test.mjs`,
+  `docs/brain/{01-architecture,03-decisions,06-ai-working-log}.md`.
+- **Lý do:** PR #52 chỉ public Home; data routes and RAG still sat behind auth/RLS for active users.
+- **Kiểm tra:** Root `npm test` 204/204 pass; `npm run build` pass; lint has 0 errors and 4
+  pre-existing warnings. `member-api npm test` is blocked by its absent local dependencies and
+  `MEMBER_DATABASE_URL`; Supabase CLI, Deno and browser automation are absent, so pgTAP/Deno/browser/
+  runtime/production deployment remain pending the required local/hosted gates.

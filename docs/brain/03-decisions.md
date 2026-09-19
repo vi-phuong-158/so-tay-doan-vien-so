@@ -908,3 +908,20 @@ không nới, không skip bất kỳ assertion nào**; test 14/15/16/26 vẫn đ
 - **Lý do:** Public-first là yêu cầu sản phẩm cho lần closure này nhưng phải tương thích với RLS
   hiện tại. Chỉ Home đang dùng dữ liệu minh họa nên có thể public an toàn; mọi surface dữ liệu thật
   giữ nguyên fail-closed boundary.
+
+## [2026-09-18] P5.5-D18 — Public data is a separate, deny-by-default surface
+
+- **Quyết định:** Thay thế giới hạn P5.5-D17 “chỉ Home public” bằng ba surface rõ ràng: `PUBLIC`
+  gồm Tri thức, văn bản, chuyên đề, AI và công trình đổi mới đã công bố; `AUTHENTICATED` gồm dữ
+  liệu/hành động cá nhân; `RESTRICTED` là mọi nội dung nội bộ, storage object, đáp án quiz, Member
+  API và admin. Guest chỉ có policy `SELECT` với predicate cố định `PUBLISHED + PUBLIC` (hoặc
+  `APPROVED` tương ứng); không có `USING (true)` và không có write grant.
+- **Quyết định:** Hai bucket nội dung tiếp tục private. `public-content-url` kiểm tra id của
+  document/resource ở server trước khi ký URL 60 giây; caller không thể đưa bucket/path. AI public
+  gọi `search_public_knowledge` có predicate hard-coded và quota hourly bằng hash địa chỉ; không
+  persist conversation/message. AI authenticated vẫn dùng retrieval theo scope cũ.
+- **Lý do:** Route public không đủ nếu RLS, Storage và RAG còn login-first. Tách trust path giữ
+  anonymous khỏi metadata/chunk private kể cả khi private content có relevance cao hơn.
+- **Đảm bảo:** `quiz_options`, private Storage paths, Member API, report/admin và mutation không
+  nhận anon grant. pgTAP `public_first_auth.sql` kiểm tra anon positive/negative rows, bucket
+  privacy, function ACL và private-AI-outranks-public negative case.

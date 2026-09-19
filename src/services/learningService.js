@@ -258,6 +258,17 @@ export function createLearningService(client) {
         client.storage.from(LEARNING_RESOURCES_BUCKET).createSignedUrl(storagePath, expiresIn)
       );
       return data.signedUrl;
+    },
+
+    async getPublicResourceDownloadUrl(resourceId) {
+      assertUuid(resourceId, 'resourceId');
+      const { data, error } = await client.functions.invoke('public-content-url', {
+        body: { content_type: 'LEARNING_RESOURCE', content_id: resourceId }
+      });
+      if (error || !data?.success || !data.signed_url) {
+        throw new LearningServiceError('RESOURCE_NOT_FOUND', 'RESOURCE_NOT_FOUND', error);
+      }
+      return data.signed_url;
     }
   };
 }
