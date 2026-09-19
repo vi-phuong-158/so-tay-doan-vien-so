@@ -39,13 +39,13 @@ values
   ('f8300000-0000-0000-0000-000000000003', 'Draft project', 'draft-project-f810', 'DRAFT', 'PUBLIC', 'DRAFT', 'cccccccc-cccc-cccc-cccc-cccccccccccc');
 
 select public_first_set_anon();
-select results_eq($$select title from public.documents where id like 'f810%' order by id$$,
+select results_eq($$select title from public.documents where id::text like 'f810%' order by id$$,
   array['Public AI document'], 'anon reads only published PUBLIC documents');
-select results_eq($$select title from public.learning_topics where id like 'f820%' order by id$$,
+select results_eq($$select title from public.learning_topics where id::text like 'f820%' order by id$$,
   array['Public topic'], 'anon reads only published PUBLIC topics');
 select results_eq($$select title from public.learning_resources order by title$$,
   array['Public resource'], 'anon cannot infer resources of hidden topics');
-select results_eq($$select title from public.innovation_projects where id like 'f830%' order by id$$,
+select results_eq($$select title from public.innovation_projects where id::text like 'f830%' order by id$$,
   array['Public project'], 'anon reads only published PUBLIC innovation projects');
 select table_privs_are('public', 'quiz_options', 'anon', array[]::text[], 'anon cannot read quiz answer options');
 select is((select count(*)::integer from storage.objects where bucket_id in ('documents-private', 'learning-resources-private')), 0,

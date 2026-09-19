@@ -2180,3 +2180,15 @@
   pre-existing warnings. `member-api npm test` is blocked by its absent local dependencies and
   `MEMBER_DATABASE_URL`; Supabase CLI, Deno and browser automation are absent, so pgTAP/Deno/browser/
   runtime/production deployment remain pending the required local/hosted gates.
+
+## [2026-09-19] PUBLIC_FIRST_AUTH_CORRECTION — CI pgTAP portability fix
+- **Agent:** Codex
+- **Thay đổi:** Cast UUID fixture identifiers to text before applying the `LIKE` prefix predicate in
+  `public_first_auth.sql`.
+- **File đã sửa:** `supabase/tests/public_first_auth.sql`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** CI pgTAP reached the new test and failed before assertions because PostgreSQL has no
+  `uuid ~~ unknown` operator. This is a test-query type correction only; it does not change RLS,
+  migrations, production data, or runtime behavior.
+- **Kiểm tra:** CI failure log isolated the error at test line 43 after all prior DB test files
+  passed. The corrected query uses the explicit `id::text` predicate; CI must be re-run as hosted
+  pgTAP evidence because the local Supabase runtime remains unavailable.
