@@ -43,10 +43,11 @@ export function Home() {
         <div className="featured-document">
           <h3>Tra cứu văn bản và chuyên đề đã công bố</h3>
           <p>Nội dung công khai mở trực tiếp; thao tác cá nhân và khu vực nội bộ vẫn yêu cầu đăng nhập.</p>
-          <div className="featured-document-actions">
-            <Link className="primary" to="/tri-thuc/hoi-ai"><Icon name="sparkles" size={15} />Hỏi AI công khai</Link>
-            <Link className="secondary" to="/tri-thuc/van-ban">Xem văn bản</Link>
-          </div>
+          <nav className="home-quick-actions" aria-label="Lối vào nội dung công khai">
+            <Link to="/tri-thuc/van-ban"><Icon name="file" size={19} /><span>Văn bản</span></Link>
+            <Link to="/tri-thuc/chuyen-de"><Icon name="book" size={19} /><span>Chuyên đề</span></Link>
+            <Link to="/tri-thuc/hoi-ai"><Icon name="sparkles" size={19} /><span>Hỏi AI</span></Link>
+          </nav>
         </div>
         <div className="section-eyebrow"><span>{isGuest ? '02' : '04'} — ĐỔI MỚI SÁNG TẠO</span><i /><Link to="/doi-moi-sang-tao">XEM CÔNG TRÌNH →</Link></div>
       </div>

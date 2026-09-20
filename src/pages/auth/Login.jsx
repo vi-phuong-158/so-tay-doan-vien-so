@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { Icon } from '../../components/Icon';
+import { Brand } from '../../components/common';
 
 export const Login = () => {
   const [email, setEmail] = useState('');
@@ -17,61 +19,62 @@ export const Login = () => {
     e.preventDefault();
     setError(null);
     setLoading(true);
-
-    const { error: loginError } = await login(email, password);
-
-    if (loginError) {
-      setError('Thông tin đăng nhập không chính xác hoặc tài khoản bị khóa.');
-      setLoading(false);
-    } else {
+    try {
+      const { error: loginError } = await login(email, password);
+      if (loginError) {
+        setError('Thông tin đăng nhập không chính xác hoặc tài khoản bị khóa.');
+        return;
+      }
       navigate(from, { replace: true });
+    } catch {
+      setError('Thông tin đăng nhập không chính xác hoặc tài khoản bị khóa.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="page login-page">
-      <div className="login-card form-card">
-        <div className="brand" style={{ marginBottom: '24px' }}>
-          <img src="/brand/app-icon.svg" alt="Sổ tay Đoàn viên số" />
-          <div><strong>Sổ tay Đoàn viên số</strong></div>
+      <section className="login-brand" aria-label="Giới thiệu Sổ tay Đoàn viên số">
+        <p className="login-kicker">TUỔI TRẺ CÔNG AN TỈNH PHÚ THỌ</p>
+        <h2>Tri thức và công việc Đoàn, trong một điểm đến.</h2>
+        <p>Tra cứu nội dung đã công bố và mở các chức năng dành cho tài khoản được cấp quyền.</p>
+        <div className="login-values" aria-label="Các khu vực chính">
+          <span><Icon name="book" size={17} /> Tri thức công khai</span>
+          <span><Icon name="work" size={17} /> Công việc Đoàn</span>
+          <span><Icon name="bulb" size={17} /> Đổi mới sáng tạo</span>
         </div>
-        <form onSubmit={handleSubmit}>
-          {error && <div className="status status-danger" style={{ marginBottom: '16px' }}>{error}</div>}
-          
-          <label className="form-field">
+      </section>
+
+      <section className="login-card form-card" aria-labelledby="login-title">
+        <Brand compact />
+        <div className="login-card-heading">
+          <h1 id="login-title">Đăng nhập</h1>
+          <p>Dùng tài khoản đã được cấp để tiếp tục.</p>
+        </div>
+        <form className="auth-form" onSubmit={handleSubmit}>
+          {error && <div className="status status-danger" role="alert">{error}</div>}
+
+          <label className="form-field" htmlFor="login-email">
             <span>Email</span>
-            <input 
-              type="email" 
-              required 
-              value={email} 
-              onChange={e => setEmail(e.target.value)} 
-              placeholder="Nhập email" 
-            />
-          </label>
-          
-          <label className="form-field">
-            <span>Mật khẩu</span>
-            <input 
-              type="password" 
-              required 
-              value={password} 
-              onChange={e => setPassword(e.target.value)} 
-              placeholder="Nhập mật khẩu" 
-            />
+            <input id="login-email" type="email" autoComplete="username" required value={email} onChange={e => setEmail(e.target.value)} placeholder="Nhập email" />
           </label>
 
-          <button type="button" className="link-button" onClick={() => navigate('/quen-mat-khau')} style={{ alignSelf: 'flex-start', marginBottom: '24px', background: 'transparent', border: 'none', color: 'var(--brand-600)', cursor: 'pointer' }}>
+          <label className="form-field" htmlFor="login-password">
+            <span>Mật khẩu</span>
+            <input id="login-password" type="password" autoComplete="current-password" required value={password} onChange={e => setPassword(e.target.value)} placeholder="Nhập mật khẩu" />
+          </label>
+
+          <button type="button" className="link-button" onClick={() => navigate('/quen-mat-khau')}>
             Quên mật khẩu?
           </button>
 
-          <button type="submit" className="button button-primary" disabled={loading} style={{ width: '100%' }}>
-            {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+          <button type="submit" className="button button-primary" disabled={loading}>
+            {loading ? 'Đang đăng nhập…' : 'Đăng nhập'}
           </button>
         </form>
-        <p style={{ marginTop: '24px', fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center' }}>
-          Hệ thống lưu hành nội bộ. Yêu cầu đăng nhập bằng tài khoản được cấp.
-        </p>
-      </div>
+        <p className="auth-note">Hệ thống lưu hành nội bộ. Yêu cầu đăng nhập bằng tài khoản được cấp.</p>
+      </section>
     </div>
   );
 };

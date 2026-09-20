@@ -16,7 +16,7 @@
 | AI | Gemini (embedding + trả lời) qua Edge Function `ask-ai` |
 | Email | Brevo/Resend/SMTP qua `email_queue` + `process-email-queue` |
 | Hosting | Vercel (hoặc Mắt Bão) với SPA rewrite; xem `vercel.json` |
-| Client libs | `@supabase/supabase-js`, `dompurify` |
+| Client libs | `@supabase/supabase-js`, `dompurify`, `lucide-react` (shared icon set) |
 
 ## Cấu trúc thư mục chính
 
@@ -28,14 +28,16 @@ src/
 ├── contexts/AuthContext.jsx # session/user/profile/roles + login/logout/hasRole
 ├── components/
 │   ├── Guards.jsx           # AuthGuard, RoleGuard (+ getAuthGuardAction thuần, có test)
-│   ├── Layout.jsx           # AppShell: Sidebar + BottomNav + Outlet
+│   ├── Layout.jsx           # AppShell: Sidebar + BottomNavigation (5 primary routes) + Outlet
 │   ├── NotificationBell.jsx # badge unread server-backed, user-keyed cache reset
-│   ├── common.jsx           # Brand, EmptyState, SectionHeader...
-│   ├── Icon.jsx             # line icon
-│   ├── ErrorBoundary.jsx / Skeleton.jsx
+│   ├── common.jsx           # Brand, EmptyState, AuthRequiredState, native Modal, form/layout primitives
+│   ├── Icon.jsx             # shared Lucide icon adapter
+│   ├── ErrorBoundary.jsx / Skeleton.jsx # shared loading placeholder uses index.css tokens
 ├── pages/
 │   ├── auth/                # Login, ForgotPassword, ResetPassword, ChangePassword (dùng Supabase)
-│   ├── Home/Innovation/Profile.jsx  # HIỆN DÙNG MOCK
+│   ├── Home.jsx             # public-first landing and direct links to public content
+│   ├── Innovation.jsx       # published project list + existing authenticated submit Edge Function
+│   ├── Profile.jsx          # Account identity; Member Record remains on Member API routes
 │   ├── Work.jsx             # đã nối reportService (Phase 2)
 │   ├── Knowledge.jsx        # tab Văn bản + Chuyên đề đã nối service thật (P4-01/P4-03)
 │   ├── Documents.jsx        # /tri-thuc/van-ban — list thật: search/filter/paginate (P4-01)
@@ -81,8 +83,16 @@ supabase/
 | `src/contexts/AuthContext.jsx` | Session/user/profile/roles, `login/logout/hasRole` | `App`, mọi component gọi `useAuth` | `services/supabaseClient` |
 | `src/services/supabaseClient.js` | Client Supabase (anon key) | `AuthContext`, `pages/auth/*`, `pages/Admin` | `VITE_SUPABASE_URL/ANON_KEY` |
 | `src/components/Guards.jsx` | `AuthGuard` (chặn chưa đăng nhập/inactive), `RoleGuard` | `App.jsx` | `useAuth`, react-router |
-| `src/components/Layout.jsx` | `AppShell`: Sidebar + BottomNav + `<Outlet/>`; public-first shell giữ Home/demo surface truy cập được khi chưa đăng nhập | `App.jsx` (Home public, protected routes trong AuthGuard) | `useAuth`, `Icon`, `common` |
-| `src/pages/*` (5 khu vực) | UI khu vực | routes trong `App.jsx` | `data/mock.js`, `useAuth`, `common` |
+| `src/components/Layout.jsx` | `AppShell`: Sidebar + shared five-item `BottomNavigation` + `<Outlet/>`; guest and authenticated shells use the same primary destinations | `App.jsx` (public pages and guarded private pages) | `useAuth`, `Icon`, `common` |
+| `src/components/common.jsx` | `Brand`, `Button`, page/state primitives, `AuthRequiredState`, native `Modal` | Shared pages and guards | `Icon`, report status helpers, React dialog APIs |
+| `src/components/Icon.jsx` | One `name`-to-Lucide adapter; decorative SVGs are hidden from assistive technology | `Layout`, pages, common components | `lucide-react` |
+| `src/components/Skeleton.jsx` | Shared animated loading placeholder with live status semantics | Data-backed list/detail pages | `index.css` surface tokens |
+| `src/index.css` | Design tokens, shared visual primitives, focus states, responsive layout and auth modal sheet rules | All frontend routes | Be Vietnam Pro, brand tokens |
+| `src/pages/Home.jsx` | Public-first landing and shortcuts to documents, learning and Ask AI | route `/` | `AuthContext`, shared components |
+| `src/pages/Innovation.jsx` | Published project list, details, and authenticated submission form | route `/doi-moi-sang-tao` | `innovationService`, existing Edge Function, shared `Modal` |
+| `src/services/innovationService.js` | Maps public projects; validates the short problem payload and invokes existing `submit-innovation-problem` | `Innovation` | Supabase client; organization is derived server-side |
+| `src/pages/Profile.jsx` | Account identity, role and organization, settings actions, logout; no Member Record fields | route `/ca-nhan` | `AuthContext`, `MemberManagement` is a separate route family |
+| `src/pages/*` | Work, Knowledge, Document, Learning/Quiz, Member and Admin areas | routes in `App.jsx` | domain services, `AuthContext`, shared components |
 | `src/data/mock.js` | Dữ liệu demo | 5 pages chính | — (⚠ thay bằng service khi nối Supabase) |
 | `src/lib/status.mjs` | Nhãn/tone trạng thái báo cáo, tính hạn, chuẩn hóa tên tệp | pages hiển thị báo cáo | — (thuần, có unit test) |
 | `src/services/reportAdminService.js` | Đọc campaign trong scope; tạo/sửa draft, upload/finalize template và publish | `AdminReports` | Supabase RPC + Storage private + `finalize-campaign-template` |
@@ -95,6 +105,13 @@ supabase/
 | `src/pages/AdminLearningTopics.jsx` | Admin topic list/filter/create with loading/error/empty states | route `/admin/chuyen-de` | `learningAdminService`, `RoleGuard`, `common` |
 | `src/pages/AdminLearningTopicDetail.jsx` | Topic edit/publish, resource CRUD/upload/reorder, quiz list/create | route `/admin/chuyen-de/:topicId` | learning/quiz admin services, private Storage |
 | `src/pages/AdminQuizEditor.jsx` | Quiz metadata, SINGLE/MULTIPLE questions/options and publish/close | route `/admin/chuyen-de/:topicId/trac-nghiem/:quizId` | `quizAdminService`, `RoleGuard`, `common` |
+
+### UI shell decision record
+
+- `App.jsx` route inventory and authorization groups are unchanged by the UI/UX finalization.
+- The primary navigation is a shared five-destination list: Home, Work, Knowledge, Innovation, and Profile. Guest use of Work/Profile still reaches `AuthRequiredState`; route guards remain authoritative.
+- The existing design tokens in `src/index.css` remain the only source for colors and responsive UI states. Lucide is the single icon library. The shared `Modal` uses native `<dialog>`; its mobile sheet layout is CSS-only.
+- Innovation submission stays on the existing `submit-innovation-problem` contract. The browser sends `title` and `pain_point`; no client-selected organization, file upload, API, route, table, RLS, RPC, or Edge Function was added.
 
 ### Backend (Edge Functions) — module then chốt
 

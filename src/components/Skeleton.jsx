@@ -1,5 +1,5 @@
 const shimmer = {
-  background: 'linear-gradient(90deg, var(--surface-2) 25%, var(--surface) 50%, var(--surface-2) 75%)',
+  background: 'linear-gradient(90deg, var(--surface-soft) 25%, var(--surface-card) 50%, var(--surface-soft) 75%)',
   backgroundSize: '200% 100%',
   animation: 'shimmer 1.5s infinite',
   borderRadius: 10,
@@ -7,7 +7,7 @@ const shimmer = {
 
 export default function Skeleton({ lines = 4, style }) {
   return (
-    <div style={{ padding: '16px 0', ...style }}>
+    <div role="status" aria-label="Đang tải nội dung" aria-busy="true" style={{ padding: '16px 0', ...style }}>
       <style>{`@keyframes shimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }`}</style>
       {Array.from({ length: lines }, (_, i) => (
         <div

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../services/supabaseClient';
+import { Brand } from '../../components/common';
 
 export const ResetPassword = () => {
   const [password, setPassword] = useState('');
@@ -19,62 +20,52 @@ export const ResetPassword = () => {
     }
     
     setLoading(true);
-
-    const { error: updateError } = await supabase.auth.updateUser({ password });
-
-    if (updateError) {
+    try {
+      const { error: updateError } = await supabase.auth.updateUser({ password });
+      if (updateError) {
+        setError('Cập nhật mật khẩu thất bại. Phiên có thể đã hết hạn.');
+      } else {
+        setSuccess(true);
+      }
+    } catch {
       setError('Cập nhật mật khẩu thất bại. Phiên có thể đã hết hạn.');
-    } else {
-      setSuccess(true);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
-    <div className="page login-page">
-      <div className="login-card form-card">
-        <h2 style={{ marginBottom: '16px' }}>Đặt lại mật khẩu</h2>
+    <div className="page login-page auth-flow-page">
+      <section className="login-card form-card" aria-labelledby="reset-password-title">
+        <Brand compact />
+        <h1 id="reset-password-title">Đặt lại mật khẩu</h1>
         {success ? (
-          <div>
-            <p style={{ marginBottom: '24px' }}>Mật khẩu của bạn đã được đặt lại thành công.</p>
-            <button className="button button-primary" onClick={() => navigate('/login')} style={{ width: '100%' }}>
+          <div className="auth-success" role="status">
+            <p>Mật khẩu của bạn đã được đặt lại thành công.</p>
+            <button className="button button-primary" onClick={() => navigate('/login')}>
               Đăng nhập ngay
             </button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit}>
-            {error && <div className="status status-danger" style={{ marginBottom: '16px' }}>{error}</div>}
-            
-            <label className="form-field">
+          <form className="auth-form" onSubmit={handleSubmit}>
+            {error && <div className="status status-danger" role="alert">{error}</div>}
+
+            <label className="form-field" htmlFor="reset-password-new">
               <span>Mật khẩu mới</span>
-              <input 
-                type="password" 
-                required 
-                minLength={6}
-                value={password} 
-                onChange={e => setPassword(e.target.value)} 
-                placeholder="Nhập mật khẩu mới" 
-              />
-            </label>
-            
-            <label className="form-field">
-              <span>Xác nhận mật khẩu</span>
-              <input 
-                type="password" 
-                required 
-                minLength={6}
-                value={confirmPassword} 
-                onChange={e => setConfirmPassword(e.target.value)} 
-                placeholder="Nhập lại mật khẩu" 
-              />
+              <input id="reset-password-new" type="password" autoComplete="new-password" required minLength={6} value={password} onChange={e => setPassword(e.target.value)} placeholder="Nhập mật khẩu mới" />
             </label>
 
-            <button type="submit" className="button button-primary" disabled={loading} style={{ width: '100%' }}>
-              {loading ? 'Đang cập nhật...' : 'Cập nhật mật khẩu'}
+            <label className="form-field" htmlFor="reset-password-confirm">
+              <span>Xác nhận mật khẩu</span>
+              <input id="reset-password-confirm" type="password" autoComplete="new-password" required minLength={6} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Nhập lại mật khẩu" />
+            </label>
+
+            <button type="submit" className="button button-primary" disabled={loading}>
+              {loading ? 'Đang cập nhật…' : 'Cập nhật mật khẩu'}
             </button>
           </form>
         )}
-      </div>
+      </section>
     </div>
   );
 };

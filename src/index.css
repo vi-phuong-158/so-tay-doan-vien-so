@@ -1,5 +1,4 @@
 @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&display=swap');
 
 :root {
   --brand-900:#073B8C; --brand-800:#0D47A1; --brand-700:#1257C4; --brand-600:#1976D2; --brand-500:#2F80ED;
@@ -50,14 +49,14 @@
 /* Modern Civic Glass — numbered section headers, editorial featured card, de-carded document
    rows, tab switcher. See docs/02-design-system.md §"Modern Civic Glass" and
    docs/brain/03-decisions.md. Reuses existing tokens/shadows/radius; no new stack. */
-:root{--accent-navy-label:#1237A6;--font-display:'Archivo',var(--font-sans)}
+:root{--accent-navy-label:#1237A6;--font-display:var(--font-sans)}
 .tabs{display:flex;gap:4px;padding:4px;background:var(--surface-soft);border-radius:var(--radius-md);margin:0 0 16px}
 .tabs .tab{flex:1;min-height:44px;border:0;border-radius:12px;font-size:12.5px;font-weight:600;color:var(--text-secondary);display:flex;align-items:center;justify-content:center;transition:.15s}
 .tabs .tab.active{background:var(--surface-card);color:var(--brand-800);box-shadow:var(--shadow-sm)}
 .section-eyebrow{display:flex;align-items:center;gap:10px;margin:24px 0 12px}
-.section-eyebrow>span{font-family:var(--font-display);font-size:11px;font-weight:800;letter-spacing:.12em;color:var(--accent-navy-label);white-space:nowrap}
+.section-eyebrow>span{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--accent-navy-label);white-space:nowrap}
 .section-eyebrow>i{flex:1;height:1px;background:var(--border-default)}
-.section-eyebrow>a,.section-eyebrow>button{font-family:var(--font-display);font-size:11px;font-weight:800;letter-spacing:.06em;color:var(--text-primary);white-space:nowrap;display:flex;align-items:center;gap:4px}
+.section-eyebrow>a,.section-eyebrow>button{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--text-primary);white-space:nowrap;display:flex;align-items:center;gap:4px}
 .metric-info{display:flex;flex-direction:column;gap:2px}
 .metric-card{position:relative}
 .metric-card.accent-yellow{padding-left:17px}
@@ -112,3 +111,110 @@
 .history-detail p{font-size:12px;color:var(--text-secondary);margin:0}
 .dashboard-filters label:not(.dashboard-search){display:grid;gap:5px;font-size:13px;font-weight:600;color:var(--text-secondary)}
 .dashboard-filters select{min-height:44px;width:100%;border:1px solid var(--border-default);border-radius:14px;padding:0 12px;background:#fff;color:var(--text-primary);font-size:13px;font-weight:400}
+
+/* Shared UI completion: focus, auth-on-demand, responsive quick actions and dialogs. */
+:focus-visible{outline:3px solid var(--brand-500);outline-offset:3px}
+.page-header{flex-wrap:wrap}
+.page-header>.button{max-width:100%;white-space:normal;text-align:center}
+.home-hero{border-radius:22px}
+.home-quick-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:5px}
+.home-quick-actions a{min-width:0;min-height:52px;padding:7px 5px;border:1px solid rgba(255,255,255,.2);border-radius:13px;background:rgba(255,255,255,.1);color:#fff;display:grid;justify-items:center;align-content:center;gap:3px;font-size:11px;font-weight:600;text-align:center}
+.home-quick-actions a:hover,.home-quick-actions a:focus-visible{background:rgba(255,255,255,.18)}
+.auth-gate-page{display:grid;align-content:center;min-height:calc(100dvh - 120px)}
+.auth-required-state{width:min(100%,480px);margin:24px auto;padding:28px 24px;border:1px solid var(--border-default);border-radius:var(--radius-lg);background:var(--surface-card);box-shadow:var(--shadow-sm);display:grid;justify-items:center;gap:12px;text-align:center}
+.auth-required-icon{width:52px;height:52px;border-radius:16px;background:var(--brand-050);color:var(--brand-700);display:grid;place-items:center}
+.auth-required-state h1{font-size:20px;line-height:1.35}
+.auth-required-state p{max-width:38ch;color:var(--text-secondary)}
+.account-record-note{margin-top:18px;color:var(--text-secondary);font-size:12px;line-height:1.6}
+.notification-badge{min-width:19px;min-height:19px;padding:0 3px;font-size:11px;line-height:15px;display:grid;place-items:center}
+.app-modal{width:min(calc(100vw - 32px),560px);max-width:none;max-height:min(90vh,760px);max-height:min(90dvh,760px);margin:auto;padding:0;border:1px solid var(--border-default);border-radius:var(--radius-xl);background:var(--surface-card);color:var(--text-primary);box-shadow:var(--shadow-lg);overflow:hidden}
+.app-modal::backdrop{background:rgba(18,35,63,.32);backdrop-filter:blur(2px)}
+.app-modal-layout{max-height:inherit;display:flex;flex-direction:column}
+.app-modal-header{flex:none;padding:18px 20px 14px;border-bottom:1px solid var(--border-default);display:flex;align-items:center;justify-content:space-between;gap:16px}
+.app-modal-header h2{font-size:18px;line-height:1.35}
+.app-modal-header .icon-button{flex:none;box-shadow:none}
+.app-modal-content{min-height:0;padding:18px 20px;overflow-y:auto;overscroll-behavior:contain}
+.app-modal-footer{flex:none;padding:14px 20px max(14px,env(safe-area-inset-bottom));border-top:1px solid var(--border-default);background:var(--surface-card);display:flex;justify-content:flex-end;gap:10px}
+.innovation-problem-form{display:grid;gap:16px}
+.innovation-problem-form .form-field>small{color:var(--text-muted);font-size:12px}
+.innovation-problem-form input[readonly]{background:var(--surface-page);color:var(--text-secondary)}
+.innovation-problem-form textarea{min-height:120px}
+.innovation-security-note{padding:12px 14px;border-radius:14px;background:var(--brand-050);color:var(--text-secondary);font-size:12px;line-height:1.6}
+.innovation-projects{margin-top:18px}
+.innovation-project-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+.innovation-project-card{min-width:0;display:grid;align-content:start;gap:10px}
+.innovation-project-card.is-featured{border-top:3px solid var(--brand-600);background:linear-gradient(180deg,var(--brand-050),var(--surface-card) 42%)}
+.innovation-project-heading{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.innovation-project-category,.innovation-project-unit{color:var(--text-secondary);font-size:12px}
+.innovation-project-card h2{font-size:16px;line-height:1.4}
+.innovation-progress-label{margin-top:2px;display:flex;justify-content:space-between;gap:12px;color:var(--text-secondary);font-size:12px}
+.innovation-progress-label strong{color:var(--text-primary);font-variant-numeric:tabular-nums}
+.innovation-project-card .button{justify-self:start}
+.innovation-project-detail{display:grid;gap:14px}
+.innovation-project-detail p{line-height:1.65;color:var(--text-secondary)}
+.innovation-project-detail strong{color:var(--text-primary)}
+.innovation-submit-success{margin:12px 0;padding:13px 15px;border:1px solid rgba(19,138,99,.18);border-radius:14px;background:#edf8f3;color:#126d50;display:flex;align-items:center;gap:9px}
+
+@media(max-width:960px){
+  .bottom-nav{grid-template-columns:repeat(5,minmax(0,1fr));transition:transform .18s ease,opacity .18s ease}
+}
+@supports selector(.app-layout:has(.page input:focus)){
+  @media(max-width:960px){
+    .app-layout:has(.page input:focus,.page textarea:focus,.page select:focus) .bottom-nav{transform:translateY(calc(100% + 20px));opacity:0;pointer-events:none}
+  }
+}
+@media(max-width:640px){
+  .page-header{align-items:flex-start;row-gap:10px}
+  .page-header h1{font-size:20px}
+  .page-header p{font-size:11px}
+  .page-header>.button{min-height:44px;padding-inline:14px;font-size:12px}
+  .home-hero{border-radius:20px}
+  .home-quick-actions{gap:6px}
+  .home-quick-actions a{min-height:50px;font-size:11px}
+  .innovation-project-list{grid-template-columns:1fr}
+  .innovation-project-card .button{width:100%}
+  .app-modal{position:fixed;inset:auto 12px calc(12px + env(safe-area-inset-bottom));width:auto;margin:0;max-height:min(90vh,760px);max-height:min(90dvh,760px);border-radius:24px}
+  .app-modal-header{padding:16px 16px 12px}
+  .app-modal-content{padding:16px}
+  .app-modal-footer{padding:12px 16px max(12px,env(safe-area-inset-bottom))}
+  .app-modal-footer>.button{flex:1;padding-inline:12px}
+  .page small{font-size:max(11px,1em)}
+  .status,.doc-tags span,.doc-tags b,.document-card p,.document-card small,.knowledge-grid small,.quick-card small,.notice-row small,.file-row small,.timeline span,.upload-zone small,.selected-files strong,.selected-files small,.admin-item small,.campaign-list-item p,.campaign-list-meta,.checkbox-row small,.profile-stats span,.empty-state p,.form-error,.bottom-nav small{font-size:11px}
+  .bottom-nav small{white-space:nowrap}
+}
+@media(max-width:380px){
+  .page-header>.button{font-size:11px}
+  .auth-required-state{padding:23px 17px}
+  .app-modal-footer{gap:8px}
+}
+
+/* Auth routes share the same compact card and field language without becoming the app landing. */
+.login-page{width:100%;max-width:none}
+.login-brand{max-width:560px;justify-self:center}
+.login-brand .login-kicker{font-size:12px;font-weight:700;letter-spacing:.1em;color:rgba(255,255,255,.78)}
+.login-brand h2{font-size:clamp(30px,3.4vw,42px);line-height:1.22;margin:20px 0 14px;letter-spacing:-.02em}
+.login-brand>p:not(.login-kicker){max-width:46ch;font-size:15px;line-height:1.7;color:rgba(255,255,255,.82)}
+.login-values{gap:9px;margin-top:25px}
+.login-values span{min-height:40px;font-size:12px}
+.login-card{gap:18px}
+.login-card .brand{margin-bottom:0!important}
+.login-card .brand img{width:40px;height:40px;border-radius:12px;box-shadow:none}
+.login-card .brand strong{font-size:13px}
+.login-card h1,.login-card h2{font-size:22px;line-height:1.3;margin:0}
+.login-card-heading p,.auth-form-intro,.auth-note,.auth-success p,.auth-change-password>p{color:var(--text-secondary);line-height:1.6}
+.login-card form.auth-form,.auth-change-password form.auth-form{display:grid;gap:14px}
+.login-card .form-field,.auth-change-password .form-field{gap:7px}
+.login-card .link-button{justify-self:start;min-height:44px;padding:0;background:transparent;color:var(--brand-700);font-weight:600}
+.login-card .button,.auth-change-password form>.button,.auth-success>.button{width:100%}
+.login-card .auth-note{font-size:12px;text-align:center}
+.login-card .status-danger{white-space:normal}
+.auth-success{display:grid;gap:16px}
+.auth-flow-page{grid-template-columns:1fr;gap:0;padding:30px 18px}
+.auth-flow-page .login-card{justify-self:center}
+.auth-change-password{width:min(100%,520px);margin:0 auto}
+.auth-change-password .auth-success{justify-items:center;padding:8px 0;text-align:center;color:var(--success)}
+
+@media(max-width:960px){
+  .auth-flow-page{padding:24px 18px}
+  .auth-flow-page .login-card{justify-self:center}
+}
