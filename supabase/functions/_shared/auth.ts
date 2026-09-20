@@ -21,6 +21,60 @@ export function clients(request: Request): { userClient: SupabaseClient; adminCl
   return { userClient, adminClient };
 }
 
+type PublicFirstAuthorization = 'GUEST' | 'USER_TOKEN';
+
+function configuredPublicApiKeys(): string[] {
+  const keys = new Set<string>();
+  const legacyAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+  const singlePublishableKey = Deno.env.get('SUPABASE_PUBLISHABLE_KEY');
+  if (legacyAnonKey) keys.add(legacyAnonKey);
+  if (singlePublishableKey) keys.add(singlePublishableKey);
+
+  const publishableKeys = Deno.env.get('SUPABASE_PUBLISHABLE_KEYS');
+  if (publishableKeys) {
+    try {
+      const parsed = JSON.parse(publishableKeys);
+      if (parsed && typeof parsed === 'object') {
+        for (const value of Object.values(parsed)) {
+          if (typeof value === 'string') keys.add(value);
+        }
+      }
+    } catch {
+      throw new Error('CONFIGURATION_ERROR');
+    }
+  }
+
+  if (keys.size === 0) throw new Error('CONFIGURATION_ERROR');
+  return [...keys];
+}
+
+export function classifyPublicFirstAuthorization(
+  authorization: string | null,
+  apiKey: string | null,
+  acceptedApiKeys: string[],
+): PublicFirstAuthorization {
+  if (!apiKey || !acceptedApiKeys.includes(apiKey)) throw new Error('INVALID_API_KEY');
+  if (!authorization) return 'GUEST';
+
+  const match = authorization.match(/^Bearer\s+(.+)$/i);
+  if (!match) throw new Error('UNAUTHENTICATED');
+  if (match[1] === apiKey) return 'GUEST';
+  return 'USER_TOKEN';
+}
+
+// Public functions run with platform JWT verification disabled so modern publishable keys can
+// reach them. A request therefore has to prove it comes through a configured public application
+// key. Any bearer other than that key is treated as a user credential and must validate with Auth;
+// an invalid, expired, or forged bearer can never downgrade itself to the guest path.
+export async function optionalPublicFirstUser(request: Request, userClient: SupabaseClient): Promise<User | null> {
+  const authKind = classifyPublicFirstAuthorization(
+    request.headers.get('Authorization'),
+    request.headers.get('apikey'),
+    configuredPublicApiKeys(),
+  );
+  return authKind === 'GUEST' ? null : requireUser(userClient);
+}
+
 export async function requireUser(userClient: SupabaseClient): Promise<User> {
   const authHeader = (userClient as any)._authorization || '';
   const token = authHeader.replace(/^Bearer\s+/i, '');

@@ -7,6 +7,25 @@
 
 ## Đang làm
 
+### PUBLIC_FIRST_RUNTIME_FINAL_ACCEPTANCE_CLOSURE (2026-09-20)
+- **Base:** `origin/master@ab7242787965c7669caeeef6eb6e2d44b214b974` (PR #53 merge).
+- **Runtime đã đồng bộ:** rehearsal `znexculhbdjiflkczpyu` nhận `202609180001_public_first_auth`
+  và forward migrations `202609200001_public_first_quiz_read_hardening` / `202609200002_public_ai_quota_policy`; `ask-ai` ACTIVE v8 và
+  `public-content-url` ACTIVE v1 đều `verify_jwt=false` với authentication boundary trong handler.
+- **Evidence guest:** Browser thật trên Vercel production (SHA `ab72427`) mở public routes, list/detail
+  content synthetic, và Ask AI trả citation public; SQL transaction chứng minh PUBLIC allow,
+  INTERNAL deny, fixed public retrieval deny private source, private Storage deny, and guest AI
+  persistence = 0. Fixture đã cleanup theo exact IDs.
+- **Final acceptance:** source SHA `633c5cf4142675b2b780f35e0372e6f6eff87602` đã được push trên PR #54;
+  exact-SHA CI run `35486717207` xanh. Dùng `.env` hiện có, xác minh rehearsal `znexculhbdjiflkczpyu`,
+  tạo hai user synthetic, document organization-only và private Storage bytes; authenticated browser
+  login/session reload/detail PASS; signed 60-second private download trả đúng 38 bytes. Click nút tải
+  không phát ra browser download event trong harness; xem limitation trong report. Tất cả fixture,
+  AI conversation/messages, profile/role, object và Auth users đã cleanup, verify count 0/404.
+  **Verdict:** `PUBLIC_FIRST_RUNTIME_FINAL_ACCEPTANCE_PASS`. PR #54 vẫn OPEN, chưa merge; không đổi
+  production và không mở Phase 6.
+- **Report:** `docs/phase-5-5/06-public-first-runtime-closure.md`.
+
 ### P5.5 — End-to-End Final Closure (2026-09-18)
 - **Base:** `origin/master@7f468a5111df54486f7e98688b4c16057668a519`. PR #51 giữ nguyên như
   historical hosted-runtime acceptance artifact; không merge vì không có Mắt Bão runtime.

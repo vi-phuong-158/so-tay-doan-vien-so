@@ -922,6 +922,20 @@ không nới, không skip bất kỳ assertion nào**; test 14/15/16/26 vẫn đ
   persist conversation/message. AI authenticated vẫn dùng retrieval theo scope cũ.
 - **Lý do:** Route public không đủ nếu RLS, Storage và RAG còn login-first. Tách trust path giữ
   anonymous khỏi metadata/chunk private kể cả khi private content có relevance cao hơn.
+
+## [2026-09-20] Public-First Edge Function authentication and quiz read closure
+
+- **Quyết định:** `ask-ai` và `public-content-url` deploy với `verify_jwt=false` vì frontend dùng
+  Supabase publishable key, không phải user JWT. Handler nhận guest chỉ khi Authorization vắng mặt
+  hoặc trùng với configured application key; bearer khác phải xác minh thật qua Supabase Auth và
+  lỗi xác minh trả 401, không được rơi xuống guest path.
+- **Quyết định:** Giữ Phase 4 contract: guest chỉ xem quiz metadata/CTA đăng nhập; không có direct
+  `SELECT` trên `quiz_questions` hoặc `quiz_options`. Forward migration
+  `202609200001_public_first_quiz_read_hardening.sql` xóa policy anon không thể hoạt động vì grant
+  đọc câu hỏi đã bị revoke.
+- **Lý do:** Platform JWT verification không xác minh `sb_publishable_*` như user access token.
+  Tắt gateway verification chỉ an toàn khi handler phân tách guest/user fail-closed và data path
+  guest đã bị fixed predicate, quota, private Storage, và no-persistence ràng buộc.
 - **Đảm bảo:** `quiz_options`, private Storage paths, Member API, report/admin và mutation không
   nhận anon grant. pgTAP `public_first_auth.sql` kiểm tra anon positive/negative rows, bucket
   privacy, function ACL và private-AI-outranks-public negative case.
