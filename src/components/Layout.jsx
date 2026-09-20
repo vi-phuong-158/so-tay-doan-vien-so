@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Icon } from './Icon';
 import { Brand } from './common';
 import { useAuth } from '../contexts/AuthContext';
@@ -50,15 +50,18 @@ function Sidebar() {
 }
 
 function BottomNav() {
-  const { user } = useAuth();
-  const items = user
-    ? [['/', 'home', 'Trang chủ'], ['/cong-viec', 'work', 'Công việc'], ['/tri-thuc', 'book', 'Tri thức'], ['/doi-moi-sang-tao', 'bulb', 'Đổi mới'], ['/ca-nhan', 'user', 'Cá nhân']]
-    : [['/', 'home', 'Trang chủ'], ['/tri-thuc', 'book', 'Tri thức'], ['/doi-moi-sang-tao', 'bulb', 'Đổi mới'], ['/login', 'user', 'Đăng nhập']];
+  const items = [
+    ['/', 'home', 'Trang chủ'],
+    ['/cong-viec', 'work', 'Công việc'],
+    ['/tri-thuc', 'book', 'Tri thức'],
+    ['/doi-moi-sang-tao', 'bulb', 'Đổi mới'],
+    ['/ca-nhan', 'user', 'Cá nhân']
+  ];
   return (
-    <nav className="bottom-nav">
+    <nav className="bottom-nav" aria-label="Điều hướng chính">
       {items.map(([url, icon, label]) => (
         <NavLink key={url} to={url} end={url === '/'} className={({isActive}) => isActive ? 'active' : ''}>
-          <span className="nav-icon"><Icon name={icon} size={22} />{user && url === '/cong-viec' && <i>2</i>}</span><small>{label}</small>
+          <span className="nav-icon"><Icon name={icon} size={22} /></span><small>{label}</small>
         </NavLink>
       ))}
     </nav>
@@ -67,8 +70,20 @@ function BottomNav() {
 
 export function AppShell() {
   const { user } = useAuth();
+  const { pathname } = useLocation();
+  const isLoginPage = pathname === '/login';
+  const usesBrandedMobileHeader = pathname === '/'
+    || pathname === '/tri-thuc'
+    || pathname === '/tri-thuc/hoi-ai'
+    || (Boolean(user) && (
+      pathname === '/cong-viec'
+      || pathname.startsWith('/cong-viec/bao-cao/')
+      || pathname.startsWith('/tri-thuc/trac-nghiem/')
+      || pathname.startsWith('/quan-ly-doan-vien')
+    ));
+
   return (
-    <div className="app-layout">
+    <div className={`app-layout${usesBrandedMobileHeader ? ' app-layout--branded-mobile-header' : ''}${isLoginPage ? ' app-layout--login' : ''}`}>
       <Sidebar />
       <main className="main-content">
         <div className="mobile-topbar">

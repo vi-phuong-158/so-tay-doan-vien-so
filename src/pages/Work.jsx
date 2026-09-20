@@ -83,8 +83,8 @@ export function Work() {
   const visibleAssignments = groupedAssignments[activeTab];
 
   return (
-    <div className="page">
-      <PageHeader title="Công việc & Báo cáo" />
+    <div className="page page--appbar work-page">
+      <PageHeader title="Công việc & Báo cáo" subtitle="Theo dõi nhiệm vụ và hạn nộp báo cáo" variant="brand" />
 
       <div className="tabs" role="tablist" aria-label="Lọc nhiệm vụ báo cáo">
         <button

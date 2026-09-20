@@ -2204,3 +2204,20 @@
 - **Kiểm tra:** CI reported only extra `DELETE`, `INSERT`, `REFERENCES`, `TRIGGER`, `TRUNCATE`, and
   `UPDATE`, with no `SELECT`. The revised check directly verifies the required read denial. Hosted
   CI must re-run as pgTAP evidence because the local Supabase runtime remains unavailable.
+
+## [2026-09-20] UI_REFERENCE_RECONCILIATION — Mockup-to-code
+- **Agent:** Codex
+- **Thay đổi:** Đối chiếu và triển khai lại 8 màn Login, Home, Công việc, Chi tiết báo cáo, Tri thức,
+  AI, Quiz và Quản lý đoàn viên theo mockup owner; đưa shell mobile về bottom nav 5 mục, dùng logo
+  Đoàn có sẵn và thay icon path tự viết bằng `lucide-react`. Ghi chú báo cáo lưu text cục bộ theo
+  user/assignment; submit/upload vẫn đi qua service hiện hữu.
+- **File đã sửa:** `package.json`, `package-lock.json`, `public/brand/logo-doan.jpg`,
+  `src/components/{Icon,Layout,common}.jsx`, `src/index.css`,
+  `src/pages/{AskAi,Home,Knowledge,MemberManagement,Quiz,ReportAssignmentDetail,Work}.jsx`,
+  `src/pages/auth/Login.jsx`, `docs/brain/{01-architecture,03-decisions,04-current-tasks,06-ai-working-log}.md`.
+- **Lý do:** UI trước đó lệch hierarchy/layout mobile trong mockup đã duyệt; các chỉnh sửa chỉ tác
+  động presentation và giữ nguyên auth, business service, route, API contract và security behavior.
+- **Kiểm tra:** `npm test` 204/204 pass; `npm run lint` 0 lỗi, 3 cảnh báo Fast Refresh cũ;
+  `npm run build` pass (cảnh báo bundle chính 518.05 kB). Browser visual review 8 màn ở 390×844;
+  responsive matrix 40 lượt (8 route × 360/390/430/768/1440) không tràn ngang, màn không trắng.
+  Fake Supabase/Member API chỉ cung cấp dữ liệu tổng hợp cho UI, không xác minh backend/runtime.

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Icon } from '../components/Icon';
 import { PageHeader, EmptyState } from '../components/common';
 import Skeleton from '../components/Skeleton';
@@ -7,32 +7,40 @@ import { DocumentCard } from './Documents';
 import { TopicCard } from './LearningTopics';
 import { createDocumentService } from '../services/documentService';
 import { createLearningService } from '../services/learningService';
+import { createQuizService } from '../services/quizService';
 import { supabase } from '../services/supabaseClient';
 import { documentErrorMessage, formatDocumentDate } from '../lib/documentDisplay.mjs';
 import { learningErrorMessage } from '../lib/learningDisplay.mjs';
 
 const documentService = createDocumentService(supabase);
 const learningService = createLearningService(supabase);
+const quizService = createQuizService(supabase);
 const PREVIEW_SIZE = 5;
 
 export function Knowledge() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('docs');
+  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState('');
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [topics, setTopics] = useState([]);
   const [topicsLoading, setTopicsLoading] = useState(true);
   const [topicsError, setTopicsError] = useState(null);
+  const [quizzes, setQuizzes] = useState([]);
+  const [quizzesLoading, setQuizzesLoading] = useState(false);
+  const [quizzesError, setQuizzesError] = useState(null);
 
-  // P4-01 wired the Văn bản tab to real data; P4-03 does the same for Chuyên đề học tập.
-  // Quiz/AI/Innovation mocks elsewhere are deliberately untouched.
+  // Văn bản, chuyên đề và quiz preview đều dùng service read-only hiện có.
+  // AI và đổi mới tiếp tục dùng các route/service hiện hữu.
   const loadPreview = useCallback(() => {
     let mounted = true;
     setLoading(true);
     setError(null);
 
     documentService
-      .listDocuments({ page: 0, pageSize: PREVIEW_SIZE })
+      .listDocuments({ page: 0, pageSize: PREVIEW_SIZE, search })
       .then((result) => {
         if (mounted) setDocuments(result.items);
       })
@@ -46,7 +54,7 @@ export function Knowledge() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [search]);
 
   // Deferred so the effect body performs no synchronous setState (project lint rule).
   useEffect(() => {
@@ -93,10 +101,67 @@ export function Knowledge() {
     };
   }, [loadTopicsPreview]);
 
+  const loadQuizPreview = useCallback(() => {
+    let mounted = true;
+    setQuizzesLoading(true);
+    setQuizzesError(null);
+
+    Promise.all(topics.map(async (topic) => (
+      await quizService.listQuizzes(topic.id)
+    ).map((quiz) => ({ ...quiz, topicTitle: topic.title }))))
+      .then((results) => {
+        if (mounted) setQuizzes(results.flat());
+      })
+      .catch(() => {
+        if (mounted) setQuizzesError(true);
+      })
+      .finally(() => {
+        if (mounted) setQuizzesLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [topics]);
+
+  useEffect(() => {
+    if (activeTab !== 'quizzes') return undefined;
+    let cleanup;
+    const timer = setTimeout(() => {
+      cleanup = loadQuizPreview();
+    }, 0);
+    return () => {
+      clearTimeout(timer);
+      cleanup?.();
+    };
+  }, [activeTab, loadQuizPreview]);
+
+  function submitSearch(event) {
+    event.preventDefault();
+    setSearch(searchInput.trim());
+    setActiveTab('docs');
+  }
+
   return (
-    <div className="page">
-      <PageHeader title="Tri thức & Văn bản" />
-      <div className="tabs" role="tablist" aria-label="Khu vực tri thức">
+    <div className="page page--appbar knowledge-page">
+      <PageHeader title="Tri thức & Văn bản" variant="brand" />
+      <div className="knowledge-search-row">
+        <form className="knowledge-search" onSubmit={submitSearch} role="search">
+          <Icon name="search" size={18} />
+          <input
+            aria-label="Tìm văn bản hoặc chuyên đề"
+            type="search"
+            placeholder="Tìm văn bản, chuyên đề..."
+            value={searchInput}
+            onChange={(event) => setSearchInput(event.target.value)}
+          />
+          <button type="submit" aria-label="Tìm kiếm"><Icon name="arrow" size={18} /></button>
+        </form>
+        <button type="button" className="knowledge-filter" aria-label="Mở bộ lọc văn bản" onClick={() => navigate('/tri-thuc/van-ban')}>
+          <Icon name="filter" size={19} />
+        </button>
+      </div>
+      <div className="tabs knowledge-tabs" role="tablist" aria-label="Khu vực tri thức">
         <button
           type="button"
           role="tab"
@@ -104,7 +169,7 @@ export function Knowledge() {
           className={`tab ${activeTab === 'docs' ? 'active' : ''}`}
           onClick={() => setActiveTab('docs')}
         >
-          Văn bản, biểu mẫu
+          Văn bản
         </button>
         <button
           type="button"
@@ -113,7 +178,16 @@ export function Knowledge() {
           className={`tab ${activeTab === 'topics' ? 'active' : ''}`}
           onClick={() => setActiveTab('topics')}
         >
-          Chuyên đề học tập
+          Chuyên đề
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'quizzes'}
+          className={`tab ${activeTab === 'quizzes' ? 'active' : ''}`}
+          onClick={() => setActiveTab('quizzes')}
+        >
+          Trắc nghiệm
         </button>
       </div>
 
@@ -170,7 +244,7 @@ export function Knowledge() {
               </Link>
             )}
           </div>
-        ) : (
+        ) : activeTab === 'topics' ? (
           <div className="document-list">
             {topicsLoading && <Skeleton lines={5} />}
 
@@ -201,9 +275,26 @@ export function Knowledge() {
               </Link>
             )}
           </div>
+        ) : (
+          <div className="knowledge-quiz-list">
+            {quizzesLoading && <Skeleton lines={3} />}
+            {!quizzesLoading && quizzesError && (
+              <EmptyState icon="alert" title="Không thể tải trắc nghiệm" description="Vui lòng thử lại sau." action="Thử lại" onAction={loadQuizPreview} />
+            )}
+            {!quizzesLoading && !quizzesError && quizzes.length === 0 && (
+              <EmptyState icon="check" title="Chưa có bài trắc nghiệm" description="Các bài kiểm tra sẽ xuất hiện khi có chuyên đề được mở." />
+            )}
+            {!quizzesLoading && !quizzesError && quizzes.map((quiz) => (
+              <Link className="knowledge-quiz-row" key={quiz.id} to={`/tri-thuc/trac-nghiem/${quiz.id}`}>
+                <span><Icon name="check" size={19} /></span>
+                <div><strong>{quiz.title}</strong><small>{quiz.topicTitle}{quiz.timeLimitMinutes ? ` · ${quiz.timeLimitMinutes} phút` : ''}</small></div>
+                <Icon name="chevron-right" size={18} />
+              </Link>
+            ))}
+          </div>
         )}
       </div>
-      <Link className="fab" aria-label="Hỏi AI" to="/tri-thuc/hoi-ai"><Icon name="sparkles" size={24} /></Link>
+      <Link className="fab" aria-label="Hỏi AI" to="/tri-thuc/hoi-ai"><Icon name="sparkles" size={20} /><span>Hỏi AI</span></Link>
     </div>
   );
 }

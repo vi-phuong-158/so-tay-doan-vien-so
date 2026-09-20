@@ -7,6 +7,17 @@
 
 ## Đang làm
 
+### UI_REFERENCE_RECONCILIATION — Mockup-to-code (2026-09-20)
+- **Base:** `origin/master@ab7242787965c7669caeeef6eb6e2d44b214b974`; branch riêng
+  `feat/ui-reference-reconciliation` trong managed worktree.
+- **Phạm vi:** Thi công lại 8 màn frontend theo mockup owner; giữ nguyên route, business services,
+  auth, RLS, Member API và ranh giới dữ liệu. Dùng asset logo Đoàn sẵn có và `lucide-react`.
+- **Trạng thái:** UI, responsive matrix và local browser review hoàn tất; test/lint/build đã chạy.
+  Draft PR được tạo sau khi chốt thay đổi. Không merge khi `PUBLIC_FIRST_RUNTIME_CLOSURE` chưa
+  closure; sau đó phải rebase, review conflict thủ công và chạy lại full gates/browser acceptance.
+- **Evidence:** Bộ ảnh 390 px và matrix 360/390/430/768/1440; fake Supabase/Member API chỉ phục
+  vụ browser UI, không đại diện backend hoặc runtime acceptance.
+
 ### P5.5 — End-to-End Final Closure (2026-09-18)
 - **Base:** `origin/master@7f468a5111df54486f7e98688b4c16057668a519`. PR #51 giữ nguyên như
   historical hosted-runtime acceptance artifact; không merge vì không có Mắt Bão runtime.

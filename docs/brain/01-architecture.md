@@ -16,7 +16,7 @@
 | AI | Gemini (embedding + trả lời) qua Edge Function `ask-ai` |
 | Email | Brevo/Resend/SMTP qua `email_queue` + `process-email-queue` |
 | Hosting | Vercel (hoặc Mắt Bão) với SPA rewrite; xem `vercel.json` |
-| Client libs | `@supabase/supabase-js`, `dompurify` |
+| Client libs | `@supabase/supabase-js`, `dompurify`, `lucide-react` |
 
 ## Cấu trúc thư mục chính
 
@@ -31,7 +31,7 @@ src/
 │   ├── Layout.jsx           # AppShell: Sidebar + BottomNav + Outlet
 │   ├── NotificationBell.jsx # badge unread server-backed, user-keyed cache reset
 │   ├── common.jsx           # Brand, EmptyState, SectionHeader...
-│   ├── Icon.jsx             # line icon
+│   ├── Icon.jsx             # tên icon → component line icon từ lucide-react
 │   ├── ErrorBoundary.jsx / Skeleton.jsx
 ├── pages/
 │   ├── auth/                # Login, ForgotPassword, ResetPassword, ChangePassword (dùng Supabase)
@@ -82,7 +82,11 @@ supabase/
 | `src/services/supabaseClient.js` | Client Supabase (anon key) | `AuthContext`, `pages/auth/*`, `pages/Admin` | `VITE_SUPABASE_URL/ANON_KEY` |
 | `src/components/Guards.jsx` | `AuthGuard` (chặn chưa đăng nhập/inactive), `RoleGuard` | `App.jsx` | `useAuth`, react-router |
 | `src/components/Layout.jsx` | `AppShell`: Sidebar + BottomNav + `<Outlet/>`; public-first shell giữ Home/demo surface truy cập được khi chưa đăng nhập | `App.jsx` (Home public, protected routes trong AuthGuard) | `useAuth`, `Icon`, `common` |
+| `src/components/Icon.jsx` | Map tên icon ứng dụng sang line icon thống nhất | `Layout`, `pages/*`, `common` | `lucide-react` |
 | `src/pages/*` (5 khu vực) | UI khu vực | routes trong `App.jsx` | `data/mock.js`, `useAuth`, `common` |
+| `src/pages/Knowledge.jsx` | Tab Văn bản/Chuyên đề/Trắc nghiệm, tìm kiếm và điều hướng tới nội dung | route `/tri-thuc` | `documentService`, `learningService`, `quizService`, `Icon`, `common` |
+| `src/pages/AskAi.jsx` | Chat, gợi ý câu hỏi và nguồn trích dẫn | route `/tri-thuc/hoi-ai` | `aiService`, `Icon`, `common` |
+| `src/pages/ReportAssignmentDetail.jsx` | Chi tiết, tải lên và nộp báo cáo; lưu ghi chú nháp cục bộ theo người dùng/đợt | route chi tiết báo cáo | `reportService`, `AuthContext`, `Icon`, `common` |
 | `src/data/mock.js` | Dữ liệu demo | 5 pages chính | — (⚠ thay bằng service khi nối Supabase) |
 | `src/lib/status.mjs` | Nhãn/tone trạng thái báo cáo, tính hạn, chuẩn hóa tên tệp | pages hiển thị báo cáo | — (thuần, có unit test) |
 | `src/services/reportAdminService.js` | Đọc campaign trong scope; tạo/sửa draft, upload/finalize template và publish | `AdminReports` | Supabase RPC + Storage private + `finalize-campaign-template` |
