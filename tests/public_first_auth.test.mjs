@@ -53,3 +53,8 @@ test('service worker upgrades the login-first shell without a manual browser-dat
   assert.match(serviceWorker, /self\.skipWaiting\(\)/);
   assert.match(serviceWorker, /self\.clients\.claim\(\)/);
 });
+
+test('tablet bottom navigation labels stay readable at 11px or larger', () => {
+  const styles = fs.readFileSync(new URL('../src/index.css', import.meta.url), 'utf8');
+  assert.match(styles, /\.bottom-nav small\{font-size:11px;font-weight:600\}/);
+});
