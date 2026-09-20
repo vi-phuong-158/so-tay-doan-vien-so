@@ -2269,7 +2269,8 @@
 - **File đã sửa:** `package.json`, `package-lock.json`, `public/brand/logo-doan.jpg`,
   `src/components/{Icon,Layout,common}.jsx`, `src/index.css`,
   `src/pages/{AskAi,Home,Knowledge,MemberManagement,Quiz,ReportAssignmentDetail,Work}.jsx`,
-  `src/pages/auth/Login.jsx`, `docs/brain/{01-architecture,03-decisions,04-current-tasks,06-ai-working-log}.md`.
+  `src/pages/auth/Login.jsx`, `docs/brain/{01-architecture,03-decisions,04-current-tasks,06-ai-working-log}.md`,
+  `docs/ui-reference-reconciliation/{README.md,screenshots/*.png}`.
 - **Lý do:** UI trước đó lệch hierarchy/layout mobile trong mockup đã duyệt; các chỉnh sửa chỉ tác
   động presentation và giữ nguyên auth, business service, route, API contract và security behavior.
 - **Kiểm tra:** `npm test` 204/204 pass; `npm run lint` 0 lỗi, 3 cảnh báo Fast Refresh cũ;
