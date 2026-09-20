@@ -89,6 +89,9 @@ supabase/
 | `src/components/Skeleton.jsx` | Shared animated loading placeholder with live status semantics | Data-backed list/detail pages | `index.css` surface tokens |
 | `src/index.css` | Design tokens, shared visual primitives, focus states, responsive layout and auth modal sheet rules | All frontend routes | Be Vietnam Pro, brand tokens |
 | `src/pages/Home.jsx` | Public-first landing and shortcuts to documents, learning and Ask AI | route `/` | `AuthContext`, shared components |
+| `src/pages/Knowledge.jsx` | Hub Văn bản/Chuyên đề/Trắc nghiệm, tìm kiếm và điều hướng tới nội dung | route `/tri-thuc` | `documentService`, `learningService`, `quizService`, `Icon`, `common` |
+| `src/pages/AskAi.jsx` | Chat, gợi ý câu hỏi, trạng thái no-evidence và nguồn trích dẫn | route `/tri-thuc/hoi-ai` | `aiService`, `Icon`, `common` |
+| `src/pages/ReportAssignmentDetail.jsx` | Chi tiết, tải lên và nộp báo cáo; ghi chú nháp cục bộ theo người dùng/đợt | route `/cong-viec/bao-cao/:assignmentId` | `reportService`, `AuthContext`, `Icon`, `common` |
 | `src/pages/Innovation.jsx` | Published project list, details, and authenticated submission form | route `/doi-moi-sang-tao` | `innovationService`, existing Edge Function, shared `Modal` |
 | `src/services/innovationService.js` | Maps public projects; validates the short problem payload and invokes existing `submit-innovation-problem` | `Innovation` | Supabase client; organization is derived server-side |
 | `src/pages/Profile.jsx` | Account identity, role and organization, settings actions, logout; no Member Record fields | route `/ca-nhan` | `AuthContext`, `MemberManagement` is a separate route family |

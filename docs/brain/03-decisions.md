@@ -965,3 +965,16 @@ không nới, không skip bất kỳ assertion nào**; test 14/15/16/26 vẫn đ
 - **Đảm bảo:** `quiz_options`, private Storage paths, Member API, report/admin và mutation không
   nhận anon grant. pgTAP `public_first_auth.sql` kiểm tra anon positive/negative rows, bucket
   privacy, function ACL và private-AI-outranks-public negative case.
+
+## [2026-09-20] UI_REFERENCE_RECONCILIATION — Mockup owner là nguồn giao diện chuẩn
+
+- **Quyết định:** Dùng bộ mockup 8 màn hình do owner cung cấp làm visual source of truth cho Login,
+  Home, Công việc, Chi tiết báo cáo, Tri thức, AI, Quiz và Quản lý đoàn viên. Mobile dùng bottom
+  navigation 5 mục; desktop giữ shell thích ứng hiện có.
+- **Quyết định:** Thống nhất icon qua `lucide-react` và tái sử dụng asset logo Đoàn đã có trong
+  repository. Không thay đổi route, service contract, auth, RLS, API hoặc quy tắc public/private.
+- **Lý do:** Bản Modern Civic Glass trước đó không khớp layout compact, phân cấp thị giác và cách
+  điều hướng mobile trong mockup owner đã duyệt.
+- **Phạm vi:** Đây là thay đổi giao diện frontend; ghi chú Lưu nháp báo cáo chỉ lưu text cục bộ
+  theo user/assignment, còn gửi báo cáo tiếp tục qua service hiện tại. Branch chờ runtime closure
+  trước khi rebase và nâng Draft PR lên Ready for Review.

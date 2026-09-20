@@ -4,8 +4,8 @@ import { getReportStatus } from '../lib/status.mjs';
 
 export function Brand({ compact = false }) {
   return <div className={`brand ${compact ? 'brand-compact' : ''}`}>
-    <img src="/brand/app-icon.svg" alt="" />
-    <div><strong>Sổ tay Đoàn viên số</strong>{!compact && <span>Tuổi trẻ Công an tỉnh Phú Thọ</span>}</div>
+    <img src="/brand/logo-doan.jpg" alt="Logo Đoàn Thanh niên Việt Nam" />
+    <div><strong>Sổ tay Đoàn viên số</strong>{!compact && <span>Ban Thanh niên Công an tỉnh Phú Thọ</span>}</div>
   </div>;
 }
 
@@ -22,9 +22,9 @@ export function Progress({ value }) {
   return <div className="progress" aria-label={`Tiến độ ${value}%`}><span style={{ width: `${Math.max(0, Math.min(100, value))}%` }} /></div>;
 }
 
-export function PageHeader({ title, subtitle, action, back, navigate }) {
-  return <header className="page-header">
-    <div className="page-title-wrap">{back && <button className="icon-button back-button" onClick={() => navigate(back)} aria-label="Quay lại"><Icon name="chevron" /></button>}<div><h1>{title}</h1>{subtitle && <p>{subtitle}</p>}</div></div>
+export function PageHeader({ title, subtitle, action, back, navigate, variant = 'default', className = '' }) {
+  return <header className={`page-header${variant === 'brand' ? ' page-header--brand' : ''} ${className}`.trim()}>
+    <div className="page-title-wrap">{back && <button className="icon-button back-button" onClick={() => navigate(back)} aria-label="Quay lại"><Icon name="chevron-left" /></button>}<div><h1>{title}</h1>{subtitle && <p>{subtitle}</p>}</div></div>
     {action}
   </header>;
 }

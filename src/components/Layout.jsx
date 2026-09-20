@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Icon } from './Icon';
 import { Brand } from './common';
 import { useAuth } from '../contexts/AuthContext';
@@ -55,10 +55,10 @@ function Sidebar() {
 
 export function BottomNavigation() {
   return (
-    <nav className="bottom-nav">
+    <nav className="bottom-nav" aria-label="Điều hướng chính">
       {primaryNavItems.map(([url, icon, label]) => (
         <NavLink key={url} to={url} end={url === '/'} className={({isActive}) => isActive ? 'active' : ''}>
-          <span className="nav-icon"><Icon name={icon} size={21} /></span><small>{label}</small>
+          <span className="nav-icon"><Icon name={icon} size={22} /></span><small>{label}</small>
         </NavLink>
       ))}
     </nav>
@@ -67,8 +67,19 @@ export function BottomNavigation() {
 
 export function AppShell() {
   const { user } = useAuth();
+  const { pathname } = useLocation();
+  const usesBrandedMobileHeader = pathname === '/'
+    || pathname === '/tri-thuc'
+    || pathname === '/tri-thuc/hoi-ai'
+    || (Boolean(user) && (
+      pathname === '/cong-viec'
+      || pathname.startsWith('/cong-viec/bao-cao/')
+      || pathname.startsWith('/tri-thuc/trac-nghiem/')
+      || pathname.startsWith('/quan-ly-doan-vien')
+    ));
+
   return (
-    <div className="app-layout">
+    <div className={`app-layout${usesBrandedMobileHeader ? ' app-layout--branded-mobile-header' : ''}`}>
       <Sidebar />
       <main className="main-content">
         <div className="mobile-topbar">

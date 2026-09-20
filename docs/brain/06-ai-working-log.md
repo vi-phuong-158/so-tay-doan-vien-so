@@ -2259,3 +2259,20 @@
 - **Lý do:** Củng cố cảm giác một sản phẩm thống nhất trên mobile/desktop, giữ đăng nhập theo yêu cầu của route, và sửa shared loading state vốn render như vùng trắng vì dùng token không tồn tại.
 - **Kiểm tra:** `npm test` 207/207; lint 0 errors với 3 Fast Refresh warnings đã có; build PASS (513.97 kB main chunk warning); route smoke trên toàn bộ route pattern và wildcard ở 360px; bốn viewport 360/390/768/1440 không overflow cho 7 surface đại diện; ba auth routes kiểm tra ở cả bốn viewport; visible text không dưới 11px ở Home, Knowledge, Innovation, Work gate và auth forms trên 360/390px; 5 navigation/auth click smoke và keyboard focus field kiểm tra. No backend/API/auth-boundary or Phase 6 changes. PR #56 mở trên branch này.
 - **Giới hạn:** Không có rehearsal Supabase/Member API hoặc authenticated role trong workspace; content, session/logout, private document, Ask AI response, authorized member/admin screens và Innovation modal submit còn chờ browser acceptance trên Preview. Verdict `UI_UX_END_TO_END_FINALIZATION_BLOCKED_NO_REHEARSAL_RUNTIME`; report `docs/ui-ux-end-to-end-finalization.md`.
+
+## [2026-09-20] UI_REFERENCE_RECONCILIATION — Mockup-to-code
+- **Agent:** Codex
+- **Thay đổi:** Đối chiếu và triển khai lại 8 màn Login, Home, Công việc, Chi tiết báo cáo, Tri thức,
+  AI, Quiz và Quản lý đoàn viên theo mockup owner; đưa shell mobile về bottom nav 5 mục, dùng logo
+  Đoàn có sẵn và thay icon path tự viết bằng `lucide-react`. Ghi chú báo cáo lưu text cục bộ theo
+  user/assignment; submit/upload vẫn đi qua service hiện hữu.
+- **File đã sửa:** `package.json`, `package-lock.json`, `public/brand/logo-doan.jpg`,
+  `src/components/{Icon,Layout,common}.jsx`, `src/index.css`,
+  `src/pages/{AskAi,Home,Knowledge,MemberManagement,Quiz,ReportAssignmentDetail,Work}.jsx`,
+  `src/pages/auth/Login.jsx`, `docs/brain/{01-architecture,03-decisions,04-current-tasks,06-ai-working-log}.md`.
+- **Lý do:** UI trước đó lệch hierarchy/layout mobile trong mockup đã duyệt; các chỉnh sửa chỉ tác
+  động presentation và giữ nguyên auth, business service, route, API contract và security behavior.
+- **Kiểm tra:** `npm test` 204/204 pass; `npm run lint` 0 lỗi, 3 cảnh báo Fast Refresh cũ;
+  `npm run build` pass (cảnh báo bundle chính 518.05 kB). Browser visual review 8 màn ở 390×844;
+  responsive matrix 40 lượt (8 route × 360/390/430/768/1440) không tràn ngang, màn không trắng.
+  Fake Supabase/Member API chỉ cung cấp dữ liệu tổng hợp cho UI, không xác minh backend/runtime.
