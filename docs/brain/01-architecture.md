@@ -24,7 +24,7 @@
 src/
 ├── main.jsx                 # entry: mount App, đăng ký service worker (/sw.js)
 ├── App.jsx                  # BrowserRouter + toàn bộ khai báo route + Guards
-├── index.css                # design tokens (Be Vietnam Pro, mobile-first) — nguồn màu/spacing
+├── index.css                # design tokens, Be Vietnam Pro, mobile-first styles and 11px text floor
 ├── contexts/AuthContext.jsx # session/user/profile/roles + login/logout/hasRole
 ├── components/
 │   ├── Guards.jsx           # AuthGuard, RoleGuard (+ getAuthGuardAction thuần, có test)
