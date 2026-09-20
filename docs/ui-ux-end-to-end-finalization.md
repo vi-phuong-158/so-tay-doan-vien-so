@@ -68,6 +68,7 @@ The route inventory below comes from `src/App.jsx`, including every nested and r
 
 - Added the Home shortcuts for public documents, learning topics, and Ask AI. Kept the public-first greeting and one featured knowledge card in the first view.
 - Made the five primary navigation destinations consistent for guests and signed-in users. Protected destinations still open in place and show the auth-required state; removed the hard-coded “2” badges.
+- Raised existing compact mobile labels to an 11px minimum while preserving desktop text sizing.
 - Replaced the custom SVG path map with the project’s selected Lucide icon library, retaining a single shared icon adapter.
 - Added shared `AuthRequiredState` and native `Modal` components. Added visible keyboard focus, a centered desktop dialog, a mobile bottom sheet, safe-area padding, and bottom navigation keyboard handling.
 - Fixed the shared `Skeleton` to use defined design tokens and announce loading as a status. Before this fix, missing CSS variables made loading surfaces appear empty.
@@ -100,6 +101,7 @@ Every route declared in `src/App.jsx` was opened on the local app in a fresh gue
 - Browser viewport sweep: `360px`, `390px`, `768px`, and `1440px`. Home, Knowledge, Documents, Learning, Ask AI, Innovation, and the protected Work gate had no horizontal overflow at each width. Full route smoke at `360px` found no overflow on declared routes or the wildcard path.
 - Public navigation clicks passed: Home → Ask AI, Home → public documents, bottom navigation → Knowledge, protected Work gate → Login, and Innovation guest submit CTA → Login.
 - Login, Forgot Password, and Reset Password were checked at `360px`, `390px`, `768px`, and `1440px`; all render without overflow and every input has an associated label. Login at `1440px` shows both the introduction and form. A keyboard Tab placed focus on the email field with its blue border and halo visible.
+- Computed styles on visible text were checked at `360px` and `390px` across Home, Knowledge, Innovation, Work auth gate, and Login; no text rendered below `11px`, and none of those routes overflowed.
 - The browser used `127.0.0.1:5174` with a process-only dummy Supabase URL/key and no local Supabase service. No credentials or `.env` file were added or changed. Public data requests therefore remain in loading/error states; the Innovation list surfaced its retry error after about 12 seconds.
 - Authenticated home, Work/report contents, private document detail, Profile, authorized Member Management/Admin, Ask AI citations/no-evidence, logout/session restore, Innovation modal/bottom sheet, and server submission could not be accepted locally without the real rehearsal Supabase and Member API environment. No synthetic account/session or fake content was used.
 

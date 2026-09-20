@@ -10,12 +10,12 @@
 ### SO_TAY_DOAN_VIEN_UI_UX_END_TO_END_FINALIZATION (2026-09-20)
 - **Base:** `master@2095ebb98c572f10a5b04a08396e3e3569fb1271`; branch `codex/ui-ux-end-to-end-finalization`.
 - **Phạm vi:** hoàn thiện frontend theo Design System và Public-First; giữ nguyên route/auth/data boundaries, không mở Phase 6.
-- **Đã làm:** shared Lucide adapter, 5-item navigation, auth-on-demand state, native responsive dialog, visible loading skeleton, public Home shortcuts, Innovation detail/submit UX trên service contract hiện có, auth form alignment và Profile account/member clarification.
+- **Đã làm:** shared Lucide adapter, 5-item navigation, auth-on-demand state, native responsive dialog, visible loading skeleton, public Home shortcuts, mobile text floor 11px, Innovation detail/submit UX trên service contract hiện có, auth form alignment và Profile account/member clarification.
 - **Kiểm tra local:** root `npm test` 207/207; lint 0 errors (3 Fast Refresh warnings cũ); build PASS (main JS chunk 513.97 kB, warning >500 kB); browser route/interaction smoke và width sweep 360/390/768/1440 không overflow trên routes đã mở.
 - **Acceptance còn BLOCKED:** không có Supabase rehearsal/Member API runtime hoặc authorized session trong browser, nên content-backed public pages, signed-in/Member/Admin surfaces, Ask AI response, private documents, logout/session restore, modal submission và mobile keyboard chưa được nghiệm thu thật. Không tạo synthetic login/data.
 - **Verdict:** `UI_UX_END_TO_END_FINALIZATION_BLOCKED_NO_REHEARSAL_RUNTIME`.
 - **Report:** `docs/ui-ux-end-to-end-finalization.md` (route matrix, viewport matrix, screenshot evidence, limitations, test results).
-- **Handoff:** commit/push/PR cho owner review Preview; không merge.
+- **Handoff:** commit `59f6117` đã push, PR #56 mở để owner review trên Preview; không merge.
 
 ### PUBLIC_FIRST_RUNTIME_FINAL_ACCEPTANCE_CLOSURE (ĐÃ HOÀN TẤT — 2026-09-20)
 - **Base:** `origin/master@ab7242787965c7669caeeef6eb6e2d44b214b974` (PR #53 merge).

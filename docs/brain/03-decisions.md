@@ -18,6 +18,9 @@ status và dialog dùng component chung để các route giữ cùng typography,
 `<dialog>` cung cấp modal desktop, focus trap và Escape; CSS hiển thị cùng component như bottom sheet
 trên mobile.
 
+Mobile text styles that were below 11px are raised to an 11px minimum in the shared stylesheet;
+this keeps existing compact labels legible without changing desktop sizing.
+
 Innovation gửi bài toán chỉ gọi Edge Function `submit-innovation-problem` đã có, với `title` và
 `pain_point`; server tự lấy organization từ hồ sơ tài khoản. Giao diện không gửi organization ID
 hoặc file. Không có hỗ trợ attachment trong contract hiện tại nên UI ghi rõ giới hạn, và chỉ báo
