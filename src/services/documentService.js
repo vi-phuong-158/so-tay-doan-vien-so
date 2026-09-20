@@ -281,6 +281,17 @@ export function createDocumentService(client) {
       return data.signedUrl;
     },
 
+    async getPublicDocumentDownloadUrl(documentId) {
+      assertUuid(documentId, 'documentId');
+      const { data, error } = await client.functions.invoke('public-content-url', {
+        body: { content_type: 'DOCUMENT', content_id: documentId }
+      });
+      if (error || !data?.success || !data.signed_url) {
+        throw new DocumentServiceError('DOCUMENT_NOT_FOUND', 'DOCUMENT_NOT_FOUND', error);
+      }
+      return data.signed_url;
+    },
+
     /** Distinct filter options, derived from the rows the caller can actually see. */
     async getFilterOptions() {
       const rows = await unwrap(

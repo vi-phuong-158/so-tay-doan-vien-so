@@ -38,7 +38,7 @@ function documentRow(overrides = {}) {
 }
 
 /** Records every PostgREST builder call so tests can assert the query actually sent. */
-function createClient({ response = { data: [], error: null, count: 0 }, signedUrlResponse } = {}) {
+function createClient({ response = { data: [], error: null, count: 0 }, signedUrlResponse, functionResponse } = {}) {
   const calls = [];
   const query = {
     select(value, options) { calls.push(['select', value, options]); return this; },
@@ -65,6 +65,12 @@ function createClient({ response = { data: [], error: null, count: 0 }, signedUr
             );
           }
         };
+      }
+    },
+    functions: {
+      invoke(name, options) {
+        calls.push(['functions.invoke', name, options]);
+        return Promise.resolve(functionResponse || { data: { success: true, signed_url: 'https://signed.example/public-doc' }, error: null });
       }
     }
   };
@@ -209,6 +215,15 @@ test('download URLs are short-lived, bucket-scoped, and reject unsafe paths', as
       return true;
     }
   );
+});
+
+test('guest download delegates an id to the checked public gateway, never a storage path', async () => {
+  const { client, calls } = createClient();
+  const url = await createDocumentService(client).getPublicDocumentDownloadUrl(ids.document);
+  assert.equal(url, 'https://signed.example/public-doc');
+  assert.deepEqual(calls.find(([name]) => name === 'functions.invoke'), [
+    'functions.invoke', 'public-content-url', { body: { content_type: 'DOCUMENT', content_id: ids.document } }
+  ]);
 });
 
 test('server business codes survive normalization and unknown errors stay generic', () => {

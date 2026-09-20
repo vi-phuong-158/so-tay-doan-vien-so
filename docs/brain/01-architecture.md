@@ -725,3 +725,30 @@ truth for queue row provenance.
 resubmission that earns a new NEEDS_SUPPLEMENT decision opens a new reminder milestone while the
 current review cycle still cannot be reminded twice. Earlier `report_reminder_events` rows are
 never edited.
+
+# Public-first authentication surface (2026-09-18)
+
+`App.jsx` separates the public shell from `AuthGuard`:
+
+```
+PUBLIC: /, /tri-thuc, /tri-thuc/van-ban/:id, /tri-thuc/chuyen-de/:id,
+        /tri-thuc/hoi-ai, /doi-moi-sang-tao
+  -> anon SELECT policy with fixed PUBLISHED + PUBLIC predicates
+  -> private file only via public-content-url after server-side parent validation
+  -> public AI calls search_public_knowledge only; no guest conversation persistence
+
+AUTHENTICATED: reports, profile, notifications, quiz attempt, Member API, admin
+  -> AuthGuard -> existing account/role/scope checks -> RLS/Edge Function
+
+RESTRICTED: all non-PUBLIC rows, private storage objects, AI history and answer keys
+  -> no anon grant/policy; deny by default
+```
+
+`202609180001_public_first_auth.sql` owns the new anon policy predicates and the fixed
+`search_public_knowledge` SECURITY DEFINER function (pinned `search_path`, `PUBLIC` +
+`PUBLISHED` + approved/retrieval-enabled predicates). `ask-ai` chooses its trust path from the
+verified session rather than caller input: signed-out callers use that public function with a
+hashed, hourly quota key and no persisted messages; signed-in callers retain the existing scoped
+`search_published_knowledge` and provenance persistence. `public-content-url` is the only guest
+file gateway; it accepts a content id, rechecks the public parent with service-role server code,
+then emits a 60-second URL from the existing private bucket. It never accepts a storage path.

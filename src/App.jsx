@@ -55,21 +55,20 @@ export default function App() {
           <Route path="/quen-mat-khau" element={<ForgotPassword />} />
           <Route path="/dat-lai-mat-khau" element={<ResetPassword />} />
 
-          {/* Public-first shell: the home route is usable without an account. Routes that
-              read private data or mutate state are grouped behind AuthGuard below. */}
+          {/* Database RLS and Edge Functions independently restrict these routes to published PUBLIC content. */}
           <Route path="/" element={<AppShell />}>
             <Route index element={<Home />} />
+            <Route path="tri-thuc" element={<Knowledge />} />
+            <Route path="tri-thuc/hoi-ai" element={<AskAi />} />
+            <Route path="tri-thuc/van-ban" element={<Documents />} />
+            <Route path="tri-thuc/van-ban/:documentId" element={<DocumentDetail />} />
+            <Route path="tri-thuc/chuyen-de" element={<LearningTopics />} />
+            <Route path="tri-thuc/chuyen-de/:topicId" element={<LearningTopicDetail />} />
+            <Route path="doi-moi-sang-tao" element={<Innovation />} />
             <Route element={<AuthGuard />}>
               <Route path="cong-viec" element={<Work />} />
               <Route path="cong-viec/bao-cao/:assignmentId" element={<ReportAssignmentDetail />} />
-              <Route path="tri-thuc" element={<Knowledge />} />
-              <Route path="tri-thuc/hoi-ai" element={<AskAi />} />
-              <Route path="tri-thuc/van-ban" element={<Documents />} />
-              <Route path="tri-thuc/van-ban/:documentId" element={<DocumentDetail />} />
-              <Route path="tri-thuc/chuyen-de" element={<LearningTopics />} />
-              <Route path="tri-thuc/chuyen-de/:topicId" element={<LearningTopicDetail />} />
               <Route path="tri-thuc/trac-nghiem/:quizId" element={<Quiz />} />
-              <Route path="doi-moi-sang-tao" element={<Innovation />} />
               <Route path="ca-nhan" element={<Profile />} />
 
               {/* P5.5-06 — Member Management. MemberManagementGuard (NOT RoleGuard — see Guards.jsx)
