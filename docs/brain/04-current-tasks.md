@@ -16,11 +16,14 @@
   content synthetic, và Ask AI trả citation public; SQL transaction chứng minh PUBLIC allow,
   INTERNAL deny, fixed public retrieval deny private source, private Storage deny, and guest AI
   persistence = 0. Fixture đã cleanup theo exact IDs.
-- **Final acceptance attempt:** source Public-First đã review và stage, nhưng exact SHA/CI chờ owner
-  xác nhận commit/push trực tiếp. Connector không có Auth Admin hoặc Storage object-upload; local
-  credential config không trỏ rehearsal nên không dùng. Không tạo user/profile/role/document/object
-  synthetic. **Verdict:** `PUBLIC_FIRST_RUNTIME_ACCEPTANCE_BLOCKED_COMMIT_CONFIRMATION_AND_REHEARSAL_FIXTURE_CAPABILITY`.
-  Không mở Phase 6.
+- **Final acceptance:** source SHA `633c5cf4142675b2b780f35e0372e6f6eff87602` đã được push trên PR #54;
+  exact-SHA CI run `35486717207` xanh. Dùng `.env` hiện có, xác minh rehearsal `znexculhbdjiflkczpyu`,
+  tạo hai user synthetic, document organization-only và private Storage bytes; authenticated browser
+  login/session reload/detail PASS; signed 60-second private download trả đúng 38 bytes. Click nút tải
+  không phát ra browser download event trong harness; xem limitation trong report. Tất cả fixture,
+  AI conversation/messages, profile/role, object và Auth users đã cleanup, verify count 0/404.
+  **Verdict:** `PUBLIC_FIRST_RUNTIME_FINAL_ACCEPTANCE_PASS`. PR #54 vẫn OPEN, chưa merge; không đổi
+  production và không mở Phase 6.
 - **Report:** `docs/phase-5-5/06-public-first-runtime-closure.md`.
 
 ### P5.5 — End-to-End Final Closure (2026-09-18)

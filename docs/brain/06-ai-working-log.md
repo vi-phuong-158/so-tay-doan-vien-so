@@ -2235,3 +2235,19 @@
   confirms anon quota/questions/options/audit/email reads denied, private-bucket visibility 0 under
   RLS, and fixed public retrieval execute allowed. Commit was not created because direct owner
   confirmation is still required; no auth or Storage fixture was created.
+
+## [2026-09-20] PUBLIC_FIRST_RUNTIME_FINAL_ACCEPTANCE_CLOSURE — hosted rehearsal follow-up
+- **Agent:** Codex
+- **Thay đổi:** Hoàn tất acceptance với environment `.env` đang trỏ đúng rehearsal; xác minh Auth
+  Admin/Storage permissions, authenticated session persistence, organization-scoped document access,
+  signed private bytes, no-evidence Ask AI và RLS denials. Cleanup exact fixtures. Cập nhật final
+  runtime report và trạng thái current task.
+- **File đã sửa:** `docs/phase-5-5/06-public-first-runtime-closure.md`,
+  `docs/brain/04-current-tasks.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Thay các blocker cũ bằng kết quả exact-SHA runtime acceptance; giữ lại giới hạn duy nhất
+  là browser harness không expose native download event sau nút `window.open`.
+- **Kiểm tra:** Preview deployment `dpl_5gRUHaUsYpREPqFk3N8xZMLA8PyE` dùng source SHA
+  `633c5cf4142675b2b780f35e0372e6f6eff87602`; CI run `35486717207` xanh. Authenticated signed URL
+  trả HTTP 200, `text/plain`, đúng 38 bytes; cross-org/anon denied. Session còn sau reload, document
+  detail mở được, user sign-out. Cleanup verified: document/conversation/messages/profile/role/object
+  counts 0, Auth users 404. `.env` unchanged; no production data changed; PR #54 remains open.

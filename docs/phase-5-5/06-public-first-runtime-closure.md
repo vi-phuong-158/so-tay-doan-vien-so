@@ -2,7 +2,7 @@
 
 ## VERDICT
 
-`PUBLIC_FIRST_RUNTIME_ACCEPTANCE_BLOCKED_COMMIT_CONFIRMATION_AND_REHEARSAL_FIXTURE_CAPABILITY`
+`PUBLIC_FIRST_RUNTIME_FINAL_ACCEPTANCE_PASS`
 
 ## STARTING STATE
 
@@ -70,8 +70,11 @@ guest, which would downgrade invalid user credentials.
 - `npm run build`: PASS.
 - Member API: blocked, no `MEMBER_DATABASE_URL` and local `exceljs` dependency absent; no code changed.
 - pgTAP and Deno: blocked locally because Supabase CLI/Deno are unavailable.
-- Browser: guest route/list/detail/AI PASS; signed-byte download and authenticated persona remain unproven.
-- CI: no exact final source SHA exists yet, so no CI evidence is claimed.
+- Browser: guest route/list/detail/AI PASS. Authenticated preview login, session persistence after reload,
+  and organization-scoped document detail PASS. The download-button click did not surface a browser
+  download event; the private signed-byte contract was verified separately below.
+- Exact source SHA `633c5cf4142675b2b780f35e0372e6f6eff87602`: GitHub Actions CI run `35486717207`
+  completed successfully; Vercel check succeeded for the matching preview deployment.
 
 ## SECURITY ADVISORS
 
@@ -92,40 +95,50 @@ owner follow-up.
 - Functions: `ask-ai` v7 → v8, `verify_jwt=true` → `false`; `public-content-url` v1,
   `verify_jwt=false`.
 
-## FINAL ACCEPTANCE ATTEMPT (2026-09-20)
+## FINAL ACCEPTANCE (2026-09-20)
 
-- Branch is `codex/public-first-runtime-closure`; starting `HEAD` and `origin/master` are both
-  `ab7242787965c7669caeeef6eb6e2d44b214b974`.
-- The reviewed Public-First source and documentation are staged only. The commit operation awaits
-  direct owner confirmation, so no final SHA, push, PR, or exact-SHA CI result exists.
-- Rehearsal Auth Admin and Storage fixture capabilities are unavailable through the connected
-  management interface. Local credential files were checked by presence and target host only; their
-  configured URL is not rehearsal, so none was used. No synthetic account, profile, role, document,
-  Storage object, plaintext credential, or temporary secret was created.
-- The browser authenticated-login step remains unrun because it requires a rehearsal-only
-  disposable credential and action-time authorization to enter it in the hosted application.
-- A signed-byte test cannot be substituted with Storage metadata: an object upload capability is
-  required to produce real private bytes. The former `SIGNED_URL_FAILED` result therefore remains
-  the correct fail-closed outcome for a metadata-only fixture.
-- Security recheck: anonymous quota, quiz questions/options, audit logs, and email queue access are
-  denied; private-bucket object visibility is zero under RLS; public retrieval execute is granted
-  only to its fixed contract; forged bearer behavior remains 401 from the earlier live probe.
+- Branch: `codex/public-first-runtime-closure`; source under test and remote branch head before this
+  documentation follow-up: `633c5cf4142675b2b780f35e0372e6f6eff87602`. Base is
+  `master@ab7242787965c7669caeeef6eb6e2d44b214b974` (PR #53). PR #54 remains open and unmerged.
+- Preview deployment `dpl_5gRUHaUsYpREPqFk3N8xZMLA8PyE` is `READY`, target `preview`, and built from
+  the exact source SHA above. Its bundled frontend resolves to
+  `znexculhbdjiflkczpyu.supabase.co`.
+- Existing `.env` variables: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and
+  `SUPABASE_PUBLISHABLE_KEY`. The URL resolves to rehearsal project `znexculhbdjiflkczpyu` and the
+  credentials provide the required Auth Admin and Storage fixture access. No credential values were
+  recorded; `.env` was not changed.
+- Synthetic rehearsal fixture: two active member users in separate organizations, one published
+  `ORGANIZATION_ONLY` document, one 38-byte object in the private `documents-private` bucket, and one
+  authenticated no-evidence AI conversation. No source evidence or canonical content was changed.
+- Authenticated API: the owner can read the document and create a 60-second signed URL; fetching it
+  returned HTTP 200, `text/plain`, and the exact 38-byte fixture content. The other organization and
+  anonymous user cannot read or sign the object. `public-content-url` returned 404 for the private
+  document. A forged bearer returned 401.
+- Authenticated AI returned the exact no-evidence answer with zero citations and persisted only the
+  expected conversation and two messages. Direct quota table/RPC access, quiz question/option reads,
+  audit log/email queue reads, role escalation, and organization reassignment were denied.
+- Authenticated browser: login on the exact-SHA preview succeeded, the session survived a reload,
+  the private document detail rendered for the owner, and logout returned to the login page. The
+  browser automation did not expose a native download event after the detail-page button click; the
+  signed-byte download itself was independently verified through the authenticated Storage client.
+- Cleanup verified zero remaining fixture documents, conversations, AI messages, profiles, roles,
+  and private Storage objects. Both synthetic Auth users returned 404 after deletion.
+- No production data was changed and PR #54 was not merged. No Phase 6 work was started.
 
-## REMAINING BLOCKERS
+## REMAINING LIMITATIONS
 
-1. Direct owner confirmation is required before creating the staged commit and pushing it for
-   exact-head CI.
-2. Provide a rehearsal-only Auth Admin fixture capability or disposable active-user credential,
-   then authorize its browser sign-in at action time.
-3. Provide a safe rehearsal Storage upload capability for a marked private fixture containing real
-   bytes.
+- The in-app browser did not expose a native download event for the `window.open` action. The
+  signed-URL creation, authorization boundary, expiry setting, HTTP response, content type, and exact
+  bytes were verified through the authenticated Storage client; rerunning a browser-native download
+  event is needed only if that specific browser event is a mandatory acceptance criterion.
 
-## FINAL SHA
+## FINAL SOURCE SHA
 
-Working branch base: `ab7242787965c7669caeeef6eb6e2d44b214b974`; reviewed changes are staged and
-uncommitted.
+`633c5cf4142675b2b780f35e0372e6f6eff87602` — exact source SHA used by the preview and successful
+CI run `35486717207`. This final report update changes documentation only; its pushed commit and
+checks are tracked by PR #54.
 
 ## NEXT STEP
 
-Obtain direct commit authorization and the two rehearsal fixture capabilities, then rerun the
-authenticated-browser and signed-download matrices. No Phase 6 work is required.
+Keep PR #54 open for owner review. No merge, production change, or Phase 6 work is part of this
+acceptance closure.
