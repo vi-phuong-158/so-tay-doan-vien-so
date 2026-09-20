@@ -2204,3 +2204,34 @@
 - **Kiểm tra:** CI reported only extra `DELETE`, `INSERT`, `REFERENCES`, `TRIGGER`, `TRUNCATE`, and
   `UPDATE`, with no `SELECT`. The revised check directly verifies the required read denial. Hosted
   CI must re-run as pgTAP evidence because the local Supabase runtime remains unavailable.
+
+## [2026-09-20] PUBLIC_FIRST_RUNTIME_CLOSURE
+- **Agent:** Codex
+- **Thay đổi:** Đồng bộ rehearsal `znexculhbdjiflkczpyu` từ `master@ab72427`: apply Public-First
+  migration, forward quiz hardening, and explicit service-role quota policy; deploy `ask-ai` v8 và `public-content-url` v1. Thêm shared
+  boundary phân biệt application credential guest với user bearer: bearer lỗi bị reject 401 thay vì
+  downgrade guest. Thêm pgTAP regression cho quiz question/option direct-read deny.
+- **File đã sửa:** `supabase/functions/_shared/auth.ts`, `supabase/functions/{ask-ai,public-content-url}/index.ts`,
+  `supabase/functions/_shared/auth.test.ts`, `supabase/migrations/{202609200001_public_first_quiz_read_hardening.sql,202609200002_public_ai_quota_policy.sql}`,
+  `supabase/tests/public_first_quiz_hardening.sql`, `docs/phase-5-5/06-public-first-runtime-closure.md`,
+  `docs/brain/{01-architecture,03-decisions,04-current-tasks,06-ai-working-log}.md`.
+- **Lý do:** Rehearsal still had old database/function runtime after PR #53. Current Supabase
+  publishable keys require in-handler guest/user separation when platform JWT verification is off.
+- **Kiểm tra:** Hosted migration/function/catalog checks; browser guest route/list/detail/AI citation;
+  direct forged-bearer 401; transaction RLS/retrieval/private-Storage/no-persistence checks; fixture
+  cleanup 0 rows. Root `npm test` 204/204 and build PASS; lint 0 errors with four existing warnings.
+  Deno/local Supabase and full Member API are blocked by unavailable runtime/dependencies.
+
+## [2026-09-20] PUBLIC_FIRST_RUNTIME_FINAL_ACCEPTANCE_CLOSURE
+- **Agent:** Codex
+- **Thay đổi:** Re-audit branch/diff, re-run root validation and rehearsal RLS catalog checks; stage
+  only Public-First closure files. Append final-acceptance evidence and blockers to the closure
+  report.
+- **File đã sửa:** `docs/phase-5-5/06-public-first-runtime-closure.md`,
+  `docs/brain/04-current-tasks.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Close exactly the remaining exact-SHA CI, authenticated-browser, and signed-download
+  gates without using non-rehearsal credentials or creating an unsafe fixture path.
+- **Kiểm tra:** `npm test` 204/204; lint 0 errors with 4 existing warnings; build PASS. Rehearsal
+  confirms anon quota/questions/options/audit/email reads denied, private-bucket visibility 0 under
+  RLS, and fixed public retrieval execute allowed. Commit was not created because direct owner
+  confirmation is still required; no auth or Storage fixture was created.

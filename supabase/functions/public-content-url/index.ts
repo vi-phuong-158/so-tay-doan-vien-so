@@ -1,10 +1,11 @@
-import { clients } from '../_shared/auth.ts';
+import { clients, optionalPublicFirstUser } from '../_shared/auth.ts';
 import { corsHeaders, errorResponse, json, readJson } from '../_shared/http.ts';
 import { assertUuid } from '../_shared/validation.ts';
 
 type Payload = { content_type?: string; content_id?: string };
 
 function statusFor(code: string): number {
+  if (code === 'UNAUTHENTICATED' || code === 'INVALID_API_KEY') return 401;
   if (code === 'CONTENT_NOT_FOUND') return 404;
   if (code === 'METHOD_NOT_ALLOWED') return 405;
   return 400;
@@ -15,7 +16,8 @@ Deno.serve(async request => {
   if (request.method !== 'POST') return errorResponse(new Error('METHOD_NOT_ALLOWED'), 405);
 
   try {
-    const { adminClient } = clients(request);
+    const { userClient, adminClient } = clients(request);
+    await optionalPublicFirstUser(request, userClient);
     const payload = await readJson<Payload>(request);
     const contentId = assertUuid(payload.content_id, 'INVALID_CONTENT_ID');
     let bucket = '';

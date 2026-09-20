@@ -111,7 +111,8 @@ supabase/
 | `functions/finalize-campaign-template` | Đọc metadata thật từ Storage, chuẩn hóa tên, move template và đăng ký metadata | `reportAdminService` | `_shared/*`, service-role Storage, `register_report_campaign_template` |
 | `functions/export-report-status` | CSV UTF-8/BOM scoped, formula-neutralized, audit bắt buộc | `AdminReportDashboard` qua `reportAdminService` | dashboard RPC, `_shared/*`, `audit_logs` |
 | `functions/download-report-bundle` | ZIP latest submission/file trong scope, private Storage, giới hạn 100 file/50 MB, audit | `AdminReportDashboard` qua `reportAdminService` | dashboard RPC, service-role Storage, `fflate`, `_shared/*` |
-| `functions/ask-ai` | RAG: scope tài liệu → Gemini → chuẩn hóa nguồn → lưu lịch sử | client | `_shared/*`, `match_document_chunks` |
+| `functions/ask-ai` | Guest: fixed public corpus + hourly hashed quota, no history; authenticated: scoped RAG + provenance persistence | client | `_shared/auth.ts`, RAG adapter, `search_public_knowledge` / `search_published_knowledge` |
+| `functions/public-content-url` | Public-content-only lookup by typed UUID then 60-second signed URL from an existing private bucket | document/learning services | `_shared/auth.ts`, service-role Storage |
 | `functions/process-document` | Trích xuất → chunk → embedding → chờ duyệt | admin | `_shared/*`, Gemini |
 | `functions/send-reminder` / `process-email-queue` | Gọi reminder scan trusted / gửi email theo batch | `send-reminder`: trusted caller manual/external. `process-email-queue`: manual/external **và** `pg_cron` job `email_queue_worker` mỗi 10 phút qua `pg_net`+Vault (P3-08) | `_shared/*`, reminder RPC, email_queue |
 | `functions/resolve-member-scope` (P5.5-02) | Member Scope Authorization Bridge: xác thực JWT thật, đọc lại `profiles.account_status`/`user_roles`, trả `{user_id, roles:[{role_code,is_global,org_codes}]}` cho `member-api/` — không tin role/scope do caller gửi. `SYSTEM_ADMIN` đơn lẻ → `roles: []` | `member-api/src/memberScope.js`, server-to-server, kèm secret `x-member-api-secret` | `_shared/auth.ts` (`requireUser`), `profiles`, `user_roles`, RPC `member_scope_org_codes` |
@@ -131,10 +132,11 @@ main.jsx → App(BrowserRouter) → AuthProvider(getSession + onAuthStateChange
                                            → protected page
 
 # Public-first boundary
-Home chỉ hiển thị dữ liệu minh họa và không bypass RLS. Documents, learning, reports,
-notifications, member management, admin và ask-ai vẫn đi qua AuthGuard rồi RLS/Edge Function;
-anonymous AI/retrieval không được mở. Account Supabase/Auth và Member Record trong Member API
-tiếp tục là hai model độc lập; Member API tự kiểm tra JWT/scope/role ở server.
+Guest may read only `PUBLISHED + PUBLIC` documents, learning metadata/resources, and innovation.
+Guest AI searches only the fixed public corpus and persists only its hashed hourly quota key, never a
+conversation, message, or citation. Reports, notifications, profile, quiz attempts, Member API, and
+admin remain authenticated. Account Supabase/Auth and Member Record in Member API remain separate;
+Member API verifies JWT, scope, and role on its server.
 
 # Nộp báo cáo (đích, khi frontend hết mock)
 Page nộp → reportService (Storage private upload dưới prefix assignment/staging)
@@ -752,3 +754,11 @@ hashed, hourly quota key and no persisted messages; signed-in callers retain the
 `search_published_knowledge` and provenance persistence. `public-content-url` is the only guest
 file gateway; it accepts a content id, rechecks the public parent with service-role server code,
 then emits a 60-second URL from the existing private bucket. It never accepts a storage path.
+`202609200001_public_first_quiz_read_hardening.sql` removes the dead anonymous question policy and
+keeps Phase 4's attempt-RPC-only question/answer delivery explicit. `202609200002_public_ai_quota_policy.sql`
+makes the quota table's service-role-only posture explicit without granting any client table access.
+
+Because current browser clients use `sb_publishable_*` keys, `ask-ai` and `public-content-url` run
+with platform `verify_jwt=false`. Their shared Public-First boundary accepts the configured
+application key as guest traffic, validates every other bearer through Supabase Auth, and returns
+401 for malformed, expired, or forged bearer tokens; it never downgrades a failed bearer to guest.

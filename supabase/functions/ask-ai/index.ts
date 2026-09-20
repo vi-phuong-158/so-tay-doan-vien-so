@@ -1,4 +1,4 @@
-import { clients, requireUser } from '../_shared/auth.ts';
+import { clients, optionalPublicFirstUser } from '../_shared/auth.ts';
 import { corsHeaders, errorResponse, json, readJson } from '../_shared/http.ts';
 import { assertUuid, safeText } from '../_shared/validation.ts';
 import {
@@ -99,12 +99,7 @@ Deno.serve(async request => {
     const payload = await readJson<Payload>(request);
     const question = safeText(payload.question, 2_000);
     if (!question || question.length < 3) throw new Error('QUESTION_REQUIRED');
-    let user = null;
-    try {
-      user = await requireUser(userClient);
-    } catch (error) {
-      if (!(error instanceof Error) || error.message !== 'UNAUTHENTICATED') throw error;
-    }
+    const user = await optionalPublicFirstUser(request, userClient);
 
     if (!user) {
       if (payload.conversation_id) throw new Error('PUBLIC_CONVERSATION_NOT_SUPPORTED');
