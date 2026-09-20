@@ -15,8 +15,9 @@
 - **Trạng thái:** UI, responsive matrix và local browser review hoàn tất; test/lint/build đã chạy.
   Draft PR được tạo sau khi chốt thay đổi. Không merge khi `PUBLIC_FIRST_RUNTIME_CLOSURE` chưa
   closure; sau đó phải rebase, review conflict thủ công và chạy lại full gates/browser acceptance.
-- **Evidence:** Bộ ảnh 390 px và matrix 360/390/430/768/1440; fake Supabase/Member API chỉ phục
-  vụ browser UI, không đại diện backend hoặc runtime acceptance.
+- **Evidence:** `docs/ui-reference-reconciliation/` lưu 9 ảnh 390×844; matrix 360/390/430/768/1440
+  bao phủ đủ 8 route. Fake Supabase/Member API chỉ phục vụ browser UI, không đại diện backend hoặc
+  runtime acceptance.
 
 ### P5.5 — End-to-End Final Closure (2026-09-18)
 - **Base:** `origin/master@7f468a5111df54486f7e98688b4c16057668a519`. PR #51 giữ nguyên như
