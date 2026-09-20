@@ -5,6 +5,29 @@
 
 ---
 
+## [2026-09-20] UI/UX End-to-End Finalization — giữ Public-First, dùng shared frontend primitives
+
+UI shell tiếp tục theo quyết định `PUBLIC_FIRST_AUTH_ON_DEMAND`: Home, tài liệu, chuyên đề, Ask AI
+và Innovation giữ public route; Work/Profile/Quiz/Member/Admin vẫn đi qua guard hiện hữu. Sidebar
+và bottom navigation dùng cùng năm điểm đến chính. Một guest chọn Work/Profile thấy `AuthRequiredState`
+trên route hiện tại rồi chủ động mở Login, không bị chuyển trang tự động.
+
+Chọn `lucide-react` làm icon set duy nhất theo Design System đã chốt; toàn frontend dùng adapter
+`src/components/Icon.jsx`, không nhập icon library trực tiếp tại pages. Loading, auth-required,
+status và dialog dùng component chung để các route giữ cùng typography, token và interaction. Native
+`<dialog>` cung cấp modal desktop, focus trap và Escape; CSS hiển thị cùng component như bottom sheet
+trên mobile.
+
+Innovation gửi bài toán chỉ gọi Edge Function `submit-innovation-problem` đã có, với `title` và
+`pain_point`; server tự lấy organization từ hồ sơ tài khoản. Giao diện không gửi organization ID
+hoặc file. Không có hỗ trợ attachment trong contract hiện tại nên UI ghi rõ giới hạn, và chỉ báo
+thành công sau server response thành công.
+
+Account profile không chứa hoặc giả lập Member Record. Những liên kết tự điều hướng về cùng trang bị
+bỏ để không hiển thị hành động giả. Không thay route, RLS, RPC, Edge Function, Member API, auth/JWT,
+database hoặc business workflow; việc kiểm thử giao diện thật cho account/data vẫn cần rehearsal
+runtime và role hợp lệ.
+
 ## [2026-08-16] P4-04: Quiz chỉ ghi/chấm qua trusted RPC, answer key không nằm trong payload trước submit
 
 Khảo sát cho thấy schema năm bảng Quiz đã tồn tại. P4-04 giữ model đó, nhưng thay policy đọc quiz/

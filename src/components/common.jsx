@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import { Icon } from './Icon';
 import { getReportStatus } from '../lib/status.mjs';
 
@@ -35,6 +35,52 @@ export function SectionHeader({ title, action, onAction }) {
 
 export function EmptyState({ icon = 'file', title, description, action, onAction }) {
   return <div className="empty-state"><span className="empty-icon"><Icon name={icon} size={30} /></span><h3>{title}</h3><p>{description}</p>{action && <Button variant="secondary" onClick={onAction}>{action}</Button>}</div>;
+}
+
+export function AuthRequiredState({ onLogin }) {
+  return (
+    <section className="auth-required-state" aria-labelledby="auth-required-title">
+      <span className="auth-required-icon"><Icon name="shield" size={24} /></span>
+      <h1 id="auth-required-title">Nội dung dành cho tài khoản được phân quyền</h1>
+      <p>Đăng nhập bằng tài khoản được cấp quyền để tiếp tục.</p>
+      <Button onClick={onLogin}>Đăng nhập để tiếp tục</Button>
+    </section>
+  );
+}
+
+export function Modal({ open, title, onClose, children, footer, className = '' }) {
+  const dialogRef = useRef(null);
+  const titleId = useId();
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    if (open && !dialog.open) dialog.showModal();
+    else if (!open && dialog.open) dialog.close();
+  }, [open]);
+
+  const close = () => dialogRef.current?.close();
+
+  return (
+    <dialog
+      ref={dialogRef}
+      className={`app-modal ${className}`.trim()}
+      aria-labelledby={titleId}
+      onClose={onClose}
+      onClick={(event) => { if (event.target === event.currentTarget) close(); }}
+    >
+      <div className="app-modal-layout">
+        <header className="app-modal-header">
+          <h2 id={titleId}>{title}</h2>
+          <button type="button" className="icon-button" aria-label="Đóng cửa sổ" onClick={close}>
+            <Icon name="close" size={19} />
+          </button>
+        </header>
+        <div className="app-modal-content">{children}</div>
+        {footer && <footer className="app-modal-footer">{footer}</footer>}
+      </div>
+    </dialog>
+  );
 }
 
 export function Toast({ message, onClose }) {

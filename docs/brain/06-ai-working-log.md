@@ -2251,3 +2251,11 @@
   trả HTTP 200, `text/plain`, đúng 38 bytes; cross-org/anon denied. Session còn sau reload, document
   detail mở được, user sign-out. Cleanup verified: document/conversation/messages/profile/role/object
   counts 0, Auth users 404. `.env` unchanged; no production data changed; PR #54 remains open.
+
+## [2026-09-20] SO_TAY_DOAN_VIEN_UI_UX_END_TO_END_FINALIZATION
+- **Agent:** Codex
+- **Thay đổi:** Hoàn thiện shared UI theo Public-First và design tokens: thống nhất guest/auth nav 5 mục, chuyển icon sang Lucide, thêm auth-required/native modal primitives, sửa shared skeleton token, bổ sung quick actions trên Home, Innovation details/form dùng Edge Function contract có sẵn, chỉnh Profile account copy, và chuẩn hóa Login/Forgot/Reset/Change Password.
+- **File đã sửa:** `package.json`, `package-lock.json`; `src/components/{Guards,Icon,Layout,Skeleton,common}.jsx`, `src/index.css`, `src/pages/{Home,Innovation,Profile}.jsx`, `src/pages/auth/{Login,ForgotPassword,ResetPassword,ChangePassword}.jsx`, `src/services/innovationService.js`, `tests/{public_first_auth,innovation_service}.test.mjs`, `docs/ui-ux-end-to-end-finalization.md`, `docs/brain/{01-architecture,03-decisions,04-current-tasks,06-ai-working-log}.md`, và screenshot evidence trong `docs/ui-ux-end-to-end-finalization/screenshots/`.
+- **Lý do:** Củng cố cảm giác một sản phẩm thống nhất trên mobile/desktop, giữ đăng nhập theo yêu cầu của route, và sửa shared loading state vốn render như vùng trắng vì dùng token không tồn tại.
+- **Kiểm tra:** `npm test` 207/207; lint 0 errors với 3 Fast Refresh warnings đã có; build PASS (513.97 kB main chunk warning); route smoke trên toàn bộ route pattern và wildcard ở 360px; bốn viewport 360/390/768/1440 không overflow cho 7 surface đại diện; ba auth routes kiểm tra ở cả bốn viewport; 5 navigation/auth click smoke và keyboard focus field kiểm tra. No backend/API/auth-boundary or Phase 6 changes.
+- **Giới hạn:** Không có rehearsal Supabase/Member API hoặc authenticated role trong workspace; content, session/logout, private document, Ask AI response, authorized member/admin screens và Innovation modal submit còn chờ browser acceptance trên Preview. Verdict `UI_UX_END_TO_END_FINALIZATION_BLOCKED_NO_REHEARSAL_RUNTIME`; report `docs/ui-ux-end-to-end-finalization.md`.
