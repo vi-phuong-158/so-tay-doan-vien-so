@@ -15,9 +15,7 @@ export function AskAi() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  async function submit(event) {
-    event.preventDefault();
-    const askedQuestion = question.trim();
+  async function askQuestion(askedQuestion) {
     if (loading || !askedQuestion) return;
     setLoading(true);
     setError(null);
@@ -35,6 +33,11 @@ export function AskAi() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function submit(event) {
+    event.preventDefault();
+    askQuestion(question.trim());
   }
 
   return (
@@ -75,11 +78,21 @@ export function AskAi() {
                   ))}
                 </div>
               )}
+              {message.citations.length === 0 && (
+                <p className="ask-ai-no-evidence" role="note">
+                  Chưa tìm thấy nguồn phù hợp để kiểm chứng câu trả lời này. Không sử dụng nội dung trên như kết luận chính thức.
+                </p>
+              )}
             </article>
           </div>
         ))}
         {loading && <p className="ask-ai-thinking"><Icon name="sparkles" size={16} /> Đang đối chiếu nguồn…</p>}
-        {error && <p className="form-error" role="alert">{error}</p>}
+        {error && (
+          <div className="ask-ai-error form-error" role="alert">
+            <p>{error}</p>
+            <button type="button" onClick={() => askQuestion(question.trim())} disabled={!question.trim() || loading}>Thử lại</button>
+          </div>
+        )}
       </div>
       <form className="ask-ai-composer" onSubmit={submit}>
         <label className="sr-only" htmlFor="ai-question">Nhập câu hỏi</label>
