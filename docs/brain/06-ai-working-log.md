@@ -2297,4 +2297,5 @@
   warning >500 kB); `git diff --check` PASS. Browser rehearsal guest 30/30 route pattern tại mỗi
   viewport 360/390/430/768/1440, console public sạch, navigation/auth-on-demand/keyboard và Ask AI
   no-evidence PASS. Authenticated runtime/Member API vẫn BLOCKED đúng nghĩa; không tạo fixture giả,
-  không dùng service role ở frontend và không chạm production.
+  không dùng service role ở frontend và không chạm production. PR #57 exact head
+  `a6d7f02c8d6aaa3da64b4c2e5175be4e0f3bf8ca`, CI run `35700532914` xanh toàn bộ.

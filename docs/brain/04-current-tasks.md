@@ -13,7 +13,8 @@
 - **Trạng thái source:** reconcile hoàn tất; 208/208 test, lint 0 errors (3 warning cũ), build và diff-check PASS. Browser guest 30/30 route pattern ở từng viewport 360/390/430/768/1440; Ask AI no-evidence rehearsal PASS.
 - **Runtime còn chặn:** không có authorized rehearsal session/Member API endpoint, nên authenticated report/quiz/Profile/Member/Admin và Innovation submit chưa thể PASS.
 - **Ràng buộc:** không dùng dữ liệu production, không thay backend/RLS/API, không merge `master`; runtime acceptance chỉ PASS khi có rehearsal được ủy quyền.
-- **Tài liệu:** `docs/ui-final-closure/UI_RECONCILIATION_MATRIX.md` và final acceptance report (sẽ cập nhật trong task này).
+- **PR closure:** [#57](https://github.com/vi-phuong-158/so-tay-doan-vien-so/pull/57), exact head `a6d7f02c8d6aaa3da64b4c2e5175be4e0f3bf8ca`, CI run `35700532914` xanh toàn bộ.
+- **Tài liệu:** `docs/ui-final-closure/UI_RECONCILIATION_MATRIX.md` và `docs/ui-final-closure/FINAL_ACCEPTANCE.md`.
 
 ### PUBLIC_FIRST_RUNTIME_FINAL_ACCEPTANCE_CLOSURE (ĐÃ HOÀN TẤT — 2026-09-20)
 - **Base:** `origin/master@ab7242787965c7669caeeef6eb6e2d44b214b974` (PR #53 merge).

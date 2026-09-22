@@ -103,7 +103,7 @@ chứng minh màn protected đã được reconcile, nhưng không được dùn
 
 ## PR STATUS
 
-- Closure PR: cập nhật sau khi push.
-- Head SHA: cập nhật sau commit cuối.
-- CI: cập nhật theo exact head.
-- Merge recommendation: chỉ merge closure PR khi exact-head CI xanh; không merge PR #55/#56.
+- Closure PR: [#57](https://github.com/vi-phuong-158/so-tay-doan-vien-so/pull/57).
+- Head SHA: `a6d7f02c8d6aaa3da64b4c2e5175be4e0f3bf8ca`.
+- Exact-head CI run: `35700532914` — `build`, `test-db`, `member-api-test`, Vercel và Preview Comments đều xanh.
+- Merge recommendation: merge #57 sau owner review; không merge nguyên trạng PR #55/#56.
