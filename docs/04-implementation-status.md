@@ -1,16 +1,23 @@
 # Trạng thái thi công
 
-## SOTAY_UI_FINAL_CLOSURE (2026-09-22)
+## SOTAY_UI_FINAL_CLOSURE — MERGED (2026-09-23)
 
-- Base `master@2095ebb98c572f10a5b04a08396e3e3569fb1271`, sau khi PR #54 đã merge.
-- Branch `feat/ui-final-closure` hợp nhất có chọn lọc PR #55 và #56; không còn hai implementation
-  UI cạnh tranh. Route/auth/data/security contract giữ nguyên và Phase 6 không được mở.
-- UI source/browser guest đã được kiểm tra trên 30 route pattern tại 360/390/430/768/1440;
-  không blank page, không horizontal overflow, không visible text dưới 11px hoặc interactive target
-  dưới 44px trong sweep. Ask AI guest no-evidence và navigation/auth-on-demand hoạt động trên rehearsal.
-- Authenticated report/quiz/Profile/Member/Admin và mutation Innovation vẫn cần authorized session;
-  không tạo mock hoặc dùng service-role để giả PASS. Xem matrix và evidence tại
-  `docs/ui-final-closure/`.
+- Starting master: `2095ebb98c572f10a5b04a08396e3e3569fb1271` (PR #54 đã merge).
+- PR #57 exact audited head `0050f40357b9091d082971659aa37f84378dfdaf` merged via merge commit
+  `2f0336a8784a4c0610543b20aa704a6e90182423`.
+- Local source gates: 205/205 tests, lint 0 errors/3 existing Fast Refresh warnings, build PASS
+  (520.68 kB main chunk warning), `git diff --check` PASS. Exact-head CI run `35829383771` passed
+  build, test-db, member-api-test, Vercel Preview and Preview Comments.
+- Post-merge CI run `35829761261` on `2f0336a` passed build, test-db/Deno and member-api-test;
+  Vercel deployment status is SUCCESS.
+- Guest browser evidence: 30 route patterns × 5 viewports (150/150); no blank surface, horizontal
+  overflow, visible text below 11px or interactive target below 44px. Ask AI no-evidence and
+  Public-First/auth-on-demand rehearsal passed. Authenticated product journeys remain blocked by
+  missing authorized role/session and hosted Member API; see `docs/ui-final-closure/`.
+- PR #51 is closed as historical docs-only evidence. Hosted Mắt Bão/Member API production
+  acceptance remains pending; Phase 6 is not open.
+- Owner readiness and the next P5.5 acceptance matrix are prepared in
+  `docs/phase-5-5/05-hosted-runtime-readiness-checklist.md`.
 
 ## P5.5 — End-to-End Final Closure (2026-09-18)
 

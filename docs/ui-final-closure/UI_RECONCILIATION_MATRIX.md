@@ -1,14 +1,18 @@
 # UI_RECONCILIATION_MATRIX
 
-Ngày audit: 2026-09-22. Baseline: `master@2095ebb98c572f10a5b04a08396e3e3569fb1271`.
+Ngày audit: 2026-09-23. Baseline: `master@2095ebb98c572f10a5b04a08396e3e3569fb1271`.
 
 - PR #55: `f425e6eb0b04c3adfaa39f89e286268b2a64f2a1` — mockup owner cho 8 màn trọng tâm.
 - PR #56: `43237acad725c366f19b148cb8c4b833ab9ebdde` — Public-First shell, shared states, auth, Innovation và Profile.
-- Candidate: `feat/ui-final-closure` — không merge nguyên trạng PR #55 hoặc #56.
+- Merged: PR #57 exact head `0050f40357b9091d082971659aa37f84378dfdaf` → merge
+  `2f0336a8784a4c0610543b20aa704a6e90182423`; không merge nguyên trạng PR #55 hoặc #56.
 
 Ký hiệu: **55** = presentation từ PR #55; **56** = behavior/shared primitive từ PR #56;
 **M** = giữ implementation master; **R** = reconcile thủ công. `SRC PASS` là source + guest browser
 pass; không thay thế authenticated runtime acceptance.
+
+PR #51 is closed as a docs-only historical blocked acceptance artifact. Hosted Mắt Bão runtime,
+production Member API and authenticated full journeys remain pending; Phase 6 remains closed.
 
 | Route | Screen | Master | PR55 | PR56 | Giữ | Lý do | File chính | Runtime dependency | Acceptance |
 |---|---|---|---|---|---|---|---|---|---|

@@ -7,14 +7,23 @@
 
 ## Đang làm
 
-### SOTAY_UI_FINAL_CLOSURE (2026-09-22)
-- **Base:** `origin/master@2095ebb98c572f10a5b04a08396e3e3569fb1271`; branch `feat/ui-final-closure` trong isolated worktree.
-- **Phạm vi:** hợp nhất có chọn lọc PR #55 và #56 theo từng màn, hoàn tất toàn bộ route UI trong scope, giữ nguyên route/auth/data/security contract và không mở Phase 6.
-- **Trạng thái source:** reconcile hoàn tất; 205/205 test, lint 0 errors (3 warning cũ), build và diff-check PASS. Browser guest 30/30 route pattern ở từng viewport 360/390/430/768/1440; Ask AI no-evidence rehearsal PASS.
-- **Runtime còn chặn:** không có authorized rehearsal session/Member API endpoint, nên authenticated report/quiz/Profile/Member/Admin chưa thể PASS. Innovation submission remains deferred and is outside this closure; the UI does not invoke its Edge Function.
-- **Ràng buộc:** không dùng dữ liệu production, không thay backend/RLS/API, không merge `master`; runtime acceptance chỉ PASS khi có rehearsal được ủy quyền.
-- **PR closure:** [#57](https://github.com/vi-phuong-158/so-tay-doan-vien-so/pull/57), exact head `a6d7f02c8d6aaa3da64b4c2e5175be4e0f3bf8ca`, CI run `35700532914` xanh toàn bộ.
-- **Tài liệu:** `docs/ui-final-closure/UI_RECONCILIATION_MATRIX.md` và `docs/ui-final-closure/FINAL_ACCEPTANCE.md`.
+### SOTAY_UI_FINAL_CLOSURE (ĐÃ HOÀN TẤT — 2026-09-23)
+- **Base:** `master@2095ebb98c572f10a5b04a08396e3e3569fb1271`; PR #54 đã merge.
+- **PR/UI merge:** PR #57 exact audited head `0050f40357b9091d082971659aa37f84378dfdaf`, merge commit
+  `2f0336a8784a4c0610543b20aa704a6e90182423`.
+- **Source gates:** local 205/205 tests, lint 0 errors/3 existing warnings, build PASS (520.68 kB
+  main chunk warning), diff-check PASS. PR exact-head CI `35829383771` passed build, test-db,
+  member-api-test, Vercel and Preview Comments. Post-merge CI `35829761261` on merge commit passed
+  build, test-db/Deno, member-api-test and Vercel deployment.
+- **Browser:** 30 route patterns × 5 viewports = 150/150 guest checks; Ask AI no-evidence and
+  Public-First/auth-on-demand rehearsal PASS. Authenticated report/quiz/Profile/Member/Admin remain
+  blocked pending authorized roles/session and hosted Member API. Innovation submission is deferred;
+  no UI invocation was merged.
+- **PR #51:** closed as docs-only historical evidence; not merged. No production runtime was changed
+  and Phase 6 remains closed.
+- **Evidence:** `docs/ui-final-closure/FINAL_ACCEPTANCE.md` and
+  `docs/ui-final-closure/UI_RECONCILIATION_MATRIX.md`. Owner infrastructure requirements and the
+  next hosted acceptance matrix are in `docs/phase-5-5/05-hosted-runtime-readiness-checklist.md`.
 
 ### PUBLIC_FIRST_RUNTIME_FINAL_ACCEPTANCE_CLOSURE (ĐÃ HOÀN TẤT — 2026-09-20)
 - **Base:** `origin/master@ab7242787965c7669caeeef6eb6e2d44b214b974` (PR #53 merge).

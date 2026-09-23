@@ -102,10 +102,14 @@ chứng minh màn protected đã được reconcile, nhưng không được dùn
 - Mobile software keyboard: browser harness không mô phỏng bàn phím ảo; CSS focus rule ẩn bottom nav
   và modal dùng bounded `dvh`, nhưng device acceptance vẫn pending.
 - Production blocker: production deployment/readiness nằm ngoài task; không deploy/chạm dữ liệu production.
+- Owner provisioning checklist and the next P5.5 acceptance matrix:
+  `docs/phase-5-5/05-hosted-runtime-readiness-checklist.md`.
 
 ## PR STATUS
 
 - Closure PR: [#57](https://github.com/vi-phuong-158/so-tay-doan-vien-so/pull/57).
-- Head SHA: `a6d7f02c8d6aaa3da64b4c2e5175be4e0f3bf8ca`.
-- Exact-head CI run: `35700532914` — `build`, `test-db`, `member-api-test`, Vercel và Preview Comments đều xanh.
-- Merge recommendation: merge #57 sau owner review; không merge nguyên trạng PR #55/#56.
+- Exact audited head: `0050f40357b9091d082971659aa37f84378dfdaf`.
+- Exact-head CI: run `35829383771` — build, test-db, member-api-test, Vercel and Preview Comments all SUCCESS.
+- Merge: `2f0336a8784a4c0610543b20aa704a6e90182423` (2026-09-23); merged tree equals the audited head tree.
+- Post-merge CI: run `35829761261` on the merge commit — build, test-db/Deno, member-api-test and Vercel deployment all SUCCESS.
+- PR #55 and #56 were superseded by this reconciliation. PR #51 is closed as docs-only historical blocked acceptance evidence.
