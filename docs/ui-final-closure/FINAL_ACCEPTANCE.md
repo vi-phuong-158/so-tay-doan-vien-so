@@ -101,7 +101,12 @@ chứng minh màn protected đã được reconcile, nhưng không được dùn
   acceptance claim.
 - Mobile software keyboard: browser harness không mô phỏng bàn phím ảo; CSS focus rule ẩn bottom nav
   và modal dùng bounded `dvh`, nhưng device acceptance vẫn pending.
-- Production blocker: production deployment/readiness nằm ngoài task; không deploy/chạm dữ liệu production.
+- Deployment: merge commit triggered Vercel Production frontend deployment; status SUCCESS at
+  [`2f0336a deployment`](https://vercel.com/vi-phuong-158s-projects/so-tay-doan-vien-so/hj4WmJizcaBczPsuWXNWzmL2Gdzx).
+  Authenticated browser acceptance was not run against production. No Member API/PostgreSQL
+  deployment, server secret/configuration, migration, or production data was changed.
+- Production runtime blocker: hosted Member API/database, production CORS/CSP wiring, authenticated
+  journeys, and hosted backup/restore remain pending; see the owner readiness checklist.
 - Owner provisioning checklist and the next P5.5 acceptance matrix:
   `docs/phase-5-5/05-hosted-runtime-readiness-checklist.md`.
 

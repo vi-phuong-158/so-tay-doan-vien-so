@@ -14,8 +14,10 @@
   overflow, visible text below 11px or interactive target below 44px. Ask AI no-evidence and
   Public-First/auth-on-demand rehearsal passed. Authenticated product journeys remain blocked by
   missing authorized role/session and hosted Member API; see `docs/ui-final-closure/`.
-- PR #51 is closed as historical docs-only evidence. Hosted Mắt Bão/Member API production
-  acceptance remains pending; Phase 6 is not open.
+- PR #51 is closed as historical docs-only evidence. Vercel automatically completed the Production
+  frontend deployment for `2f0336a`; Member API/PostgreSQL hosting, server secrets/configuration,
+  and hosted authenticated acceptance remain pending. No production database/data was changed and
+  Phase 6 is not open.
 - Owner readiness and the next P5.5 acceptance matrix are prepared in
   `docs/phase-5-5/05-hosted-runtime-readiness-checklist.md`.
 
