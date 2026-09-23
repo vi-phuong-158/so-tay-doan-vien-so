@@ -92,8 +92,8 @@ supabase/
 | `src/pages/Knowledge.jsx` | Hub Văn bản/Chuyên đề/Trắc nghiệm, tìm kiếm và điều hướng tới nội dung | route `/tri-thuc` | `documentService`, `learningService`, `quizService`, `Icon`, `common` |
 | `src/pages/AskAi.jsx` | Chat, gợi ý câu hỏi, trạng thái no-evidence và nguồn trích dẫn | route `/tri-thuc/hoi-ai` | `aiService`, `Icon`, `common` |
 | `src/pages/ReportAssignmentDetail.jsx` | Chi tiết, tải lên và nộp báo cáo; ghi chú nháp cục bộ theo người dùng/đợt | route `/cong-viec/bao-cao/:assignmentId` | `reportService`, `AuthContext`, `Icon`, `common` |
-| `src/pages/Innovation.jsx` | Published project list, details, and authenticated submission form | route `/doi-moi-sang-tao` | `innovationService`, existing Edge Function, shared `Modal` |
-| `src/services/innovationService.js` | Maps public projects; validates the short problem payload and invokes existing `submit-innovation-problem` | `Innovation` | Supabase client; organization is derived server-side |
+| `src/pages/Innovation.jsx` | Published project list and details | route `/doi-moi-sang-tao` | `innovationService`, shared `Modal` |
+| `src/services/innovationService.js` | Maps public project rows | `Innovation` | Supabase client |
 | `src/pages/Profile.jsx` | Account identity, role and organization, settings actions, logout; no Member Record fields | route `/ca-nhan` | `AuthContext`, `MemberManagement` is a separate route family |
 | `src/pages/*` | Work, Knowledge, Document, Learning/Quiz, Member and Admin areas | routes in `App.jsx` | domain services, `AuthContext`, shared components |
 | `src/data/mock.js` | Dữ liệu demo | 5 pages chính | — (⚠ thay bằng service khi nối Supabase) |
@@ -114,7 +114,7 @@ supabase/
 - `App.jsx` route inventory and authorization groups are unchanged by the UI/UX finalization.
 - The primary navigation is a shared five-destination list: Home, Work, Knowledge, Innovation, and Profile. Guest use of Work/Profile still reaches `AuthRequiredState`; route guards remain authoritative.
 - The existing design tokens in `src/index.css` remain the only source for colors and responsive UI states. Lucide is the single icon library. The shared `Modal` uses native `<dialog>`; its mobile sheet layout is CSS-only.
-- Innovation submission stays on the existing `submit-innovation-problem` contract. The browser sends `title` and `pain_point`; no client-selected organization, file upload, API, route, table, RLS, RPC, or Edge Function was added.
+- Innovation submission remains outside the UI closure scope. The public project list/detail presentation does not invoke `submit-innovation-problem`; no submission UI, route, table, RLS, RPC, or Edge Function is part of this closure.
 
 ### Backend (Edge Functions) — module then chốt
 

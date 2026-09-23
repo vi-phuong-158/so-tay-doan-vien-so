@@ -5,8 +5,9 @@
 `SOTAY_UI_SOURCE_ACCEPTANCE_PASS_RUNTIME_ACCEPTANCE_BLOCKED`
 
 UI source, guest/public rehearsal paths và auth-on-demand gates pass. Authenticated report, quiz,
-Profile, Member Management, Admin và Innovation submission chưa được gọi PASS vì không có
-authorized rehearsal account/Member API endpoint trong phiên này.
+Profile, Member Management và Admin chưa được gọi PASS vì không có authorized rehearsal
+account/Member API endpoint trong phiên này. Innovation submission is deferred and outside this
+closure; no submission UI or invocation is included.
 
 ## BASELINE
 
@@ -95,8 +96,9 @@ chứng minh màn protected đã được reconcile, nhưng không được dùn
 - Source/UI blocker: không còn blocker đã biết trong scope.
 - Rehearsal blocker: thiếu authorized user/role session và không có `VITE_MEMBER_API_URL`; do đó
   upload/submit/history/review/resubmit, quiz attempt/result, Profile/logout/session restore,
-  notifications/change-password, Innovation submit, Member CRUD/import/audit và Admin mutations
-  chưa được browser-acceptance thật.
+  notifications/change-password, Member CRUD/import/audit và Admin mutations chưa được
+  browser-acceptance thật. Innovation submission is deferred outside this closure, not a runtime
+  acceptance claim.
 - Mobile software keyboard: browser harness không mô phỏng bàn phím ảo; CSS focus rule ẩn bottom nav
   và modal dùng bounded `dvh`, nhưng device acceptance vẫn pending.
 - Production blocker: production deployment/readiness nằm ngoài task; không deploy/chạm dữ liệu production.

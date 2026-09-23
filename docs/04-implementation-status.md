@@ -34,7 +34,7 @@
 - Dashboard cá nhân hóa và dashboard quản trị.
 - Luồng nộp báo cáo có chọn tệp, xác nhận và lịch sử phiên bản qua `reportService`/backend hiện hữu.
 - Văn bản, chuyên đề, quiz và AI dùng service/RPC/Edge Function hiện hữu, có loading/empty/error states.
-- Công trình đổi mới đọc danh sách công khai; form gửi bài toán dùng contract hiện hữu và yêu cầu đăng nhập.
+- Công trình đổi mới đọc danh sách công khai; gửi bài toán vẫn được để ngoài scope closure này và chưa nối UI với Edge Function.
 - PWA shell, manifest, service worker.
 - Supabase REST/Auth client.
 - Migration schema và policy RLS nền tảng.

@@ -1,5 +1,24 @@
 # 06 — AI Working Log
 
+## [2026-09-23] SOTAY_UI_FINAL_CLOSURE — audit scope correction before merge
+
+- **Agent:** Codex
+- **Thay đổi:** Independent audit found the candidate had added a problem-submission form and a
+  client call to `submit-innovation-problem`, although the active closure brief excludes new
+  workflow functionality and the task log identifies this modal as a separate product decision.
+  Removed the submission UI/service invocation and its tests; retained the public Innovation list,
+  project detail presentation, and existing guest-to-login navigation. Reconciled current status
+  documentation while preserving the earlier branch iteration as history.
+- **File đã sửa:** `src/pages/Innovation.jsx`, `src/services/innovationService.js`,
+  `src/index.css`, `tests/innovation_service.test.mjs`, `docs/04-implementation-status.md`,
+  `docs/brain/01-architecture.md`, `docs/brain/03-decisions.md`, `docs/brain/04-current-tasks.md`,
+  `docs/ui-final-closure/FINAL_ACCEPTANCE.md`,
+  `docs/ui-final-closure/UI_RECONCILIATION_MATRIX.md`,
+  `docs/ui-ux-end-to-end-finalization.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Keep PR #57 within UI reconciliation scope; do not start Phase 6 or make a new business
+  workflow active.
+- **Kiểm tra:** pending source gates, exact-head CI, and renewed independent review before merge.
+
 ## [2026-09-18] P5.5 — End-to-End Final Closure / Public-first auth
 
 - **Agent:** Codex

@@ -76,6 +76,15 @@ The route inventory below comes from `src/App.jsx`, including every nested and r
 - Aligned Login, Forgot Password, Reset Password, and Change Password with the shared forms. Kept the Supabase auth calls and route behavior; added safe network-error handling and loading states. Removed Profile links that navigated back to the same page and clarified that the Account profile and Member Record are separate surfaces.
 - Updated the stale public-first navigation assertions to enforce the requested shared five-destination navigation and auth-on-demand gate. Added Innovation service tests for payload boundary, validation, and safe error mapping.
 
+## Scope correction before PR #57 merge (2026-09-23)
+
+The submission form/service described in the earlier branch iteration above was removed during the
+independent release audit because the current UI closure brief excludes new workflow functionality
+and the project task log marks this modal as a feature gap requiring a separate product decision.
+The final closure retains the public project list/detail presentation and guest-to-login navigation;
+it does not invoke `submit-innovation-problem`. The service test added for that out-of-scope call was
+removed with it. This records the branch history while describing the final candidate accurately.
+
 ### UI_ROUTE_AND_COMPONENT_MATRIX — final result
 
 Every route declared in `src/App.jsx` was opened on the local app in a fresh guest session, with a wildcard path checked separately. Role-protected routes rendered the same login-on-demand gate without redirect loops or horizontal overflow. Dynamic detail paths were opened with a synthetic UUID solely to exercise route matching; no record was created or requested from a real backend.

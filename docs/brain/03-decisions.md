@@ -21,10 +21,12 @@ trên mobile.
 Mobile text styles that were below 11px are raised to an 11px minimum in the shared stylesheet;
 this keeps existing compact labels legible without changing desktop sizing.
 
-Innovation gửi bài toán chỉ gọi Edge Function `submit-innovation-problem` đã có, với `title` và
-`pain_point`; server tự lấy organization từ hồ sơ tài khoản. Giao diện không gửi organization ID
-hoặc file. Không có hỗ trợ attachment trong contract hiện tại nên UI ghi rõ giới hạn, và chỉ báo
-thành công sau server response thành công.
+Historical branch iteration: Innovation submission was briefly wired to the existing
+`submit-innovation-problem` contract. A pre-merge audit on 2026-09-23 removed that UI/service call
+because this closure brief excludes new workflow functionality and the product task log marks the
+modal as a separate product decision. The final closure presents the public project list/details
+only; it does not invoke the function. Any future submission UI requires a separately authorized
+task and runtime acceptance.
 
 Account profile không chứa hoặc giả lập Member Record. Những liên kết tự điều hướng về cùng trang bị
 bỏ để không hiển thị hành động giả. Không thay route, RLS, RPC, Edge Function, Member API, auth/JWT,
