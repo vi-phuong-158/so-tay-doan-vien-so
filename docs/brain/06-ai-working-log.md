@@ -6,18 +6,23 @@
 - **Thay đổi:** Independent audit found the candidate had added a problem-submission form and a
   client call to `submit-innovation-problem`, although the active closure brief excludes new
   workflow functionality and the task log identifies this modal as a separate product decision.
-  Removed the submission UI/service invocation and its tests; retained the public Innovation list,
-  project detail presentation, and existing guest-to-login navigation. Reconciled current status
-  documentation while preserving the earlier branch iteration as history.
+  The audit also found new localStorage report draft persistence and answer-required quiz navigation.
+  Removed those additions to preserve the existing workflow and avoid browser storage for report
+  text. Retained the public Innovation list/detail presentation, existing guest-to-login navigation,
+  report/quiz presentation updates, and backend contracts. Reconciled current status documentation
+  while preserving the earlier branch iteration as history.
 - **File đã sửa:** `src/pages/Innovation.jsx`, `src/services/innovationService.js`,
-  `src/index.css`, `tests/innovation_service.test.mjs`, `docs/04-implementation-status.md`,
+  `src/pages/ReportAssignmentDetail.jsx`, `src/pages/Quiz.jsx`, `src/index.css`,
+  `tests/innovation_service.test.mjs`, `docs/04-implementation-status.md`,
   `docs/brain/01-architecture.md`, `docs/brain/03-decisions.md`, `docs/brain/04-current-tasks.md`,
   `docs/ui-final-closure/FINAL_ACCEPTANCE.md`,
   `docs/ui-final-closure/UI_RECONCILIATION_MATRIX.md`,
   `docs/ui-ux-end-to-end-finalization.md`, `docs/brain/06-ai-working-log.md`.
 - **Lý do:** Keep PR #57 within UI reconciliation scope; do not start Phase 6 or make a new business
   workflow active.
-- **Kiểm tra:** pending source gates, exact-head CI, and renewed independent review before merge.
+- **Kiểm tra:** `npm test` 205/205 PASS; `npm run lint` 0 errors/3 existing Fast Refresh warnings;
+  `npm run build` PASS (520.68 kB chunk-size warning); `git diff --check` PASS; report detail
+  contains no browser-storage API. Exact-head CI and renewed review remain pending before merge.
 
 ## [2026-09-18] P5.5 — End-to-End Final Closure / Public-first auth
 

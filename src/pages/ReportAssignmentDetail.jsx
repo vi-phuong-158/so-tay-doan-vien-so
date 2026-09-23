@@ -70,7 +70,7 @@ function statusLabel(status) {
 export function ReportAssignmentDetail() {
   const navigate = useNavigate();
   const { assignmentId } = useParams();
-  const { hasRole, user } = useAuth();
+  const { hasRole } = useAuth();
   const isReviewer = hasRole('YOUTH_ADMIN') || hasRole('SYSTEM_ADMIN');
   const [assignment, setAssignment] = useState(null);
   const [templates, setTemplates] = useState([]);
@@ -90,8 +90,6 @@ export function ReportAssignmentDetail() {
   const [submitResult, setSubmitResult] = useState(null);
   const [summary, setSummary] = useState('');
   const [submitNote, setSubmitNote] = useState('');
-  const [draftSaved, setDraftSaved] = useState(false);
-  const [draftError, setDraftError] = useState(null);
   const [reviewAction, setReviewAction] = useState(null);
   const [reviewReason, setReviewReason] = useState('');
   const [reviewConfirming, setReviewConfirming] = useState(false);
@@ -143,23 +141,6 @@ export function ReportAssignmentDetail() {
       cleanup?.();
     };
   }, [loadDetail]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!user?.id || !assignmentId) return;
-      try {
-        const savedDraft = window.localStorage.getItem(`report-draft:${user.id}:${assignmentId}`);
-        if (!savedDraft) return;
-        const parsed = JSON.parse(savedDraft);
-        if (typeof parsed.summary === 'string') setSummary(parsed.summary);
-        if (typeof parsed.submitNote === 'string') setSubmitNote(parsed.submitNote);
-        setDraftSaved(true);
-      } catch {
-        setDraftError('Không thể đọc bản nháp đã lưu trên thiết bị.');
-      }
-    }, 0);
-    return () => clearTimeout(timer);
-  }, [assignmentId, user?.id]);
 
   async function refreshAssignment() {
     try {
@@ -299,12 +280,6 @@ export function ReportAssignmentDetail() {
       setSelectedFiles([]);
       setSummary('');
       setSubmitNote('');
-      setDraftSaved(false);
-      try {
-        window.localStorage.removeItem(`report-draft:${user.id}:${assignment.id}`);
-      } catch {
-        // The server submission succeeded; a stale local text draft can be cleared later.
-      }
       setConfirming(false);
       await refreshAssignment();
     } catch (requestError) {
@@ -363,18 +338,6 @@ export function ReportAssignmentDetail() {
       setSubmissionFileError(requestError);
     } finally {
       setDownloadingSubmissionFile(null);
-    }
-  }
-
-  function saveLocalDraft() {
-    if (!user?.id || !assignment?.id) return;
-    try {
-      window.localStorage.setItem(`report-draft:${user.id}:${assignment.id}`, JSON.stringify({ summary, submitNote }));
-      setDraftSaved(true);
-      setDraftError(null);
-    } catch {
-      setDraftSaved(false);
-      setDraftError('Không thể lưu bản nháp trên thiết bị.');
     }
   }
 
@@ -647,17 +610,14 @@ export function ReportAssignmentDetail() {
 
               <div className="form-field">
                 <label htmlFor="report-summary">Tóm tắt (không bắt buộc)</label>
-                <textarea id="report-summary" maxLength={5000} value={summary} onChange={(event) => { setSummary(event.target.value); setDraftSaved(false); }} disabled={uploading || submitting} />
+                <textarea id="report-summary" maxLength={5000} value={summary} onChange={(event) => setSummary(event.target.value)} disabled={uploading || submitting} />
               </div>
               <div className="form-field">
                 <label htmlFor="report-submit-note">Ghi chú nộp (không bắt buộc)</label>
-                <textarea id="report-submit-note" maxLength={2000} value={submitNote} onChange={(event) => { setSubmitNote(event.target.value); setDraftSaved(false); }} disabled={uploading || submitting} />
+                <textarea id="report-submit-note" maxLength={2000} value={submitNote} onChange={(event) => setSubmitNote(event.target.value)} disabled={uploading || submitting} />
               </div>
 
-              {draftSaved && <p className="report-draft-status" role="status">Bản nháp văn bản đã lưu trên thiết bị này. Tệp không được lưu trong bản nháp.</p>}
-              {draftError && <p className="form-error" role="alert">{draftError}</p>}
               <div className="report-upload-actions">
-                <button type="button" className="button button-secondary" onClick={saveLocalDraft} disabled={uploading || submitting}>Lưu nháp</button>
                 <button type="button" className="button button-secondary" onClick={uploadFiles} disabled={uploading || submitting || selectedFiles.length === 0 || selectedFiles.every(({ status }) => status === 'uploaded')}>
                   {uploading ? 'Đang tải lên...' : 'Tải tệp lên'}
                 </button>

@@ -66,7 +66,6 @@ function AttemptView({ questions, answers, currentIndex, onAnswer, onPrevious, o
   const selected = answers[question.id] || [];
   const progress = Math.round(((currentIndex + 1) / questions.length) * 100);
   const last = currentIndex === questions.length - 1;
-  const hasAnswer = selected.length > 0;
   return (
     <div className="quiz-page">
       <div className="quiz-progress-head"><span>Câu {currentIndex + 1}/{questions.length}</span><span>{progress}%</span></div>
@@ -96,9 +95,9 @@ function AttemptView({ questions, answers, currentIndex, onAnswer, onPrevious, o
       <div className="quiz-sticky-action">
         <Button variant="secondary" onClick={onPrevious} disabled={currentIndex === 0 || submitting}>Trước</Button>
         {last ? (
-          <Button onClick={onSubmit} disabled={!hasAnswer || submitting}>{submitting ? 'Đang nộp…' : 'Nộp bài'}</Button>
+          <Button onClick={onSubmit} disabled={submitting}>{submitting ? 'Đang nộp…' : 'Nộp bài'}</Button>
         ) : (
-          <Button onClick={onNext} disabled={!hasAnswer || submitting}>{hasAnswer ? 'Câu tiếp theo' : 'Chọn một đáp án'}</Button>
+          <Button onClick={onNext} disabled={submitting}>Câu tiếp theo</Button>
         )}
       </div>
     </div>

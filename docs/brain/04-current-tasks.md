@@ -10,7 +10,7 @@
 ### SOTAY_UI_FINAL_CLOSURE (2026-09-22)
 - **Base:** `origin/master@2095ebb98c572f10a5b04a08396e3e3569fb1271`; branch `feat/ui-final-closure` trong isolated worktree.
 - **Phạm vi:** hợp nhất có chọn lọc PR #55 và #56 theo từng màn, hoàn tất toàn bộ route UI trong scope, giữ nguyên route/auth/data/security contract và không mở Phase 6.
-- **Trạng thái source:** reconcile hoàn tất; 208/208 test, lint 0 errors (3 warning cũ), build và diff-check PASS. Browser guest 30/30 route pattern ở từng viewport 360/390/430/768/1440; Ask AI no-evidence rehearsal PASS.
+- **Trạng thái source:** reconcile hoàn tất; 205/205 test, lint 0 errors (3 warning cũ), build và diff-check PASS. Browser guest 30/30 route pattern ở từng viewport 360/390/430/768/1440; Ask AI no-evidence rehearsal PASS.
 - **Runtime còn chặn:** không có authorized rehearsal session/Member API endpoint, nên authenticated report/quiz/Profile/Member/Admin chưa thể PASS. Innovation submission remains deferred and is outside this closure; the UI does not invoke its Edge Function.
 - **Ràng buộc:** không dùng dữ liệu production, không thay backend/RLS/API, không merge `master`; runtime acceptance chỉ PASS khi có rehearsal được ủy quyền.
 - **PR closure:** [#57](https://github.com/vi-phuong-158/so-tay-doan-vien-so/pull/57), exact head `a6d7f02c8d6aaa3da64b4c2e5175be4e0f3bf8ca`, CI run `35700532914` xanh toàn bộ.

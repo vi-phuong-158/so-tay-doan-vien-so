@@ -980,3 +980,6 @@ không nới, không skip bất kỳ assertion nào**; test 14/15/16/26 vẫn đ
 - **Phạm vi:** Đây là thay đổi giao diện frontend; ghi chú Lưu nháp báo cáo chỉ lưu text cục bộ
   theo user/assignment, còn gửi báo cáo tiếp tục qua service hiện tại. Branch chờ runtime closure
   trước khi rebase và nâng Draft PR lên Ready for Review.
+
+  **Scope correction (2026-09-23):** local report draft persistence was removed before merge. The
+  closure changes report presentation only; report text is not written to browser storage.

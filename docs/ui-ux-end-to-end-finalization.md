@@ -85,6 +85,10 @@ The final closure retains the public project list/detail presentation and guest-
 it does not invoke `submit-innovation-problem`. The service test added for that out-of-scope call was
 removed with it. This records the branch history while describing the final candidate accurately.
 
+The same audit removed browser-local report draft persistence and answer-required gates added to quiz
+navigation. The final candidate keeps the existing report submission and quiz progression contracts;
+the report text fields remain in component state until the current page is left.
+
 ### UI_ROUTE_AND_COMPONENT_MATRIX — final result
 
 Every route declared in `src/App.jsx` was opened on the local app in a fresh guest session, with a wildcard path checked separately. Role-protected routes rendered the same login-on-demand gate without redirect loops or horizontal overflow. Dynamic detail paths were opened with a synthetic UUID solely to exercise route matching; no record was created or requested from a real backend.

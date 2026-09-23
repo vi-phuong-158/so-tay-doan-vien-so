@@ -57,9 +57,9 @@ Chi tiết theo từng route: [UI_RECONCILIATION_MATRIX.md](./UI_RECONCILIATION_
 
 ## TEST RESULTS
 
-- `npm test`: 208/208 PASS.
+- `npm test`: 205/205 PASS after removing three out-of-scope Innovation submission tests with the submission UI.
 - `npm run lint`: 0 errors; 3 Fast Refresh warnings cũ ở `Guards.jsx` và `AuthContext.jsx`.
-- `npm run build`: PASS; 2000 modules; main chunk 525.45 kB (cảnh báo >500 kB, không phải lỗi).
+- `npm run build`: PASS; 2000 modules; main chunk 520.68 kB (cảnh báo >500 kB, không phải lỗi).
 - `git diff --check`: PASS.
 - Browser: 150/150 route × viewport checks PASS; 5-item nav, Forgot Password, Innovation/Work
   auth-on-demand, Login keyboard focus và Ask AI no-evidence PASS; public console clean.
