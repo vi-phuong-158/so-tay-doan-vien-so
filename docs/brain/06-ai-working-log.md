@@ -22,7 +22,14 @@
   workflow active.
 - **Kiểm tra:** `npm test` 205/205 PASS; `npm run lint` 0 errors/3 existing Fast Refresh warnings;
   `npm run build` PASS (520.68 kB chunk-size warning); `git diff --check` PASS; report detail
-  contains no browser-storage API. Exact-head CI and renewed review remain pending before merge.
+  contains no browser-storage API. Exact-head CI run `35829383771` passed all checks on
+  `0050f40357b9091d082971659aa37f84378dfdaf`; there were no human review threads or unresolved
+  inline comments. PR #57 merged at `2f0336a8784a4c0610543b20aa704a6e90182423`; post-merge run
+  `35829761261` passed and Vercel automatically completed the Production frontend deployment at
+  `https://so-tay-doan-vien-jgrxhsuxe-vi-phuong-158s-projects.vercel.app`. No production database/data,
+  Member API deployment, or server secret/configuration was changed. PR #51 was closed with a
+  historical-evidence explanation. The post-merge docs-only reconciliation includes
+  `docs/phase-5-5/05-hosted-runtime-readiness-checklist.md` for the owner handoff.
 
 ## [2026-09-18] P5.5 — End-to-End Final Closure / Public-first auth
 

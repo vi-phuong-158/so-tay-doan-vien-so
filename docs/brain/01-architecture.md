@@ -36,7 +36,7 @@ src/
 ├── pages/
 │   ├── auth/                # Login, ForgotPassword, ResetPassword, ChangePassword (dùng Supabase)
 │   ├── Home.jsx             # public-first landing and direct links to public content
-│   ├── Innovation.jsx       # published project list + existing authenticated submit Edge Function
+│   ├── Innovation.jsx       # published project list and detail presentation
 │   ├── Profile.jsx          # Account identity; Member Record remains on Member API routes
 │   ├── Work.jsx             # đã nối reportService (Phase 2)
 │   ├── Knowledge.jsx        # tab Văn bản + Chuyên đề đã nối service thật (P4-01/P4-03)
