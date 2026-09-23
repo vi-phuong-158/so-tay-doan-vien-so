@@ -4,12 +4,12 @@ Nền tảng số phục vụ đoàn viên, cán bộ Đoàn, Ban Thanh niên v�
 
 ## Trạng thái bàn giao
 
-- Hoàn thiện giao diện responsive của 5 khu vực: Trang chủ, Công việc, Tri thức, Đổi mới sáng tạo, Cá nhân.
-- Có các luồng mẫu: xem/nộp báo cáo, lịch sử phiên bản, kho văn bản, chuyên đề, quiz, trợ lý AI có nguồn, công trình đổi mới, gửi/theo dõi bài toán, dashboard quản trị.
+- Giao diện responsive thống nhất 5 khu vực: Trang chủ, Công việc, Tri thức, Đổi mới sáng tạo, Cá nhân; Public-First và đăng nhập tại điểm cần quyền.
+- Các vertical slice báo cáo, văn bản, chuyên đề/quiz, Ask AI, thông báo, quản trị và Member Management đã nối service/RPC/API tương ứng; trạng thái khả dụng phụ thuộc runtime và quyền tài khoản.
 - Có PWA manifest và service worker.
-- Có REST client kết nối Supabase không đưa secret vào frontend.
-- Có migration khởi tạo schema/RLS nền tảng và khung Edge Functions.
-- Dữ liệu giao diện hiện là dữ liệu demo. Phải tạo Supabase dev/rehearsal, chạy migration và nối từng service trước khi production.
+- Có Supabase client chỉ dùng publishable key ở frontend; secret vẫn ở backend.
+- Có schema/RLS/RPC, Edge Functions và Member API theo các phase đã nghiệm thu kỹ thuật.
+- Trạng thái UI closure và các runtime gate còn lại được ghi tại `docs/ui-final-closure/FINAL_ACCEPTANCE.md`.
 
 ## Chạy bằng Vite
 
@@ -32,6 +32,7 @@ python -m http.server 4173
 
 ```bash
 npm test
+npm run lint
 npm run build
 ```
 

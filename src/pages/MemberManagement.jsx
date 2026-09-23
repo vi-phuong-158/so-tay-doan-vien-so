@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Icon } from '../components/Icon';
 import { Button, EmptyState, PageHeader, Toast } from '../components/common';
 import Skeleton from '../components/Skeleton';
 import { supabase } from '../services/supabaseClient';
@@ -53,6 +54,7 @@ export function MemberManagement() {
   const [statusFilter, setStatusFilter] = useState('');
   const [youthPositionFilter, setYouthPositionFilter] = useState('');
   const [sort, setSort] = useState('full_name_asc');
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const [organizations, setOrganizations] = useState([]);
   const [scope, setScope] = useState(null);
@@ -172,36 +174,47 @@ export function MemberManagement() {
     : organizations.filter((org) => scope?.roles?.some((r) => r.org_codes?.includes(org.code)) ?? true);
 
   return (
-    <div className="page admin-reports-page">
+    <div className="page page--appbar admin-reports-page member-management-page">
       <PageHeader
-        title="Quản lý đoàn viên"
-        subtitle={total ? `${total} đoàn viên trong phạm vi quản lý` : undefined}
+        title="Đoàn viên"
+        subtitle={`${total} đoàn viên · ${scopedOrganizations.length} đơn vị trong phạm vi`}
+        variant="brand"
         action={
           <div className="campaign-form-actions">
             {scope?.roles?.some((r) => r.role_code === 'YOUTH_ADMIN') && (
-              <Button icon="upload" variant="secondary" onClick={() => navigate('/admin/quan-ly-doan-vien/import')}>
-                Import Excel
-              </Button>
+              <button className="member-import-button" type="button" aria-label="Import danh sách Excel" onClick={() => navigate('/admin/quan-ly-doan-vien/import')}><Icon name="upload" size={20} /></button>
             )}
-            <Button icon="user" onClick={openCreate}>Thêm đoàn viên</Button>
           </div>
         }
       />
 
+      <div className="member-metrics">
+        <article><span>Tổng đoàn viên</span><strong>{total}</strong></article>
+        <article><span>Đang hiển thị</span><strong>{members.length}</strong></article>
+        <article><span>Đơn vị quản lý</span><strong>{scopedOrganizations.length}</strong></article>
+      </div>
+
       <div className="document-controls">
         <form className="dashboard-search" onSubmit={submitSearch} role="search">
-          <label htmlFor="member-search">Tìm kiếm</label>
           <input
             id="member-search"
             type="search"
-            placeholder="Tìm theo họ tên"
+            aria-label="Tìm theo họ tên hoặc chi đoàn"
+            placeholder="Tìm theo họ tên, chi đoàn"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
           />
-          <Button type="submit" icon="search" variant="secondary">Tìm</Button>
+          <button type="submit" aria-label="Tìm kiếm"><Icon name="search" size={19} /></button>
+          <button type="button" className={filtersOpen ? 'active' : ''} aria-label="Mở bộ lọc" aria-expanded={filtersOpen} onClick={() => setFiltersOpen((open) => !open)}><Icon name="filter" size={19} /></button>
         </form>
 
-        <div className="dashboard-filters">
+        <div className="member-filter-chips" role="group" aria-label="Lọc nhanh">
+          <button type="button" className={!statusFilter && !youthPositionFilter ? 'active' : ''} onClick={() => { setStatusFilter(''); setYouthPositionFilter(''); }}>Tất cả</button>
+          <button type="button" className={statusFilter === 'ACTIVE' ? 'active' : ''} onClick={() => { setStatusFilter('ACTIVE'); setYouthPositionFilter(''); }}>Đang sinh hoạt</button>
+          <button type="button" className={youthPositionFilter === 'BI_THU' ? 'active' : ''} onClick={() => { setYouthPositionFilter('BI_THU'); setStatusFilter(''); }}>Bí thư</button>
+        </div>
+
+        {filtersOpen && <div className="dashboard-filters member-filter-panel">
           <label htmlFor="member-work-unit">
             Đơn vị
             <select id="member-work-unit" value={workUnitFilter} onChange={(e) => setWorkUnitFilter(e.target.value)}>
@@ -236,13 +249,21 @@ export function MemberManagement() {
               <option value="updated_at_desc">Cập nhật gần nhất</option>
             </select>
           </label>
-        </div>
+        </div>}
+      </div>
+
+      <div className="member-list-heading">
+        <strong>Danh sách đoàn viên</strong>
+        <button type="button" onClick={openCreate}><Icon name="plus" size={17} />Thêm mới</button>
       </div>
 
       {creating && (
+        <div className="member-drawer-backdrop">
+        <section className="member-drawer" role="dialog" aria-modal="true" aria-labelledby="member-create-title">
         <form className="campaign-form" onSubmit={submitCreate} noValidate>
           <fieldset>
-            <legend>Thêm đoàn viên mới</legend>
+            <legend id="member-create-title">Thêm đoàn viên mới</legend>
+            <button type="button" className="member-drawer-close" aria-label="Đóng biểu mẫu" onClick={closeCreate} disabled={saving}>×</button>
 
             <label htmlFor="member-full-name">
               Họ và tên *
@@ -333,6 +354,8 @@ export function MemberManagement() {
             </div>
           </fieldset>
         </form>
+        </section>
+        </div>
       )}
 
       {loading && <Skeleton lines={6} />}
@@ -355,9 +378,10 @@ export function MemberManagement() {
       )}
 
       {!loading && !error && members.length > 0 && (
-        <div className="campaign-list">
+        <div className="campaign-list member-list">
           {members.map((member) => (
             <Link key={member.id} to={`/quan-ly-doan-vien/${member.id}`} className="campaign-list-item">
+              <span className="member-avatar" aria-hidden="true">{member.fullName.trim().split(/\s+/).slice(-2).map((part) => part[0]).join('').toUpperCase()}</span>
               <div>
                 <div className="doc-tags">
                   <span className={`status status-${memberStatusTone(member.memberStatus)}`}>
@@ -372,6 +396,7 @@ export function MemberManagement() {
                   {member.jobTitle ? ` • ${member.jobTitle}` : ''}
                 </p>
               </div>
+              <Icon className="member-row-chevron" name="chevron-right" size={18} />
             </Link>
           ))}
         </div>

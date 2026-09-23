@@ -1,9 +1,21 @@
 # Trạng thái thi công
 
+## SOTAY_UI_FINAL_CLOSURE (2026-09-22)
+
+- Base `master@2095ebb98c572f10a5b04a08396e3e3569fb1271`, sau khi PR #54 đã merge.
+- Branch `feat/ui-final-closure` hợp nhất có chọn lọc PR #55 và #56; không còn hai implementation
+  UI cạnh tranh. Route/auth/data/security contract giữ nguyên và Phase 6 không được mở.
+- UI source/browser guest đã được kiểm tra trên 30 route pattern tại 360/390/430/768/1440;
+  không blank page, không horizontal overflow, không visible text dưới 11px hoặc interactive target
+  dưới 44px trong sweep. Ask AI guest no-evidence và navigation/auth-on-demand hoạt động trên rehearsal.
+- Authenticated report/quiz/Profile/Member/Admin và mutation Innovation vẫn cần authorized session;
+  không tạo mock hoặc dùng service-role để giả PASS. Xem matrix và evidence tại
+  `docs/ui-final-closure/`.
+
 ## P5.5 — End-to-End Final Closure (2026-09-18)
 
 - Base `master@7f468a5111df54486f7e98688b4c16057668a519`; PR #51 được giữ làm historical
-  artifact, không merge thêm. Closure branch áp dụng public-first auth: Home/demo public và các
+  artifact, không merge thêm. Closure branch áp dụng public-first auth: Home/public shell và các
   route dữ liệu thật hiển thị login on demand qua `AuthGuard`.
 - Local source gates: root `200/200`, targeted Member API `73/73`, lint `0 errors`, build PASS.
   Full Member API local chưa thể kết luận PASS do thiếu `MEMBER_DATABASE_URL` và `exceljs` chưa
@@ -20,9 +32,9 @@
 - Điều hướng 5 khu vực và route chi tiết.
 - Component giao diện dùng chung trong App.
 - Dashboard cá nhân hóa và dashboard quản trị.
-- Luồng nộp báo cáo có chọn tệp, xác nhận, lịch sử phiên bản ở chế độ demo.
-- Văn bản, chuyên đề, quiz, AI có thẻ nguồn ở chế độ demo.
-- Công trình đổi mới, gửi và theo dõi bài toán ở chế độ demo.
+- Luồng nộp báo cáo có chọn tệp, xác nhận và lịch sử phiên bản qua `reportService`/backend hiện hữu.
+- Văn bản, chuyên đề, quiz và AI dùng service/RPC/Edge Function hiện hữu, có loading/empty/error states.
+- Công trình đổi mới đọc danh sách công khai; gửi bài toán vẫn được để ngoài scope closure này và chưa nối UI với Edge Function.
 - PWA shell, manifest, service worker.
 - Supabase REST/Auth client.
 - Migration schema và policy RLS nền tảng.

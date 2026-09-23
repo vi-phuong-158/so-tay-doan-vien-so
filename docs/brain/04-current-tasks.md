@@ -7,7 +7,16 @@
 
 ## Đang làm
 
-### PUBLIC_FIRST_RUNTIME_FINAL_ACCEPTANCE_CLOSURE (2026-09-20)
+### SOTAY_UI_FINAL_CLOSURE (2026-09-22)
+- **Base:** `origin/master@2095ebb98c572f10a5b04a08396e3e3569fb1271`; branch `feat/ui-final-closure` trong isolated worktree.
+- **Phạm vi:** hợp nhất có chọn lọc PR #55 và #56 theo từng màn, hoàn tất toàn bộ route UI trong scope, giữ nguyên route/auth/data/security contract và không mở Phase 6.
+- **Trạng thái source:** reconcile hoàn tất; 205/205 test, lint 0 errors (3 warning cũ), build và diff-check PASS. Browser guest 30/30 route pattern ở từng viewport 360/390/430/768/1440; Ask AI no-evidence rehearsal PASS.
+- **Runtime còn chặn:** không có authorized rehearsal session/Member API endpoint, nên authenticated report/quiz/Profile/Member/Admin chưa thể PASS. Innovation submission remains deferred and is outside this closure; the UI does not invoke its Edge Function.
+- **Ràng buộc:** không dùng dữ liệu production, không thay backend/RLS/API, không merge `master`; runtime acceptance chỉ PASS khi có rehearsal được ủy quyền.
+- **PR closure:** [#57](https://github.com/vi-phuong-158/so-tay-doan-vien-so/pull/57), exact head `a6d7f02c8d6aaa3da64b4c2e5175be4e0f3bf8ca`, CI run `35700532914` xanh toàn bộ.
+- **Tài liệu:** `docs/ui-final-closure/UI_RECONCILIATION_MATRIX.md` và `docs/ui-final-closure/FINAL_ACCEPTANCE.md`.
+
+### PUBLIC_FIRST_RUNTIME_FINAL_ACCEPTANCE_CLOSURE (ĐÃ HOÀN TẤT — 2026-09-20)
 - **Base:** `origin/master@ab7242787965c7669caeeef6eb6e2d44b214b974` (PR #53 merge).
 - **Runtime đã đồng bộ:** rehearsal `znexculhbdjiflkczpyu` nhận `202609180001_public_first_auth`
   và forward migrations `202609200001_public_first_quiz_read_hardening` / `202609200002_public_ai_quota_policy`; `ask-ai` ACTIVE v8 và
@@ -22,15 +31,16 @@
   login/session reload/detail PASS; signed 60-second private download trả đúng 38 bytes. Click nút tải
   không phát ra browser download event trong harness; xem limitation trong report. Tất cả fixture,
   AI conversation/messages, profile/role, object và Auth users đã cleanup, verify count 0/404.
-  **Verdict:** `PUBLIC_FIRST_RUNTIME_FINAL_ACCEPTANCE_PASS`. PR #54 vẫn OPEN, chưa merge; không đổi
-  production và không mở Phase 6.
+  **Verdict:** `PUBLIC_FIRST_RUNTIME_FINAL_ACCEPTANCE_PASS`. Tại thời điểm acceptance PR #54 còn mở;
+  sau đó đã merge vào `master@2095ebb98c572f10a5b04a08396e3e3569fb1271`. Không đổi production
+  và không mở Phase 6.
 - **Report:** `docs/phase-5-5/06-public-first-runtime-closure.md`.
 
 ### P5.5 — End-to-End Final Closure (2026-09-18)
 - **Base:** `origin/master@7f468a5111df54486f7e98688b4c16057668a519`. PR #51 giữ nguyên như
   historical hosted-runtime acceptance artifact; không merge vì không có Mắt Bão runtime.
   Branch closure mới: `codex/p5-5-final-e2e-closure`.
-- **Phạm vi vòng này:** sửa auth architecture sang `PUBLIC_FIRST_AUTH_ON_DEMAND`: Home/demo shell
+- **Phạm vi vòng này:** sửa auth architecture sang `PUBLIC_FIRST_AUTH_ON_DEMAND`: Home/public shell
   public, route dữ liệu thật vẫn AuthGuard/RLS; guest nhận CTA đăng nhập tại điểm cần quyền. Không
   mở anonymous AI/retrieval và không tách Account khỏi Member Record đã chốt ở P5.5-D1…D4.
 - **Đã xác minh:** root `200/200`, auth/public-first tests `17/17`, lint `0 errors` (4 warning cũ),

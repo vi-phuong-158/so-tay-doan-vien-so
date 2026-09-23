@@ -17,61 +17,79 @@ export const Login = () => {
     e.preventDefault();
     setError(null);
     setLoading(true);
-
-    const { error: loginError } = await login(email, password);
-
-    if (loginError) {
-      setError('Thông tin đăng nhập không chính xác hoặc tài khoản bị khóa.');
-      setLoading(false);
-    } else {
+    try {
+      const { error: loginError } = await login(email, password);
+      if (loginError) {
+        setError('Thông tin đăng nhập không chính xác hoặc tài khoản bị khóa.');
+        return;
+      }
       navigate(from, { replace: true });
+    } catch {
+      setError('Thông tin đăng nhập không chính xác hoặc tài khoản bị khóa.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="page login-page">
-      <div className="login-card form-card">
-        <div className="brand" style={{ marginBottom: '24px' }}>
-          <img src="/brand/app-icon.svg" alt="Sổ tay Đoàn viên số" />
-          <div><strong>Sổ tay Đoàn viên số</strong></div>
-        </div>
-        <form onSubmit={handleSubmit}>
-          {error && <div className="status status-danger" style={{ marginBottom: '16px' }}>{error}</div>}
-          
-          <label className="form-field">
+      <main className="login-shell">
+        <section className="login-card" aria-labelledby="login-title">
+          <header className="login-hero">
+            <img src="/brand/logo-doan.jpg" alt="Logo Đoàn Thanh niên Việt Nam" />
+            <div>
+              <h1 id="login-title">Sổ tay Đoàn viên số</h1>
+              <p>Nền tảng công tác Đoàn của tuổi trẻ Công an tỉnh Phú Thọ</p>
+            </div>
+          </header>
+        <form className="auth-form" onSubmit={handleSubmit}>
+          {error && <div className="status status-danger login-error" role="alert">{error}</div>}
+
+          <label className="form-field" htmlFor="login-email">
             <span>Email</span>
-            <input 
-              type="email" 
-              required 
-              value={email} 
-              onChange={e => setEmail(e.target.value)} 
-              placeholder="Nhập email" 
-            />
-          </label>
-          
-          <label className="form-field">
-            <span>Mật khẩu</span>
-            <input 
-              type="password" 
-              required 
-              value={password} 
-              onChange={e => setPassword(e.target.value)} 
-              placeholder="Nhập mật khẩu" 
+            <input
+              id="login-email"
+              type="email"
+              autoComplete="username"
+              required
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="Nhập email"
             />
           </label>
 
-          <button type="button" className="link-button" onClick={() => navigate('/quen-mat-khau')} style={{ alignSelf: 'flex-start', marginBottom: '24px', background: 'transparent', border: 'none', color: 'var(--brand-600)', cursor: 'pointer' }}>
+          <label className="form-field" htmlFor="login-password">
+            <span>Mật khẩu</span>
+            <input
+              id="login-password"
+              type="password"
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="Nhập mật khẩu"
+            />
+          </label>
+
+          <button type="button" className="login-forgot" onClick={() => navigate('/quen-mat-khau')}>
             Quên mật khẩu?
           </button>
 
-          <button type="submit" className="button button-primary" disabled={loading} style={{ width: '100%' }}>
-            {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+          <button type="submit" className="button button-primary login-submit" disabled={loading}>
+            {loading ? 'Đang đăng nhập…' : 'Đăng nhập'}
           </button>
         </form>
-        <p style={{ marginTop: '24px', fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center' }}>
-          Hệ thống lưu hành nội bộ. Yêu cầu đăng nhập bằng tài khoản được cấp.
-        </p>
-      </div>
+        <p className="login-note">Hệ thống lưu hành nội bộ. Sử dụng tài khoản do đơn vị cấp.</p>
+        </section>
+
+        <aside className="organization-card">
+          <img src="/brand/logo-doan.jpg" alt="" />
+          <div>
+            <strong>Ban Thanh niên Công an tỉnh Phú Thọ</strong>
+            <span>Sổ tay Đoàn viên số</span>
+          </div>
+        </aside>
+      </main>
     </div>
   );
 };

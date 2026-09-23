@@ -13,9 +13,10 @@ test('the root route is public-first and protected routes use a separate auth la
 });
 
 test('guest protected-route behavior is an on-demand login CTA, not an application redirect', () => {
+  const common = fs.readFileSync(new URL('../src/components/common.jsx', import.meta.url), 'utf8');
   assert.match(guards, /return 'AUTHENTICATION_REQUIRED'/);
-  assert.match(guards, /Đăng nhập để tiếp tục/);
-  assert.match(guards, /navigate\('\/login', \{ state: \{ from: location \} \}\)/);
+  assert.match(common, /Đăng nhập để tiếp tục/);
+  assert.match(guards, /AuthRequiredState onLogin=\{\(\) => navigate\('\/login', \{ state: \{ from: location \} \}\)\}/);
   assert.doesNotMatch(guards, /<Navigate to="\/login"/);
 });
 
@@ -32,11 +33,16 @@ test('public routes are outside the protected group and private routes stay insi
   }
 });
 
-test('public shell avoids personal notification and work badges for guests', () => {
+test('public shell keeps the primary navigation stable for guests and signed-in members', () => {
   const layout = fs.readFileSync(new URL('../src/components/Layout.jsx', import.meta.url), 'utf8');
   const home = fs.readFileSync(new URL('../src/pages/Home.jsx', import.meta.url), 'utf8');
   assert.match(layout, /user && <NotificationBell/);
-  assert.match(layout, /\['\/login', 'user', 'Đăng nhập'\]/);
+  for (const route of ["['/', 'home', 'Trang chủ']", "['/cong-viec', 'work', 'Công việc']", "['/tri-thuc', 'book', 'Tri thức']", "['/doi-moi-sang-tao', 'bulb', 'Đổi mới']", "['/ca-nhan', 'user', 'Cá nhân']"]) {
+    assert.ok(layout.includes(route), `missing primary destination ${route}`);
+  }
+  assert.doesNotMatch(layout, /\['\/login',/);
+  assert.match(layout, /primaryNavItems\.map/);
+  assert.match(guards, /<AuthRequiredState onLogin=\{\(\) => navigate\('\/login'/);
   assert.match(home, /isGuest \? 'Khám phá kho tri thức công khai/);
   assert.doesNotMatch(home, /Dữ liệu minh họa/);
 });
@@ -46,4 +52,9 @@ test('service worker upgrades the login-first shell without a manual browser-dat
   assert.match(serviceWorker, /so-tay-doan-vien-v2/);
   assert.match(serviceWorker, /self\.skipWaiting\(\)/);
   assert.match(serviceWorker, /self\.clients\.claim\(\)/);
+});
+
+test('tablet bottom navigation labels stay readable at 11px or larger', () => {
+  const styles = fs.readFileSync(new URL('../src/index.css', import.meta.url), 'utf8');
+  assert.match(styles, /\.bottom-nav small\{font-size:11px;font-weight:600\}/);
 });

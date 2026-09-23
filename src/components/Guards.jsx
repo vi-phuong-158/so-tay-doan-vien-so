@@ -1,6 +1,6 @@
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { EmptyState } from './common';
+import { AuthRequiredState, EmptyState } from './common';
 
 export const getAuthGuardAction = ({ loading, user, profileError, profile }) => {
   if (loading) return 'LOADING_SESSION';
@@ -23,21 +23,15 @@ export const AuthGuard = ({ children }) => {
   }
   if (action === 'AUTHENTICATION_REQUIRED') {
     return (
-      <div className="page" style={{ padding: '40px 16px', display: 'flex', justifyContent: 'center' }}>
-        <EmptyState
-          icon="shield"
-          title="Nội dung dành cho tài khoản được phân quyền"
-          description="Bạn cần đăng nhập để tiếp tục đến khu vực này."
-          action="Đăng nhập để tiếp tục"
-          onAction={() => navigate('/login', { state: { from: location } })}
-        />
+      <div className="page auth-gate-page">
+        <AuthRequiredState onLogin={() => navigate('/login', { state: { from: location } })} />
       </div>
     );
   }
   if (action === 'ERROR_PROFILE') {
     return (
-      <div className="page" style={{ padding: '40px 16px', display: 'flex', justifyContent: 'center' }}>
-        <EmptyState icon="alert" title="Lỗi tải hồ sơ" description={profileError} action="Đăng xuất" onAction={logout} />
+      <div className="page auth-gate-page">
+        <EmptyState icon="alert" title="Không tải được thông tin tài khoản" description="Hãy thử lại sau hoặc đăng xuất rồi đăng nhập lại." action="Đăng xuất" onAction={logout} />
       </div>
     );
   }

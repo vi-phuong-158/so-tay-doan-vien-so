@@ -5,6 +5,34 @@
 
 ---
 
+## [2026-09-20] UI/UX End-to-End Finalization — giữ Public-First, dùng shared frontend primitives
+
+UI shell tiếp tục theo quyết định `PUBLIC_FIRST_AUTH_ON_DEMAND`: Home, tài liệu, chuyên đề, Ask AI
+và Innovation giữ public route; Work/Profile/Quiz/Member/Admin vẫn đi qua guard hiện hữu. Sidebar
+và bottom navigation dùng cùng năm điểm đến chính. Một guest chọn Work/Profile thấy `AuthRequiredState`
+trên route hiện tại rồi chủ động mở Login, không bị chuyển trang tự động.
+
+Chọn `lucide-react` làm icon set duy nhất theo Design System đã chốt; toàn frontend dùng adapter
+`src/components/Icon.jsx`, không nhập icon library trực tiếp tại pages. Loading, auth-required,
+status và dialog dùng component chung để các route giữ cùng typography, token và interaction. Native
+`<dialog>` cung cấp modal desktop, focus trap và Escape; CSS hiển thị cùng component như bottom sheet
+trên mobile.
+
+Mobile text styles that were below 11px are raised to an 11px minimum in the shared stylesheet;
+this keeps existing compact labels legible without changing desktop sizing.
+
+Historical branch iteration: Innovation submission was briefly wired to the existing
+`submit-innovation-problem` contract. A pre-merge audit on 2026-09-23 removed that UI/service call
+because this closure brief excludes new workflow functionality and the product task log marks the
+modal as a separate product decision. The final closure presents the public project list/details
+only; it does not invoke the function. Any future submission UI requires a separately authorized
+task and runtime acceptance.
+
+Account profile không chứa hoặc giả lập Member Record. Những liên kết tự điều hướng về cùng trang bị
+bỏ để không hiển thị hành động giả. Không thay route, RLS, RPC, Edge Function, Member API, auth/JWT,
+database hoặc business workflow; việc kiểm thử giao diện thật cho account/data vẫn cần rehearsal
+runtime và role hợp lệ.
+
 ## [2026-08-16] P4-04: Quiz chỉ ghi/chấm qua trusted RPC, answer key không nằm trong payload trước submit
 
 Khảo sát cho thấy schema năm bảng Quiz đã tồn tại. P4-04 giữ model đó, nhưng thay policy đọc quiz/
@@ -939,3 +967,19 @@ không nới, không skip bất kỳ assertion nào**; test 14/15/16/26 vẫn đ
 - **Đảm bảo:** `quiz_options`, private Storage paths, Member API, report/admin và mutation không
   nhận anon grant. pgTAP `public_first_auth.sql` kiểm tra anon positive/negative rows, bucket
   privacy, function ACL và private-AI-outranks-public negative case.
+
+## [2026-09-20] UI_REFERENCE_RECONCILIATION — Mockup owner là nguồn giao diện chuẩn
+
+- **Quyết định:** Dùng bộ mockup 8 màn hình do owner cung cấp làm visual source of truth cho Login,
+  Home, Công việc, Chi tiết báo cáo, Tri thức, AI, Quiz và Quản lý đoàn viên. Mobile dùng bottom
+  navigation 5 mục; desktop giữ shell thích ứng hiện có.
+- **Quyết định:** Thống nhất icon qua `lucide-react` và tái sử dụng asset logo Đoàn đã có trong
+  repository. Không thay đổi route, service contract, auth, RLS, API hoặc quy tắc public/private.
+- **Lý do:** Bản Modern Civic Glass trước đó không khớp layout compact, phân cấp thị giác và cách
+  điều hướng mobile trong mockup owner đã duyệt.
+- **Phạm vi:** Đây là thay đổi giao diện frontend; ghi chú Lưu nháp báo cáo chỉ lưu text cục bộ
+  theo user/assignment, còn gửi báo cáo tiếp tục qua service hiện tại. Branch chờ runtime closure
+  trước khi rebase và nâng Draft PR lên Ready for Review.
+
+  **Scope correction (2026-09-23):** local report draft persistence was removed before merge. The
+  closure changes report presentation only; report text is not written to browser storage.

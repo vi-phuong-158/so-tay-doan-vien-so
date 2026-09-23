@@ -1,12 +1,36 @@
 # 06 — AI Working Log
 
+## [2026-09-23] SOTAY_UI_FINAL_CLOSURE — audit scope correction before merge
+
+- **Agent:** Codex
+- **Thay đổi:** Independent audit found the candidate had added a problem-submission form and a
+  client call to `submit-innovation-problem`, although the active closure brief excludes new
+  workflow functionality and the task log identifies this modal as a separate product decision.
+  The audit also found new localStorage report draft persistence and answer-required quiz navigation.
+  Removed those additions to preserve the existing workflow and avoid browser storage for report
+  text. Retained the public Innovation list/detail presentation, existing guest-to-login navigation,
+  report/quiz presentation updates, and backend contracts. Reconciled current status documentation
+  while preserving the earlier branch iteration as history.
+- **File đã sửa:** `src/pages/Innovation.jsx`, `src/services/innovationService.js`,
+  `src/pages/ReportAssignmentDetail.jsx`, `src/pages/Quiz.jsx`, `src/index.css`,
+  `tests/innovation_service.test.mjs`, `docs/04-implementation-status.md`,
+  `docs/brain/01-architecture.md`, `docs/brain/03-decisions.md`, `docs/brain/04-current-tasks.md`,
+  `docs/ui-final-closure/FINAL_ACCEPTANCE.md`,
+  `docs/ui-final-closure/UI_RECONCILIATION_MATRIX.md`,
+  `docs/ui-ux-end-to-end-finalization.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Keep PR #57 within UI reconciliation scope; do not start Phase 6 or make a new business
+  workflow active.
+- **Kiểm tra:** `npm test` 205/205 PASS; `npm run lint` 0 errors/3 existing Fast Refresh warnings;
+  `npm run build` PASS (520.68 kB chunk-size warning); `git diff --check` PASS; report detail
+  contains no browser-storage API. Exact-head CI and renewed review remain pending before merge.
+
 ## [2026-09-18] P5.5 — End-to-End Final Closure / Public-first auth
 
 - **Agent:** Codex
 - **Base/branch:** `origin/master@7f468a5111df54486f7e98688b4c16057668a519`; closure branch
   `codex/p5-5-final-e2e-closure`. PR #51 was audited and retained as a historical artifact; it
   was not merged and no Phase 6 work was started.
-- **Thay đổi:** `src/App.jsx` now exposes the Home/demo shell publicly and groups data-bearing
+- **Thay đổi:** `src/App.jsx` now exposes the Home/public shell publicly and groups data-bearing
   routes under `AuthGuard`; `src/components/Guards.jsx` presents an on-demand login CTA instead of
   redirecting the whole app; auth tests cover the new contract. Added the final acceptance report
   and reconciled architecture, decision, implementation-status and current-task documentation.
@@ -2250,4 +2274,52 @@
   `633c5cf4142675b2b780f35e0372e6f6eff87602`; CI run `35486717207` xanh. Authenticated signed URL
   trả HTTP 200, `text/plain`, đúng 38 bytes; cross-org/anon denied. Session còn sau reload, document
   detail mở được, user sign-out. Cleanup verified: document/conversation/messages/profile/role/object
-  counts 0, Auth users 404. `.env` unchanged; no production data changed; PR #54 remains open.
+  counts 0, Auth users 404. `.env` unchanged; no production data changed. PR #54 khi đó còn mở và
+  sau đó đã merge vào `master@2095ebb98c572f10a5b04a08396e3e3569fb1271`.
+
+## [2026-09-20] SO_TAY_DOAN_VIEN_UI_UX_END_TO_END_FINALIZATION
+- **Agent:** Codex
+- **Thay đổi:** Hoàn thiện shared UI theo Public-First và design tokens: thống nhất guest/auth nav 5 mục, chuyển icon sang Lucide, thêm auth-required/native modal primitives, sửa shared skeleton token, đặt text floor 11px trên mobile, bổ sung quick actions trên Home, Innovation details/form dùng Edge Function contract có sẵn, chỉnh Profile account copy, và chuẩn hóa Login/Forgot/Reset/Change Password.
+- **File đã sửa:** `package.json`, `package-lock.json`; `src/components/{Guards,Icon,Layout,Skeleton,common}.jsx`, `src/index.css`, `src/pages/{Home,Innovation,Profile}.jsx`, `src/pages/auth/{Login,ForgotPassword,ResetPassword,ChangePassword}.jsx`, `src/services/innovationService.js`, `tests/{public_first_auth,innovation_service}.test.mjs`, `docs/ui-ux-end-to-end-finalization.md`, `docs/brain/{01-architecture,03-decisions,04-current-tasks,06-ai-working-log}.md`, và screenshot evidence trong `docs/ui-ux-end-to-end-finalization/screenshots/`.
+- **Lý do:** Củng cố cảm giác một sản phẩm thống nhất trên mobile/desktop, giữ đăng nhập theo yêu cầu của route, và sửa shared loading state vốn render như vùng trắng vì dùng token không tồn tại.
+- **Kiểm tra:** `npm test` 207/207; lint 0 errors với 3 Fast Refresh warnings đã có; build PASS (513.97 kB main chunk warning); route smoke trên toàn bộ route pattern và wildcard ở 360px; bốn viewport 360/390/768/1440 không overflow cho 7 surface đại diện; ba auth routes kiểm tra ở cả bốn viewport; visible text không dưới 11px ở Home, Knowledge, Innovation, Work gate và auth forms trên 360/390px; 5 navigation/auth click smoke và keyboard focus field kiểm tra. No backend/API/auth-boundary or Phase 6 changes. PR #56 mở trên branch này.
+- **Giới hạn:** Không có rehearsal Supabase/Member API hoặc authenticated role trong workspace; content, session/logout, private document, Ask AI response, authorized member/admin screens và Innovation modal submit còn chờ browser acceptance trên Preview. Verdict `UI_UX_END_TO_END_FINALIZATION_BLOCKED_NO_REHEARSAL_RUNTIME`; report `docs/ui-ux-end-to-end-finalization.md`.
+
+## [2026-09-20] UI_REFERENCE_RECONCILIATION — Mockup-to-code
+- **Agent:** Codex
+- **Thay đổi:** Đối chiếu và triển khai lại 8 màn Login, Home, Công việc, Chi tiết báo cáo, Tri thức,
+  AI, Quiz và Quản lý đoàn viên theo mockup owner; đưa shell mobile về bottom nav 5 mục, dùng logo
+  Đoàn có sẵn và thay icon path tự viết bằng `lucide-react`. Ghi chú báo cáo lưu text cục bộ theo
+  user/assignment; submit/upload vẫn đi qua service hiện hữu.
+- **File đã sửa:** `package.json`, `package-lock.json`, `public/brand/logo-doan.jpg`,
+  `src/components/{Icon,Layout,common}.jsx`, `src/index.css`,
+  `src/pages/{AskAi,Home,Knowledge,MemberManagement,Quiz,ReportAssignmentDetail,Work}.jsx`,
+  `src/pages/auth/Login.jsx`, `docs/brain/{01-architecture,03-decisions,04-current-tasks,06-ai-working-log}.md`,
+  `docs/ui-reference-reconciliation/{README.md,screenshots/*.png}`.
+- **Lý do:** UI trước đó lệch hierarchy/layout mobile trong mockup đã duyệt; các chỉnh sửa chỉ tác
+  động presentation và giữ nguyên auth, business service, route, API contract và security behavior.
+- **Kiểm tra:** `npm test` 204/204 pass; `npm run lint` 0 lỗi, 3 cảnh báo Fast Refresh cũ;
+  `npm run build` pass (cảnh báo bundle chính 518.05 kB). Browser visual review 8 màn ở 390×844;
+  responsive matrix 40 lượt (8 route × 360/390/430/768/1440) không tràn ngang, màn không trắng.
+  Fake Supabase/Member API chỉ cung cấp dữ liệu tổng hợp cho UI, không xác minh backend/runtime.
+
+## [2026-09-22] SOTAY_UI_FINAL_CLOSURE
+- **Agent:** Codex
+- **Thay đổi:** Tạo branch closure từ master sau PR #54; reconcile thủ công PR #55/#56 theo từng
+  màn; thống nhất navigation, auth-on-demand, Lucide và owner mockup; sửa desktop Home/Login/
+  Knowledge/Ask AI, no-evidence/retry AI, mobile text/touch floors; cập nhật status/matrix/report và
+  lưu screenshot source cuối.
+- **File đã sửa:** `README.md`, `docs/04-implementation-status.md`,
+  `docs/brain/{01-architecture,03-decisions,04-current-tasks,06-ai-working-log}.md`,
+  `docs/ui-final-closure/**`, `docs/ui-reference-reconciliation/**`, `public/brand/logo-doan.jpg`,
+  `src/components/{Icon,Layout,common}.jsx`, `src/index.css`,
+  `src/pages/{AskAi,Home,Knowledge,MemberManagement,Quiz,ReportAssignmentDetail,Work}.jsx`,
+  `src/pages/auth/Login.jsx` cùng các file từ UI finalization đã cherry-pick.
+- **Lý do:** Đưa toàn bộ frontend về một candidate duy nhất, giữ đúng Public-First và contract hiện
+  có, loại bỏ hai implementation cạnh tranh mà không mở backend/Phase 6.
+- **Kiểm tra:** `npm test` 208/208; lint 0 errors/3 warning cũ; build PASS (main chunk 525.45 kB,
+  warning >500 kB); `git diff --check` PASS. Browser rehearsal guest 30/30 route pattern tại mỗi
+  viewport 360/390/430/768/1440, console public sạch, navigation/auth-on-demand/keyboard và Ask AI
+  no-evidence PASS. Authenticated runtime/Member API vẫn BLOCKED đúng nghĩa; không tạo fixture giả,
+  không dùng service role ở frontend và không chạm production. PR #57 exact head
+  `a6d7f02c8d6aaa3da64b4c2e5175be4e0f3bf8ca`, CI run `35700532914` xanh toàn bộ.

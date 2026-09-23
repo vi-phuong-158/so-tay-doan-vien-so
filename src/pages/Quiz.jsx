@@ -75,7 +75,7 @@ function AttemptView({ questions, answers, currentIndex, onAnswer, onPrevious, o
         <span className="status status-info">{question.type === 'MULTIPLE' ? 'Chọn nhiều đáp án' : 'Chọn một đáp án'}</span>
         <h2>{question.text}</h2>
         <div className="quiz-options">
-          {question.options.map((option) => {
+          {question.options.map((option, optionIndex) => {
             const checked = selected.includes(option.id);
             return (
               <label className={`quiz-option${checked ? ' selected' : ''}`} key={option.id}>
@@ -85,14 +85,15 @@ function AttemptView({ questions, answers, currentIndex, onAnswer, onPrevious, o
                   checked={checked}
                   onChange={() => onAnswer(question, option.id)}
                 />
+                <span className="quiz-option-letter">{String.fromCharCode(65 + optionIndex)}</span>
                 <span>{option.text}</span>
               </label>
             );
           })}
         </div>
       </article>
-      <div className="quiz-nav">
-        <Button variant="secondary" onClick={onPrevious} disabled={currentIndex === 0 || submitting}>Quay lại</Button>
+      <div className="quiz-sticky-action">
+        <Button variant="secondary" onClick={onPrevious} disabled={currentIndex === 0 || submitting}>Trước</Button>
         {last ? (
           <Button onClick={onSubmit} disabled={submitting}>{submitting ? 'Đang nộp…' : 'Nộp bài'}</Button>
         ) : (
@@ -213,12 +214,12 @@ export function Quiz() {
 
   const errorTitle = useMemo(() => error?.code === 'AUTHENTICATION_REQUIRED' ? 'Cần đăng nhập' : 'Không thể mở bài', [error]);
 
-  if (view === 'loading') return <div className="page"><PageHeader title="Trắc nghiệm" back={LIST_PATH} navigate={navigate} /><Skeleton lines={8} /></div>;
-  if (view === 'error') return <div className="page"><PageHeader title="Trắc nghiệm" back={LIST_PATH} navigate={navigate} /><EmptyState icon="alert" title={errorTitle} description={errorMessage(error)} action="Thử lại" onAction={loadIntro} /></div>;
+  if (view === 'loading') return <div className="page page--appbar quiz-screen"><PageHeader title="Trắc nghiệm" back={LIST_PATH} navigate={navigate} variant="brand" /><Skeleton lines={8} /></div>;
+  if (view === 'error') return <div className="page page--appbar quiz-screen"><PageHeader title="Trắc nghiệm" back={LIST_PATH} navigate={navigate} variant="brand" /><EmptyState icon="alert" title={errorTitle} description={errorMessage(error)} action="Thử lại" onAction={loadIntro} /></div>;
 
   return (
-    <div className="page">
-      <PageHeader title={view === 'result' ? 'Kết quả trắc nghiệm' : quiz?.title || 'Trắc nghiệm'} back={LIST_PATH} navigate={navigate} />
+    <div className="page page--appbar quiz-screen">
+      <PageHeader title={view === 'result' ? 'Kết quả trắc nghiệm' : quiz?.title || 'Trắc nghiệm'} back={LIST_PATH} navigate={navigate} variant="brand" />
       {error && <div className="form-error" role="alert">{errorMessage(error)}</div>}
       {view === 'intro' && quiz && <IntroView quiz={quiz} onStart={start} starting={starting} />}
       {view === 'attempt' && questions.length > 0 && (

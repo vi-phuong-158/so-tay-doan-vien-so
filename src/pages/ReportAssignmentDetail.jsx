@@ -362,8 +362,8 @@ export function ReportAssignmentDetail() {
     : reviewAction === 'NEEDS_SUPPLEMENT' ? 'Yêu cầu bổ sung' : 'Miễn nộp';
 
   return (
-    <div className="page">
-      <PageHeader title={campaign?.title || 'Chi tiết nhiệm vụ'} back="/cong-viec" navigate={navigate} />
+    <div className="page page--appbar report-detail-page">
+      <PageHeader title="Đợt báo cáo" subtitle="Chi tiết và nộp báo cáo" back="/cong-viec" navigate={navigate} variant="brand" />
       {loading && <Skeleton lines={7} />}
       {!loading && error && (
         <EmptyState
@@ -383,7 +383,7 @@ export function ReportAssignmentDetail() {
           </section>
 
           <section className="content-card">
-            <h3>Thông tin nhiệm vụ</h3>
+            <h3>Yêu cầu báo cáo</h3>
             {campaign.description && <p>{campaign.description}</p>}
             <div className="info-grid">
               <div><span>Mở đợt</span><strong>{formatReportDate(campaign.openAt)}</strong></div>
@@ -496,7 +496,7 @@ export function ReportAssignmentDetail() {
               <p>Thao tác sẽ được kiểm tra lại trên máy chủ và cập nhật assignment, bản nộp, history, audit và notification trong cùng transaction.</p>
               {reviewError && <p role="alert">{getReportErrorMessage(reviewError, 'Không thể review báo cáo. Trạng thái có thể đã thay đổi.')}</p>}
               {reviewResult && <p role="status">Review đã được ghi nhận. Trạng thái hiện tại sẽ được tải lại từ máy chủ.</p>}
-              <div style={{ display: 'flex', gap: 9, flexWrap: 'wrap' }}>
+              <div className="report-upload-actions">
                 {reviewActions.includes('ACCEPTED') && <button type="button" className="button button-primary" onClick={() => requestReview('ACCEPTED')} disabled={reviewSubmitting}>Xác nhận hoàn thành</button>}
                 {reviewActions.includes('NEEDS_SUPPLEMENT') && <button type="button" className="button button-secondary" onClick={() => requestReview('NEEDS_SUPPLEMENT')} disabled={reviewSubmitting}>Yêu cầu bổ sung</button>}
                 {reviewActions.includes('EXEMPTED') && <button type="button" className="button button-secondary" onClick={() => requestReview('EXEMPTED')} disabled={reviewSubmitting}>Miễn nộp</button>}
@@ -565,8 +565,12 @@ export function ReportAssignmentDetail() {
                 <div className="security-box"><strong>Nội dung cần bổ sung</strong><p>{latestSubmission.reviewNote}</p></div>
               )}
               <div className="form-field">
-                <span>Chọn tệp</span>
-                <label className="button button-secondary" htmlFor="report-files">Chọn tệp</label>
+                <span>Tệp đã tải lên</span>
+                <label className="report-upload-zone" htmlFor="report-files">
+                  <Icon name="upload" size={23} />
+                  <strong>Chọn tệp báo cáo</strong>
+                  <small>Nhấn để chọn tệp · {formatExtensions(campaign.allowedExtensions)}</small>
+                </label>
                 <input
                   id="report-files"
                   type="file"
@@ -613,7 +617,7 @@ export function ReportAssignmentDetail() {
                 <textarea id="report-submit-note" maxLength={2000} value={submitNote} onChange={(event) => setSubmitNote(event.target.value)} disabled={uploading || submitting} />
               </div>
 
-              <div style={{ display: 'flex', gap: 9, flexWrap: 'wrap' }}>
+              <div className="report-upload-actions">
                 <button type="button" className="button button-secondary" onClick={uploadFiles} disabled={uploading || submitting || selectedFiles.length === 0 || selectedFiles.every(({ status }) => status === 'uploaded')}>
                   {uploading ? 'Đang tải lên...' : 'Tải tệp lên'}
                 </button>

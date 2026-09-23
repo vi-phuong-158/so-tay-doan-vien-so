@@ -1,29 +1,33 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Icon } from './Icon';
 import { Brand } from './common';
 import { useAuth } from '../contexts/AuthContext';
 import { NotificationBell } from './NotificationBell';
 
+const primaryNavItems = [
+  ['/', 'home', 'Trang chủ'],
+  ['/cong-viec', 'work', 'Công việc'],
+  ['/tri-thuc', 'book', 'Tri thức'],
+  ['/doi-moi-sang-tao', 'bulb', 'Đổi mới'],
+  ['/ca-nhan', 'user', 'Cá nhân']
+];
+
 function Sidebar() {
   const navigate = useNavigate();
-  const { user, profile, hasRole, roles } = useAuth();
+  const { profile, hasRole, roles } = useAuth();
   // P5.5-06: deliberately NOT `hasRole` — `hasRole` bakes in a SYSTEM_ADMIN bypass
   // (`roles.includes(role) || roles.includes('SYSTEM_ADMIN')`), which mục 7/12 explicitly forbids
   // for Member Management (see Guards.jsx's MemberManagementGuard for the same rule enforced on
   // the routes themselves — this is UX-only, the Member API re-checks regardless).
   const canManageMembers = (roles || []).includes('YOUTH_ADMIN') || (roles || []).includes('BRANCH_OFFICER');
 
-  const items = user
-    ? [['/', 'home', 'Trang chủ'], ['/cong-viec', 'work', 'Công việc'], ['/tri-thuc', 'book', 'Tri thức'], ['/doi-moi-sang-tao', 'bulb', 'Đổi mới sáng tạo'], ['/ca-nhan', 'user', 'Cá nhân']]
-    : [['/', 'home', 'Trang chủ'], ['/tri-thuc', 'book', 'Tri thức'], ['/doi-moi-sang-tao', 'bulb', 'Đổi mới sáng tạo'], ['/login', 'user', 'Đăng nhập']];
-  
   return (
     <aside className="sidebar">
       <Brand />
       <nav>
-        {items.map(([url, icon, label]) => (
+        {primaryNavItems.map(([url, icon, label]) => (
           <NavLink key={url} to={url} end={url === '/'} className={({isActive}) => isActive ? 'active' : ''}>
-            <Icon name={icon} /><span>{label}</span>{user && url === '/cong-viec' && <b>2</b>}
+            <Icon name={icon} /><span>{label}</span>
           </NavLink>
         ))}
       </nav>
@@ -49,16 +53,12 @@ function Sidebar() {
   );
 }
 
-function BottomNav() {
-  const { user } = useAuth();
-  const items = user
-    ? [['/', 'home', 'Trang chủ'], ['/cong-viec', 'work', 'Công việc'], ['/tri-thuc', 'book', 'Tri thức'], ['/doi-moi-sang-tao', 'bulb', 'Đổi mới'], ['/ca-nhan', 'user', 'Cá nhân']]
-    : [['/', 'home', 'Trang chủ'], ['/tri-thuc', 'book', 'Tri thức'], ['/doi-moi-sang-tao', 'bulb', 'Đổi mới'], ['/login', 'user', 'Đăng nhập']];
+export function BottomNavigation() {
   return (
-    <nav className="bottom-nav">
-      {items.map(([url, icon, label]) => (
+    <nav className="bottom-nav" aria-label="Điều hướng chính">
+      {primaryNavItems.map(([url, icon, label]) => (
         <NavLink key={url} to={url} end={url === '/'} className={({isActive}) => isActive ? 'active' : ''}>
-          <span className="nav-icon"><Icon name={icon} size={22} />{user && url === '/cong-viec' && <i>2</i>}</span><small>{label}</small>
+          <span className="nav-icon"><Icon name={icon} size={22} /></span><small>{label}</small>
         </NavLink>
       ))}
     </nav>
@@ -67,8 +67,19 @@ function BottomNav() {
 
 export function AppShell() {
   const { user } = useAuth();
+  const { pathname } = useLocation();
+  const usesBrandedMobileHeader = pathname === '/'
+    || pathname === '/tri-thuc'
+    || pathname === '/tri-thuc/hoi-ai'
+    || (Boolean(user) && (
+      pathname === '/cong-viec'
+      || pathname.startsWith('/cong-viec/bao-cao/')
+      || pathname.startsWith('/tri-thuc/trac-nghiem/')
+      || pathname.startsWith('/quan-ly-doan-vien')
+    ));
+
   return (
-    <div className="app-layout">
+    <div className={`app-layout${usesBrandedMobileHeader ? ' app-layout--branded-mobile-header' : ''}`}>
       <Sidebar />
       <main className="main-content">
         <div className="mobile-topbar">
@@ -77,7 +88,7 @@ export function AppShell() {
         </div>
         <Outlet />
       </main>
-      <BottomNav />
+      <BottomNavigation />
     </div>
   );
 }
