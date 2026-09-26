@@ -5,6 +5,7 @@ import { Button, PageHeader } from '../components/common';
 import Skeleton from '../components/Skeleton';
 import { createDocumentService } from '../services/documentService';
 import { supabase } from '../services/supabaseClient';
+import { useAuth } from '../contexts/AuthContext';
 import {
   canDownloadSource,
   documentErrorMessage,
@@ -29,6 +30,7 @@ function MetaRow({ label, value }) {
 export function DocumentDetail() {
   const { documentId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [document, setDocument] = useState(null);
   const [relations, setRelations] = useState([]);
@@ -87,7 +89,9 @@ export function DocumentDetail() {
     setDownloading(true);
     setDownloadError(null);
     try {
-      const url = await documentService.getDocumentDownloadUrl(document.storagePath);
+      const url = user
+        ? await documentService.getDocumentDownloadUrl(document.storagePath)
+        : await documentService.getPublicDocumentDownloadUrl(document.id);
       window.open(url, '_blank', 'noopener,noreferrer');
     } catch (requestError) {
       setDownloadError(requestError);

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Icon } from '../components/Icon';
-import { EmptyState, PageHeader } from '../components/common';
+import { PageHeader } from '../components/common';
 import { createAskAiService } from '../services/aiService';
 import { supabase } from '../services/supabaseClient';
 
@@ -11,16 +11,23 @@ export function AskAi() {
   const navigate = useNavigate();
   const [question, setQuestion] = useState('');
   const [result, setResult] = useState(null);
+  const [messages, setMessages] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  async function submit(event) {
-    event.preventDefault();
-    if (loading) return;
+  async function askQuestion(askedQuestion) {
+    if (loading || !askedQuestion) return;
     setLoading(true);
     setError(null);
     try {
-      setResult(await askAiService.ask({ question, conversationId: result?.conversationId }));
+      const nextResult = await askAiService.ask({ question: askedQuestion, conversationId: result?.conversationId });
+      setResult(nextResult);
+      setMessages((current) => [...current, {
+        question: askedQuestion,
+        answer: nextResult.answer,
+        citations: nextResult.citations
+      }]);
+      setQuestion('');
     } catch (requestError) {
       setError(requestError.message);
     } finally {
@@ -28,50 +35,80 @@ export function AskAi() {
     }
   }
 
+  function submit(event) {
+    event.preventDefault();
+    askQuestion(question.trim());
+  }
+
   return (
-    <div className="page ask-ai-page">
-      <PageHeader title="Hỏi AI có dẫn nguồn" back="/tri-thuc" navigate={navigate} />
-      <p className="ask-ai-intro">Câu trả lời chỉ dựa trên tri thức đã được duyệt và bạn được phép xem.</p>
-      <form className="ask-ai-form" onSubmit={submit}>
-        <label htmlFor="ai-question">Câu hỏi</label>
+    <div className="page page--appbar ask-ai-page">
+      <PageHeader title="Trợ lý AI" subtitle="Tra cứu tri thức có dẫn nguồn" back="/tri-thuc" navigate={navigate} variant="brand" />
+      <div className="ask-ai-chat" aria-live="polite">
+        {messages.length === 0 && !loading && (
+          <section className="ask-ai-welcome">
+            <span className="ask-ai-welcome-icon"><Icon name="sparkles" size={25} /></span>
+            <h2>Xin chào, tôi có thể giúp gì?</h2>
+            <p>Câu trả lời được đối chiếu với tri thức đã duyệt và hiển thị nguồn tham khảo.</p>
+            <div className="ask-ai-suggestions" aria-label="Câu hỏi gợi ý">
+              {[
+                'Thời hạn thực hiện theo văn bản là bao lâu?',
+                'Đoàn viên cần làm gì khi phát hiện tin giả?',
+                'Tóm tắt nội dung văn bản mới nhất'
+              ].map((suggestion) => (
+                <button type="button" key={suggestion} onClick={() => setQuestion(suggestion)}>{suggestion}</button>
+              ))}
+            </div>
+          </section>
+        )}
+        {messages.map((message, index) => (
+          <div className="ask-ai-turn" key={`${index}-${message.question}`}>
+            <p className="ask-ai-user-bubble">{message.question}</p>
+            <article className="ask-ai-answer">
+              <div className="ask-ai-answer-label"><span><Icon name="sparkles" size={16} /></span><strong>Trợ lý AI</strong></div>
+              <p>{message.answer}</p>
+              {message.citations.length > 0 && (
+                <div className="ask-ai-citations">
+                  <h3>Nguồn tham khảo</h3>
+                  {message.citations.map((item) => (
+                    <Link key={item.evidenceId} to={item.citationPath} className="ask-ai-citation">
+                      <span>[{item.rank}]</span>
+                      <strong>{item.title}</strong>
+                      {item.locator?.page ? <small>Trang {item.locator.page}</small> : <small>Mở văn bản nguồn</small>}
+                    </Link>
+                  ))}
+                </div>
+              )}
+              {message.citations.length === 0 && (
+                <p className="ask-ai-no-evidence" role="note">
+                  Chưa tìm thấy nguồn phù hợp để kiểm chứng câu trả lời này. Không sử dụng nội dung trên như kết luận chính thức.
+                </p>
+              )}
+            </article>
+          </div>
+        ))}
+        {loading && <p className="ask-ai-thinking"><Icon name="sparkles" size={16} /> Đang đối chiếu nguồn…</p>}
+        {error && (
+          <div className="ask-ai-error form-error" role="alert">
+            <p>{error}</p>
+            <button type="button" onClick={() => askQuestion(question.trim())} disabled={!question.trim() || loading}>Thử lại</button>
+          </div>
+        )}
+      </div>
+      <form className="ask-ai-composer" onSubmit={submit}>
+        <label className="sr-only" htmlFor="ai-question">Nhập câu hỏi</label>
         <textarea
           id="ai-question"
           value={question}
-          onChange={event => setQuestion(event.target.value)}
+          onChange={(event) => setQuestion(event.target.value)}
           maxLength={2000}
-          placeholder="Ví dụ: Thời hạn thực hiện theo văn bản là bao lâu?"
+          placeholder="Nhập câu hỏi…"
           disabled={loading}
+          rows={1}
         />
-        <button className="button button-primary" type="submit" disabled={loading}>
-          <Icon name="sparkles" size={18} />
-          {loading ? 'Đang đối chiếu nguồn…' : 'Hỏi AI'}
+        <button type="submit" aria-label="Gửi câu hỏi" disabled={loading || !question.trim()}>
+          <Icon name="send" size={19} />
         </button>
       </form>
-
-      {error && <p className="form-error" role="alert">{error}</p>}
-
-      {!loading && !result && !error && (
-        <EmptyState icon="sparkles" title="Sẵn sàng tra cứu" description="Nhập câu hỏi để AI đối chiếu kho tri thức đã duyệt." />
-      )}
-
-      {result && (
-        <section className="ask-ai-result" aria-live="polite">
-          <h2>Trả lời</h2>
-          <p>{result.answer}</p>
-          {result.citations.length > 0 && (
-            <div className="ask-ai-citations">
-              <h3>Nguồn đã đối chiếu</h3>
-              {result.citations.map(item => (
-                <Link key={item.evidenceId} to={item.citationPath} className="ask-ai-citation">
-                  <span>[{item.rank}]</span>
-                  <strong>{item.title}</strong>
-                  {item.locator?.page ? <small>Trang {item.locator.page}</small> : <small>Mở văn bản nguồn</small>}
-                </Link>
-              ))}
-            </div>
-          )}
-        </section>
-      )}
     </div>
   );
 }

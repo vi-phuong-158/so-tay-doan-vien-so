@@ -15,16 +15,16 @@ function AssignmentCard({ assignment }) {
 
   return (
     <Link
-      className="card campaign-card"
+      className="card campaign-card accent"
       to={`/cong-viec/bao-cao/${assignment.id}`}
       aria-label={`Mở nhiệm vụ ${campaign.title || 'báo cáo'}`}
     >
-      <div className="card-header">
+      <div className="campaign-card-head">
         <h3>{campaign.title || 'Nhiệm vụ báo cáo'}</h3>
         <StatusBadge status={assignment.status} />
       </div>
       {campaign.issuer && <p>{campaign.issuer}</p>}
-      <div className="card-meta">
+      <div className="campaign-meta">
         <span><Icon name="clock" size={15} />Hạn nộp: {formatReportDate(dueAt)}</span>
       </div>
     </Link>
@@ -83,8 +83,8 @@ export function Work() {
   const visibleAssignments = groupedAssignments[activeTab];
 
   return (
-    <div className="page">
-      <PageHeader title="Công việc & Báo cáo" />
+    <div className="page page--appbar work-page">
+      <PageHeader title="Công việc & Báo cáo" subtitle="Theo dõi nhiệm vụ và hạn nộp báo cáo" variant="brand" />
 
       <div className="tabs" role="tablist" aria-label="Lọc nhiệm vụ báo cáo">
         <button

@@ -13,6 +13,36 @@
 - **Đánh đổi:** Evidence cũ chưa có vector vẫn lexical-only; không backfill production trong phase này. Embedding evidence mới là best-effort trong article generation; thiếu vector giữ bài dùng được qua lexical retrieval và thêm cảnh báo nội bộ.
 - **Migration/rollback:** Migration `202609260001_phase_5_semantic_retrieval.sql` additive; rollback an toàn bằng forward fix/tắt semantic RPC call, giữ `search_published_knowledge`. Không cần xóa vector hoặc dữ liệu hiện có.
 
+- **Tương thích Public-First:** Guest tiếp tục dùng quota theo giờ và `search_public_knowledge` trên corpus PUBLIC cố định; không có lịch sử hội thoại và không gọi semantic RPC. Hybrid retrieval chỉ áp dụng sau khi xác thực user, với RPC chạy theo JWT và authorization hiện hành.
+
+## [2026-09-20] UI/UX End-to-End Finalization — giữ Public-First, dùng shared frontend primitives
+
+UI shell tiếp tục theo quyết định `PUBLIC_FIRST_AUTH_ON_DEMAND`: Home, tài liệu, chuyên đề, Ask AI
+và Innovation giữ public route; Work/Profile/Quiz/Member/Admin vẫn đi qua guard hiện hữu. Sidebar
+và bottom navigation dùng cùng năm điểm đến chính. Một guest chọn Work/Profile thấy `AuthRequiredState`
+trên route hiện tại rồi chủ động mở Login, không bị chuyển trang tự động.
+
+Chọn `lucide-react` làm icon set duy nhất theo Design System đã chốt; toàn frontend dùng adapter
+`src/components/Icon.jsx`, không nhập icon library trực tiếp tại pages. Loading, auth-required,
+status và dialog dùng component chung để các route giữ cùng typography, token và interaction. Native
+`<dialog>` cung cấp modal desktop, focus trap và Escape; CSS hiển thị cùng component như bottom sheet
+trên mobile.
+
+Mobile text styles that were below 11px are raised to an 11px minimum in the shared stylesheet;
+this keeps existing compact labels legible without changing desktop sizing.
+
+Historical branch iteration: Innovation submission was briefly wired to the existing
+`submit-innovation-problem` contract. A pre-merge audit on 2026-09-23 removed that UI/service call
+because this closure brief excludes new workflow functionality and the product task log marks the
+modal as a separate product decision. The final closure presents the public project list/details
+only; it does not invoke the function. Any future submission UI requires a separately authorized
+task and runtime acceptance.
+
+Account profile không chứa hoặc giả lập Member Record. Những liên kết tự điều hướng về cùng trang bị
+bỏ để không hiển thị hành động giả. Không thay route, RLS, RPC, Edge Function, Member API, auth/JWT,
+database hoặc business workflow; việc kiểm thử giao diện thật cho account/data vẫn cần rehearsal
+runtime và role hợp lệ.
+
 ## [2026-08-16] P4-04: Quiz chỉ ghi/chấm qua trusted RPC, answer key không nằm trong payload trước submit
 
 Khảo sát cho thấy schema năm bảng Quiz đã tồn tại. P4-04 giữ model đó, nhưng thay policy đọc quiz/
@@ -405,6 +435,140 @@ không nới, không skip bất kỳ assertion nào**; test 14/15/16/26 vẫn đ
 - **Người quyết định:** Claude Code (nghiên cứu độc lập theo yêu cầu owner), chờ owner xác nhận khi
   provisioning thật.
 
+## [2026-09-08] P5.5-D9 — Excel import: không hỗ trợ merge/update-existing từ dòng import
+
+- **Quyết định:** `POST /v1/members/import/:jobId/confirm` chỉ có hai kết quả cho một dòng:
+  `CREATE_NEW` (tạo member mới, mặc định cho dòng `VALID`, hoặc override thủ công cho dòng
+  `POSSIBLE_DUPLICATE`/`WARNING`) hoặc `SKIP` (mặc định cho dòng nghi trùng chưa được xác nhận, và
+  luôn luôn cho dòng `INVALID`). Không có action nào cho phép một dòng import ghi đè/merge vào một
+  Member đã tồn tại — kể cả khi người dùng chọn override một dòng `POSSIBLE_DUPLICATE`, kết quả luôn
+  là một record MỚI, tách biệt hoàn toàn khỏi candidate đã tìm thấy.
+- **Lý do:** `member_id` (mục 5 kiến trúc) chủ đích không phải business identifier và không hiển thị
+  cho người dùng như một mã định danh nghiệp vụ — cho phép người import chọn `member_id` để "update
+  cho member này" qua Excel sẽ biến `member_id` thành một identifier nghiệp vụ trên thực tế. Đây
+  cũng đúng tinh thần mục E kiến trúc: dedup là soft-match, "auto-merge sai người không bao giờ xảy
+  ra vì không có đường code nào tự chuyển POSSIBLE_DUPLICATE → merge" — không xây feature merge thay
+  vì chỉ chặn auto-merge là lựa chọn an toàn hơn và đơn giản hơn cho MVP.
+- **Đánh đổi:** Nếu sau này Ban Thanh niên cần "cập nhật hàng loạt cho member đã có" qua Excel, đó là
+  một workflow riêng (ví dụ cần một cột `member_id` tường minh trong file, cảnh báo rủi ro rõ ràng,
+  và audit riêng) — một architecture/security decision mới, không tự thêm vào P5.5-05.
+- **Người quyết định:** Claude Code, theo đúng phạm vi P5.5-05 (mục E/F/G) và bất biến mục 5.
+
+## [2026-09-08] P5.5-D10 — Excel import: chỉ `YOUTH_ADMIN` được import, không mở rộng cho `BRANCH_OFFICER`
+
+- **Quyết định:** Dù P5.5-03 đã cho `BRANCH_OFFICER` quyền tạo/sửa Member trong scope (owner decision
+  mục 28.8), quyền đó KHÔNG tự động mở rộng sang import hàng loạt. `member-api/src/importRoutes.js`
+  kiểm tra riêng `roles.some(r => r.role_code === 'YOUTH_ADMIN')` cho MỌI route import (upload, xem
+  job, xem dòng, confirm, cancel) — độc lập với check "có role Member-Management-capable nào không"
+  mà `server.js` đã làm chung cho toàn bộ `/v1/members*`.
+- **Lý do:** Bảng ma trận role/scope ở mục 7/12 tài liệu kiến trúc ghi rõ "Ai được import: `YOUTH_ADMIN`
+  (toàn cục hoặc trong scope của org đích)" — không có dòng nào cho `BRANCH_OFFICER`. Import hàng
+  loạt có bán kính ảnh hưởng lớn hơn nhiều một thao tác CRUD đơn lẻ (tạo hàng nghìn record một lúc),
+  nên owner đã chủ động giữ quyền này hẹp hơn CRUD thường — không tự suy luận ngược từ quyền CRUD.
+- **Đánh đổi:** Không có — đây là enforce đúng những gì tài liệu đã chốt, không phải một giới hạn mới
+  tự đặt ra. Có test riêng (`memberImportRoutes.test.mjs`) chứng minh `BRANCH_OFFICER` bị từ chối
+  `403` dù có quyền CRUD.
+- **Người quyết định:** Claude Code, theo đúng mục 7/12 tài liệu kiến trúc P5.5-00.
+
+## [2026-09-08] P5.5-D11 — Excel import: parse/validate/dedup chạy đồng bộ, không có worker nền
+
+- **Quyết định:** Không triển khai trạng thái `PARSED` như một checkpoint durable riêng biệt trong
+  `member_import_job_status`. Toàn bộ parse workbook + validate từng dòng + dedup chạy trong đúng một
+  HTTP request (`POST /v1/members/import`), job chuyển thẳng từ `UPLOADED` (ghi ngay khi nhận file,
+  trước khi parse) sang `READY_FOR_CONFIRM` hoặc `FAILED`.
+- **Lý do:** Ở quy mô pilot ~3.000 dòng, benchmark thực đo được toàn bộ upload (parse+validate+dedup+
+  stage) chỉ mất ~280ms — không có lý do nghiệp vụ nào cần một worker nền/queue riêng cho việc này ở
+  quy mô hiện tại (mục 25: "vài giây tới dưới 1 phút" đã dư sức đạt được đồng bộ). Xây một job queue
+  bất đồng bộ cho một thao tác dưới 1 giây là over-engineer.
+- **Đánh đổi:** Nếu quy mô dữ liệu tăng đáng kể trong tương lai (ví dụ vượt xa 3.000 người, hoặc
+  server chậm hơn nhiều so với môi trường benchmark), việc này có thể cần một worker nền thật — đó là
+  một quyết định kiến trúc riêng khi có bằng chứng thực tế, không phải suy đoán trước.
+- **Người quyết định:** Claude Code, theo đúng mục 10/25 tài liệu kiến trúc và nguyên tắc "không
+  over-engineer" của dự án.
+
+## [2026-09-08] P5.5-D12 — Member API CORS: exact-origin echo, không wildcard
+
+- **Quyết định:** Member API thêm `CORS_ALLOWED_ORIGIN` (required, fail-closed) và chỉ echo lại
+  đúng giá trị đó vào `Access-Control-Allow-Origin` khi request's `Origin` header khớp CHÍNH XÁC —
+  không bao giờ wildcard `*`, không bao giờ reflect một Origin bất kỳ. `OPTIONS` preflight trả
+  `204` kèm header CORS và KHÔNG BAO GIỜ đi qua `authorizeMemberManagement`/chạm database.
+- **Lý do:** P5.5-06 lần đầu tiên cần trình duyệt gọi Member API cross-origin (frontend và Member
+  API là hai origin khác nhau). Không có CORS, trình duyệt chặn response trước khi frontend nhận
+  được, bất kể authorization đúng hay sai. Vì mọi request thật đều mang bearer token JWT, reflect
+  wildcard hoặc reflect Origin bất kỳ sẽ là một lỗ hổng — exact-match là mức tối thiểu an toàn.
+- **Đánh đổi:** Giá trị production của `CORS_ALLOWED_ORIGIN` là cùng một open item với mục 28.3
+  (domain/TLS của Member API) — cả hai sẽ được owner quyết định cùng lúc khi provisioning thật,
+  không tự bịa hostname production. `createServer(pool, {...})` giữ nguyên hành vi cũ (không có
+  CORS header) khi không truyền `corsAllowedOrigin` — toàn bộ test P5.5-01…05 không cần sửa.
+- **Người quyết định:** Claude Code, theo yêu cầu P5.5-06 (frontend cần gọi được Member API thật).
+
+## [2026-09-08] P5.5-D13 — Frontend không xây `/member-metadata`; tái dùng `organizations` + `/v1/member-scope` có sẵn
+
+- **Quyết định:** Bộ chọn đơn vị công tác (work_unit_code) trên form tạo/sửa đoàn viên đọc trực
+  tiếp bảng `organizations` của Supabase (đã có RLS cho phép `active users read organizations` từ
+  `202607300001_initial_schema.sql`, đúng cách `Admin.jsx` đã làm) kết hợp với `GET /v1/member-scope`
+  (đã có từ P5.5-02) để lọc UX theo scope hiện tại. Enum hiển thị (`member_status`,
+  `political_theory_level`, `youth_position`, `youth_board_position`, `gender`) được hardcode ở
+  frontend (`src/services/memberService.js`, `src/lib/memberDisplay.mjs`), khớp chính xác với
+  `member-api/src/memberValidation.js`, thay vì gọi một endpoint `/member-metadata` mới.
+- **Lý do:** `/member-metadata` đã được liệt kê là "chưa có" xuyên suốt P5.5-02…05 và không nằm
+  trong phạm vi frontend-only của P5.5-06 (xây thêm một endpoint Member API mới là backend work,
+  ngoài scope). Cả hai nguồn dữ liệu tái dùng (organizations, `/v1/member-scope`) đã tồn tại và
+  đã qua review bảo mật ở các subphase trước — không tạo registry/bản sao dữ liệu tổ chức thứ hai.
+- **Đánh đổi:** Bộ lọc theo scope ở UI là UX convenience thuần túy, không phải security control —
+  Member API vẫn tự re-validate `work_unit_code` tồn tại + trong scope trên mọi request ghi (mục
+  13/24). Nếu enum server-side thay đổi trong tương lai, phải cập nhật đồng bộ cả hai phía (rủi ro
+  drift đã biết, chấp nhận được ở quy mô/tần suất thay đổi enum hiện tại — các enum này đã được
+  mục 5 kiến trúc chốt cứng, không phải dữ liệu thay đổi thường xuyên).
+- **Người quyết định:** Claude Code, theo yêu cầu P5.5-06 (giữ đúng phạm vi frontend-only).
+
+## [2026-09-08] P5.5-D14 — Audit: sự tồn tại của row chính là tín hiệu thành công, không có cột `outcome`
+
+- **Quyết định:** `member_audit_logs` không có cột `outcome`/`status`. Một audit row CHỈ được ghi
+  sau khi mutation thật sự thành công, trong CÙNG transaction — một mutation bị từ chối (scope sai,
+  validation lỗi, not found) hoặc rollback giữa chừng không bao giờ tạo ra bất kỳ row nào, kể cả một
+  row đánh dấu `outcome='FAILED'`.
+- **Lý do:** Test requirement gốc là "rejected mutation → không có audit 'success' giả" — cách chắc
+  chắn nhất để không bao giờ có audit "success" giả là không có khái niệm audit "thành công/thất
+  bại" song song; sự tồn tại của row = đã thành công. Thêm cột `outcome` sẽ tạo ra một trạng thái
+  thứ ba (row tồn tại nhưng outcome=FAILED) không map với bất kỳ yêu cầu nghiệp vụ nào và tự nó là
+  một nguồn nhầm lẫn ("tôi có audit nghĩa là đã xảy ra" không còn đúng nữa).
+- **Đánh đổi:** Không audit được các LẦN THỬ bị từ chối (ví dụ ai đó cố sửa member ngoài scope nhiều
+  lần) — nếu sau này cần audit cả các lần thử bị từ chối vì lý do bảo mật/điều tra, đó là một loại
+  audit khác (security event log), không phải mutation audit, và là quyết định riêng.
+- **Người quyết định:** Claude Code, theo đúng yêu cầu test P5.5-07 (mục 4.A của prompt DEV MODE).
+
+## [2026-09-08] P5.5-D15 — Audit import commit: một row mỗi member được tạo, không phải một row mỗi job
+
+- **Quyết định:** `confirmImportJob` ghi MỘT audit row riêng cho MỖI member được tạo trong lần
+  commit (action=`CREATE`, `member_id` = id thật của member đó, `import_job_id` = job đã tạo nó) —
+  không phải một row tổng hợp duy nhất cho cả job.
+- **Lý do:** Kiến trúc mục 16 yêu cầu rõ: "Mỗi audit row phải trả lời... với member nào (member_id)"
+  và "cho phép truy ngược MỘT record cụ thể về đúng job đã tạo/sửa nó" — nghĩa là truy vấn theo
+  member_id phải luôn ra đúng lịch sử của riêng người đó, kể cả khi họ được tạo qua import hàng
+  loạt. Một row tổng hợp cấp job sẽ không trả lời được "record CỤ THỂ này được tạo khi nào, bởi
+  hành động nào" khi tra cứu từ trang chi tiết member.
+- **Đánh đổi:** Tăng số lượng INSERT trong transaction commit (đo thực tế: ~2.580 member → confirm
+  từ ~550ms lên ~1.670ms cục bộ — vẫn sâu dưới target "dưới vài giây" mục 25, không cần tối ưu
+  thêm). `member_import_jobs` (đã có từ P5.5-05) vẫn là nơi trả lời "job-level: bao nhiêu dòng, ai,
+  khi nào" tổng hợp — hai bảng bổ sung cho nhau, không trùng lặp.
+- **Người quyết định:** Claude Code, theo đúng mục 16 tài liệu kiến trúc.
+
+## [2026-09-16] P5.5-D16 — Security hardening phải thu hồi direct grants và enforce scope trong SECURITY DEFINER
+
+- **Quyết định:** Forward migrations `202609160001`–`003` sửa các boundary tìm thấy bằng audit trực tiếp
+  rehearsal: `transition_problem_status` chỉ cho `SYSTEM_ADMIN`, `YOUTH_ADMIN` trong scope hoặc
+  `INNOVATION_MEMBER` được assignment; `member_scope_org_codes` chỉ còn `service_role` EXECUTE;
+  mười trigger helper functions pin `search_path=public`.
+- **Lý do:** RLS không bảo vệ được thân `SECURITY DEFINER`; trước đó mọi `INNOVATION_MEMBER` có thể
+  chuyển trạng thái problem bất kỳ. Ngoài ra `REVOKE ... FROM public` không xóa direct grant do
+  default privileges, nên helper resolver có thể bị gọi trực tiếp để enumerate organization codes.
+  Đây là drift chỉ lộ ra khi đọc catalog rehearsal, không thể kết luận an toàn từ source migration.
+- **Đánh đổi:** Security Advisor vẫn giữ các cảnh báo đã phân loại là intentional-safe (backend-only
+  tables/RLS deny-by-default, helper auth checks, extension placement) và configuration-pending
+  (leaked-password protection); không mở rộng thành migration dọn toàn bộ schema ngoài phạm vi.
+- **Người quyết định:** Codex, theo yêu cầu P5.5 runtime closure và role matrix đã chốt.
+
 ## Template cho entry mới
 
 ```
@@ -729,3 +893,103 @@ không nới, không skip bất kỳ assertion nào**; test 14/15/16/26 vẫn đ
   idle timeout hosted 150 giây.
 - **Đảm bảo:** Log chỉ chứa provider, model, attempt, elapsed time, outcome và HTTP status thực tế;
   không chứa prompt, key/JWT, source content, signed URL hoặc storage locator.
+
+## [2026-09-11] Modern Civic Glass — thêm font Archivo cho label/số liệu, không đổi stack
+
+- **Bối cảnh:** Bàn giao thiết kế từ Claude Design (`Sổ tay đoàn viên số`) — visual redesign
+  "Modern Civic Glass" (75% soft/glass hiện có + 25% điểm nhấn editorial: section header đánh
+  số, featured document card navy/vàng, mã biểu mẫu). Bàn giao gồm README + 4 chat transcript +
+  `.dc.html` mockup 14 màn — không phải code chạy được, chỉ là đặc tả thị giác.
+- **Quyết định:** Thêm `@import` Google Fonts `Archivo` (700/800) trong `src/index.css`, dùng
+  QUA token `--font-display`, CHỈ cho eyebrow label đánh số và số liệu tabular (không thay
+  `Be Vietnam Pro` cho nội dung thường/đọc dài). Đây là bổ sung typography trong design system
+  hiện có, không phải đổi framework/dependency — không cần thêm package, chỉ thêm 1 dòng
+  `@import` (đặt đầu file, cạnh `@import` Be Vietnam Pro sẵn có, để tránh lỗi PostCSS
+  "@import must precede all other statements").
+- **Quyết định:** KHÔNG đổi token `--surface-card`/`#fff` hiện có trên toàn app. Card mới
+  (`.featured-document`, `.doc-index-list`, hero) dùng nguyên `var(--surface-card)`/gradient
+  brand hiện có — không thêm token "warm white" riêng như bản mockup gốc (`#FFFCF5`), vì chênh
+  lệch thị giác với `#fff` gần như không đáng kể và tránh phân mảnh token màu nền.
+  `--accent-navy-label` (`#1237A6`) là token mới duy nhất cần thêm — không trùng token nào có
+  sẵn trong bảng màu `docs/02-design-system.md` §3.
+- **Quyết định:** Chỉ áp dụng cho Trang chủ + Tri thức (+ card báo cáo dùng chung ở Công việc)
+  trong lượt này, đúng tinh thần phased rollout của bản thiết kế gốc ("không sửa tất cả cùng một
+  lúc nếu chưa xác nhận ở Trang chủ + Tri thức"). 10 màn còn lại (Chi tiết báo cáo, Hỏi AI, Quản
+  lý đoàn viên, Import Excel, Thông báo, Trắc nghiệm, Đổi mới sáng tạo, Cá nhân, Admin) CHƯA áp
+  dụng — chờ xác nhận trước khi rollout tiếp, xem `docs/brain/04-current-tasks.md`.
+- **Phát hiện phụ (không phải do lượt sửa này gây ra):** `Home.jsx`/`Work.jsx` trước đó dùng một
+  số className (`hero`, `metric-info`, `card-header`, `card-meta`) không khớp với bất kỳ rule
+  nào trong `src/index.css` (xác nhận bằng grep toàn file) — tức phần đó gần như không có style
+  thật trước bản sửa này. Đã sửa bằng cách đổi các trang này sang đúng className đã có sẵn CSS
+  (`home-hero`, `metric-card`/`metric-info` mới thêm, `campaign-card-head`/`campaign-meta`) thay
+  vì thêm CSS mới cho tên class cũ — giảm số class trùng lặp.
+- **Đảm bảo:** Không đổi service/data layer của `Work.jsx`/`Knowledge.jsx` (vẫn nguyên
+  `reportService`/`documentService`/`learningService`); `Home.jsx` vẫn dùng `src/data/mock.js`
+  như trước (một trong 5 trang chính "chưa nối Supabase" theo `00-project-overview.md`) và giữ
+  nguyên badge "Dữ liệu minh họa" hiển thị cho người dùng.
+- **Kiểm tra:** `npm run lint` (0 error, 4 warning cũ không đổi), `npm test` (197/197 pass, không
+  đổi baseline), `npm run build` PASS. Không có Supabase/browser thật trong môi trường viết code
+  này nên KHÔNG click-through được UI mới trên trình duyệt — xem giới hạn ở
+  `docs/brain/06-ai-working-log.md` entry cùng ngày.
+
+## [2026-09-18] P5.5-D17 — Public-first auth, login on demand
+
+- **Quyết định:** App shell và Home/demo surface được render cho anonymous user. Các route có
+  dữ liệu thật hoặc thao tác được bảo vệ bằng `AuthGuard`; guest thấy CTA đăng nhập tại điểm cần
+  quyền thay vì bị redirect toàn app sang `/login`.
+- **Ranh giới:** Đây không phải public hóa dữ liệu. Documents, learning, reports, notifications,
+  member management, admin và `ask-ai` tiếp tục yêu cầu authenticated active user theo RLS/Edge
+  Function hiện hữu. Không mở anonymous retrieval hoặc AI.
+- **Account ≠ Member Record:** Supabase Auth/profile/roles giữ identity và authorization; Member
+  API/PostgreSQL giữ hồ sơ đoàn viên và không đọc `auth.users`, `profiles` hay `user_roles`. Member
+  API tiếp tục re-check JWT, role và organization scope ở server.
+- **Lý do:** Public-first là yêu cầu sản phẩm cho lần closure này nhưng phải tương thích với RLS
+  hiện tại. Chỉ Home đang dùng dữ liệu minh họa nên có thể public an toàn; mọi surface dữ liệu thật
+  giữ nguyên fail-closed boundary.
+
+## [2026-09-18] P5.5-D18 — Public data is a separate, deny-by-default surface
+
+- **Quyết định:** Thay thế giới hạn P5.5-D17 “chỉ Home public” bằng ba surface rõ ràng: `PUBLIC`
+  gồm Tri thức, văn bản, chuyên đề, AI và công trình đổi mới đã công bố; `AUTHENTICATED` gồm dữ
+  liệu/hành động cá nhân; `RESTRICTED` là mọi nội dung nội bộ, storage object, đáp án quiz, Member
+  API và admin. Guest chỉ có policy `SELECT` với predicate cố định `PUBLISHED + PUBLIC` (hoặc
+  `APPROVED` tương ứng); không có `USING (true)` và không có write grant.
+- **Quyết định:** Hai bucket nội dung tiếp tục private. `public-content-url` kiểm tra id của
+  document/resource ở server trước khi ký URL 60 giây; caller không thể đưa bucket/path. AI public
+  gọi `search_public_knowledge` có predicate hard-coded và quota hourly bằng hash địa chỉ; không
+  persist conversation/message. AI authenticated vẫn dùng retrieval theo scope cũ.
+- **Lý do:** Route public không đủ nếu RLS, Storage và RAG còn login-first. Tách trust path giữ
+  anonymous khỏi metadata/chunk private kể cả khi private content có relevance cao hơn.
+
+## [2026-09-20] Public-First Edge Function authentication and quiz read closure
+
+- **Quyết định:** `ask-ai` và `public-content-url` deploy với `verify_jwt=false` vì frontend dùng
+  Supabase publishable key, không phải user JWT. Handler nhận guest chỉ khi Authorization vắng mặt
+  hoặc trùng với configured application key; bearer khác phải xác minh thật qua Supabase Auth và
+  lỗi xác minh trả 401, không được rơi xuống guest path.
+- **Quyết định:** Giữ Phase 4 contract: guest chỉ xem quiz metadata/CTA đăng nhập; không có direct
+  `SELECT` trên `quiz_questions` hoặc `quiz_options`. Forward migration
+  `202609200001_public_first_quiz_read_hardening.sql` xóa policy anon không thể hoạt động vì grant
+  đọc câu hỏi đã bị revoke.
+- **Lý do:** Platform JWT verification không xác minh `sb_publishable_*` như user access token.
+  Tắt gateway verification chỉ an toàn khi handler phân tách guest/user fail-closed và data path
+  guest đã bị fixed predicate, quota, private Storage, và no-persistence ràng buộc.
+- **Đảm bảo:** `quiz_options`, private Storage paths, Member API, report/admin và mutation không
+  nhận anon grant. pgTAP `public_first_auth.sql` kiểm tra anon positive/negative rows, bucket
+  privacy, function ACL và private-AI-outranks-public negative case.
+
+## [2026-09-20] UI_REFERENCE_RECONCILIATION — Mockup owner là nguồn giao diện chuẩn
+
+- **Quyết định:** Dùng bộ mockup 8 màn hình do owner cung cấp làm visual source of truth cho Login,
+  Home, Công việc, Chi tiết báo cáo, Tri thức, AI, Quiz và Quản lý đoàn viên. Mobile dùng bottom
+  navigation 5 mục; desktop giữ shell thích ứng hiện có.
+- **Quyết định:** Thống nhất icon qua `lucide-react` và tái sử dụng asset logo Đoàn đã có trong
+  repository. Không thay đổi route, service contract, auth, RLS, API hoặc quy tắc public/private.
+- **Lý do:** Bản Modern Civic Glass trước đó không khớp layout compact, phân cấp thị giác và cách
+  điều hướng mobile trong mockup owner đã duyệt.
+- **Phạm vi:** Đây là thay đổi giao diện frontend; ghi chú Lưu nháp báo cáo chỉ lưu text cục bộ
+  theo user/assignment, còn gửi báo cáo tiếp tục qua service hiện tại. Branch chờ runtime closure
+  trước khi rebase và nâng Draft PR lên Ready for Review.
+
+  **Scope correction (2026-09-23):** local report draft persistence was removed before merge. The
+  closure changes report presentation only; report text is not written to browser storage.

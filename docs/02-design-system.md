@@ -776,3 +776,60 @@ Phong cách chính thức của sản phẩm là:
 > **Xanh thanh niên — tối giản — hiện đại — chính thống — mobile-first.**
 
 Thiết kế giữ cấu trúc dashboard dễ sử dụng, kết hợp card bo tròn, độ nổi nhẹ và kính mờ có kiểm soát. Logo xanh, đỏ, vàng là điểm nhận diện; toàn bộ icon chức năng phải chuyển sang dạng line tối giản để giao diện trưởng thành, rõ ràng và phù hợp triển khai thực tế.
+
+---
+
+# Addendum — Modern Civic Glass (2026-09-11)
+
+Bản tinh chỉnh visual redesign, chốt qua phiên thiết kế Claude Design (`Sổ tay đoàn viên số`),
+tỷ lệ **75% Modern Soft/Glass hiện có ở trên + 25% điểm nhấn Editorial** dưới đây. Không đổi
+nghiệp vụ/route/API — chỉ token, component thị giác. Xem quyết định kỹ thuật ở
+`docs/brain/03-decisions.md` mục `[2026-09-11]`.
+
+- **Font hiển thị số/nhãn mục:** `Archivo` (700/800), chỉ dùng cho eyebrow label và số liệu —
+  KHÔNG thay `Be Vietnam Pro` cho nội dung thường. Token `--font-display` trong `src/index.css`.
+- **Section header đánh số** (`.section-eyebrow`): mẫu `01 — VIỆC CẦN LÀM` + đường kẻ mảnh +
+  link "TẤT CẢ →", màu `--accent-navy-label` (`#1237A6`). Thay cho `SectionHeader` phẳng ở các
+  khu vực có nhiều section (Trang chủ). `SectionHeader` (component cũ) vẫn giữ cho nơi chỉ có
+  một section (không đổi).
+- **Metric card Trang chủ:** 3 card trắng độc lập, KHÔNG dùng 3 màu nền icon khác nhau (đã bỏ
+  icon nhiều màu). Chỉ "Việc sắp hạn" nhận vạch vàng trái (`.metric-card.accent-yellow`) — đúng
+  §12.3 gốc "chỉ metric Sắp hạn có thể dùng vàng làm accent".
+- **Card báo cáo/campaign** (`.campaign-card.accent`): vạch trái 3px `--brand-700` (không viền
+  mực dày), mã biểu mẫu nhỏ phía trên tiêu đề (`.campaign-card-code`, ví dụ `BM-01`) khi có mã
+  thật; nếu không có mã (đa số báo cáo thật không có mã biểu mẫu) thì bỏ dòng này.
+- **Featured document card** (`.featured-document`): card navy→brand-800 gradient, số hiệu +
+  ngày màu vàng, badge vàng "MỚI BAN HÀNH", 2 CTA pill. Đây là **điểm neo editorial duy nhất**
+  của khu vực Tri thức — danh sách văn bản còn lại (`.document-list`/`.document-card`) đã được
+  "de-card" thành các dòng phân cách bằng hairline trong một khối bo góc chung, không còn mỗi
+  văn bản một card viền/bóng riêng (giảm cardification theo §5/§7).
+- **Tab switcher** (`.tabs`/`.tab`): pill track xám nhạt + pill trắng active, dùng cho
+  Công việc/Tri thức. (Lưu ý: các class này đã có trong markup từ trước nhưng thiếu CSS — bản vá
+  này bổ sung style thật, không phải đổi hành vi.)
+- **Đã áp dụng cho:** Trang chủ (`Home.jsx`), Tri thức (`Knowledge.jsx`), danh sách văn bản
+  (`Documents.jsx`/`DocumentCard`), card báo cáo dùng chung ở Công việc (`Work.jsx`).
+
+## Phase 2 rollout (2026-09-13)
+
+Mở rộng sang các màn còn lại — không đổi nghiệp vụ/route/API, chỉ CSS/JSX presentation. Xem chi
+tiết đầy đủ (defect tìm được, file sửa, bằng chứng browser) ở entry
+`[2026-09-13] PR47 closure + Modern Civic Glass Phase 2 rollout` trong
+`docs/brain/06-ai-working-log.md`.
+
+- **RESTYLE (đã sửa):** Cá nhân (`Profile.jsx`), Đổi mới sáng tạo (`Innovation.jsx`), Chi tiết/Nộp/
+  Lịch sử báo cáo (`ReportAssignmentDetail.jsx`), Bảng điều hành admin (`Admin.jsx`), cùng trạng thái
+  loading/permission-denied dùng chung của mọi route (`Guards.jsx`, chuyển sang tái dùng
+  `EmptyState`/`Button` thay vì CSS chết).
+- **ALREADY_COMPLIANT (đã dùng đúng component/token sẵn có, không cần sửa):** Thông báo
+  (`Notifications.jsx`), Quản lý/Chi tiết đoàn viên/Import Excel (`MemberManagement.jsx`,
+  `MemberDetail.jsx`, `MemberImport.jsx`), Hỏi AI (`AskAi.jsx`), Chuyên đề + chi tiết
+  (`LearningTopics.jsx`, `LearningTopicDetail.jsx`), Trắc nghiệm (`Quiz.jsx`), các trang Admin còn
+  lại (`AdminReports.jsx`, `AdminDocuments.jsx`, `AdminReportDashboard.jsx`, `AdminLearningTopics.jsx`,
+  `AdminLearningTopicDetail.jsx`, `AdminQuizEditor.jsx`, `AdminKnowledgeArticle.jsx`) — đúng tinh
+  thần Wave D: admin ưu tiên density/scanability, không trang trí như Trang chủ.
+- **DO_NOT_TOUCH round này:** `pages/auth/*` (không nằm trong danh sách rollout gốc; có dead-class
+  riêng, để round sau).
+- **NEEDS_PRODUCT_DECISION (ghi nhận, chưa sửa):** modal "Gửi bài toán, điểm nghẽn" (§11.5) chưa
+  từng được xây — nút bấm tương ứng ở `Innovation.jsx` hiện không có `onClick`; hai mục menu ở
+  `Profile.jsx` ("Thông tin cá nhân", "Thống kê hoạt động") điều hướng về chính trang hiện tại
+  (no-op) — có vẻ là placeholder cho màn hình tương lai chưa xây.

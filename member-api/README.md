@@ -17,10 +17,9 @@ Implemented:
 - A deterministic migration runner (`scripts/migrate.mjs`).
 - An HTTP skeleton with `/healthz` and `/readyz`.
 
-## P5.5-02 scope (this subphase)
+## P5.5-02 — Member Scope Authorization Bridge
 
-Implemented — the **Member Scope Authorization Bridge**, per
-`docs/phase-5-5/00-member-management-architecture.md` mục 13:
+Implemented, per `docs/phase-5-5/00-member-management-architecture.md` mục 13:
 - A Supabase Edge Function, `supabase/functions/resolve-member-scope/`, that verifies a real
   Supabase-authenticated user, re-reads `profiles.account_status` and `user_roles` server-side, and
   returns the minimal Member Management role/scope assertion — never trusting any role/organization
@@ -32,18 +31,226 @@ Implemented — the **Member Scope Authorization Bridge**, per
   (`createMemberManagementAuthorizer`) used by `server.js`.
 - `GET /v1/member-scope` — a minimal endpoint that proves the bridge end-to-end: returns the caller's
   resolved `{ user_id, roles }` when authorized, `401`/`403` otherwise. Returns **no Member data**.
-- `GET/POST/... /v1/members` now enforces the same authorization boundary first (`401` with no/
-  malformed `Authorization`, `403` with no Member Management role) and only then falls through to
-  `501 Not Implemented` — Member CRUD/list itself is still out of scope until P5.5-03.
 - No internal signed/JWT-like assertion between the Member API and the resolver: the two talk
   directly over HTTPS, authenticated by a shared secret (`x-member-api-secret`, same
   `hasTrustedWorkerSecret()` pattern as `CRON_SECRET` / P3-08) plus the real user's Supabase JWT.
   Signing an additional internal token was evaluated and rejected — architecture mục 13 already
   chose the "resolve fresh every request, no cache" model specifically to avoid that complexity.
 
-**Not implemented in P5.5-02** (later subphases): real Member CRUD/list, import XLSX, any frontend,
-any deploy to Mắt Bão, any purchase/provisioning of hosting, resolving owner decision mục 28.8
-(`BRANCH_OFFICER` write permission).
+## P5.5-03 — Member CRUD vertical slice
+
+Implemented — `GET/POST /v1/members`, `GET/PATCH /v1/members/:id` (real CRUD, not the `501` stub
+from P5.5-02):
+- `src/memberRoutes.js` / `src/memberRepository.js` / `src/memberValidation.js` / `src/scope.js`.
+- Scope enforcement server-side via `resolveEffectiveOrgScope(roles)` — global scope means
+  unrestricted among valid organizations, a non-global scope filters to the union of the caller's
+  `org_codes`, and an **empty** resolved scope always means **zero rows**, never "see everything".
+  `YOUTH_ADMIN` and `BRANCH_OFFICER` are enforced identically once scope is resolved (owner decision
+  on mục 28.8: `BRANCH_OFFICER` may create/update within its own scope, not just read).
+- Explicit allowlist mass-assignment protection on create/patch; `work_unit_code` is not in the
+  PATCH allowlist (organization transfer is immutable through this endpoint — mục 6). Responses are
+  always built field-by-field (never `SELECT *`), and never include `account_user_id`.
+- `POST /v1/members` validates `work_unit_code` in two independent steps: (1)
+  `src/organizationDirectory.js` (`checkOrganizationExists`) confirms the code is a real
+  `organizations.code` by reading Supabase's REST endpoint with the caller's own bearer token (no
+  service role, no local copy/registry of organizations); (2) `assertOrgCodeInScope` confirms the
+  code is inside the caller's resolved scope. A real code outside scope is still `403`; an
+  unresolvable/nonexistent code is `400` — checked in that order.
+- No hard delete: `DELETE /v1/members/:id` deliberately returns `501`. Archiving is an ordinary
+  `PATCH member_status: 'ARCHIVED'` (mục 17 lifecycle contract), not a separate endpoint.
+
+## P5.5-04 — Search / filter / list
+
+Implemented — the full server-side filter/search/sort contract of `GET /v1/members` (mục 14/23/25),
+building on P5.5-03's existing pagination, `work_unit_code`/`member_status` filters, and
+accent-insensitive `pg_trgm`+`unaccent` search (all reused unchanged):
+- **New filters**, same bound-parameter/enum-allowlist/`AND`-with-scope pattern as the existing two:
+  `youth_position`, `youth_board_position`, `political_theory_level`.
+- **New `sort` query param** — fixed allowlist `full_name_asc` (default) / `updated_at_desc`; any
+  other value is a `400`, never a silent fallback or a raw value reaching SQL. Both orderings add
+  `member_id ASC` as a deterministic tie-breaker so pagination stays stable when many rows share the
+  same `full_name`/`updated_at`.
+- **No new migration/index.** Benchmarked first (`tests/memberPerformance.test.mjs` +
+  `tests/helpers/syntheticMembers.mjs` generate a synthetic ~3,000-row dataset — never real member
+  data): the P5.5-01 indexes (`idx_members_work_unit_status`, `idx_members_full_name_trgm`) already
+  meet the `<300ms` server-side target (mục 25) by a wide margin — list/filter ≈2ms, search ≈10ms
+  median at 3,000 rows — so no schema change was warranted.
+- Pagination edge cases (negative/zero/non-numeric/oversized `limit`/`offset`, offset beyond the
+  dataset) were already handled correctly by P5.5-03's `parseListQuery`; P5.5-04 added test coverage
+  for them rather than changing the behavior.
+
+## P5.5-05 — Excel import
+
+Implemented — the full vertical slice of mục 9/10: `upload → parse → validate → stage → preview →
+confirm → commit`, never "read Excel then insert straight into `members`":
+
+- **Job state machine** (`migrations/0002_member_import_staging.sql`): `member_import_jobs`
+  (`UPLOADED → READY_FOR_CONFIRM → COMMITTED`, or `→ CANCELLED`/`→ FAILED`) and
+  `member_import_job_rows` (per-row `VALID`/`INVALID`/`POSSIBLE_DUPLICATE`/`WARNING`, normalized
+  data, errors, dedup candidate). Deliberate implementation choice: mục 10's `PARSED` state is not a
+  separate durable status here — parse + per-row validate/dedup run synchronously inside the same
+  request that creates the job (a ~3,000-row batch finishes in well under a second locally; see
+  Performance below), so there is no externally observable "still validating" window. A crash
+  mid-parse still leaves a traceable `UPLOADED` job row (created *before* parsing starts) rather than
+  no record at all.
+- **Parsing** (`src/importParser.js`, using `exceljs`): never trusts the browser's declared
+  Content-Type — acceptance is decided by whether the bytes actually parse as a workbook. A fixed,
+  literal header contract (`full_name`/`work_unit_code` required; `date_of_birth`, `gender`,
+  `job_title`, `member_status`, `political_theory_level`, `youth_position`, `youth_board_position`,
+  `external_ref_note` optional — same names as the CRUD payload fields, not a separate
+  Vietnamese-label taxonomy) rejects a missing required header or a duplicate header column outright;
+  an unrecognized extra column is ignored, not fatal. A formula cell's cached `result` is read as
+  data — nothing here ever evaluates a formula. Bounded against oversized input: 10 MB max file size,
+  10,000 max data rows (`MAX_IMPORT_FILE_BYTES`/`MAX_IMPORT_ROWS` in `src/importValidation.js`).
+- **Field validation** (`src/importValidation.js`): reuses the exact same enum constants as
+  `memberValidation.js` — an imported row can never end up more permissive than a row created through
+  ordinary `POST /v1/members`.
+- **Organization existence + scope** (`src/organizationDirectory.js`'s new
+  `createOrganizationDirectoryBatch`/`checkOrganizationCodesExist`, `src/scope.js`'s new
+  `isOrgCodeInScope`): one batched Supabase REST call per distinct `work_unit_code` in the whole
+  file, not one call per row. A code that does not exist, or exists but is outside the caller's
+  resolved scope, makes that row `INVALID` (never silently rerouted) — mirrors threat #7 of mục 22.
+- **Dedup soft-match** (`src/importDedup.js`): two bounded, set-based SQL queries (never one query
+  per row) using the SAME `member_immutable_unaccent()` function the `members` search index already
+  uses — against existing `members` rows, and against other rows in the same batch. Name+work_unit
+  match with equal, non-null DOB on both sides → `POSSIBLE_DUPLICATE`; DOB missing on either side →
+  `WARNING`; both sides have DOB but it differs → not flagged (treated as a different person).
+  **Never auto-merges.** A `POSSIBLE_DUPLICATE`/`WARNING` row is excluded from commit by default; a
+  human can explicitly override a specific row at confirm time to still create it as a brand-new,
+  separate record (`row_overrides: [{ row_number, action: 'CREATE_NEW' }]`) — this endpoint never
+  supports merging an import row into the candidate it matched (deferred, like Export in mục 9 — a
+  human-in-the-loop "update this specific existing member from an import row" workflow would be a
+  separate, explicit architecture decision, not a default of P5.5-05).
+- **Only `YOUTH_ADMIN` may import** (mục 7/12) — `BRANCH_OFFICER`'s P5.5-03 CRUD write permission
+  does **not** extend to bulk import; enforced in `src/importRoutes.js`, independent of the general
+  Member-Management-capable-role check `server.js` already does for every Member route.
+- **Confirm/commit** (`src/importRepository.js`'s `confirmImportJob`): one transaction, `SELECT ...
+  FOR UPDATE` on the job row. Idempotent (a second confirm on an already-`COMMITTED` job returns the
+  existing result, inserts nothing new — safe against double-click, client retry after a dropped
+  response), safe under concurrency (a second concurrent call blocks on the row lock, then sees
+  `COMMITTED`), and re-authorizes against the **current** resolved scope for the confirm request
+  itself (not the scope that was in effect at upload time) — if the actor's scope narrowed in
+  between, the **whole** commit aborts with `409 scope_changed` rather than silently importing a
+  subset (all-or-nothing, matching mục 10's atomicity contract). Deliberately sequential per-row
+  `INSERT`s inside the one transaction, matching mục 10's own stated preference ("ưu tiên correctness
+  hơn throughput... không cần streaming/batch-commit phức tạp" for a ~3,000-row pilot commit) over a
+  set-based bulk insert that would still need a reliable row↔member_id correlation for
+  `committed_member_id`/traceability.
+- **Routes** (`src/importRoutes.js`, wired into `server.js` *before* the generic
+  `/v1/members/:id` pattern so `/v1/members/import...` is never mistaken for `:id="import"`):
+  - `POST /v1/members/import` — raw file bytes as the body (any Content-Type; not JSON — the
+    original filename, if any, is passed via `X-Import-Filename` and is purely informational, never
+    trusted for anything functional), returns the job id + summary counts.
+  - `GET /v1/members/import/:jobId` — job status/summary. `GET /v1/members/import/:jobId/rows` —
+    paginated per-row preview, optional `row_status` filter.
+  - `POST /v1/members/import/:jobId/confirm` — commits.
+    `POST /v1/members/import/:jobId/cancel` — cancels a job still `READY_FOR_CONFIRM` (also
+    idempotent).
+  - Access to a job (mục 9 "chủ job hoặc role quản lý"): the job's own creator, or any global-scope
+    `YOUTH_ADMIN`. A different scoped `YOUTH_ADMIN` who did not create the job gets `404` (not `403`)
+    — same anti-enumeration contract as `GET /v1/members/:id`.
+- **Audit**: this subphase does not add the generic cross-cutting mutation audit table (that is
+  P5.5-07's job, matching the same "audit deferred to P5.5-07" precedent P5.5-03 already set for
+  ordinary CRUD). `member_import_jobs` itself durably records who imported what, when, how many rows
+  of each outcome, and the final committed count — sufficient for P5.5-05's own "audit job"
+  acceptance bullet (mục 23).
+
+### Import performance evidence (mục 25)
+
+`tests/memberImportPerformance.test.mjs` + `tests/helpers/syntheticImportWorkbook.mjs` (synthetic
+data only, never a real roster) generate a ~3,000-row `.xlsx` with a realistic mix of valid, invalid,
+and duplicate rows and measure both phases against the architecture's targets:
+
+| Phase | Target (mục 25) | Measured locally |
+|---|---|---|
+| Upload (parse + validate + dedup + stage) | "vài giây tới dưới 1 phút" | ≈280ms |
+| Confirm/commit | "dưới vài giây" | ≈550ms for ~2,580 committed rows |
+| `GET /v1/members` list after import | `<300ms` | ≈4ms |
+
+No new index was needed — the same P5.5-01/04 indexes already comfortably cover the dedup query's
+join shape (`work_unit_code` equality + `member_immutable_unaccent(full_name)` equality) at this row
+count.
+
+**Not implemented in P5.5-02/03/04/05** (later subphases): audit table (P5.5-07), frontend
+(P5.5-06), `/member-metadata`, any deploy to Mắt Bão, any purchase/provisioning of hosting.
+
+## P5.5-06 — CORS for the browser frontend
+
+The one Member API change needed to make the P5.5-06 frontend possible: the browser now calls this
+API cross-origin (a separate Vite dev server / deployed frontend origin, never the same origin as
+this Node process). Without CORS the browser blocks the response before the frontend ever sees it,
+regardless of how correct the authorization is.
+
+- New required config: `CORS_ALLOWED_ORIGIN` (fail-closed like every other required setting — the
+  process refuses to start without it). `src/server.js`'s `applyCorsHeaders` only ever echoes this
+  exact configured value back as `Access-Control-Allow-Origin`, and only when it matches the
+  request's `Origin` header exactly — **never** a wildcard, since every real request carries a
+  bearer token.
+- `OPTIONS` preflight requests are answered with `204` + the CORS headers and are **never** routed
+  further — they never reach `authorizeMemberManagement` or touch the database.
+- `createServer(pool, {...})` still works exactly as before when `corsAllowedOrigin` is omitted (no
+  CORS headers at all) — every existing test file that constructs the server directly needed no
+  changes.
+- The production value of `CORS_ALLOWED_ORIGIN` is the same open item as mục 28.3 (Member API
+  domain/TLS arrangement) — both are `OWNER/DEPLOYMENT DECISION REQUIRED` and get resolved together
+  once the frontend's production origin and this API's production origin are both known. Never
+  guessed/hardcoded here.
+
+## P5.5-07 — Application audit
+
+Implemented — every important Member mutation writes an audit row in the SAME transaction as the
+mutation itself (mục 16), against a new `member_audit_logs` table (migration
+`migrations/0003_member_audit.sql`), separate from Supabase's own `audit_logs` on purpose (Member
+API is the system of record for Member data; a cross-database audit write would need a fragile
+distributed transaction this architecture avoids):
+
+- `src/memberAudit.js` — `buildCreateAuditPayload`/`buildUpdateAuditPayload` (pure), `insertAuditLog`
+  (always called with a `client` already inside an open transaction, never the bare `pool`),
+  `listMemberAuditLogs` (paginated read for one member's own trail).
+- `src/memberRepository.js`'s `createMember`/`updateMember` are now transactions (`pool.connect()` +
+  `BEGIN`/`COMMIT`/`ROLLBACK`), not single `pool.query` calls — the member write and its audit row
+  commit or roll back together. `updateMember` does a `SELECT ... FOR UPDATE` (same scope predicate
+  as the eventual `UPDATE`) first, so `before_data` reflects the exact pre-transaction state, and a
+  lock outside `scope` returns nothing — no new unscoped read path.
+- `src/importRepository.js`'s `confirmImportJob` writes one `CREATE` audit row per committed member
+  (not one row per job — decision P5.5-D15), with `import_job_id` set, inside the same commit
+  transaction — idempotent replay (an already-`COMMITTED` job) writes nothing further, same as the
+  member writes themselves.
+- **Only business fields are audited** — `full_name`, `date_of_birth`, `gender`, `work_unit_code`,
+  `job_title`, `member_status`, `political_theory_level`, `youth_position`, `youth_board_position`.
+  `external_ref_note` is deliberately excluded (mục 16: "không cần audit thay đổi cosmetic như ghi
+  chú") — a patch touching only that field writes no audit row at all.
+- **No `outcome` column** (decision P5.5-D14) — a row's mere existence IS the success signal. A
+  rejected mutation (out of scope, validation error, not found) or a rolled-back transaction never
+  produces a row, not even one marked "failed".
+- **Never logged, structurally** — bearer tokens, shared secrets, DB credentials, raw Excel file
+  bytes are not Member fields and have no path into `before_data`/`after_data`; `actor_user_id`
+  always comes from the P5.5-02 resolver result for the request, never a client-supplied value.
+- **New read endpoint:** `GET /v1/members/:id/audit` — paginated, same scope check as
+  `GET /v1/members/:id` (a member outside the caller's scope is `404`, identical to the member
+  itself — no second, unscoped way to reach the same data).
+
+### Backup / restore — infrastructure audit (mục 18)
+
+`BLOCKS_RUNTIME_ACCEPTANCE` + `BLOCKS_PRODUCTION`, confirmed still open. No new evidence was
+produced in this task — Mắt Bão Vibe Host v2 remains architecturally selected
+(`docs/phase-5-5/01-member-infrastructure-decision.md`) but **not provisioned** (no purchase, no
+instance, no database, no connection string exists anywhere), and this agent has no account/access
+to Mắt Bão to provision or inspect anything. The mục 18 checklist is answered exactly as it was
+after P5.5-01:
+
+| Question | Status |
+|---|---|
+| Gói Mắt Bão cụ thể đang dùng có automated backup không, tần suất thế nào? | `CAPABILITY_VERIFIED` at the vendor-documentation level only (manual snapshot + Daily/Weekly/Monthly schedule) — **not configured on any real instance**, because no instance exists. |
+| PITR hay chỉ snapshot theo lịch? | `NOT VERIFIED`. |
+| Backup có encrypted at rest không? | `NOT VERIFIED`. |
+| Ai có quyền trigger restore, quy trình xác thực? | Unanswerable without a provisioned account/instance and an owner-defined access policy. |
+| Đã test restore thật chưa? | `RESTORE_REHEARSAL_NOT_RUN` — cannot run without a provisioned, non-production instance. |
+
+**This is not a P5.5-07 gap** — provisioning real infrastructure and running a restore rehearsal
+against it is explicitly `OWNER/DEPLOYMENT DECISION REQUIRED` + `BLOCKS_RUNTIME_ACCEPTANCE`, not
+`BLOCKS_IMPLEMENTATION_START`, per the architecture document itself. See
+`docs/brain/04-current-tasks.md`'s P5.5-07 entry for the full blocker report.
 
 ## Local setup
 
@@ -92,10 +299,65 @@ Test files:
   role/organization signal ever read for an authorization decision.
 - `tests/server.test.mjs` — health/readiness behavior, fail-closed database-unavailable handling,
   the `/v1/member-scope` and `/v1/members` authorization boundary (401/403/501 matrix), config
-  fail-fast behavior.
+  fail-fast behavior, and (P5.5-06) CORS: no headers when unconfigured, exact-origin-match echo,
+  no reflection for a mismatched origin, and an `OPTIONS` preflight never reaching authorization.
 - `tests/memberScope.test.mjs` — the resolver HTTP client and authorization-derivation logic:
   malformed/unreachable/non-2xx resolver responses, bearer-token parsing, role/scope shape
   validation.
+- `tests/memberValidation.test.mjs` — payload/query validation: mass-assignment allowlists, enum
+  bounds, `parseListQuery` (limit/offset clamping, filters, `sort` allowlist).
+- `tests/organizationDirectory.test.mjs` — the `work_unit_code` existence check against Supabase's
+  `organizations` REST endpoint (real code, fake code, unreachable Supabase → fail-closed `503`).
+- `tests/memberCrud.test.mjs` — `memberRepository.js` directly against a real local PostgreSQL:
+  scope enforcement, all filters (including the P5.5-04 `youth_position`/`youth_board_position`/
+  `political_theory_level` additions) ANDed with scope, sort/tie-breaker determinism, pagination
+  edge cases, SQL/LIKE-metacharacter safety.
+- `tests/memberRoutes.test.mjs` — the same matrix at the HTTP layer (real server + real Postgres):
+  cross-org isolation, organization-spoofing attempts, mass-assignment at the HTTP boundary, the
+  P5.5-04 filter/sort query-string contract (including invalid-enum and injection-shaped `sort` →
+  `400`), and the `DELETE` → `501` contract.
+- `tests/memberPerformance.test.mjs` (P5.5-04) — seeds a synthetic ~3,000-row dataset
+  (`tests/helpers/syntheticMembers.mjs`, never real member data) and asserts the `<300ms`
+  server-side list/filter and search targets (mục 25) on warmed-up, multi-iteration timings
+  (reports min/median/max to the console rather than asserting on a single sample).
+- `tests/importValidation.test.mjs` (P5.5-05) — pure field validation (`importValidation.js`) and
+  workbook parsing (`importParser.js`): required/optional fields, enum bounds, date normalization
+  (Excel date cell vs. ISO string vs. malformed), SQL/metacharacter-shaped text handled as ordinary
+  text, malformed/empty workbook, missing/duplicate/unrecognized header, empty rows skipped, formula
+  cells read as cached result (including a formula error result), oversized row count.
+- `tests/importDedup.test.mjs` (P5.5-05) — `detectDuplicates` against a real Member Postgres:
+  `POSSIBLE_DUPLICATE` vs `WARNING` by DOB presence, accent-insensitive matching, a different
+  work_unit_code or a genuinely different (non-null, non-equal) DOB never flags a match, in-batch
+  pairs, existing-member match taking priority over an in-batch one, and that detection never writes
+  to `members` itself (advisory only).
+- `tests/memberImportRoutes.test.mjs` (P5.5-05) — the full HTTP-level security/behavior matrix: the
+  complete upload→preview→confirm→commit vertical slice; cross-scope and unknown-organization rows
+  becoming `INVALID` and never committed; the `YOUTH_ADMIN`-only import gate (`BRANCH_OFFICER`
+  denied `403` despite being CRUD-capable); a malformed workbook producing a traceable `FAILED` job;
+  oversized upload rejected before any job is created; duplicate confirm, concurrent confirm, and
+  retry-after-timeout all being idempotent (exactly one committed row, never a duplicate); confirming
+  a `CANCELLED` job (`409`); cancel idempotency; the default-exclude-then-explicit-`CREATE_NEW`
+  override behavior for `POSSIBLE_DUPLICATE` rows (never a merge); rejecting an override for a row
+  that isn't actually `POSSIBLE_DUPLICATE`/`WARNING`; job-ownership isolation (user B gets `404` on
+  every sub-route of user A's scoped job by guessing its UUID); a global `YOUTH_ADMIN` being able to
+  read any job; unknown job id → `404` on every sub-route; and confirm re-checking scope fresh
+  (all-or-nothing abort, `409 scope_changed`, if the actor's scope narrowed between upload and
+  confirm).
+- `tests/memberImportPerformance.test.mjs` (P5.5-05) — the ~3,000-row synthetic import benchmark
+  described above (numbers there predate P5.5-07's audit writes — see the updated commit timing in
+  this README's P5.5-07 section).
+- `tests/memberAudit.test.mjs` (P5.5-07) — `createMember`/`updateMember` write exactly one audit row
+  per successful mutation with the correct actor/before/after; a patch touching only
+  `external_ref_note` writes none; a rejected (out-of-scope) or not-found update writes none; a
+  mutation that fails mid-transaction (a `CHECK` constraint violation) rolls back with no dangling
+  audit row; `listMemberAuditLogs` pagination/ordering; and that a field never audited
+  (`external_ref_note`) never leaks into `after_data` even when set at create time.
+- `tests/memberRoutes.test.mjs` also covers (P5.5-07 additions): `GET /v1/members/:id/audit` returns
+  the expected trail newest-first; a member outside the caller's scope is `404` on the audit
+  endpoint too (no second unscoped read path); a rejected PATCH never adds a row to the trail.
+- `tests/memberImportRoutes.test.mjs` also covers (P5.5-07 additions): confirm/commit writes one
+  `CREATE` audit row per committed member with `import_job_id` set and the real actor; a duplicate
+  (idempotent) confirm never doubles the audit rows; a cancelled job (never confirmed) has zero.
 
 The Supabase-side resolver (`resolve-member-scope`) has its own tests under
 `supabase/functions/resolve-member-scope/` — `contract.test.ts` (pure role/scope derivation) and
@@ -111,22 +373,41 @@ by the root `test-db` CI job alongside the other Edge Function tests.
 | `PORT` | No (default `8080`) | HTTP port. |
 | `MEMBER_SCOPE_RESOLVER_URL` | Yes | URL of the Supabase Edge Function `resolve-member-scope`. Missing → the process refuses to start. |
 | `MEMBER_SCOPE_RESOLVER_SECRET` | Yes | Shared server-to-server secret with that Edge Function. Missing → the process refuses to start. Never a real production value in `.env.example` or `supabase/functions/.env` (local/CI use a fixed non-sensitive placeholder — see that file). |
+| `CORS_ALLOWED_ORIGIN` | Yes | The one browser origin allowed to call this API cross-origin (P5.5-06). Missing → the process refuses to start. Echoed back only on an exact match — never a wildcard. |
 
 No secret is ever read from or written to a `VITE_*` variable, and nothing here is committed with
 real values (`.env` is gitignored; only `.env.example` is checked in).
 
 ## Known limitations / deferred to later subphases
 
-- No Member CRUD/list yet — `/v1/members` enforces authorization but still returns
-  `501 Not Implemented` once authorized (P5.5-03 scope, not a bug).
-- No organization-code cache/validation table yet — `work_unit_code` is stored as free text with a
-  non-blank constraint only; validation against Supabase `organizations.code` at write time is
-  P5.5-03+ (cross-database foreign keys are not possible).
-- Owner decision mục 28.8 (`BRANCH_OFFICER` write permission) is still open — the resolver already
-  represents `BRANCH_OFFICER`'s existing scope, but P5.5-03 cannot implement `PATCH /members/:id`
-  authorization for that role until it is answered.
+- No `/member-metadata` endpoint yet (decision P5.5-D13 — deferred, not missing).
+- ~~The frontend does not yet render the audit trail~~ — closed in P5.5-07R:
+  `src/pages/MemberDetail.jsx` now has a "Lịch sử thay đổi" section backed by
+  `memberService.getMemberAuditHistory` (own loading/empty/error+retry/pagination state, allowlisted
+  fields only, no invented actor names from raw UUIDs).
+- Backup/restore for the Member PostgreSQL instance is `BLOCKS_RUNTIME_ACCEPTANCE`/
+  `BLOCKS_PRODUCTION` and remains unresolved — see "Backup / restore — infrastructure audit" above.
+  Not a code gap: there is no provisioned instance to configure backup on yet.
+- Import does not support merging/updating an existing member from an import row — a
+  `POSSIBLE_DUPLICATE`/`WARNING` row can only be excluded (default) or explicitly created as a
+  brand-new, separate record (`CREATE_NEW` override); it can never be linked to/merged into the
+  candidate it matched. `member_id` is deliberately never exposed as an import column (mục 5: "not a
+  business identifier, not displayed to users") — a real "update this specific member from a row"
+  workflow, if ever needed, is a separate, explicit architecture decision.
+- Import's per-row organization existence/scope check and dedup are not re-verified at confirm time
+  row-by-row against a *fresh* database read (only the actor's authorized org **scope** is
+  re-verified fresh, all-or-nothing) — an organization or an existing member could theoretically
+  change between preview and confirm for reasons other than the actor's own scope (e.g. an
+  extremely rare `organizations.code` write, which mục 6 already establishes has no write path in
+  the current schema/grants). Not treated as a gap given that evidence.
+- No organization-code cache/validation table — `work_unit_code` is validated at write time against
+  Supabase's live `organizations` table via `organizationDirectory.js` (cross-database foreign keys
+  are not possible, so this is an application-level check, not a schema constraint).
 - `pg_trgm`/`unaccent` extension availability on the eventual Vibe Host v2 managed PostgreSQL
   instance is **not verified** (see `01-member-infrastructure-decision.md` mục 5) — confirmed
-  working on local/CI PostgreSQL 16 only.
+  working on local/CI PostgreSQL 16 only. Not a current blocker: the P5.5-04 performance benchmark
+  (~3,000 synthetic rows) meets the `<300ms` target even without relying on the trigram index being
+  chosen by the planner at this row count (PostgreSQL preferred a sequential scan over the GIN index
+  at 3,000 rows in local benchmarking — both are fast enough; this may change as the table grows).
 - No deployment to Mắt Bão has happened — this only runs locally/in CI against a disposable
   PostgreSQL instance.

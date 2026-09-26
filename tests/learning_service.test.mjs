@@ -45,7 +45,7 @@ function resourceRow(overrides = {}) {
   };
 }
 
-function createClient({ response = { data: [], error: null, count: 0 }, signedUrlResponse } = {}) {
+function createClient({ response = { data: [], error: null, count: 0 }, signedUrlResponse, functionResponse } = {}) {
   const calls = [];
   const query = {
     select(value, options) { calls.push(['select', value, options]); return this; },
@@ -69,6 +69,12 @@ function createClient({ response = { data: [], error: null, count: 0 }, signedUr
             );
           }
         };
+      }
+    },
+    functions: {
+      invoke(name, options) {
+        calls.push(['functions.invoke', name, options]);
+        return Promise.resolve(functionResponse || { data: { success: true, signed_url: 'https://signed.example/public-resource' }, error: null });
       }
     }
   };
@@ -212,6 +218,15 @@ test('resource download URLs are bucket-scoped, path-checked and time-bounded', 
     () => service.getResourceDownloadUrl(`${TOPIC_ID}/resources/a.pdf`, { expiresIn: 99999 }),
     (e) => e.code === 'INVALID_EXPIRY'
   );
+});
+
+test('guest resource download delegates only the resource id to the checked public gateway', async () => {
+  const { client, calls } = createClient();
+  const url = await createLearningService(client).getPublicResourceDownloadUrl('33333333-3333-4333-8333-333333333333');
+  assert.equal(url, 'https://signed.example/public-resource');
+  assert.deepEqual(calls.find(([name]) => name === 'functions.invoke'), [
+    'functions.invoke', 'public-content-url', { body: { content_type: 'LEARNING_RESOURCE', content_id: '33333333-3333-4333-8333-333333333333' } }
+  ]);
 });
 
 test('mappers never carry a signed URL', () => {

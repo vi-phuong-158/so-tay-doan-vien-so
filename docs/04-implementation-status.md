@@ -1,14 +1,49 @@
 # Trạng thái thi công
 
+## SOTAY_UI_FINAL_CLOSURE — MERGED (2026-09-23)
+
+- Starting master: `2095ebb98c572f10a5b04a08396e3e3569fb1271` (PR #54 đã merge).
+- PR #57 exact audited head `0050f40357b9091d082971659aa37f84378dfdaf` merged via merge commit
+  `2f0336a8784a4c0610543b20aa704a6e90182423`.
+- Local source gates: 205/205 tests, lint 0 errors/3 existing Fast Refresh warnings, build PASS
+  (520.68 kB main chunk warning), `git diff --check` PASS. Exact-head CI run `35829383771` passed
+  build, test-db, member-api-test, Vercel Preview and Preview Comments.
+- Post-merge CI run `35829761261` on `2f0336a` passed build, test-db/Deno and member-api-test;
+  Vercel deployment status is SUCCESS.
+- Guest browser evidence: 30 route patterns × 5 viewports (150/150); no blank surface, horizontal
+  overflow, visible text below 11px or interactive target below 44px. Ask AI no-evidence and
+  Public-First/auth-on-demand rehearsal passed. Authenticated product journeys remain blocked by
+  missing authorized role/session and hosted Member API; see `docs/ui-final-closure/`.
+- PR #51 is closed as historical docs-only evidence. Vercel automatically completed the Production
+  frontend deployment for `2f0336a`; Member API/PostgreSQL hosting, server secrets/configuration,
+  and hosted authenticated acceptance remain pending. No production database/data was changed and
+  Phase 6 is not open.
+- Owner readiness and the next P5.5 acceptance matrix are prepared in
+  `docs/phase-5-5/05-hosted-runtime-readiness-checklist.md`.
+
+## P5.5 — End-to-End Final Closure (2026-09-18)
+
+- Base `master@7f468a5111df54486f7e98688b4c16057668a519`; PR #51 được giữ làm historical
+  artifact, không merge thêm. Closure branch áp dụng public-first auth: Home/public shell và các
+  route dữ liệu thật hiển thị login on demand qua `AuthGuard`.
+- Local source gates: root `200/200`, targeted Member API `73/73`, lint `0 errors`, build PASS.
+  Full Member API local chưa thể kết luận PASS do thiếu `MEMBER_DATABASE_URL` và `exceljs` chưa
+  cài được vì Windows npm cache trả `EPERM`; CI artifact vẫn có full Member API `273/273`.
+- Supabase rehearsal/security hardening và CI test-db/Deno evidence giữ nguyên; không có mutation
+  mới trong vòng này. Mắt Bão, hosted Member API, authenticated browser và hosted backup/restore
+  vẫn chưa provision/chưa chạy.
+- Verdict: `PHASE_5_5_END_TO_END_ACCEPTANCE_BLOCKED_MATBAO_RUNTIME_NOT_PROVISIONED`. Phase 6 chưa
+  được mở.
+
 ## Đã làm
 
 - Design tokens, responsive mobile/tablet/desktop.
 - Điều hướng 5 khu vực và route chi tiết.
 - Component giao diện dùng chung trong App.
 - Dashboard cá nhân hóa và dashboard quản trị.
-- Luồng nộp báo cáo có chọn tệp, xác nhận, lịch sử phiên bản ở chế độ demo.
-- Văn bản, chuyên đề, quiz, AI có thẻ nguồn ở chế độ demo.
-- Công trình đổi mới, gửi và theo dõi bài toán ở chế độ demo.
+- Luồng nộp báo cáo có chọn tệp, xác nhận và lịch sử phiên bản qua `reportService`/backend hiện hữu.
+- Văn bản, chuyên đề, quiz và AI dùng service/RPC/Edge Function hiện hữu, có loading/empty/error states.
+- Công trình đổi mới đọc danh sách công khai; gửi bài toán vẫn được để ngoài scope closure này và chưa nối UI với Edge Function.
 - PWA shell, manifest, service worker.
 - Supabase REST/Auth client.
 - Migration schema và policy RLS nền tảng.

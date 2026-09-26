@@ -16,7 +16,7 @@
 | AI | Gemini (embedding + trả lời) qua Edge Function `ask-ai` |
 | Email | Brevo/Resend/SMTP qua `email_queue` + `process-email-queue` |
 | Hosting | Vercel (hoặc Mắt Bão) với SPA rewrite; xem `vercel.json` |
-| Client libs | `@supabase/supabase-js`, `dompurify` |
+| Client libs | `@supabase/supabase-js`, `dompurify`, `lucide-react` (shared icon set) |
 
 ## Cấu trúc thư mục chính
 
@@ -24,18 +24,20 @@
 src/
 ├── main.jsx                 # entry: mount App, đăng ký service worker (/sw.js)
 ├── App.jsx                  # BrowserRouter + toàn bộ khai báo route + Guards
-├── index.css                # design tokens (Be Vietnam Pro, mobile-first) — nguồn màu/spacing
+├── index.css                # design tokens, Be Vietnam Pro, mobile-first styles and 11px text floor
 ├── contexts/AuthContext.jsx # session/user/profile/roles + login/logout/hasRole
 ├── components/
 │   ├── Guards.jsx           # AuthGuard, RoleGuard (+ getAuthGuardAction thuần, có test)
-│   ├── Layout.jsx           # AppShell: Sidebar + BottomNav + Outlet
+│   ├── Layout.jsx           # AppShell: Sidebar + BottomNavigation (5 primary routes) + Outlet
 │   ├── NotificationBell.jsx # badge unread server-backed, user-keyed cache reset
-│   ├── common.jsx           # Brand, EmptyState, SectionHeader...
-│   ├── Icon.jsx             # line icon
-│   ├── ErrorBoundary.jsx / Skeleton.jsx
+│   ├── common.jsx           # Brand, EmptyState, AuthRequiredState, native Modal, form/layout primitives
+│   ├── Icon.jsx             # shared Lucide icon adapter
+│   ├── ErrorBoundary.jsx / Skeleton.jsx # shared loading placeholder uses index.css tokens
 ├── pages/
 │   ├── auth/                # Login, ForgotPassword, ResetPassword, ChangePassword (dùng Supabase)
-│   ├── Home/Innovation/Profile.jsx  # HIỆN DÙNG MOCK
+│   ├── Home.jsx             # public-first landing and direct links to public content
+│   ├── Innovation.jsx       # published project list and detail presentation
+│   ├── Profile.jsx          # Account identity; Member Record remains on Member API routes
 │   ├── Work.jsx             # đã nối reportService (Phase 2)
 │   ├── Knowledge.jsx        # tab Văn bản + Chuyên đề đã nối service thật (P4-01/P4-03)
 │   ├── Documents.jsx        # /tri-thuc/van-ban — list thật: search/filter/paginate (P4-01)
@@ -81,8 +83,19 @@ supabase/
 | `src/contexts/AuthContext.jsx` | Session/user/profile/roles, `login/logout/hasRole` | `App`, mọi component gọi `useAuth` | `services/supabaseClient` |
 | `src/services/supabaseClient.js` | Client Supabase (anon key) | `AuthContext`, `pages/auth/*`, `pages/Admin` | `VITE_SUPABASE_URL/ANON_KEY` |
 | `src/components/Guards.jsx` | `AuthGuard` (chặn chưa đăng nhập/inactive), `RoleGuard` | `App.jsx` | `useAuth`, react-router |
-| `src/components/Layout.jsx` | `AppShell`: Sidebar + BottomNav + `<Outlet/>` | `App.jsx` (trong AuthGuard) | `useAuth`, `Icon`, `common` |
-| `src/pages/*` (5 khu vực) | UI khu vực | routes trong `App.jsx` | `data/mock.js`, `useAuth`, `common` |
+| `src/components/Layout.jsx` | `AppShell`: Sidebar + shared five-item `BottomNavigation` + `<Outlet/>`; guest and authenticated shells use the same primary destinations | `App.jsx` (public pages and guarded private pages) | `useAuth`, `Icon`, `common` |
+| `src/components/common.jsx` | `Brand`, `Button`, page/state primitives, `AuthRequiredState`, native `Modal` | Shared pages and guards | `Icon`, report status helpers, React dialog APIs |
+| `src/components/Icon.jsx` | One `name`-to-Lucide adapter; decorative SVGs are hidden from assistive technology | `Layout`, pages, common components | `lucide-react` |
+| `src/components/Skeleton.jsx` | Shared animated loading placeholder with live status semantics | Data-backed list/detail pages | `index.css` surface tokens |
+| `src/index.css` | Design tokens, shared visual primitives, focus states, responsive layout and auth modal sheet rules | All frontend routes | Be Vietnam Pro, brand tokens |
+| `src/pages/Home.jsx` | Public-first landing and shortcuts to documents, learning and Ask AI | route `/` | `AuthContext`, shared components |
+| `src/pages/Knowledge.jsx` | Hub Văn bản/Chuyên đề/Trắc nghiệm, tìm kiếm và điều hướng tới nội dung | route `/tri-thuc` | `documentService`, `learningService`, `quizService`, `Icon`, `common` |
+| `src/pages/AskAi.jsx` | Chat, gợi ý câu hỏi, trạng thái no-evidence và nguồn trích dẫn | route `/tri-thuc/hoi-ai` | `aiService`, `Icon`, `common` |
+| `src/pages/ReportAssignmentDetail.jsx` | Chi tiết, tải lên, nộp báo cáo và lịch sử phiên bản | route `/cong-viec/bao-cao/:assignmentId` | `reportService`, `AuthContext`, `Icon`, `common` |
+| `src/pages/Innovation.jsx` | Published project list and details | route `/doi-moi-sang-tao` | `innovationService`, shared `Modal` |
+| `src/services/innovationService.js` | Maps public project rows | `Innovation` | Supabase client |
+| `src/pages/Profile.jsx` | Account identity, role and organization, settings actions, logout; no Member Record fields | route `/ca-nhan` | `AuthContext`, `MemberManagement` is a separate route family |
+| `src/pages/*` | Work, Knowledge, Document, Learning/Quiz, Member and Admin areas | routes in `App.jsx` | domain services, `AuthContext`, shared components |
 | `src/data/mock.js` | Dữ liệu demo | 5 pages chính | — (⚠ thay bằng service khi nối Supabase) |
 | `src/lib/status.mjs` | Nhãn/tone trạng thái báo cáo, tính hạn, chuẩn hóa tên tệp | pages hiển thị báo cáo | — (thuần, có unit test) |
 | `src/services/reportAdminService.js` | Đọc campaign trong scope; tạo/sửa draft, upload/finalize template và publish | `AdminReports` | Supabase RPC + Storage private + `finalize-campaign-template` |
@@ -95,6 +108,13 @@ supabase/
 | `src/pages/AdminLearningTopics.jsx` | Admin topic list/filter/create with loading/error/empty states | route `/admin/chuyen-de` | `learningAdminService`, `RoleGuard`, `common` |
 | `src/pages/AdminLearningTopicDetail.jsx` | Topic edit/publish, resource CRUD/upload/reorder, quiz list/create | route `/admin/chuyen-de/:topicId` | learning/quiz admin services, private Storage |
 | `src/pages/AdminQuizEditor.jsx` | Quiz metadata, SINGLE/MULTIPLE questions/options and publish/close | route `/admin/chuyen-de/:topicId/trac-nghiem/:quizId` | `quizAdminService`, `RoleGuard`, `common` |
+
+### UI shell decision record
+
+- `App.jsx` route inventory and authorization groups are unchanged by the UI/UX finalization.
+- The primary navigation is a shared five-destination list: Home, Work, Knowledge, Innovation, and Profile. Guest use of Work/Profile still reaches `AuthRequiredState`; route guards remain authoritative.
+- The existing design tokens in `src/index.css` remain the only source for colors and responsive UI states. Lucide is the single icon library. The shared `Modal` uses native `<dialog>`; its mobile sheet layout is CSS-only.
+- Innovation submission remains outside the UI closure scope. The public project list/detail presentation does not invoke `submit-innovation-problem`; no submission UI, route, table, RLS, RPC, or Edge Function is part of this closure.
 
 ### Backend (Edge Functions) — module then chốt
 
@@ -111,19 +131,33 @@ supabase/
 | `functions/finalize-campaign-template` | Đọc metadata thật từ Storage, chuẩn hóa tên, move template và đăng ký metadata | `reportAdminService` | `_shared/*`, service-role Storage, `register_report_campaign_template` |
 | `functions/export-report-status` | CSV UTF-8/BOM scoped, formula-neutralized, audit bắt buộc | `AdminReportDashboard` qua `reportAdminService` | dashboard RPC, `_shared/*`, `audit_logs` |
 | `functions/download-report-bundle` | ZIP latest submission/file trong scope, private Storage, giới hạn 100 file/50 MB, audit | `AdminReportDashboard` qua `reportAdminService` | dashboard RPC, service-role Storage, `fflate`, `_shared/*` |
-| `functions/ask-ai` | Query embedding Gemini → lexical + semantic candidates theo quyền → weighted RRF → Gemini → citations từ metadata server-side; lexical fallback khi embedding/vector unavailable | client | `_shared/knowledge/rag.ts`, `_shared/knowledge/geminiEmbedding.ts`, `search_published_knowledge`, `search_semantic_knowledge` |
+| `functions/ask-ai` | Guest: fixed public corpus + hourly hashed quota, no history; authenticated: query embedding + scoped lexical/semantic retrieval, weighted RRF, grounded Gemini answer and server-side citations | client | `_shared/auth.ts`, `_shared/knowledge/rag.ts`, `_shared/knowledge/geminiEmbedding.ts`, public/authenticated retrieval RPCs |
+| `functions/public-content-url` | Public-content-only lookup by typed UUID then 60-second signed URL from an existing private bucket | document/learning services | `_shared/auth.ts`, service-role Storage |
 | `functions/process-document` | Trích xuất → chunk → embedding có model identity → chờ duyệt | admin | `_shared/*`, Gemini |
 | `functions/generate-knowledge-article` | Trích xuất nguồn → sinh bài/evidence draft; best-effort embedding 768 chiều cho evidence pending, lưu bằng trusted RPC | admin | `_shared/knowledge/geminiEmbedding.ts`, `store_knowledge_evidence_embeddings` |
 | `functions/send-reminder` / `process-email-queue` | Gọi reminder scan trusted / gửi email theo batch | `send-reminder`: trusted caller manual/external. `process-email-queue`: manual/external **và** `pg_cron` job `email_queue_worker` mỗi 10 phút qua `pg_net`+Vault (P3-08) | `_shared/*`, reminder RPC, email_queue |
 | `functions/resolve-member-scope` (P5.5-02) | Member Scope Authorization Bridge: xác thực JWT thật, đọc lại `profiles.account_status`/`user_roles`, trả `{user_id, roles:[{role_code,is_global,org_codes}]}` cho `member-api/` — không tin role/scope do caller gửi. `SYSTEM_ADMIN` đơn lẻ → `roles: []` | `member-api/src/memberScope.js`, server-to-server, kèm secret `x-member-api-secret` | `_shared/auth.ts` (`requireUser`), `profiles`, `user_roles`, RPC `member_scope_org_codes` |
+| `supabase/migrations/202609160001_phase_5_5_innovation_rpc_scope_hardening.sql` | Forward-fix kiểm tra active user + scope YOUTH_ADMIN/SYSTEM_ADMIN hoặc assignment INNOVATION_MEMBER bên trong `transition_problem_status` (SECURITY DEFINER); thu hồi anon EXECUTE | Supabase reset/rehearsal migration | `innovation_problems`, `innovation_problem_assignments`, auth helpers |
+| `supabase/migrations/202609160002_phase_5_5_member_scope_rpc_privilege_hardening.sql` | Thu hồi grant trực tiếp `anon`/`authenticated` trên `member_scope_org_codes`; giữ service-role-only | Supabase reset/rehearsal migration | `member_scope_org_codes` |
+| `supabase/migrations/202609160003_phase_5_5_trigger_search_path_hardening.sql` | Pin `search_path=public` cho 10 trigger helper functions theo Security Advisor defense-in-depth | Supabase reset/rehearsal migration | P5 trigger functions |
+| `supabase/tests/{innovation_problem_rpc_security,member_scope_rpc_security,security_advisor_hardening}.sql` | Regression cho scope/assignment, function ACL và search_path; fixture innovation chỉ synthetic + rollback | `supabase test db` | seed + P5.5 hardening migrations |
 
 ### Luồng xử lý chính
 
 ```
-# Auth + phân quyền (đang hoạt động thật)
+# Auth + phân quyền (public-first, đang hoạt động thật)
 main.jsx → App(BrowserRouter) → AuthProvider(getSession + onAuthStateChange
-         → fetch profiles + user_roles) → AuthGuard(getAuthGuardAction)
-         → RoleGuard(allowedRoles | SYSTEM_ADMIN) → AppShell → <page>
+         → fetch profiles + user_roles) → AppShell → Home/demo public surface
+                                      └→ AuthGuard(on-demand login CTA)
+                                           → RoleGuard(allowedRoles | SYSTEM_ADMIN)
+                                           → protected page
+
+# Public-first boundary
+Guest may read only `PUBLISHED + PUBLIC` documents, learning metadata/resources, and innovation.
+Guest AI searches only the fixed public corpus and persists only its hashed hourly quota key, never a
+conversation, message, or citation. Reports, notifications, profile, quiz attempts, Member API, and
+admin remain authenticated. Account Supabase/Auth and Member Record in Member API remain separate;
+Member API verifies JWT, scope, and role on its server.
 
 # Nộp báo cáo (đích, khi frontend hết mock)
 Page nộp → reportService (Storage private upload dưới prefix assignment/staging)
@@ -339,15 +373,20 @@ AdminReportDashboard → reportAdminService → export-report-status / download-
                      → audit actor/campaign/filter/count/bytes; trả file private với cache-control no-store
 
 # RAG hỏi AI
-Page trợ lý AI → invoke ask-ai → requireUser → normalize query
-         → Gemini query embedding (cùng model/768 chiều với evidence)
-         → search_published_knowledge + search_semantic_knowledge
-           (JWT caller, document access + PUBLISHED/current + retrieval_enabled
-            + article/evidence APPROVED filters ngay trong PostgreSQL)
-         → weighted Reciprocal Rank Fusion (K=60, lexical weight 1.25)
-           → dedupe evidence, tối đa 2 chunk/document, tối đa 8 context chunks
-         → Gemini → citations dựng từ metadata retrieved → lưu ai_messages/ai_message_sources
-Embedding/provider hoặc vector RPC lỗi → lexical fallback; không có lexical evidence thì abstain.
+Page trợ lý AI → invoke `ask-ai` (configured public API key + optional verified user auth)
+         ├─ guest → reject `conversation_id` → consume hourly quota using SHA-256 request key
+         │       → `search_public_knowledge` (fixed PUBLIC corpus, lexical only; no history writes)
+         │       → grounded Gemini answer + server-derived citations; no evidence → abstain
+         └─ authenticated active user → persist user message/conversation → normalize query
+                 → Gemini query embedding (same model/768 dimensions as evidence)
+                 → `search_published_knowledge` + `search_semantic_knowledge`
+                   (caller JWT; document access + PUBLISHED/current + retrieval_enabled
+                    + article/evidence APPROVED filters inside PostgreSQL)
+                 → weighted Reciprocal Rank Fusion (K=60, lexical weight 1.25)
+                   → dedupe evidence, max 2 chunks/document and 8 context chunks
+                 → Gemini → citations from retrieved metadata → persist ai_messages/ai_message_sources
+For the authenticated path, embedding/provider or vector RPC failure falls back to lexical retrieval;
+without lexical evidence, Ask AI abstains. Guest queries never enter the authenticated semantic RPC path.
 ```
 
 ## Mô hình dữ liệu / API
@@ -409,6 +448,18 @@ qua endpoint này — chuyển đơn vị phải là workflow riêng có audit).
 archive dùng `PATCH member_status = 'ARCHIVED'` theo hợp đồng lifecycle sẵn có (mục 17), không có
 endpoint archive riêng. Phản hồi luôn allowlist field, không bao giờ trả `account_user_id`.
 
+Từ P5.5-04, `GET /v1/members` (mục 14/23/25) đầy đủ contract filter/search/sort: thêm 3 filter còn
+thiếu — `youth_position`, `youth_board_position`, `political_theory_level` (cùng cơ chế bound
+parameter + enum allowlist với `work_unit_code`/`member_status` đã có, luôn `AND` với scope, không
+bao giờ mở rộng scope của caller). Thêm `sort` (query param, allowlist cố định
+`full_name_asc`|`updated_at_desc`, mặc định `full_name_asc`; giá trị ngoài allowlist → `400`, không
+bao giờ nối trực tiếp vào SQL) — cả hai chiều sort đều có tie-breaker `member_id` để đảm bảo stable
+ordering khi trùng `full_name`/`updated_at`. Không thêm migration/index mới: benchmark trên dataset
+synthetic 3.000 dòng (`member-api/tests/memberPerformance.test.mjs`,
+`tests/helpers/syntheticMembers.mjs`) cho thấy index composite `(work_unit_code, member_status)` và
+GIN trigram `idx_members_full_name_trgm` từ P5.5-01 đã đủ — list/filter ~2ms, search ~10ms server-side
+(median), nằm sâu dưới target `<300ms` mục 25.
+
 `POST /v1/members` xác thực `work_unit_code` qua hai bước độc lập: (1) `member-api/src/organizationDirectory.js`
 (`checkOrganizationExists`) — đọc thẳng bảng `organizations` thật của Supabase qua REST endpoint
 sẵn có (grant + RLS "active users read organizations" từ `202607300001_initial_schema.sql`), dùng
@@ -419,8 +470,93 @@ nghĩa là "không giới hạn giữa các tổ chức hợp lệ", không ph�
 (fail-closed): `SUPABASE_URL`/`SUPABASE_ANON_KEY` trong `member-api/.env` (giá trị anon key công
 khai, không phải secret).
 
-Chưa có: import Excel (P5.5-05), audit table riêng (P5.5-07), frontend (P5.5-06), `/member-metadata`.
+Từ P5.5-05, Excel import thật đã hoạt động — vertical slice đầy đủ mục 9/10:
+`upload → parse → validate → stage → preview → confirm → commit`, không "đọc Excel rồi insert
+thẳng". Migration `member-api/migrations/0002_member_import_staging.sql` thêm `member_import_jobs`
+(state machine `UPLOADED → READY_FOR_CONFIRM → COMMITTED`, hoặc `→ CANCELLED`/`→ FAILED`; `PARSED`
+không phải trạng thái durable riêng — parse+validate/dedup chạy đồng bộ trong cùng request tạo job)
+và `member_import_job_rows` (từng dòng `VALID`/`INVALID`/`POSSIBLE_DUPLICATE`/`WARNING`, dữ liệu đã
+chuẩn hoá, lỗi, candidate trùng). Module mới: `member-api/src/importParser.js` (dùng `exceljs`,
+không tin Content-Type từ browser, formula cell chỉ đọc cached `result` chứ không bao giờ evaluate,
+bound file 10MB/10.000 dòng), `importValidation.js` (tái dùng nguyên constant enum từ
+`memberValidation.js`), `importDedup.js` (soft-match qua chính `member_immutable_unaccent()` đã
+dùng cho search — không bao giờ tự động merge), `importRepository.js` (transaction
+confirm/commit atomic + idempotent qua `SELECT ... FOR UPDATE` trên job row), `importRoutes.js`
+(route matching đặt TRƯỚC `matchMemberRoute` để `/v1/members/import...` không bị nhầm thành
+`:id="import"`). Chỉ `YOUTH_ADMIN` được import (mục 7/12) — `BRANCH_OFFICER` có quyền CRUD từ
+P5.5-03 nhưng KHÔNG được import, enforce riêng trong `importRoutes.js`. `organizationDirectory.js`
+thêm `createOrganizationDirectoryBatch`/`checkOrganizationCodesExist` (một request PostgREST
+`in.()` cho toàn bộ mã tổ chức khác nhau trong file, không phải một request/dòng); `scope.js` thêm
+`isOrgCodeInScope` (biến thể không throw của `assertOrgCodeInScope`, dùng trong vòng lặp validate
+từng dòng). Confirm re-authorize scope MỚI NHẤT tại thời điểm confirm (không tin scope lúc upload);
+nếu scope co hẹp giữa upload và confirm, toàn bộ commit abort `409 scope_changed` (all-or-nothing).
+Dòng `POSSIBLE_DUPLICATE`/`WARNING` mặc định bị loại khỏi commit; người dùng có thể override từng
+dòng để vẫn tạo mới (KHÔNG BAO GIỜ merge vào candidate — merge/update-existing bị defer, giống cách
+Export bị defer ở mục 9). Benchmark synthetic ~3.000 dòng
+(`member-api/tests/memberImportPerformance.test.mjs`) không cần index mới: upload ~280ms, confirm
+~550ms, đều sâu dưới target mục 25. Audit table cross-cutting (mọi mutation) vẫn để P5.5-07 — job
+table tự nó đã đủ ghi "ai import gì, khi nào, bao nhiêu dòng, kết quả" cho acceptance mục 23 của
+P5.5-05.
+
+Từ P5.5-06, frontend thật đã hoạt động qua Member API — không còn mock. Member API thêm CORS
+(`CORS_ALLOWED_ORIGIN` required fail-closed, exact-origin echo, không wildcard — mục P5.5-D12) vì
+đây là lần đầu trình duyệt gọi Member API cross-origin; `createServer(pool, {...})` giữ nguyên hành
+vi cũ khi không truyền `corsAllowedOrigin` nên P5.5-01…05 test không đổi. `src/services/memberService.js`
+(mới) là data boundary — nhận `client` (Supabase client, chỉ dùng lấy access token + đọc bảng
+`organizations` đã RLS-cho-phép, KHÔNG dùng để tính authorization) và `baseUrl` làm tham số tường
+minh (không đọc `import.meta.env` trong module, giữ import.meta.env chỉ ở page component, đúng
+convention `createDocumentService(client)` sẵn có — testable dưới `node --test` thuần). Route mới:
+`/quan-ly-doan-vien` (danh sách + tạo mới), `/quan-ly-doan-vien/:memberId` (chi tiết/sửa/lưu trữ),
+`/admin/quan-ly-doan-vien/import` (luồng import). Guard mới `MemberManagementGuard`
+(`src/components/Guards.jsx`) — KHÔNG dùng `RoleGuard` (có bypass `SYSTEM_ADMIN`, đúng cảnh báo mục
+24 F1 của kiến trúc); điều kiện `roles.includes('YOUTH_ADMIN') || roles.includes('BRANCH_OFFICER')`,
+route import dùng `requireImportRole` chỉ cho `YOUTH_ADMIN`. Guard chỉ là UX boundary — Member API
+vẫn tự re-check authorization mọi request (mục 13/24), không có ngoại lệ. Không xây
+`/member-metadata` (mục P5.5-D13) — bộ chọn đơn vị đọc thẳng `organizations` (Supabase, đã RLS) +
+`GET /v1/member-scope` (đã có từ P5.5-02) để lọc UX; enum hiển thị hardcode khớp
+`memberValidation.js`. Import UX (`src/pages/MemberImport.jsx`) đi đúng luồng
+upload→preview(tab theo row_status)→override từng dòng nghi trùng (chỉ CREATE_NEW, không merge, khớp
+P5.5-05)→confirm→kết quả; không coi upload là commit.
+
+Từ P5.5-07, application audit thật đã hoạt động. Migration
+`member-api/migrations/0003_member_audit.sql` thêm `member_audit_logs` (bảng riêng, KHÔNG dùng
+chung `audit_logs` của Supabase — Member API là system of record, tránh distributed transaction
+giữa hai database, đúng mục 16). `member-api/src/memberAudit.js` là module duy nhất build audit
+payload/ghi audit row — `insertAuditLog` luôn nhận một `client` đã ở trong transaction đang mở
+(không bao giờ `pool` trần), gọi từ `memberRepository.js` và `importRepository.js`.
+`createMember`/`updateMember` trong `memberRepository.js` chuyển từ một `pool.query` đơn sang
+transaction thật (`BEGIN`/`COMMIT`/`ROLLBACK`) — member write và audit row cùng commit/rollback.
+`updateMember` làm `SELECT ... FOR UPDATE` (cùng scope predicate với `UPDATE`) trước để lấy
+`before_data` chính xác, không phải một lần đọc cũ/stale. Chỉ audit field nghiệp vụ (`full_name`,
+`date_of_birth`, `gender`, `work_unit_code`, `job_title`, `member_status`,
+`political_theory_level`, `youth_position`, `youth_board_position`) — `external_ref_note` chủ đích
+loại trừ (mục 16, "cosmetic"). KHÔNG có cột `outcome` (mục P5.5-D14) — sự tồn tại của row = tín
+hiệu thành công; mutation bị từ chối/rollback không bao giờ tạo row. `importRepository.js`'s
+`confirmImportJob` ghi MỘT audit row mỗi member được commit (không phải một row/job — mục P5.5-D15)
+với `import_job_id` set, trong CÙNG transaction với insert member đó; idempotent replay không tạo
+thêm row nào. Route mới: `GET /v1/members/:id/audit` (cùng scope check với `GET /v1/members/:id` —
+ngoài scope → 404 y hệt, không có đường đọc thứ hai không qua scope).
+
+**Backup/restore hạ tầng (mục 18):** vẫn `BLOCKS_RUNTIME_ACCEPTANCE`/`BLOCKS_PRODUCTION`, không có
+bằng chứng mới trong P5.5-07 — Mắt Bão Vibe Host v2 vẫn CHƯA được provisioned (không có instance,
+không có connection string), và agent không có tài khoản/quyền truy cập Mắt Bão để tự provisioning
+hay kiểm tra. Xem `member-api/README.md` mục "Backup / restore — infrastructure audit" và
+`docs/brain/04-current-tasks.md` cho checklist đầy đủ chưa trả lời được.
+
+Chưa có: `/member-metadata` (deferred, mục P5.5-D13); UI hiển thị lịch sử audit trên trang chi tiết
+member (endpoint đã có, frontend P5.5-06 làm trước khi endpoint tồn tại nên chưa render — follow-up
+nhỏ, không phải gap backend).
 Xem `member-api/README.md` cho chi tiết và giới hạn hiện tại.
+
+### P5.5 runtime-closure security delta (2026-09-16)
+
+Audit rehearsal phát hiện hai vấn đề không thể suy ra chỉ từ source migration: (1)
+`transition_problem_status` là `SECURITY DEFINER` nhưng trước đó cho mọi `INNOVATION_MEMBER` cập
+nhật mọi bài toán, không kiểm tra assignment/scope; (2) default privileges của project cấp trực tiếp
+EXECUTE cho `anon`/`authenticated` trên `member_scope_org_codes`, dù migration chỉ revoke `PUBLIC`.
+Ba forward migrations `202609160001`–`003` sửa hai boundary này và pin search path cho trigger helpers.
+Không sửa migration đã chạy; mọi thay đổi đều có pgTAP regression. Resolver function được deploy trên
+rehearsal với JWT verification bật, nhưng shared secret của runtime Member API chưa được xác minh.
 
 ```text
                     USER
@@ -634,3 +770,38 @@ truth for queue row provenance.
 resubmission that earns a new NEEDS_SUPPLEMENT decision opens a new reminder milestone while the
 current review cycle still cannot be reminded twice. Earlier `report_reminder_events` rows are
 never edited.
+
+# Public-first authentication surface (2026-09-18)
+
+`App.jsx` separates the public shell from `AuthGuard`:
+
+```
+PUBLIC: /, /tri-thuc, /tri-thuc/van-ban/:id, /tri-thuc/chuyen-de/:id,
+        /tri-thuc/hoi-ai, /doi-moi-sang-tao
+  -> anon SELECT policy with fixed PUBLISHED + PUBLIC predicates
+  -> private file only via public-content-url after server-side parent validation
+  -> public AI calls search_public_knowledge only; no guest conversation persistence
+
+AUTHENTICATED: reports, profile, notifications, quiz attempt, Member API, admin
+  -> AuthGuard -> existing account/role/scope checks -> RLS/Edge Function
+
+RESTRICTED: all non-PUBLIC rows, private storage objects, AI history and answer keys
+  -> no anon grant/policy; deny by default
+```
+
+`202609180001_public_first_auth.sql` owns the new anon policy predicates and the fixed
+`search_public_knowledge` SECURITY DEFINER function (pinned `search_path`, `PUBLIC` +
+`PUBLISHED` + approved/retrieval-enabled predicates). `ask-ai` chooses its trust path from the
+verified session rather than caller input: signed-out callers use that public function with a
+hashed, hourly quota key and no persisted messages; signed-in callers retain the existing scoped
+`search_published_knowledge` and provenance persistence. `public-content-url` is the only guest
+file gateway; it accepts a content id, rechecks the public parent with service-role server code,
+then emits a 60-second URL from the existing private bucket. It never accepts a storage path.
+`202609200001_public_first_quiz_read_hardening.sql` removes the dead anonymous question policy and
+keeps Phase 4's attempt-RPC-only question/answer delivery explicit. `202609200002_public_ai_quota_policy.sql`
+makes the quota table's service-role-only posture explicit without granting any client table access.
+
+Because current browser clients use `sb_publishable_*` keys, `ask-ai` and `public-content-url` run
+with platform `verify_jwt=false`. Their shared Public-First boundary accepts the configured
+application key as guest traffic, validates every other bearer through Supabase Auth, and returns
+401 for malformed, expired, or forged bearer tokens; it never downgrades a failed bearer to guest.

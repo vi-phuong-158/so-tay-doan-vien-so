@@ -1,52 +1,109 @@
-import { useState } from 'react';
-import { Icon } from '../components/Icon';
-import { PageHeader, Button, StatusBadge } from '../components/common';
-import { projects, problems, problemStatus } from '../data/mock';
+import { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Button, EmptyState, Modal, PageHeader, Progress, StatusBadge } from '../components/common';
+import Skeleton from '../components/Skeleton';
+import { useAuth } from '../contexts/AuthContext';
+import { createInnovationService } from '../services/innovationService';
+import { supabase } from '../services/supabaseClient';
 
-function ProjectCard({ item }) {
+const innovationService = createInnovationService(supabase);
+
+function ProjectCard({ item, featured, onOpen }) {
   return (
-    <div className="card project-card">
-      <div className="card-header">
-        <span className="status status-info">{item.status}</span>
+    <article className={`card innovation-project-card${featured ? ' is-featured' : ''}`}>
+      <div className="innovation-project-heading">
+        <StatusBadge label={item.status} tone="info" />
+        {item.category && <span className="innovation-project-category">{item.category}</span>}
       </div>
-      <h3>{item.title}</h3>
-      <p className="card-desc">{item.summary}</p>
-      <div className="card-meta"><span><Icon name="users" size={15} />{item.team}</span></div>
-    </div>
+      <h2>{item.title}</h2>
+      {item.summary && <p className="card-desc">{item.summary}</p>}
+      <div className="innovation-progress-label"><span>Tiến độ</span><strong>{item.progress}%</strong></div>
+      <Progress value={item.progress} />
+      {item.team && <p className="innovation-project-unit">Đơn vị thực hiện: {item.team}</p>}
+      <Button variant="secondary" icon="arrow" onClick={() => onOpen(item)}>Xem chi tiết</Button>
+    </article>
   );
 }
 
 export function Innovation() {
-  const [activeTab, setActiveTab] = useState('projects');
-  
+  const { user } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [selectedProject, setSelectedProject] = useState(null);
+
+  useEffect(() => {
+    let mounted = true;
+    innovationService.listProjects()
+      .then((rows) => { if (mounted) setProjects(rows); })
+      .catch(() => { if (mounted) setError(true); })
+      .finally(() => { if (mounted) setLoading(false); });
+    return () => { mounted = false; };
+  }, [refreshKey]);
+
+  const retryProjects = () => {
+    setLoading(true);
+    setError(null);
+    setRefreshKey((value) => value + 1);
+  };
+
+  const requestProblemSubmission = () => {
+    if (!user) navigate('/login', { state: { from: location } });
+  };
+
   return (
-    <div className="page">
-      <PageHeader title="Góc đổi mới sáng tạo" action={activeTab === 'problems' ? <Button icon="search" variant="secondary">Gửi bài toán</Button> : null} />
-      <div className="tabs">
-        <button className={`tab ${activeTab === 'projects' ? 'active' : ''}`} onClick={() => setActiveTab('projects')}>Công trình, sáng kiến</button>
-        <button className={`tab ${activeTab === 'problems' ? 'active' : ''}`} onClick={() => setActiveTab('problems')}>Bài toán, điểm nghẽn</button>
-      </div>
-      
-      <div style={{ padding: '16px' }}>
-        {activeTab === 'projects' ? (
-          <div className="list card-list">
-            {projects.map(p => <ProjectCard key={p.id} item={p} />)}
+    <div className="page innovation-page">
+      <PageHeader
+        title="Góc đổi mới sáng tạo"
+        action={(
+          <Button icon="plus" variant="secondary" onClick={requestProblemSubmission}>
+            {user ? 'Gửi bài toán' : 'Đăng nhập để gửi bài toán'}
+          </Button>
+        )}
+      />
+      <p className="page-subtitle">Các công trình đã được phê duyệt công bố.</p>
+
+      <section className="innovation-projects" aria-label="Công trình đã công bố">
+        {loading && <Skeleton lines={6} />}
+        {!loading && error && (
+          <div className="form-error" role="alert">
+            <p>Không tải được công trình công bố. Vui lòng thử lại.</p>
+            <Button variant="secondary" onClick={retryProjects}>Thử lại</Button>
           </div>
-        ) : (
-          <div className="list card-list">
-            {problems.map(p => (
-              <div key={p.id} className="card problem-card">
-                <div className="card-header">
-                  <h3>{p.title}</h3>
-                  <StatusBadge label={problemStatus[p.status][0]} tone={problemStatus[p.status][1]} />
-                </div>
-                <div className="card-meta"><span><Icon name="calendar" size={15}/>{p.date}</span><span><Icon name="users" size={15}/>{p.organization}</span></div>
-                <div className="problem-update"><strong>Cập nhật mới nhất:</strong> {p.update}</div>
-              </div>
+        )}
+        {!loading && !error && projects.length === 0 && (
+          <EmptyState icon="bulb" title="Chưa có công trình công bố" description="Các công trình được phê duyệt sẽ xuất hiện tại đây." />
+        )}
+        {!loading && !error && projects.length > 0 && (
+          <div className="list card-list innovation-project-list">
+            {projects.map((project, index) => (
+              <ProjectCard key={project.id} item={project} featured={index === 0} onOpen={setSelectedProject} />
             ))}
           </div>
         )}
-      </div>
+      </section>
+
+      <Modal
+        open={Boolean(selectedProject)}
+        title={selectedProject?.title || 'Chi tiết công trình'}
+        className="innovation-project-modal"
+        onClose={() => setSelectedProject(null)}
+        footer={<Button variant="secondary" onClick={() => setSelectedProject(null)}>Đóng</Button>}
+      >
+        {selectedProject && (
+          <div className="innovation-project-detail">
+            <StatusBadge label={selectedProject.status} tone="info" />
+            {selectedProject.category && <p><strong>Lĩnh vực:</strong> {selectedProject.category}</p>}
+            {selectedProject.team && <p><strong>Đơn vị thực hiện:</strong> {selectedProject.team}</p>}
+            {selectedProject.summary && <p>{selectedProject.summary}</p>}
+            <div className="innovation-progress-label"><span>Tiến độ</span><strong>{selectedProject.progress}%</strong></div>
+            <Progress value={selectedProject.progress} />
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

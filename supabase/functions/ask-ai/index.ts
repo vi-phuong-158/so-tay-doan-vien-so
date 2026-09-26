@@ -1,4 +1,4 @@
-import { clients, requireUser } from '../_shared/auth.ts';
+import { clients, optionalPublicFirstUser } from '../_shared/auth.ts';
 import { corsHeaders, errorResponse, json, readJson } from '../_shared/http.ts';
 import { assertUuid, safeText } from '../_shared/validation.ts';
 import {
@@ -27,6 +27,16 @@ type RetrievalRow = {
 };
 
 type SemanticRetrievalRow = Omit<RetrievalRow, 'rank' | 'exact_match'> & { similarity: number };
+
+async function requestKey(request: Request): Promise<string> {
+  // The platform-provided address is used only to rate-limit. Persist the SHA-256 digest, never
+  // the address or question itself; a missing proxy header shares the conservative fallback key.
+  const clientAddress = request.headers.get('cf-connecting-ip')
+    || request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || 'unknown';
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`public-ai:${clientAddress}`));
+  return [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, '0')).join('');
+}
 
 function errorCode(error: unknown): string {
   if (error instanceof RagError) return error.code;
@@ -92,11 +102,40 @@ Deno.serve(async request => {
 
   try {
     const { userClient, adminClient } = clients(request);
-    const user = await requireUser(userClient);
     const payload = await readJson<Payload>(request);
     const question = safeText(payload.question, 2_000);
     if (!question || question.length < 3) throw new Error('QUESTION_REQUIRED');
     const query = normalizeKnowledgeQuery(question);
+    const user = await optionalPublicFirstUser(request, userClient);
+
+    if (!user) {
+      if (payload.conversation_id) throw new Error('PUBLIC_CONVERSATION_NOT_SUPPORTED');
+      const { data: allowed, error: quotaError } = await adminClient.rpc('consume_public_ai_quota', {
+        p_request_key: await requestKey(request),
+        p_max_requests: 20,
+      });
+      if (quotaError || !allowed) throw new Error('MODEL_RATE_LIMITED');
+
+      const { data, error: retrievalError } = await adminClient.rpc('search_public_knowledge', {
+        p_query: query,
+        p_match_count: 8,
+      });
+      if (retrievalError) throw new Error('RETRIEVAL_FAILED');
+      const sources: RetrievedKnowledgeSource[] = ((data ?? []) as RetrievalRow[]).map(mapSource);
+      if (sources.length === 0) {
+        return json({ success: true, conversation_id: null, message_id: null, answer: NO_EVIDENCE_ANSWER, citations: [] });
+      }
+
+      const apiKey = Deno.env.get('GEMINI_API_KEY');
+      const model = Deno.env.get('RAG_GENERATION_MODEL') || Deno.env.get('GEMINI_GENERATION_MODEL');
+      if (!apiKey || !model) throw new Error('GEMINI_NOT_CONFIGURED');
+      const runtime = getGeminiGenerationRuntimeConfig({ GEMINI_GENERATION_TIMEOUT_MS: Deno.env.get('GEMINI_GENERATION_TIMEOUT_MS') });
+      const generatedAnswer = await new GeminiGroundedAnswerGenerator(model, apiKey, fetch, { maxAttempts: runtime.maxAttempts }, runtime.timeoutMs)
+        .generate(question, sources);
+      const citations = sources.map((source, index) => citation(source, index + 1));
+      const answer = `${generatedAnswer}\n\nNguồn tra cứu:\n${citations.map(item => `[${item.rank}] ${item.title}`).join('\n')}`;
+      return json({ success: true, conversation_id: null, message_id: null, answer, citations });
+    }
 
     const conversationId = await getConversationId(userClient, adminClient, user.id, question, payload);
     const { error: userMessageError } = await adminClient.from('ai_messages')

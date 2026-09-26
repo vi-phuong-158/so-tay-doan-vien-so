@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
-import { AuthGuard, RoleGuard } from './components/Guards';
+import { AuthGuard, MemberManagementGuard, RoleGuard } from './components/Guards';
 import { AppShell } from './components/Layout';
 
 import { Login } from './pages/auth/Login';
@@ -29,6 +29,9 @@ import { AdminLearningTopics } from './pages/AdminLearningTopics';
 import { AdminLearningTopicDetail } from './pages/AdminLearningTopicDetail';
 import { AdminQuizEditor } from './pages/AdminQuizEditor';
 import { AdminKnowledgeArticle } from './pages/AdminKnowledgeArticle';
+import { MemberManagement } from './pages/MemberManagement';
+import { MemberDetail } from './pages/MemberDetail';
+import { MemberImport } from './pages/MemberImport';
 
 import { EmptyState } from './components/common';
 
@@ -52,56 +55,64 @@ export default function App() {
           <Route path="/quen-mat-khau" element={<ForgotPassword />} />
           <Route path="/dat-lai-mat-khau" element={<ResetPassword />} />
 
-          {/* Protected Routes inside AppShell */}
-          <Route path="/" element={<AuthGuard><AppShell /></AuthGuard>}>
+          {/* Database RLS and Edge Functions independently restrict these routes to published PUBLIC content. */}
+          <Route path="/" element={<AppShell />}>
             <Route index element={<Home />} />
-            <Route path="cong-viec" element={<Work />} />
-            <Route path="cong-viec/bao-cao/:assignmentId" element={<ReportAssignmentDetail />} />
             <Route path="tri-thuc" element={<Knowledge />} />
             <Route path="tri-thuc/hoi-ai" element={<AskAi />} />
             <Route path="tri-thuc/van-ban" element={<Documents />} />
             <Route path="tri-thuc/van-ban/:documentId" element={<DocumentDetail />} />
             <Route path="tri-thuc/chuyen-de" element={<LearningTopics />} />
             <Route path="tri-thuc/chuyen-de/:topicId" element={<LearningTopicDetail />} />
-            <Route path="tri-thuc/trac-nghiem/:quizId" element={<Quiz />} />
             <Route path="doi-moi-sang-tao" element={<Innovation />} />
-            <Route path="ca-nhan" element={<Profile />} />
+            <Route element={<AuthGuard />}>
+              <Route path="cong-viec" element={<Work />} />
+              <Route path="cong-viec/bao-cao/:assignmentId" element={<ReportAssignmentDetail />} />
+              <Route path="tri-thuc/trac-nghiem/:quizId" element={<Quiz />} />
+              <Route path="ca-nhan" element={<Profile />} />
 
-            {/* Profile Routes */}
-            <Route path="ca-nhan/thong-bao" element={<Notifications />} />
-            <Route path="ca-nhan/doi-mat-khau" element={<ChangePassword />} />
+              {/* P5.5-06 — Member Management. MemberManagementGuard (NOT RoleGuard — see Guards.jsx)
+                  is the UX boundary; the Member API re-checks authorization on every request regardless. */}
+              <Route path="quan-ly-doan-vien" element={<MemberManagementGuard><MemberManagement /></MemberManagementGuard>} />
+              <Route path="quan-ly-doan-vien/:memberId" element={<MemberManagementGuard><MemberDetail /></MemberManagementGuard>} />
+              <Route path="admin/quan-ly-doan-vien/import" element={<MemberManagementGuard requireImportRole><MemberImport /></MemberManagementGuard>} />
 
-            {/* Admin Routes */}
-            <Route path="admin" element={
-              <RoleGuard allowedRoles={['YOUTH_ADMIN']}>
-                <AdminDashboard />
-              </RoleGuard>
-            } />
-            <Route path="admin/van-ban" element={
-              <RoleGuard allowedRoles={['YOUTH_ADMIN']}>
-                <AdminDocuments />
-              </RoleGuard>
-            } />
-            <Route path="admin/van-ban/:documentId/tri-thuc" element={<RoleGuard allowedRoles={['YOUTH_ADMIN']}><AdminKnowledgeArticle /></RoleGuard>} />
-            <Route path="admin/chuyen-de" element={<RoleGuard allowedRoles={['YOUTH_ADMIN']}><AdminLearningTopics /></RoleGuard>} />
-            <Route path="admin/chuyen-de/:topicId" element={<RoleGuard allowedRoles={['YOUTH_ADMIN']}><AdminLearningTopicDetail /></RoleGuard>} />
-            <Route path="admin/chuyen-de/:topicId/trac-nghiem/:quizId" element={<RoleGuard allowedRoles={['YOUTH_ADMIN']}><AdminQuizEditor /></RoleGuard>} />
-            <Route path="admin/bao-cao" element={
-              <RoleGuard allowedRoles={['YOUTH_ADMIN']}>
-                <AdminReports />
-              </RoleGuard>
-            } />
-            <Route path="admin/bao-cao/:campaignId" element={
-              <RoleGuard allowedRoles={['YOUTH_ADMIN']}>
-                <AdminReports />
-              </RoleGuard>
-            } />
-            <Route path="admin/bao-cao/:campaignId/dashboard" element={
-              <RoleGuard allowedRoles={['YOUTH_ADMIN']}>
-                <AdminReportDashboard />
-              </RoleGuard>
-            } />
-            
+              {/* Profile Routes */}
+              <Route path="ca-nhan/thong-bao" element={<Notifications />} />
+              <Route path="ca-nhan/doi-mat-khau" element={<ChangePassword />} />
+
+              {/* Admin Routes */}
+              <Route path="admin" element={
+                <RoleGuard allowedRoles={['YOUTH_ADMIN']}>
+                  <AdminDashboard />
+                </RoleGuard>
+              } />
+              <Route path="admin/van-ban" element={
+                <RoleGuard allowedRoles={['YOUTH_ADMIN']}>
+                  <AdminDocuments />
+                </RoleGuard>
+              } />
+              <Route path="admin/van-ban/:documentId/tri-thuc" element={<RoleGuard allowedRoles={['YOUTH_ADMIN']}><AdminKnowledgeArticle /></RoleGuard>} />
+              <Route path="admin/chuyen-de" element={<RoleGuard allowedRoles={['YOUTH_ADMIN']}><AdminLearningTopics /></RoleGuard>} />
+              <Route path="admin/chuyen-de/:topicId" element={<RoleGuard allowedRoles={['YOUTH_ADMIN']}><AdminLearningTopicDetail /></RoleGuard>} />
+              <Route path="admin/chuyen-de/:topicId/trac-nghiem/:quizId" element={<RoleGuard allowedRoles={['YOUTH_ADMIN']}><AdminQuizEditor /></RoleGuard>} />
+              <Route path="admin/bao-cao" element={
+                <RoleGuard allowedRoles={['YOUTH_ADMIN']}>
+                  <AdminReports />
+                </RoleGuard>
+              } />
+              <Route path="admin/bao-cao/:campaignId" element={
+                <RoleGuard allowedRoles={['YOUTH_ADMIN']}>
+                  <AdminReports />
+                </RoleGuard>
+              } />
+              <Route path="admin/bao-cao/:campaignId/dashboard" element={
+                <RoleGuard allowedRoles={['YOUTH_ADMIN']}>
+                  <AdminReportDashboard />
+                </RoleGuard>
+              } />
+            </Route>
+
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>
