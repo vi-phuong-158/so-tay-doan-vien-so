@@ -7,6 +7,13 @@
 
 ## Đang làm
 
+### P5 semantic retrieval — hybrid Ask AI implementation
+- **Base:** `origin/master@56f858296bcd02c3a805d77dba2b3086cace8a4b`; branch `feat/phase-5-semantic-retrieval`.
+- **Trạng thái:** Implementation complete; `SEMANTIC_RETRIEVAL_PARTIAL` pending Deno and pgTAP execution. Baseline used lexical `search_published_knowledge`; the older `match_document_chunks` RPC was not called by Ask AI. P5 article-generation evidence did not yet carry vectors.
+- **Phạm vi:** query embedding, scoped pgvector retrieval, deterministic RRF/context selection, lexical fallback, focused Deno/pgTAP tests, architecture/decision/log updates. No production backfill or hosted acceptance.
+- **Validation:** root npm tests/lint/build PASS; local Supabase CLI/Docker/Deno unavailable, so pgTAP/Edge gates remain unverified. No commit/merge until CI verifies them.
+- **Report:** `docs/phase-5/14-semantic-retrieval.md`.
+
 ### P5.5-00 — Member Management Architecture & Data Contract (architecture only) — CLOSED
 - **Base:** `master@a775a637a29217dbce6d658086935fd1b64da5c9` (Phase 1–5 đã đóng). Branch
   `docs/p5-5-member-management-architecture`, merged vào `master` qua PR #38 (merge commit

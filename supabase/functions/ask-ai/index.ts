@@ -6,8 +6,11 @@ import {
   NO_EVIDENCE_ANSWER,
   type RetrievedKnowledgeSource,
   RagError,
+  normalizeKnowledgeQuery,
+  retrieveKnowledgeContext,
 } from '../_shared/knowledge/rag.ts';
 import { getGeminiGenerationRuntimeConfig } from '../_shared/knowledge/geminiRuntime.ts';
+import { createGeminiEmbedding, GeminiEmbeddingError } from '../_shared/knowledge/geminiEmbedding.ts';
 
 type Payload = { question: string; mode?: string; conversation_id?: string };
 
@@ -20,7 +23,10 @@ type RetrievalRow = {
   evidence_text: string;
   locator: Record<string, unknown>;
   rank: number;
+  exact_match?: boolean;
 };
+
+type SemanticRetrievalRow = Omit<RetrievalRow, 'rank' | 'exact_match'> & { similarity: number };
 
 function errorCode(error: unknown): string {
   if (error instanceof RagError) return error.code;
@@ -90,22 +96,61 @@ Deno.serve(async request => {
     const payload = await readJson<Payload>(request);
     const question = safeText(payload.question, 2_000);
     if (!question || question.length < 3) throw new Error('QUESTION_REQUIRED');
+    const query = normalizeKnowledgeQuery(question);
 
     const conversationId = await getConversationId(userClient, adminClient, user.id, question, payload);
     const { error: userMessageError } = await adminClient.from('ai_messages')
       .insert({ conversation_id: conversationId, role: 'user', content: question, status: 'COMPLETED' });
     if (userMessageError) throw new Error('MESSAGE_PERSIST_FAILED');
 
-    const { data, error: retrievalError } = await userClient.rpc('search_published_knowledge', {
-      p_query: question,
-      p_match_count: 8,
+    const { data: lexicalData, error: lexicalError } = await userClient.rpc('search_published_knowledge', {
+      p_query: query,
+      p_match_count: 24,
     });
-    if (retrievalError) throw new Error('RETRIEVAL_FAILED');
-    const sources: RetrievedKnowledgeSource[] = ((data ?? []) as RetrievalRow[]).map(mapSource);
+    if (lexicalError) throw new Error('RETRIEVAL_FAILED');
+    const lexical = ((lexicalData ?? []) as RetrievalRow[]).map(mapSource).map((source, index) => ({
+      ...source,
+      exactMatch: Boolean((lexicalData as RetrievalRow[] | null)?.[index]?.exact_match),
+    }));
+    const embeddingModel = Deno.env.get('GEMINI_EMBEDDING_MODEL');
+    const embeddingKey = Deno.env.get('GEMINI_API_KEY');
+    const retrieval = await retrieveKnowledgeContext(
+      query,
+      lexical,
+      async normalizedQuery => {
+        if (!embeddingModel || !embeddingKey) throw new Error('GEMINI_EMBEDDING_NOT_CONFIGURED');
+        return createGeminiEmbedding(normalizedQuery, embeddingKey, embeddingModel);
+      },
+      async queryEmbedding => {
+        const { data: semanticData, error: semanticError } = await userClient.rpc('search_semantic_knowledge', {
+          p_query_embedding: queryEmbedding,
+          p_embedding_model: embeddingModel || '',
+          p_match_count: 24,
+          p_similarity_threshold: 0.55,
+        });
+        if (semanticError) throw new Error('SEMANTIC_RETRIEVAL_FAILED');
+        return ((semanticData ?? []) as SemanticRetrievalRow[]).map(row => ({
+          ...mapSource({ ...row, rank: row.similarity }),
+          semanticSimilarity: Number(row.similarity),
+        }));
+      }
+    );
+    const sources = retrieval.sources;
+    const retrievalMode = retrieval.mode;
+    if (retrieval.error) {
+      const error = retrieval.error;
+      const code = error instanceof GeminiEmbeddingError
+        ? error.code
+        : error instanceof Error && ['SEMANTIC_RETRIEVAL_FAILED', 'GEMINI_EMBEDDING_NOT_CONFIGURED'].includes(error.message)
+          ? error.message
+          : 'GEMINI_EMBEDDING_PROVIDER_UNAVAILABLE';
+      console.log(JSON.stringify({ event: 'knowledge_retrieval_degraded', mode: 'lexical_fallback', outcome: code }));
+    }
+    console.log(JSON.stringify({ event: 'knowledge_retrieval', mode: retrieval.mode, lexical_candidates: retrieval.lexicalCandidates, semantic_candidates: retrieval.semanticCandidates, selected_context_count: sources.length }));
 
     if (sources.length === 0) {
       const { data: message, error } = await adminClient.from('ai_messages')
-        .insert({ conversation_id: conversationId, role: 'assistant', content: NO_EVIDENCE_ANSWER, status: 'COMPLETED' })
+        .insert({ conversation_id: conversationId, role: 'assistant', content: NO_EVIDENCE_ANSWER, status: 'COMPLETED', token_usage: { retrieval_mode: retrievalMode, lexical_candidates: retrieval.lexicalCandidates, semantic_candidates: retrieval.semanticCandidates, selected_context_count: 0 } })
         .select('id')
         .single();
       if (error || !message) throw new Error('MESSAGE_PERSIST_FAILED');
@@ -129,7 +174,7 @@ Deno.serve(async request => {
         content: answer,
         model,
         latency_ms: Date.now() - startedAt,
-        token_usage: { provider: 'GEMINI', source_count: sources.length },
+        token_usage: { provider: 'GEMINI', source_count: sources.length, retrieval_mode: retrievalMode, lexical_candidates: retrieval.lexicalCandidates, semantic_candidates: retrieval.semanticCandidates, selected_context_count: sources.length },
         status: 'COMPLETED',
       })
       .select('id')
@@ -144,7 +189,7 @@ Deno.serve(async request => {
         evidence_id: source.evidenceId,
         source_kind: 'EVIDENCE',
         rank: index + 1,
-        similarity: source.rank,
+        similarity: source.semanticSimilarity ?? source.rank,
         quoted_excerpt: source.evidenceText.slice(0, 350),
       })),
     );

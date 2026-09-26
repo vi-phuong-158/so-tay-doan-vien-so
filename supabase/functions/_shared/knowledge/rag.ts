@@ -12,7 +12,98 @@ export type RetrievedKnowledgeSource = {
   evidenceText: string;
   locator: Record<string, unknown>;
   rank: number;
+  exactMatch?: boolean;
+  semanticSimilarity?: number;
 };
+
+export type RankedKnowledgeCandidate = RetrievedKnowledgeSource;
+
+const RRF_K = 60;
+const LEXICAL_WEIGHT = 1.25;
+const MAX_CHUNKS_PER_DOCUMENT = 2;
+const MAX_CONTEXT_CHARACTERS = 12_000;
+
+export function fuseKnowledgeCandidates(
+  lexical: RankedKnowledgeCandidate[],
+  semantic: RankedKnowledgeCandidate[],
+  limit = 8,
+): RetrievedKnowledgeSource[] {
+  const fused = new Map<string, { source: RetrievedKnowledgeSource; score: number; lexicalRank: number; exact: boolean }>();
+  const add = (candidates: RankedKnowledgeCandidate[], weight: number, kind: 'lexical' | 'semantic') => {
+    candidates.forEach((source, index) => {
+      const current = fused.get(source.evidenceId) ?? {
+        source,
+        score: 0,
+        lexicalRank: Number.MAX_SAFE_INTEGER,
+        exact: false,
+      };
+      current.score += weight / (RRF_K + index + 1);
+      if (kind === 'lexical') {
+        current.lexicalRank = index + 1;
+        current.exact = Boolean(source.exactMatch);
+      } else if (source.semanticSimilarity !== undefined) {
+        current.source.semanticSimilarity = source.semanticSimilarity;
+      }
+      fused.set(source.evidenceId, current);
+    });
+  };
+  add(lexical, LEXICAL_WEIGHT, 'lexical');
+  add(semantic, 1, 'semantic');
+
+  const ranked = [...fused.values()].sort((a, b) => Number(b.exact) - Number(a.exact)
+    || b.score - a.score
+    || a.lexicalRank - b.lexicalRank
+    || a.source.evidenceId.localeCompare(b.source.evidenceId));
+  const selected: RetrievedKnowledgeSource[] = [];
+  const documentCounts = new Map<string, number>();
+  let contextCharacters = 0;
+  for (const item of ranked) {
+    const count = documentCounts.get(item.source.documentId) ?? 0;
+    if (count >= MAX_CHUNKS_PER_DOCUMENT || contextCharacters + item.source.evidenceText.length > MAX_CONTEXT_CHARACTERS) continue;
+    documentCounts.set(item.source.documentId, count + 1);
+    contextCharacters += item.source.evidenceText.length;
+    selected.push({ ...item.source, rank: item.score });
+    if (selected.length >= Math.max(1, Math.min(limit, 12))) break;
+  }
+  return selected;
+}
+
+export function normalizeKnowledgeQuery(question: string): string {
+  return question.normalize('NFC').replace(/\s+/g, ' ').trim();
+}
+
+export async function retrieveKnowledgeContext<TEmbedding>(
+  query: string,
+  lexical: RetrievedKnowledgeSource[],
+  createQueryEmbedding: (query: string) => Promise<TEmbedding>,
+  searchSemantic: (embedding: TEmbedding) => Promise<RetrievedKnowledgeSource[]>,
+  limit = 8,
+): Promise<{
+  sources: RetrievedKnowledgeSource[];
+  mode: 'hybrid' | 'lexical_fallback';
+  lexicalCandidates: number;
+  semanticCandidates: number;
+  error?: unknown;
+}> {
+  try {
+    const embedding = await createQueryEmbedding(query);
+    const semantic = await searchSemantic(embedding);
+    return {
+      sources: fuseKnowledgeCandidates(lexical, semantic, limit),
+      mode: 'hybrid',
+      lexicalCandidates: lexical.length,
+      semanticCandidates: semantic.length,
+    };
+  } catch (error) {
+    return {
+      sources: fuseKnowledgeCandidates(lexical, [], limit),
+      mode: 'lexical_fallback',
+      lexicalCandidates: lexical.length,
+      semanticCandidates: 0,
+      error,
+    };
+  }
+}
 
 export class RagError extends Error {
   constructor(readonly code: string, readonly retryable = false) {

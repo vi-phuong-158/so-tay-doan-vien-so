@@ -1,5 +1,13 @@
 # 06 — AI Working Log
 
+## [2026-09-26] P5 hybrid semantic retrieval
+
+- **Agent:** Codex
+- **Thay đổi:** Từ baseline `origin/master@56f8582`, thêm Gemini query/evidence embedding với 768-dimension validation and timeout; scoped pgvector retrieval cạnh lexical search; deterministic weighted RRF/context caps; lexical fallback and internal retrieval diagnostics. Added retrieval-only pgTAP and Deno coverage and updated architecture/decision/current-task docs. No data backfill or hosted/production calls.
+- **File đã sửa:** `supabase/migrations/202609260001_phase_5_semantic_retrieval.sql`, `supabase/functions/ask-ai/index.ts`, `supabase/functions/process-document/index.ts`, `supabase/functions/generate-knowledge-article/index.ts`, `supabase/functions/_shared/knowledge/geminiEmbedding.ts`, `supabase/functions/_shared/knowledge/geminiEmbedding.test.ts`, `supabase/functions/_shared/knowledge/rag.ts`, `supabase/functions/_shared/knowledge/ragRetrieval.test.ts`, `supabase/tests/phase_5_semantic_retrieval.sql`, `supabase/tests/phase_5_article_generation.sql`, `docs/brain/01-architecture.md`, `docs/brain/03-decisions.md`, `docs/brain/04-current-tasks.md`, `docs/phase-5/14-semantic-retrieval.md`.
+- **Lý do:** Ask AI trước đó chỉ dùng full-text retrieval; P5 reviewed evidence cũng chưa có vectors, nên câu hỏi diễn đạt tự nhiên chưa được tìm theo ngữ nghĩa.
+- **Kiểm tra:** `npm.cmd test` 153/153 PASS; lint 0 errors/3 existing warnings; build PASS; `git diff --check` PASS. pgTAP/Deno chưa chạy được vì môi trường thiếu Supabase CLI, Docker và Deno. Verdict hiện tại: `SEMANTIC_RETRIEVAL_PARTIAL`, chờ CI exact-head regression.
+
 ## [2026-09-05] P5.5-03 fix — validate work_unit_code against authoritative organization data
 
 - **Agent:** Claude Code

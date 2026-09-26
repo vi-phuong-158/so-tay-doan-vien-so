@@ -1,6 +1,6 @@
 begin;
 
-select plan(43);
+select plan(48);
 
 create or replace function p5_03_set_auth_user(p_uid uuid) returns void
 language plpgsql as $$
@@ -39,6 +39,10 @@ select function_privs_are('public', 'set_document_retrieval_enabled', ARRAY['uui
 select function_privs_are('public', 'set_knowledge_article_retrieval_enabled', ARRAY['uuid','boolean'], 'authenticated', ARRAY['EXECUTE'], 'article retrieval uses a trusted RPC');
 select function_privs_are('public', 'search_published_knowledge', ARRAY['text','integer'], 'authenticated', ARRAY['EXECUTE'], 'retrieval is callable only by authenticated users');
 select function_privs_are('public', 'search_published_knowledge', ARRAY['text','integer'], 'anon', ARRAY[]::text[], 'anonymous callers cannot invoke retrieval');
+select function_privs_are('public', 'search_semantic_knowledge', ARRAY['vector','text','integer','real'], 'authenticated', ARRAY['EXECUTE'], 'semantic retrieval is callable by authenticated users');
+select function_privs_are('public', 'search_semantic_knowledge', ARRAY['vector','text','integer','real'], 'anon', ARRAY[]::text[], 'anonymous callers cannot invoke semantic retrieval');
+select function_privs_are('public', 'store_knowledge_evidence_embeddings', ARRAY['uuid','text','jsonb'], 'authenticated', ARRAY[]::text[], 'users cannot store evidence embeddings');
+select has_column('public', 'document_chunks', 'embedding_model', 'evidence vectors record their embedding model');
 select results_eq(
   $$
     select count(*)::integer
@@ -146,7 +150,7 @@ select results_eq(
 select public.persist_document_extraction(
   'f9000000-0000-0000-0000-000000000001'::uuid,
   encode(extensions.digest(convert_to('p5-03-source-bytes', 'UTF8'), 'sha256'::text), 'hex'), 'normalized-fixture-hash', 'deterministic-text', 'p5-03-deterministic-v1',
-  '[{"page":1,"text":"Điều 1. Hạn 15 ngày."}]'::jsonb, '{"sections":[]}'::jsonb, 'Điều 1. Hạn 15 ngày.'
+  '[{"page":1,"text":"Điều 1. Hạn 15 ngày. Mã chương trình: RAG-ALPHA-726. Hồ sơ phải được gửi trước 17 giờ 30 ngày 31 tháng 12 năm 2026. Người tham gia có trách nhiệm báo cáo kết quả thực hiện."}]'::jsonb, '{"sections":[]}'::jsonb, 'Điều 1. Hạn 15 ngày. Mã chương trình: RAG-ALPHA-726. Hồ sơ phải được gửi trước 17 giờ 30 ngày 31 tháng 12 năm 2026. Người tham gia có trách nhiệm báo cáo kết quả thực hiện.'
 ) is not null;
 select results_eq('select count(*)::integer from public.document_extractions', ARRAY[1], 'successful extraction is stored privately');
 select throws_ok(
@@ -162,7 +166,7 @@ select results_eq('select count(*)::integer from p5_03_claim', ARRAY[1], 'genera
 select public.persist_knowledge_article_draft(
   (select id from p5_03_claim), (select claim_token from p5_03_claim),
   '{"title":"Bản nháp synthetic","summary":"Hạn 15 ngày","key_points":["Hạn 15 ngày"],"structured_content":{}}'::jsonb,
-  jsonb_build_array(jsonb_build_object('content','Điều 1. Hạn 15 ngày.','content_hash',encode(extensions.digest(convert_to('Điều 1. Hạn 15 ngày.', 'UTF8'), 'sha256'::text),'hex'),'locator',jsonb_build_object('page',1),'evidence_kind','DEADLINE','selected_reason','fixture')),
+  jsonb_build_array(jsonb_build_object('content','Điều 1. Hạn 15 ngày. Mã chương trình: RAG-ALPHA-726. Hồ sơ phải được gửi trước 17 giờ 30 ngày 31 tháng 12 năm 2026. Người tham gia có trách nhiệm báo cáo kết quả thực hiện.','content_hash',encode(extensions.digest(convert_to('Điều 1. Hạn 15 ngày. Mã chương trình: RAG-ALPHA-726. Hồ sơ phải được gửi trước 17 giờ 30 ngày 31 tháng 12 năm 2026. Người tham gia có trách nhiệm báo cáo kết quả thực hiện.', 'UTF8'), 'sha256'::text),'hex'),'locator',jsonb_build_object('page',1),'evidence_kind','DEADLINE','selected_reason','fixture')),
   '{"provider":"FAKE","model":"synthetic-fake-v1","prompt_version":"knowledge_article_v1"}'::jsonb,
   '11112222-3333-4444-5555-666677778888'::uuid
 ) is not null;
@@ -170,11 +174,42 @@ select results_eq($$ select count(*)::integer from public.knowledge_articles whe
 select results_eq($$ select count(*)::integer from public.document_chunks where article_id is not null and review_status = 'PENDING' $$, ARRAY[1], 'evidence is selective and initially pending');
 select results_eq(
   $$ select content_hash from public.document_chunks where article_id is not null $$,
-  $$ select encode(extensions.digest(convert_to('Điều 1. Hạn 15 ngày.', 'UTF8'), 'sha256'::text), 'hex') $$,
+  $$ select encode(extensions.digest(convert_to('Điều 1. Hạn 15 ngày. Mã chương trình: RAG-ALPHA-726. Hồ sơ phải được gửi trước 17 giờ 30 ngày 31 tháng 12 năm 2026. Người tham gia có trách nhiệm báo cáo kết quả thực hiện.', 'UTF8'), 'sha256'::text), 'hex') $$,
   'database evidence hash is explicit UTF-8 SHA-256'
 );
 select public.complete_ingestion_job((select id from p5_03_claim), (select claim_token from p5_03_claim), '{"article_id":"f0000000-0000-0000-0000-000000000001"}'::jsonb);
 
+select public.store_knowledge_evidence_embeddings(
+  (select id from public.knowledge_articles where document_id = 'f7000000-0000-0000-0000-000000000001'::uuid),
+  'models/gemini-embedding-001',
+  jsonb_build_array(jsonb_build_object(
+    'content_hash', (select content_hash from public.document_chunks where article_id = (select id from public.knowledge_articles where document_id = 'f7000000-0000-0000-0000-000000000001'::uuid)),
+    'embedding', to_jsonb(array_fill(0.25::real, ARRAY[768]))
+  ))
+);
+select throws_ok(
+  $$ select public.store_knowledge_evidence_embeddings(
+       (select id from public.knowledge_articles where document_id = 'f7000000-0000-0000-0000-000000000001'::uuid),
+       'models/gemini-embedding-001',
+       '[{"content_hash":"bad","embedding":[0,1]}]'::jsonb
+     ) $$,
+  'EMBEDDING_DIMENSION_INVALID', 'malformed evidence vectors are rejected'
+);
+select throws_ok(
+  $$ select public.store_knowledge_evidence_embeddings(
+       (select id from public.knowledge_articles where document_id = 'f7000000-0000-0000-0000-000000000001'::uuid),
+       'models/gemini-embedding-001',
+       jsonb_build_array(jsonb_build_object(
+         'content_hash', (select content_hash from public.document_chunks where article_id = (select id from public.knowledge_articles where document_id = 'f7000000-0000-0000-0000-000000000001'::uuid)),
+         'embedding', 'null'::jsonb
+       ))
+     ) $$,
+  'EMBEDDING_DIMENSION_INVALID', 'null evidence vectors are rejected'
+);
+select results_eq(
+  $$ select count(*)::integer from public.document_chunks where article_id = (select id from public.knowledge_articles where document_id = 'f7000000-0000-0000-0000-000000000001'::uuid) and vector_dims(embedding) = 768 and embedding_model = 'models/gemini-embedding-001' $$,
+  ARRAY[1], 'pending evidence vector is dimensioned and model tagged before review'
+);
 select p5_03_set_auth_user('11112222-3333-4444-5555-666677778888'::uuid);
 select public.review_knowledge_article((select id from public.knowledge_articles where document_id = 'f7000000-0000-0000-0000-000000000001'::uuid), 'APPROVE', 'Đã đối chiếu source');
 select results_eq($$ select count(*)::integer from public.knowledge_articles where document_id = 'f7000000-0000-0000-0000-000000000001'::uuid and review_status = 'APPROVED' $$, ARRAY[1], 'scoped admin can approve a complete article');
@@ -186,16 +221,6 @@ select lives_ok(
 select lives_ok(
   $$ select public.set_knowledge_article_retrieval_enabled((select id from public.knowledge_articles where document_id = 'f7000000-0000-0000-0000-000000000001'::uuid), true) $$,
   'scoped admin can enable approved current article retrieval'
-);
-select p5_03_set_auth_user('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'::uuid);
-select results_eq(
-  $$ select count(*)::integer from public.search_published_knowledge('Hạn 15 ngày', 8) $$,
-  ARRAY[1], 'same-organization member retrieves approved source evidence'
-);
-select p5_03_set_auth_user('dddddddd-dddd-dddd-dddd-dddddddddddd'::uuid);
-select results_eq(
-  $$ select count(*)::integer from public.search_published_knowledge('Hạn 15 ngày', 8) $$,
-  ARRAY[0], 'cross-organization user cannot retrieve source evidence'
 );
 select p5_03_set_auth_user('11112222-3333-4444-5555-666677778888'::uuid);
 select throws_ok(
