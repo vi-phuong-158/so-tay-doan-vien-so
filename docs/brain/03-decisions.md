@@ -5,6 +5,16 @@
 
 ---
 
+## [2026-09-26] Ask AI dùng hybrid retrieval với lexical fallback
+
+- **Quyết định:** Giữ full-text retrieval cho exact identifier/title/lexical recall và bổ sung pgvector cosine retrieval trên `document_chunks.embedding vector(768)`. Ask AI tạo query embedding bằng cùng `GEMINI_EMBEDDING_MODEL`/dimension; hai danh sách hợp nhất bằng weighted RRF (K=60, lexical weight 1.25), evidence ID dedupe, tối đa hai chunk/document và tám chunk context/12.000 ký tự. Semantic cosine threshold ban đầu là 0.55 để loại match chủ đề yếu; đây là ngưỡng bảo thủ cần được đánh giá lại bằng acceptance corpus, chưa phải kết quả tuning production. Query lọc theo model và quyền trước khi exact-rank để không trộn embedding spaces; `embedding_model` có partial B-tree index.
+- **Lý do:** Đóng semantic retrieval gap mà không loại bỏ exact-term retrieval và không làm Ask AI mất khả năng trả lời khi embedding provider lỗi.
+- **Bảo mật/vòng đời:** Lexical và vector RPC chạy security-invoker dưới user JWT; document authorization, PUBLISHED/current version, retrieval opt-in, article current/APPROVED và evidence APPROVED được lọc tại retrieval query. Evidence vector không cấp thêm quyền đọc. Citations tiếp tục được tạo từ metadata của evidence đã truy hồi.
+- **Đánh đổi:** Evidence cũ chưa có vector vẫn lexical-only; không backfill production trong phase này. Embedding evidence mới là best-effort trong article generation; thiếu vector giữ bài dùng được qua lexical retrieval và thêm cảnh báo nội bộ.
+- **Migration/rollback:** Migration `202609260001_phase_5_semantic_retrieval.sql` additive; rollback an toàn bằng forward fix/tắt semantic RPC call, giữ `search_published_knowledge`. Không cần xóa vector hoặc dữ liệu hiện có.
+
+- **Tương thích Public-First:** Guest tiếp tục dùng quota theo giờ và `search_public_knowledge` trên corpus PUBLIC cố định; không có lịch sử hội thoại và không gọi semantic RPC. Hybrid retrieval chỉ áp dụng sau khi xác thực user, với RPC chạy theo JWT và authorization hiện hành.
+
 ## [2026-09-20] UI/UX End-to-End Finalization — giữ Public-First, dùng shared frontend primitives
 
 UI shell tiếp tục theo quyết định `PUBLIC_FIRST_AUTH_ON_DEMAND`: Home, tài liệu, chuyên đề, Ask AI

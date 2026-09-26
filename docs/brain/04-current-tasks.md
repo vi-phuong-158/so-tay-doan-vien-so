@@ -7,6 +7,13 @@
 
 ## Đang làm
 
+### P5 semantic retrieval integration reconciliation — COMPLETED (2026-09-26)
+- **Base:** semantic implementation `0e68e717534656233e26824dc19ba144b37d6e8a`; integrating `origin/master@8f3d99425e0147bf045c95988589c2b7e6704df1` on `feat/phase-5-semantic-retrieval`.
+- **Trạng thái:** Reconciliation merge `4695f3005151da054acb49d1735d862f262f16b7` plus trigger search-path compatibility fix `b1f9ca9b8eb4e840cba3196cc9f46d651b05bd8d`; PR #59 is Draft and MERGEABLE. Exact-head CI `36251878483` passed build, 33 pgTAP files/863 tests, Deno check/tests, Member API, and Vercel Preview. Final docs-only status update requires one final exact-head CI run.
+- **Kết quả/bảo mật:** Guest remains on hourly hashed quota + fixed public lexical corpus with no conversation history; authenticated retrieval remains JWT-scoped hybrid lexical/semantic. Trigger helper retains `search_path=public`. No production deployment/backfill and no rehearsal E2E.
+- **Tiếp theo:** Sau exact-head CI xanh, chạy prepared RAG acceptance corpus trong non-production rehearsal environment theo đúng SHA cuối.
+- **Report:** `docs/phase-5/14-semantic-retrieval.md` and PR #59.
+
 ### SOTAY_UI_FINAL_CLOSURE (ĐÃ HOÀN TẤT — 2026-09-23)
 - **Base:** `master@2095ebb98c572f10a5b04a08396e3e3569fb1271`; PR #54 đã merge.
 - **PR/UI merge:** PR #57 exact audited head `0050f40357b9091d082971659aa37f84378dfdaf`, merge commit

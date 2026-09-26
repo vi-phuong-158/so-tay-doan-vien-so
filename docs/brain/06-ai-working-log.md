@@ -1,5 +1,20 @@
 # 06 — AI Working Log
 
+## [2026-09-26] P5 semantic retrieval integration reconciliation
+
+- **Agent:** Codex
+- **Thay đổi:** Đưa `origin/master@8f3d99425e0147bf045c95988589c2b7e6704df1` vào branch Semantic Retrieval bằng merge; giữ guest Ask AI public-first với quota theo giờ và public lexical RPC, đồng thời giữ hybrid semantic retrieval có scope cho authenticated users. Cập nhật luồng RAG trong architecture và ghi rõ trust boundary trong decision log. Exact-SHA CI chạy public-first và semantic pgTAP thành công nhưng phát hiện migration semantic làm mất `search_path=public` của trigger helper khi `CREATE OR REPLACE`; đã giữ lại cấu hình này và CI sẽ chạy lại trên SHA cập nhật.
+- **File đã sửa:** `supabase/functions/ask-ai/index.ts`, `docs/brain/01-architecture.md`, `docs/brain/03-decisions.md`, `docs/brain/04-current-tasks.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Tích hợp semantic retrieval với các thay đổi auth/quota/public corpus trên master mà không mở semantic corpus cho guest.
+- **Kiểm tra:** Local `npm test` 205/205 PASS, `npm run lint` 0 errors/3 existing Fast Refresh warnings, `npm run build` PASS. CI run `36251584468` trên merge candidate phát hiện `enforce_evidence_immutability()` bị mất `search_path=public`; migration được sửa và CI exact SHA `b1f9ca9b8eb4e840cba3196cc9f46d651b05bd8d` (`36251878483`) PASS: root build/lint/tests, clean Supabase reset + pgTAP `Files=33, Tests=863` (semantic retrieval và article-generation files đều executed), Deno check và 4 `geminiEmbedding.test.ts` + 10 `ragRetrieval.test.ts`, Member API, Vercel Preview. CI cuối cùng sẽ chạy lại cho docs-only status update này. Không deploy Production, không merge PR và không chạy rehearsal E2E.
+
+## [2026-09-26] P5 hybrid semantic retrieval
+
+- **Agent:** Codex
+- **Thay đổi:** Từ baseline `origin/master@56f8582`, thêm Gemini query/evidence embedding với 768-dimension validation and timeout; scoped pgvector retrieval cạnh lexical search; deterministic weighted RRF/context caps; lexical fallback and internal retrieval diagnostics. Added retrieval-only pgTAP and Deno coverage and updated architecture/decision/current-task docs. No data backfill or hosted/production calls.
+- **File đã sửa:** `supabase/migrations/202609260001_phase_5_semantic_retrieval.sql`, `supabase/functions/ask-ai/index.ts`, `supabase/functions/process-document/index.ts`, `supabase/functions/generate-knowledge-article/index.ts`, `supabase/functions/_shared/knowledge/geminiEmbedding.ts`, `supabase/functions/_shared/knowledge/geminiEmbedding.test.ts`, `supabase/functions/_shared/knowledge/rag.ts`, `supabase/functions/_shared/knowledge/ragRetrieval.test.ts`, `supabase/tests/phase_5_semantic_retrieval.sql`, `supabase/tests/phase_5_article_generation.sql`, `docs/brain/01-architecture.md`, `docs/brain/03-decisions.md`, `docs/brain/04-current-tasks.md`, `docs/phase-5/14-semantic-retrieval.md`.
+- **Lý do:** Ask AI trước đó chỉ dùng full-text retrieval; P5 reviewed evidence cũng chưa có vectors, nên câu hỏi diễn đạt tự nhiên chưa được tìm theo ngữ nghĩa.
+- **Kiểm tra:** `npm.cmd test` 153/153 PASS; lint 0 errors/3 existing warnings; build PASS; `git diff --check` PASS. pgTAP/Deno chưa chạy được vì môi trường thiếu Supabase CLI, Docker và Deno. Verdict hiện tại: `SEMANTIC_RETRIEVAL_PARTIAL`, chờ CI exact-head regression.
 ## [2026-09-23] SOTAY_UI_FINAL_CLOSURE — audit scope correction before merge
 
 - **Agent:** Codex

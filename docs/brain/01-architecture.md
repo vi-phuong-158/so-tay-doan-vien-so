@@ -131,9 +131,10 @@ supabase/
 | `functions/finalize-campaign-template` | Đọc metadata thật từ Storage, chuẩn hóa tên, move template và đăng ký metadata | `reportAdminService` | `_shared/*`, service-role Storage, `register_report_campaign_template` |
 | `functions/export-report-status` | CSV UTF-8/BOM scoped, formula-neutralized, audit bắt buộc | `AdminReportDashboard` qua `reportAdminService` | dashboard RPC, `_shared/*`, `audit_logs` |
 | `functions/download-report-bundle` | ZIP latest submission/file trong scope, private Storage, giới hạn 100 file/50 MB, audit | `AdminReportDashboard` qua `reportAdminService` | dashboard RPC, service-role Storage, `fflate`, `_shared/*` |
-| `functions/ask-ai` | Guest: fixed public corpus + hourly hashed quota, no history; authenticated: scoped RAG + provenance persistence | client | `_shared/auth.ts`, RAG adapter, `search_public_knowledge` / `search_published_knowledge` |
+| `functions/ask-ai` | Guest: fixed public corpus + hourly hashed quota, no history; authenticated: query embedding + scoped lexical/semantic retrieval, weighted RRF, grounded Gemini answer and server-side citations | client | `_shared/auth.ts`, `_shared/knowledge/rag.ts`, `_shared/knowledge/geminiEmbedding.ts`, public/authenticated retrieval RPCs |
 | `functions/public-content-url` | Public-content-only lookup by typed UUID then 60-second signed URL from an existing private bucket | document/learning services | `_shared/auth.ts`, service-role Storage |
-| `functions/process-document` | Trích xuất → chunk → embedding → chờ duyệt | admin | `_shared/*`, Gemini |
+| `functions/process-document` | Trích xuất → chunk → embedding có model identity → chờ duyệt | admin | `_shared/*`, Gemini |
+| `functions/generate-knowledge-article` | Trích xuất nguồn → sinh bài/evidence draft; best-effort embedding 768 chiều cho evidence pending, lưu bằng trusted RPC | admin | `_shared/knowledge/geminiEmbedding.ts`, `store_knowledge_evidence_embeddings` |
 | `functions/send-reminder` / `process-email-queue` | Gọi reminder scan trusted / gửi email theo batch | `send-reminder`: trusted caller manual/external. `process-email-queue`: manual/external **và** `pg_cron` job `email_queue_worker` mỗi 10 phút qua `pg_net`+Vault (P3-08) | `_shared/*`, reminder RPC, email_queue |
 | `functions/resolve-member-scope` (P5.5-02) | Member Scope Authorization Bridge: xác thực JWT thật, đọc lại `profiles.account_status`/`user_roles`, trả `{user_id, roles:[{role_code,is_global,org_codes}]}` cho `member-api/` — không tin role/scope do caller gửi. `SYSTEM_ADMIN` đơn lẻ → `roles: []` | `member-api/src/memberScope.js`, server-to-server, kèm secret `x-member-api-secret` | `_shared/auth.ts` (`requireUser`), `profiles`, `user_roles`, RPC `member_scope_org_codes` |
 | `supabase/migrations/202609160001_phase_5_5_innovation_rpc_scope_hardening.sql` | Forward-fix kiểm tra active user + scope YOUTH_ADMIN/SYSTEM_ADMIN hoặc assignment INNOVATION_MEMBER bên trong `transition_problem_status` (SECURITY DEFINER); thu hồi anon EXECUTE | Supabase reset/rehearsal migration | `innovation_problems`, `innovation_problem_assignments`, auth helpers |
@@ -372,9 +373,20 @@ AdminReportDashboard → reportAdminService → export-report-status / download-
                      → audit actor/campaign/filter/count/bytes; trả file private với cache-control no-store
 
 # RAG hỏi AI
-Page trợ lý AI → invoke ask-ai → requireUser + quota → xác định scope tài liệu
-         → embedding câu hỏi → match_document_chunks (chỉ chunk APPROVED)
-         → Gemini → trả lời + nguồn → lưu ai_messages/ai_message_sources
+Page trợ lý AI → invoke `ask-ai` (configured public API key + optional verified user auth)
+         ├─ guest → reject `conversation_id` → consume hourly quota using SHA-256 request key
+         │       → `search_public_knowledge` (fixed PUBLIC corpus, lexical only; no history writes)
+         │       → grounded Gemini answer + server-derived citations; no evidence → abstain
+         └─ authenticated active user → persist user message/conversation → normalize query
+                 → Gemini query embedding (same model/768 dimensions as evidence)
+                 → `search_published_knowledge` + `search_semantic_knowledge`
+                   (caller JWT; document access + PUBLISHED/current + retrieval_enabled
+                    + article/evidence APPROVED filters inside PostgreSQL)
+                 → weighted Reciprocal Rank Fusion (K=60, lexical weight 1.25)
+                   → dedupe evidence, max 2 chunks/document and 8 context chunks
+                 → Gemini → citations from retrieved metadata → persist ai_messages/ai_message_sources
+For the authenticated path, embedding/provider or vector RPC failure falls back to lexical retrieval;
+without lexical evidence, Ask AI abstains. Guest queries never enter the authenticated semantic RPC path.
 ```
 
 ## Mô hình dữ liệu / API
@@ -388,8 +400,17 @@ học tập/quiz, trợ lý AI, đổi mới sáng tạo, email, `audit_logs`.
 RPC then chốt: `create_report_submission`, `create_report_submission_with_files` (expected-version overload),
 `create_report_assignments`, `review_report_assignment`, `get_report_dashboard`,
 `get_report_dashboard_assignments`,
-`mark_overdue_assignments(p_as_of)`, `match_document_chunks`, `transition_problem_status`,
+`mark_overdue_assignments(p_as_of)`, `match_document_chunks` (legacy document path),
+`search_published_knowledge`, `search_semantic_knowledge`, `store_knowledge_evidence_embeddings`,
+`transition_problem_status`,
 `is_organization_in_scope`.
+
+Semantic retrieval uses pgvector cosine distance over `document_chunks.embedding vector(768)`;
+`embedding_model` is filtered before ranking so vectors from different model spaces are never
+compared, and the vector/model identity is immutable after evidence approval. The model tag has a
+partial B-tree filter index. Older/null-vector evidence remains
+lexically searchable and is not backfilled by this phase. The pre-existing IVFFlat index remains
+available to the legacy chunk RPC; P5's authorized/model-filtered candidate set is ranked exactly.
 
 P3-01 notification RPC: publish_report_campaign, mark_notification_read, mark_all_notifications_read.
 P3-04 notification trigger: enqueue_report_email_from_notification; email templates are
@@ -674,9 +695,11 @@ content remains immutable and a correction/regeneration uses a new revision/gene
 | `supabase/functions/generate-knowledge-article/index.ts` | authenticated scoped admin orchestration: source read, checksum, extraction, Gemini, persist draft | admin UI | StorageProvider, queue/RPCs |
 | `supabase/migrations/202608250001_phase_5_article_generation.sql` | private extraction/attempt artifacts, AI eligibility, idempotent queue, trusted persist/review RPCs | Supabase reset/CI | canonical P5-R0 schema |
 | `supabase/migrations/20260825154300_phase_5_function_privilege_hardening.sql` | revoke default client `EXECUTE` from internal P5 trigger functions; preserves explicit RPC grants | Supabase reset/CI | P5 trigger bindings and PostgreSQL function ACLs |
-| `supabase/migrations/202608310001_phase_5_rag_retrieval.sql` | controlled retrieval enablement and security-invoker lexical retrieval of current approved evidence | `ask-ai`, Supabase reset/CI | documents, articles, evidence RLS |
-| `supabase/functions/_shared/knowledge/rag.ts` | bounded Gemini grounded-answer adapter and source-only prompt | `ask-ai`, Deno tests | Gemini secret, approved evidence |
-| `supabase/functions/ask-ai/index.ts` | authenticated RLS-first retrieval, conversation ownership check, answer/citation persistence | `aiService` | RAG adapter, `ai_*` provenance trigger |
+| `supabase/migrations/202609260001_phase_5_semantic_retrieval.sql` | model-tagged evidence vectors, trusted evidence-vector persistence, lexical exact-match candidates, and scoped pgvector candidate RPC | `ask-ai`, article generation, Supabase reset/CI | document/article/evidence lifecycle and RLS |
+| `supabase/functions/_shared/knowledge/geminiEmbedding.ts` | Gemini 768-dimension embedding request/validation with bounded timeout and safe provider errors | `ask-ai`, document/article ingestion, Deno tests | `GEMINI_API_KEY`, `GEMINI_EMBEDDING_MODEL` |
+| `supabase/functions/_shared/knowledge/rag.ts` | lexical fallback, deterministic weighted RRF (K=60, lexical 1.25), dedupe and context diversity, grounded-answer adapter | `ask-ai`, Deno tests | retrieved approved evidence |
+| `supabase/functions/ask-ai/index.ts` | authenticated hybrid retrieval, conversation ownership check, answer/citation persistence and internal retrieval diagnostics | `aiService` | RAG/embedding adapters, scoped lexical/vector RPCs, `ai_*` provenance trigger |
+| `supabase/functions/generate-knowledge-article/index.ts` | best-effort embed of selected source-grounded evidence before it is reviewable | admin | embedding adapter, `store_knowledge_evidence_embeddings` |
 | `src/services/aiService.js`, `src/pages/AskAi.jsx` | browser boundary and user-facing cited-answer screen | `/tri-thuc/hoi-ai` | authenticated Edge Function only |
 | `supabase/tests/phase_5_article_generation.sql` | P5-03 table/RPC security, dynamic trigger-function ACL and trigger-behavior regression acceptance | `supabase test db` | P5 migrations + seed |
 | `src/services/knowledgeAdminService.js` | read-only article/evidence admin reads plus Edge Function/RPC mutation boundary | `AdminKnowledgeArticle` | Supabase client |
