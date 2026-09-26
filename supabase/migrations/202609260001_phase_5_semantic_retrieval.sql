@@ -11,6 +11,7 @@ create index if not exists idx_document_chunks_embedding_model_p5
 create or replace function public.enforce_evidence_immutability()
 returns trigger
 language plpgsql
+set search_path = public
 as $$
 begin
   if old.document_version_id is not null and old.review_status = 'APPROVED' then
