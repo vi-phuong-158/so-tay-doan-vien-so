@@ -1,5 +1,5 @@
-import { assertEquals, assertThrows } from 'jsr:@std/assert@1';
-import { embeddingEndpoint, embeddingRequest, GEMINI_EMBEDDING_DIMENSION, GeminiEmbeddingError, parseEmbeddingResponse } from './geminiEmbedding.ts';
+import { assertEquals, assertRejects, assertThrows } from 'jsr:@std/assert@1';
+import { createGeminiEmbedding, embeddingEndpoint, embeddingRequest, GEMINI_EMBEDDING_DIMENSION, GeminiEmbeddingError, parseEmbeddingResponse } from './geminiEmbedding.ts';
 
 Deno.test('Gemini embedding request explicitly requests the database vector dimension', () => {
   assertEquals(embeddingRequest('fixture text').output_dimensionality, GEMINI_EMBEDDING_DIMENSION);
@@ -13,4 +13,13 @@ Deno.test('Gemini embedding response accepts exactly 768 finite numeric dimensio
 Deno.test('Gemini embedding response fails closed for a wrong dimension or invalid numeric value', () => {
   assertThrows(() => parseEmbeddingResponse({ embedding: { values: Array.from({ length: 767 }, () => 0) } }), GeminiEmbeddingError, 'GEMINI_EMBEDDING_DIMENSION_INVALID');
   assertThrows(() => parseEmbeddingResponse({ embedding: { values: [...Array.from({ length: 767 }, () => 0), Number.NaN] } }), GeminiEmbeddingError, 'GEMINI_EMBEDDING_DIMENSION_INVALID');
+  assertThrows(() => parseEmbeddingResponse({ embedding: { values: null } }), GeminiEmbeddingError, 'GEMINI_EMBEDDING_DIMENSION_INVALID');
+});
+
+Deno.test('Gemini embedding provider maps timeout and server errors without exposing secrets', async () => {
+  await assertRejects(() => createGeminiEmbedding('query', 'secret', 'models/test', async () => {
+    throw new DOMException('timeout', 'TimeoutError');
+  }), GeminiEmbeddingError, 'GEMINI_EMBEDDING_TIMEOUT');
+  await assertRejects(() => createGeminiEmbedding('query', 'secret', 'models/test', async () => new Response('{}', { status: 503 })),
+    GeminiEmbeddingError, 'GEMINI_EMBEDDING_PROVIDER_UNAVAILABLE');
 });

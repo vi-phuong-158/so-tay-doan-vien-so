@@ -14,6 +14,7 @@ import {
   PROMPT_VERSION,
 } from '../_shared/knowledge/generator.ts';
 import { getGeminiGenerationRuntimeConfig } from '../_shared/knowledge/geminiRuntime.ts';
+import { createGeminiEmbedding } from '../_shared/knowledge/geminiEmbedding.ts';
 
 type Payload = {
   document_id: string;
@@ -144,6 +145,26 @@ async function run(request: Request): Promise<Response> {
     });
     const evidence = await resolveEvidenceSuggestions(extraction, draft.evidence);
     assertEvidenceIsSourceText(extraction, evidence);
+    const embeddingModel = Deno.env.get('GEMINI_EMBEDDING_MODEL');
+    const embeddingKey = Deno.env.get('GEMINI_API_KEY');
+    let evidenceEmbeddings: Array<{ content_hash: string; embedding: number[] }> = [];
+    let semanticWarning: string | null = null;
+    if (embeddingModel && embeddingKey) {
+      try {
+        evidenceEmbeddings = await Promise.all(evidence.map(async item => ({
+          content_hash: item.content_hash,
+          embedding: await createGeminiEmbedding(item.content, embeddingKey, embeddingModel),
+        })));
+      } catch (error) {
+        const code = error instanceof Error && /^GEMINI_EMBEDDING_[A-Z_]+$/.test(error.message)
+          ? error.message
+          : 'GEMINI_EMBEDDING_PROVIDER_UNAVAILABLE';
+        semanticWarning = 'SEMANTIC_EMBEDDING_UNAVAILABLE';
+        console.log(JSON.stringify({ event: 'knowledge_evidence_embedding', outcome: code, model: embeddingModel }));
+      }
+    } else {
+      semanticWarning = 'SEMANTIC_EMBEDDING_UNAVAILABLE';
+    }
     const generationMetadata = {
       provider: generator.provider, model: generator.model, prompt_version: PROMPT_VERSION,
       generator_version: generatorVersion, source_byte_hash: extraction.sourceByteHash,
@@ -152,11 +173,22 @@ async function run(request: Request): Promise<Response> {
     };
     const { data: articleId, error: persistError } = await adminClient.rpc('persist_knowledge_article_draft', {
       p_job_id: jobId, p_claim_token: claim.claim_token,
-      p_article: { title: draft.title, summary: draft.summary, key_points: draft.key_points, structured_content: draft.structured_content, warnings: draft.warnings ?? [] },
+      p_article: { title: draft.title, summary: draft.summary, key_points: draft.key_points, structured_content: draft.structured_content, warnings: [...(draft.warnings ?? []), ...(semanticWarning ? [semanticWarning] : [])] },
       p_evidence: evidence.map(item => ({ ...item, selected_reason: item.selected_reason })),
       p_generation_metadata: generationMetadata, p_actor_user_id: user.id,
     });
     if (persistError || !articleId) throw new Error(persistError?.message || 'PERSISTENCE_FAILED');
+    if (evidenceEmbeddings.length && embeddingModel) {
+      const { error: embeddingError } = await adminClient.rpc('store_knowledge_evidence_embeddings', {
+        p_article_id: articleId,
+        p_embedding_model: embeddingModel,
+        p_embeddings: evidenceEmbeddings,
+      });
+      if (embeddingError) {
+        console.log(JSON.stringify({ event: 'knowledge_evidence_embedding', outcome: 'PERSIST_FAILED', model: embeddingModel }));
+        await adminClient.from('knowledge_articles').update({ warnings: [...(draft.warnings ?? []), 'SEMANTIC_EMBEDDING_UNAVAILABLE'] }).eq('id', articleId);
+      }
+    }
     const { error: completeError } = await adminClient.rpc('complete_ingestion_job', {
       p_job_id: jobId, p_claim_token: claim.claim_token,
       p_result: { article_id: articleId, stage: 'ARTICLE_DRAFT', duration_ms: Date.now() - startedAt },

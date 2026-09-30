@@ -1,5 +1,19 @@
 # Trạng thái thi công
 
+## P5-04 — Hybrid Semantic Retrieval (2026-09-30)
+
+- PR #59 remains Draft at the independent runtime-acceptance gate. Starting `master@8f3d994`,
+  starting PR HEAD `9155e156`; CI `36252163618` passed all source gates on that HEAD.
+- Audit found and fixed false citations on model abstention at `6ff6298`; implementation-head
+  CI `36663700231` passed frontend, test-db/Deno, Member API and Vercel.
+  Local root tests 205/205, lint and build pass. Local full Member API is blocked by missing
+  `MEMBER_DATABASE_URL` and `exceljs`; CI supplies the source gate.
+- Rehearsal `znexculhbdjiflkczpyu` is healthy with the semantic migration and retrieval RPCs,
+  but this environment has no protected bootstrap credential for synthetic actor E2E. Runtime
+  semantic, citations, browser and cleanup acceptance remain unrun. No new rehearsal data or
+  production data was touched; merge is deferred.
+- Evidence and next gate: `docs/phase-5/14-semantic-retrieval.md`. Phase 6 remains closed.
+
 ## SOTAY_UI_FINAL_CLOSURE — MERGED (2026-09-23)
 
 - Starting master: `2095ebb98c572f10a5b04a08396e3e3569fb1271` (PR #54 đã merge).
