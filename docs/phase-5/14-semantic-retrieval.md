@@ -5,8 +5,9 @@
 `SEMANTIC_RETRIEVAL_PARTIAL`. Exact-head CI `36252163618` passed on
 `9155e1567b60acc815f2ad93ddab89e91a992504`, including clean database reset/pgTAP, Deno,
 frontend, Member API, and Vercel. The 2026-09-30 independent audit found that a model abstention
-after nonempty retrieval still emitted citations. A scoped fix and regression test are in progress;
-they require new exact-head CI. Runtime semantic acceptance has not passed.
+after nonempty retrieval still emitted citations. The fix and regression test landed at
+`6ff629848dfff014ca929f557eedac8e5795234e`; exact implementation-head CI `36663700231`
+passed all three jobs and Vercel Preview. Runtime semantic acceptance has not passed.
 
 ## Baseline
 
@@ -69,8 +70,8 @@ they require new exact-head CI. Runtime semantic acceptance has not passed.
 - 2026-09-30 local `npm.cmd test`: PASS, 205/205; lint: PASS, 0 errors/3 existing Fast Refresh
   warnings; build: PASS. Full local Member API: blocked by absent `MEMBER_DATABASE_URL` and
   missing local `exceljs` package; no dependencies were installed.
-- CI `36252163618` on previous exact HEAD `9155e156`: PASS, including database reset/pgTAP,
-  Deno/Edge, Member API and Vercel. New fix requires a fresh exact-head CI run.
+- CI `36252163618` on starting HEAD `9155e156`: PASS. CI `36663700231` on fixed implementation
+  HEAD `6ff6298`: PASS, including database reset/pgTAP, Deno/Edge, Member API, frontend and Vercel.
 - Local Supabase CLI, Docker and Deno are unavailable; local pgTAP/Deno gates were not run.
 - Rehearsal project identity verified as `znexculhbdjiflkczpyu`,
   `so-tay-doan-vien-rehearsal`, `ACTIVE_HEALTHY`; the semantic migration and both retrieval RPCs
@@ -84,7 +85,7 @@ they require new exact-head CI. Runtime semantic acceptance has not passed.
 
 ## Remaining blockers and next step
 
-Run new exact-head CI, then supply rehearsal-only bootstrap credentials through the protected
+After final documentation-head CI, supply rehearsal-only bootstrap credentials through the protected
 runtime environment and run the expanded synthetic semantic corpus with exact-ID cleanup. The
 existing Phase 5 harness covers one lexical article, so it is insufficient by itself for P5-04's
 paraphrase, synonym, hybrid-conflict and threshold gates. Keep PR #59 Draft until those gates pass.

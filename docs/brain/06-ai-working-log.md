@@ -5,7 +5,7 @@
 - **Thay đổi:** Sửa Ask AI để câu trả lời abstain không gắn citation cho candidate không đủ căn cứ; thêm regression test và đối chiếu trạng thái PR #59, CI, rehearsal migration/RPC.
 - **File đã sửa:** `supabase/functions/_shared/knowledge/rag.ts`, `supabase/functions/_shared/knowledge/ragRetrieval.test.ts`, `supabase/functions/ask-ai/index.ts`, `docs/phase-5/14-semantic-retrieval.md`, `docs/brain/04-current-tasks.md`, `docs/brain/06-ai-working-log.md`, `docs/04-implementation-status.md`.
 - **Lý do:** Tránh citation giả khi model xác nhận không đủ căn cứ; giữ verdict runtime chính xác.
-- **Kiểm tra:** Local root 205/205, lint 0 errors/3 existing warnings, build PASS. CI `36252163618` passed on pre-fix HEAD `9155e156`; post-fix CI pending. Rehearsal identity `znexculhbdjiflkczpyu`, migration and RPC presence verified; no actor E2E or cleanup claimed without rehearsal-only bootstrap credentials. Production access: NO.
+- **Kiểm tra:** Local root 205/205, lint 0 errors/3 existing warnings, build PASS. CI `36252163618` passed on pre-fix HEAD `9155e156`; implementation-head CI `36663700231` passed on `6ff6298` (build, test-db/pgTAP/Deno, Member API, Vercel). Rehearsal identity `znexculhbdjiflkczpyu`, migration and RPC presence verified; no actor E2E or cleanup claimed without rehearsal-only bootstrap credentials. Production access: NO.
 
 ## [2026-09-26] P5 semantic retrieval integration reconciliation
 
