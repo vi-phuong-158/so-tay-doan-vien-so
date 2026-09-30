@@ -3,6 +3,10 @@ import { isProviderTimeout, logProviderAttempt, DEFAULT_GEMINI_GENERATION_TIMEOU
 
 export const NO_EVIDENCE_ANSWER = 'Không tìm thấy đủ căn cứ trong kho tri thức mà đồng chí được phép truy cập.';
 
+export function groundedSourcesForAnswer(answer: string, sources: RetrievedKnowledgeSource[]): RetrievedKnowledgeSource[] {
+  return answer.trim() === NO_EVIDENCE_ANSWER ? [] : sources;
+}
+
 export type RetrievedKnowledgeSource = {
   articleId: string;
   evidenceId: string;

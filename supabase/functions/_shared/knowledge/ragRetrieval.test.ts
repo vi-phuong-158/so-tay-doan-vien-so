@@ -1,5 +1,5 @@
 import { assertEquals } from 'jsr:@std/assert@1';
-import { fuseKnowledgeCandidates, normalizeKnowledgeQuery, retrieveKnowledgeContext, type RetrievedKnowledgeSource } from './rag.ts';
+import { fuseKnowledgeCandidates, groundedSourcesForAnswer, NO_EVIDENCE_ANSWER, normalizeKnowledgeQuery, retrieveKnowledgeContext, type RetrievedKnowledgeSource } from './rag.ts';
 
 function candidate(evidenceId: string, documentId = 'document-a', overrides: Partial<RetrievedKnowledgeSource> = {}): RetrievedKnowledgeSource {
   return {
@@ -67,6 +67,12 @@ Deno.test('semantic retrieval returns expected evidence for a synonym/paraphrase
 
 Deno.test('no lexical or semantic evidence stays empty for the no-evidence contract', () => {
   assertEquals(fuseKnowledgeCandidates([], [], 8), []);
+});
+
+Deno.test('model abstention does not cite retrieved but insufficient candidates', () => {
+  const sources = [candidate('related-but-insufficient')];
+  assertEquals(groundedSourcesForAnswer(NO_EVIDENCE_ANSWER, sources), []);
+  assertEquals(groundedSourcesForAnswer('Câu trả lời có căn cứ.', sources), sources);
 });
 
 Deno.test('context selection limits repeated chunks from one document', () => {

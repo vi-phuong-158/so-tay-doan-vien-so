@@ -4,6 +4,7 @@ import { assertUuid, safeText } from '../_shared/validation.ts';
 import {
   GeminiGroundedAnswerGenerator,
   NO_EVIDENCE_ANSWER,
+  groundedSourcesForAnswer,
   type RetrievedKnowledgeSource,
   RagError,
   normalizeKnowledgeQuery,
@@ -132,8 +133,9 @@ Deno.serve(async request => {
       const runtime = getGeminiGenerationRuntimeConfig({ GEMINI_GENERATION_TIMEOUT_MS: Deno.env.get('GEMINI_GENERATION_TIMEOUT_MS') });
       const generatedAnswer = await new GeminiGroundedAnswerGenerator(model, apiKey, fetch, { maxAttempts: runtime.maxAttempts }, runtime.timeoutMs)
         .generate(question, sources);
-      const citations = sources.map((source, index) => citation(source, index + 1));
-      const answer = `${generatedAnswer}\n\nNguồn tra cứu:\n${citations.map(item => `[${item.rank}] ${item.title}`).join('\n')}`;
+      const citedSources = groundedSourcesForAnswer(generatedAnswer, sources);
+      const citations = citedSources.map((source, index) => citation(source, index + 1));
+      const answer = citations.length === 0 ? generatedAnswer : `${generatedAnswer}\n\nNguồn tra cứu:\n${citations.map(item => `[${item.rank}] ${item.title}`).join('\n')}`;
       return json({ success: true, conversation_id: null, message_id: null, answer, citations });
     }
 
@@ -204,8 +206,9 @@ Deno.serve(async request => {
     const runtime = getGeminiGenerationRuntimeConfig({ GEMINI_GENERATION_TIMEOUT_MS: Deno.env.get('GEMINI_GENERATION_TIMEOUT_MS') });
     const generatedAnswer = await new GeminiGroundedAnswerGenerator(model, apiKey, fetch, { maxAttempts: runtime.maxAttempts }, runtime.timeoutMs)
       .generate(question, sources);
-    const citations = sources.map((source, index) => citation(source, index + 1));
-    const answer = `${generatedAnswer}\n\nNguồn tra cứu:\n${citations.map(item => `[${item.rank}] ${item.title}`).join('\n')}`;
+    const citedSources = groundedSourcesForAnswer(generatedAnswer, sources);
+    const citations = citedSources.map((source, index) => citation(source, index + 1));
+    const answer = citations.length === 0 ? generatedAnswer : `${generatedAnswer}\n\nNguồn tra cứu:\n${citations.map(item => `[${item.rank}] ${item.title}`).join('\n')}`;
     const { data: message, error: messageError } = await adminClient.from('ai_messages')
       .insert({
         conversation_id: conversationId,
@@ -213,15 +216,15 @@ Deno.serve(async request => {
         content: answer,
         model,
         latency_ms: Date.now() - startedAt,
-        token_usage: { provider: 'GEMINI', source_count: sources.length, retrieval_mode: retrievalMode, lexical_candidates: retrieval.lexicalCandidates, semantic_candidates: retrieval.semanticCandidates, selected_context_count: sources.length },
+        token_usage: { provider: 'GEMINI', source_count: citedSources.length, retrieval_mode: retrievalMode, lexical_candidates: retrieval.lexicalCandidates, semantic_candidates: retrieval.semanticCandidates, selected_context_count: sources.length },
         status: 'COMPLETED',
       })
       .select('id')
       .single();
     if (messageError || !message) throw new Error('MESSAGE_PERSIST_FAILED');
 
-    const { error: citationError } = await adminClient.from('ai_message_sources').insert(
-      sources.map((source, index) => ({
+    const { error: citationError } = citedSources.length === 0 ? { error: null } : await adminClient.from('ai_message_sources').insert(
+      citedSources.map((source, index) => ({
         message_id: message.id,
         document_id: source.documentId,
         document_version_id: source.documentVersionId,

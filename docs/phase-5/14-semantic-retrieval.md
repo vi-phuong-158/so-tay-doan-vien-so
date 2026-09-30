@@ -2,10 +2,11 @@
 
 ## Status
 
-`SEMANTIC_RETRIEVAL_PARTIAL` pending local database/Edge verification. Implementation and focused
-regression coverage are present on the task branch. Root npm gates pass. The current environment
-does not provide Deno, Docker or Supabase CLI, so this report does not claim pgTAP or Edge tests pass.
-No hosted rehearsal or production request was made.
+`SEMANTIC_RETRIEVAL_PARTIAL`. Exact-head CI `36252163618` passed on
+`9155e1567b60acc815f2ad93ddab89e91a992504`, including clean database reset/pgTAP, Deno,
+frontend, Member API, and Vercel. The 2026-09-30 independent audit found that a model abstention
+after nonempty retrieval still emitted citations. A scoped fix and regression test are in progress;
+they require new exact-head CI. Runtime semantic acceptance has not passed.
 
 ## Baseline
 
@@ -35,7 +36,8 @@ No hosted rehearsal or production request was made.
 - Fallback/no evidence: embedding provider or semantic RPC errors degrade to lexical-only retrieval.
   Empty results retain the existing abstention response and do not call Gemini generation.
 - Citation: server-side source mapping still uses document/version/evidence/locator metadata; route
-  remains `/tri-thuc/van-ban/{documentId}`. No model-created citations are used.
+  remains `/tri-thuc/van-ban/{documentId}`. No model-created citations are used. Model abstention
+  now returns zero citations even if retrieval supplied candidates.
 - Diagnostics: internal structured logs and message token metadata record mode, lexical/semantic
   candidate counts and selected context count; no query text, embedding or secret is logged.
 
@@ -64,18 +66,25 @@ No hosted rehearsal or production request was made.
 
 ## Validation
 
-- `npm.cmd test`: PASS, 153/153.
-- `npm.cmd run lint`: PASS, 0 errors and 3 pre-existing Fast Refresh warnings.
-- `npm.cmd run build`: PASS.
-- `supabase test db`: BLOCKED — Supabase CLI is not installed.
-- Deno Edge check/tests: BLOCKED — Deno is not installed.
-- Docker/PostgreSQL local runner: unavailable in the current environment.
+- 2026-09-30 local `npm.cmd test`: PASS, 205/205; lint: PASS, 0 errors/3 existing Fast Refresh
+  warnings; build: PASS. Full local Member API: blocked by absent `MEMBER_DATABASE_URL` and
+  missing local `exceljs` package; no dependencies were installed.
+- CI `36252163618` on previous exact HEAD `9155e156`: PASS, including database reset/pgTAP,
+  Deno/Edge, Member API and Vercel. New fix requires a fresh exact-head CI run.
+- Local Supabase CLI, Docker and Deno are unavailable; local pgTAP/Deno gates were not run.
+- Rehearsal project identity verified as `znexculhbdjiflkczpyu`,
+  `so-tay-doan-vien-rehearsal`, `ACTIVE_HEALTHY`; the semantic migration and both retrieval RPCs
+  are present. This is deployment inventory, not actor-based runtime acceptance.
+- No rehearsal bootstrap credentials are available locally (`SUPABASE_SERVICE_ROLE_KEY`, public
+  config). The existing exact-ID cleanup harness therefore cannot create synthetic actors. No new
+  fixture was created, and no retrieval, Ask AI, citation, browser, or cleanup runtime gate is
+  claimed as passed. Production access: NO.
 - Performance: not measured; one query embedding request, then two scoped retrieval RPCs in hybrid
   mode. Lexical fallback uses one RPC.
 
 ## Remaining blockers and next step
 
-Run the repository CI database and Deno gates on this exact branch/HEAD, fix any failures, then run
-the previously prepared RAG end-to-end acceptance corpus on the non-production rehearsal
-environment. This is not RAG end-to-end acceptance yet. Do not merge until those code regression
-gates pass.
+Run new exact-head CI, then supply rehearsal-only bootstrap credentials through the protected
+runtime environment and run the expanded synthetic semantic corpus with exact-ID cleanup. The
+existing Phase 5 harness covers one lexical article, so it is insufficient by itself for P5-04's
+paraphrase, synonym, hybrid-conflict and threshold gates. Keep PR #59 Draft until those gates pass.

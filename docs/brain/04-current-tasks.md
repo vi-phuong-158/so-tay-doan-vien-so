@@ -7,6 +7,12 @@
 
 ## Đang làm
 
+### P5-04 semantic retrieval runtime acceptance — BLOCKED (2026-09-30)
+- **PR:** #59, `feat/phase-5-semantic-retrieval`; starting `master@8f3d994`, PR HEAD `9155e156`. Exact-head CI `36252163618` PASS on that starting HEAD.
+- **Independent audit:** found model abstention could still attach retrieved candidate citations. Fixed on the PR branch with a regression test; fresh exact-head CI required before runtime deployment.
+- **Rehearsal:** project `znexculhbdjiflkczpyu` identity, semantic migration and retrieval RPC presence verified. Actor-based E2E cannot start without rehearsal-only public config and Auth bootstrap credential. No synthetic fixture created; no runtime PASS or merge claimed.
+- **Next gate:** CI on final PR HEAD, then provision protected rehearsal credentials and run synthetic semantic acceptance plus exact-ID cleanup. See `docs/phase-5/14-semantic-retrieval.md`.
+
 ### P5 semantic retrieval integration reconciliation — COMPLETED (2026-09-26)
 - **Base:** semantic implementation `0e68e717534656233e26824dc19ba144b37d6e8a`; integrating `origin/master@8f3d99425e0147bf045c95988589c2b7e6704df1` on `feat/phase-5-semantic-retrieval`.
 - **Trạng thái:** Reconciliation merge `4695f3005151da054acb49d1735d862f262f16b7` plus trigger search-path compatibility fix `b1f9ca9b8eb4e840cba3196cc9f46d651b05bd8d`; PR #59 is Draft and MERGEABLE. Exact-head CI `36251878483` passed build, 33 pgTAP files/863 tests, Deno check/tests, Member API, and Vercel Preview. Final docs-only status update requires one final exact-head CI run.
