@@ -22,6 +22,25 @@
 - Lookup load-more belongs to the last completed query, not the current input. Edited input requires
   a new search before pagination. Hosted acceptance covers this regression and all five viewports.
 
+## [2026-10-02] NQ_300 is free without interactive login
+
+- **Quyết định:** The owner explicitly requests free use by everyone. Publish only the NQ_300 parent
+  topic and route this fixed bank outside `AuthGuard`; do not open the existing configurable Quiz,
+  Member, Work, Profile or Admin routes.
+- **Identity:** The NQ page silently uses Supabase Anonymous Auth. Its purpose-scoped identity gets
+  an `INVITED` profile and no roles; it is not an active member and fails all existing active-user
+  gates. Login/email/password remain absent from the quiz flow.
+- **Data boundary:** RLS exposes only NQ topic/quiz metadata for that anonymous identity. The
+  question bank, answer options, snapshots, grading and attempt mutations stay behind NQ RPCs.
+  Attempt ownership remains `auth.uid()`, including cross-session denial. Generic Quiz RPCs and
+  public (unauthenticated-role) callers remain denied.
+- **Retention and abuse:** Anonymous signup uses Supabase's per-IP rate limit. A daily pg_cron job
+  deletes anonymous Auth identities older than 30 days, along with their quiz data. Interactive
+  CAPTCHA is not part of this no-friction flow. Enable Anonymous Sign-Ins only on the rehearsal
+  project after this migration and its NQ-only RLS gates are in place; keep production untouched.
+- **Supersedes:** the 2026-09-20 rule that all Quiz routes require login, for this single NQ_300 bank
+  only. Other Quiz and application authorization remains unchanged.
+
 > Ghi lại quyết định kỹ thuật quan trọng để agent sau không "phát minh lại" hoặc đảo ngược
 > mà không biết lý do. Nguồn gốc: `docs/07-decisions.md`, README, lịch sử git, `docs/phase-2/`.
 

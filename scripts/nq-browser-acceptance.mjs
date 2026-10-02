@@ -6,7 +6,8 @@ import { pathToFileURL } from 'node:url';
 import { createServer } from 'vite';
 
 const { chromium } = await import(pathToFileURL(resolve(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES, 'playwright/index.mjs')).href);
-const actor = JSON.parse(await readFile(process.env.NQ_BROWSER_ACTOR_FILE, 'utf8'));
+const guestMode = process.env.NQ_GUEST_MODE === '1';
+const actor = guestMode ? null : JSON.parse(await readFile(process.env.NQ_BROWSER_ACTOR_FILE, 'utf8'));
 const evidence = resolve('docs/quiz-300/evidence');
 await mkdir(evidence, { recursive: true });
 const origin = process.env.NQ_BASE_URL || 'http://127.0.0.1:5174';
@@ -19,8 +20,14 @@ const context = await browser.newContext({ viewport: { width: 390, height: 844 }
 const page = await context.newPage();
 const errors = [];
 const states = [];
+let anonymousIdentityCreated = false;
 page.on('pageerror', (error) => errors.push(error.message));
 page.on('response', async (response) => {
+  if (guestMode && response.url().includes('/auth/v1/signup') && response.ok()) {
+    assert.equal(new URL(response.url()).hostname, 'znexculhbdjiflkczpyu.supabase.co');
+    const authResult = await response.json();
+    anonymousIdentityCreated = authResult.user?.is_anonymous === true;
+  }
   if (response.url().includes('/rpc/nq_attempt') && response.ok()) {
     assert.equal(new URL(response.url()).hostname, 'znexculhbdjiflkczpyu.supabase.co');
     // A navigation may discard a completed response body before this observer reads it.
@@ -37,12 +44,14 @@ try {
   if (process.env.NQ_PREVIEW_ACCESS_FILE) {
     await page.goto((await readFile(process.env.NQ_PREVIEW_ACCESS_FILE, 'utf8')).trim());
   }
-  await page.goto(`${origin}/login`);
-  console.log('LOGIN_DOM', (await page.locator('body').innerText()).slice(0, 500));
-  await page.getByLabel('Email', { exact: true }).fill(actor.email);
-  await page.getByLabel('Mật khẩu', { exact: true }).fill(actor.password);
-  await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
-  await page.waitForURL(origin + '/', { timeout: 45000 });
+  if (!guestMode) {
+    await page.goto(`${origin}/login`);
+    console.log('LOGIN_DOM', (await page.locator('body').innerText()).slice(0, 500));
+    await page.getByLabel('Email', { exact: true }).fill(actor.email);
+    await page.getByLabel('Mật khẩu', { exact: true }).fill(actor.password);
+    await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
+    await page.waitForURL(origin + '/', { timeout: 45000 });
+  }
   if (process.env.NQ_EXPIRY_ONLY) {
     await page.goto(`${origin}${quizPath}`);
     await page.getByRole('button', { name: 'Làm đề khác', exact: true }).waitFor({ timeout: 45000 });
@@ -69,6 +78,10 @@ try {
   await page.getByRole('tab', { name: 'Trắc nghiệm', exact: true }).click();
   await page.getByRole('link', { name: /Trắc nghiệm Nghị quyết/ }).click({ timeout: 45000 });
   await page.getByRole('button', { name: 'Bắt đầu thi', exact: true }).waitFor({ timeout: 45000 });
+  if (guestMode) {
+    assert.equal(anonymousIdentityCreated, true, 'A non-interactive Supabase guest session was created');
+    await page.getByText('Miễn phí, không cần đăng nhập.', { exact: false }).waitFor();
+  }
   await page.screenshot({ path: resolve(evidence, 'mobile-intro.png'), fullPage: true });
   await page.getByRole('button', { name: 'Bắt đầu thi', exact: true }).click();
   await page.getByText('Câu 1 / 30', { exact: true }).waitFor({ timeout: 45000 });
@@ -159,7 +172,8 @@ try {
   assert.deepEqual(errors, []);
   const summary = { mobile: 'PASS', desktop: 'PASS', answer_leakage: 'PASS',
     resume: 'PASS', offline_reconnect: 'PASS', lookup: 'PASS', lookup_query_change: 'PASS',
-    viewports: [360, 390, 430, 768, 1440], origin, browser_errors: errors,
+    viewports: [360, 390, 430, 768, 1440], origin, auth_mode: guestMode ? 'anonymous_no_login' : 'member',
+    browser_errors: errors,
     initial_attempt_id: first.attempt_id, final_attempt_id: retry.attempt_id };
   await writeFile(resolve(evidence, 'browser-summary.json'), JSON.stringify(summary, null, 2) + '\n');
   console.log(JSON.stringify(summary));

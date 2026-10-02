@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
 import { Button, PageHeader } from '../components/common';
 import { Icon } from '../components/Icon';
 import Skeleton from '../components/Skeleton';
@@ -11,7 +10,6 @@ const service = createNqQuizService(supabase);
 
 export function NqQuiz() {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const [state, setState] = useState(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -32,7 +30,8 @@ export function NqQuiz() {
   const pending = useRef({});
   const lookupVersion = useRef(0);
   const mounted = useRef(true);
-  const cacheKey = useCallback((id) => `nq-draft:${user.id}:${id}`, [user.id]);
+  const actorId = useRef(null);
+  const cacheKey = useCallback((id) => `nq-draft:${actorId.current}:${id}`, []);
 
   const apply = useCallback((next) => {
     if (!mounted.current) return;
@@ -75,7 +74,19 @@ export function NqQuiz() {
 
   useEffect(() => {
     mounted.current = true;
-    const timer = setTimeout(load, 0);
+    const timer = setTimeout(async () => {
+      try {
+        const actor = await service.ensureActor();
+        if (!mounted.current) return;
+        actorId.current = actor.id;
+        await load();
+      } catch {
+        if (mounted.current) {
+          setError('Chưa tạo được phiên làm bài miễn phí. Vui lòng thử lại.');
+          setLoading(false);
+        }
+      }
+    }, 0);
     return () => { mounted.current = false; clearTimeout(timer); };
   }, [load]);
 
@@ -170,6 +181,7 @@ export function NqQuiz() {
     {error && <div className="form-error" role="alert">{error}<Button variant="secondary" onClick={load}>Thử lại</Button></div>}
     {loading ? <Skeleton lines={6} /> : view === 'intro' ? <article className="content-card nq-intro">
       <h2>Trắc nghiệm Nghị quyết</h2><p>30 câu hỏi · 20 phút</p>
+      <p className="text-muted">Miễn phí, không cần đăng nhập. Kết quả được lưu trên thiết bị này.</p>
       <Button onClick={start} disabled={busy}>Bắt đầu thi</Button>
       <Button variant="secondary" onClick={() => setView('lookup')}>Tra cứu câu hỏi</Button>
     </article> : view === 'attempt' && question ? <>

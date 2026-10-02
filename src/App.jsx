@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { AuthGuard, MemberManagementGuard, RoleGuard } from './components/Guards';
 import { AppShell } from './components/Layout';
+import { NQ_QUIZ_ID } from './services/nqQuizService';
 
 import { Login } from './pages/auth/Login';
 import { ForgotPassword } from './pages/auth/ForgotPassword';
@@ -18,6 +19,7 @@ import { DocumentDetail } from './pages/DocumentDetail';
 import { LearningTopics } from './pages/LearningTopics';
 import { LearningTopicDetail } from './pages/LearningTopicDetail';
 import { Quiz } from './pages/Quiz';
+import { NqQuiz } from './pages/NqQuiz';
 import { Innovation } from './pages/Innovation';
 import { Profile } from './pages/Profile';
 import { Notifications } from './pages/Notifications';
@@ -64,6 +66,7 @@ export default function App() {
             <Route path="tri-thuc/van-ban/:documentId" element={<DocumentDetail />} />
             <Route path="tri-thuc/chuyen-de" element={<LearningTopics />} />
             <Route path="tri-thuc/chuyen-de/:topicId" element={<LearningTopicDetail />} />
+            <Route path={`tri-thuc/trac-nghiem/${NQ_QUIZ_ID}`} element={<NqQuiz />} />
             <Route path="doi-moi-sang-tao" element={<Innovation />} />
             <Route element={<AuthGuard />}>
               <Route path="cong-viec" element={<Work />} />

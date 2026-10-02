@@ -1,5 +1,23 @@
 # 06 — AI Working Log
 
+## [2026-10-02] NQ_300 public guest access — implementation in progress
+- **Agent:** Codex
+- **Thay đổi:** User requested the NQ_300 quiz work freely without interactive login. Added a
+  bank-specific guest Auth/RLS design, public listing route and 30-day guest retention; acceptance
+  is still in progress.
+- **File đã sửa:** `src/App.jsx`, `src/contexts/AuthContext.jsx`, `src/pages/NqQuiz.jsx`,
+  `src/services/nqQuizService.js`, `supabase/config.toml`,
+  `supabase/migrations/20261002183000_nq_300_guest_access.sql`,
+  `scripts/{build-nq-seed.py,nq-browser-acceptance.mjs,nq-runtime-check.sql}`, `tests/nq_quiz.test.mjs`,
+  `docs/{01-product-spec.md,brain/{01-architecture,03-decisions,04-current-tasks,06-ai-working-log}.md}`.
+- **Lý do:** The quiz was published as INTERNAL_YOUTH and placed behind AuthGuard, so guests saw an
+  empty list. The owner clarified the bank should be usable without signing in.
+- **Kiểm tra:** Frontend 209/209 PASS; lint 0 errors (3 existing Fast Refresh warnings); Vite build
+  PASS; guest browser harness syntax PASS; source/runtime SQL, CI and hosted anonymous-auth acceptance
+  remain pending on rehearsal.
+- **Rollback/forward-fix:** Close only the NQ bank/topic to stop new attempts; keep all question data.
+  Roll back the frontend to the previous deployment. Do not replay migrations; use a forward-fix.
+
 ## [2026-10-02] Quiz 300 review fixes and release closure
 - **Agent:** Codex
 - **Thay đổi:** Restore the original handoff patch on isolated `codex/quiz-300-nq-fixes`;
