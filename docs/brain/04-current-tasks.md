@@ -7,7 +7,12 @@
 
 ## Đang làm
 
-### NQ_300 Quiz implementation (2026-10-02)
+### NQ_300 Quiz implementation and review closure (2026-10-02)
+- Follow-up branch `codex/quiz-300-nq-fixes` restores the original handoff patch locally.
+- P1 resolved by matching filenames to the verified hosted versions `20261002134138`/`20261002140545`
+  with identical SQL; P2 fixed by binding pagination to the last completed lookup query.
+- CLI GitHub/Vercel authentication is available here; CI, hosting and release gates are being rerun.
+- Current follow-up evidence and rollout/rollback gates: `docs/quiz-300/FIX_ACCEPTANCE.md`.
 - Branch `codex/quiz-300-nq`, starting `8f3d99425e0147bf045c95988589c2b7e6704df1`.
 - 300 source questions seeded/compared on verified rehearsal `znexculhbdjiflkczpyu`;
   one fixed 30-question/20-minute mode, safe server lifecycle, review and lookup implemented.

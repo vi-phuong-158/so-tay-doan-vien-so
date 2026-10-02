@@ -47,8 +47,8 @@ ngân hàng khi chạy lại. Các tests nghiệp vụ chạy với publication 
 ## DATABASE
 
 - Applied migrations:
-  - `20261002133337_quiz_300_nq.sql`.
-  - `20261002140348_quiz_300_legacy_guard_fix.sql`.
+  - `20261002134138_quiz_300_nq.sql`.
+  - `20261002140545_quiz_300_legacy_guard_fix.sql`.
 - Reused: `learning_topics`, `quizzes`, `quiz_questions`, `quiz_options`, `quiz_attempts`, `quiz_answers`.
 - Additive fields: `bank_code`, `question_number`, `source_label`; partial unique indexes.
 - Created: **one private snapshot table**, `quiz_private.attempt_snapshots`, with RLS and no client

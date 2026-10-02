@@ -19,6 +19,12 @@
 - Local browser pending selections contain only chosen IDs, keyed by user/attempt, and are discarded
   after finalization. They never override backend expiry or contain the grading key.
 - CI runs legacy suites before two idempotent NQ seed executions and NQ SQL assertions.
+- Lookup pagination keeps its submitted query separate from the editable input. Changing the input
+  disables load-more until a new search replaces the rows and offset.
+- NQ migration filenames use the verified hosted history versions `20261002134138` and
+  `20261002140545`; their SQL bodies match the original handoff and are not reapplied.
+- The service-worker shell cache is versioned for this frontend rollout so cached older Quiz
+  clients receive the updated shell. Browser acceptance can target a hosted URL via `NQ_BASE_URL`.
 
 > Kiến trúc chi tiết ở `docs/03-architecture.md`; mô hình dữ liệu đầy đủ ở `docs/01-product-spec.md`
 > mục 8. File này là bản đồ vận hành + **Code Graph** để agent đọc trước khi sửa.

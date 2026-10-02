@@ -8,8 +8,9 @@ const { chromium } = await import(`${process.env.CODEX_PRIMARY_RUNTIME_NODE_MODU
 const actor = JSON.parse(await readFile(process.env.NQ_BROWSER_ACTOR_FILE, 'utf8'));
 const evidence = resolve('docs/quiz-300/evidence');
 await mkdir(evidence, { recursive: true });
-const server = await createServer({ server: { host: '127.0.0.1', port: 5174 } });
-await server.listen();
+const origin = process.env.NQ_BASE_URL || 'http://127.0.0.1:5174';
+const server = process.env.NQ_BASE_URL ? null : await createServer({ server: { host: '127.0.0.1', port: 5174 } });
+await server?.listen();
 const browser = await chromium.launch({ executablePath: process.env.NQ_CHROMIUM_PATH,
   ...(process.env.HTTPS_PROXY ? { proxy: { server: process.env.HTTPS_PROXY, bypass: '127.0.0.1,localhost' } } : {}),
   args: ['--no-sandbox', '--disable-dev-shm-usage'] });
@@ -20,12 +21,12 @@ const states = [];
 page.on('pageerror', (error) => errors.push(error.message));
 page.on('response', async (response) => {
   if (response.url().includes('/rpc/nq_attempt') && response.ok()) {
+    assert.equal(new URL(response.url()).hostname, 'znexculhbdjiflkczpyu.supabase.co');
     const state = await response.json();
     if (state) states.push(state);
   }
 });
 page.on('dialog', (dialog) => dialog.accept());
-const origin = 'http://127.0.0.1:5174';
 const quizPath = '/tri-thuc/trac-nghiem/7c620b81-6dc6-4a57-9908-3a1f68652a00';
 try {
   await page.goto(`${origin}/login`);
@@ -120,7 +121,23 @@ try {
     assert.equal(rows[0].options.length, 4);
     assert.ok('ABCD'.includes(rows[0].correct_answer));
   }
+  // Changing the input must not append a different query using the previous offset.
+  await page.getByRole('searchbox').fill('');
+  let lookupResponse = page.waitForResponse((r) => r.url().includes('/rpc/lookup_nq_questions'));
+  await page.getByRole('button', { name: 'Tìm', exact: true }).click();
+  assert.equal((await (await lookupResponse).json()).length, 20);
+  await page.getByRole('searchbox').fill('công nghiệp');
+  assert.equal(await page.getByRole('button', { name: 'Xem thêm', exact: true }).isDisabled(), true);
+  lookupResponse = page.waitForResponse((r) => r.url().includes('/rpc/lookup_nq_questions'));
+  await page.getByRole('button', { name: 'Tìm', exact: true }).click();
+  const keywordRows = await (await lookupResponse).json();
+  await page.waitForFunction((count) => document.querySelectorAll('.nq-lookup-options').length === count, keywordRows.length);
+  assert.deepEqual(await page.locator('.quiz-question-card h3').allTextContents(), keywordRows.map((q) => `Câu ${q.question_number}`));
   await page.screenshot({ path: resolve(evidence, 'mobile-lookup.png'), fullPage: true });
+  for (const width of [360, 390, 430, 768, 1440]) {
+    await page.setViewportSize({ width, height: 1000 });
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+  }
   await page.setViewportSize({ width: 1440, height: 1000 });
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
   await page.screenshot({ path: resolve(evidence, 'desktop-lookup.png'), fullPage: true });
@@ -133,7 +150,8 @@ try {
   await page.screenshot({ path: resolve(evidence, 'desktop-attempt.png'), fullPage: true });
   assert.deepEqual(errors, []);
   const summary = { mobile: 'PASS', desktop: 'PASS', answer_leakage: 'PASS',
-    resume: 'PASS', offline_reconnect: 'PASS', lookup: 'PASS', browser_errors: errors,
+    resume: 'PASS', offline_reconnect: 'PASS', lookup: 'PASS', lookup_query_change: 'PASS',
+    viewports: [360, 390, 430, 768, 1440], origin, browser_errors: errors,
     initial_attempt_id: first.attempt_id, final_attempt_id: retry.attempt_id };
   await writeFile(resolve(evidence, 'browser-summary.json'), JSON.stringify(summary, null, 2) + '\n');
   console.log(JSON.stringify(summary));
@@ -143,5 +161,5 @@ try {
   console.error('BROWSER_FAILURE', error.message, 'DOM', (await page.locator('body').innerText()).slice(0, 2200));
   process.exitCode = 1;
 } finally {
-  await context.close(); await browser.close(); await server.close();
+  await context.close(); await browser.close(); await server?.close();
 }

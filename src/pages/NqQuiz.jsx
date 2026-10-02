@@ -21,6 +21,7 @@ export function NqQuiz() {
   const [remaining, setRemaining] = useState(1200);
   const [review, setReview] = useState(false);
   const [search, setSearch] = useState('');
+  const [lookupSearch, setLookupSearch] = useState('');
   const [results, setResults] = useState([]);
   const [offset, setOffset] = useState(0);
   const [lookupLoading, setLookupLoading] = useState(false);
@@ -138,11 +139,13 @@ export function NqQuiz() {
     const version = ++lookupVersion.current;
     setLookupLoading(true); setError('');
     try {
-      const rows = await service.lookup(search, nextOffset);
+      const term = nextOffset ? lookupSearch : search;
+      const rows = await service.lookup(term, nextOffset);
       if (version !== lookupVersion.current) return;
+      if (!nextOffset) setLookupSearch(term);
       setResults((previous) => nextOffset ? [...previous, ...rows] : rows);
       setOffset(nextOffset + rows.length);
-    } catch { setError('Không thể tra cứu câu hỏi. Vui lòng thử lại.'); }
+    } catch { if (version === lookupVersion.current) setError('Không thể tra cứu câu hỏi. Vui lòng thử lại.'); }
     finally { if (version === lookupVersion.current) setLookupLoading(false); }
   }
 
@@ -188,7 +191,7 @@ export function NqQuiz() {
       <form className="nq-search" onSubmit={lookup}><input aria-label="Số câu hoặc từ khóa" placeholder="Câu 125 hoặc từ khóa" type="search" value={search} onChange={(e) => setSearch(e.target.value)} maxLength={200} /><Button type="submit" disabled={lookupLoading}>Tìm</Button></form>
       {results.map((q) => <article className="content-card quiz-question-card" key={q.question_number}><h3>Câu {q.question_number}</h3><h2>{q.text}</h2><ol className="nq-lookup-options">{q.options.map((o) => <li key={o.label}><b>{o.label}.</b> {o.text}</li>)}</ol><p className="nq-key">Đáp án đúng: {q.correct_answer}</p></article>)}
       {!lookupLoading && results.length === 0 && <p>Nhập số câu hoặc từ khóa để tra cứu.</p>}
-      {offset > 0 && offset % 20 === 0 && <Button variant="secondary" disabled={lookupLoading} onClick={() => lookup(null, offset)}>Xem thêm</Button>}
+      {offset > 0 && offset % 20 === 0 && <Button variant="secondary" disabled={lookupLoading || search !== lookupSearch} onClick={() => lookup(null, offset)}>Xem thêm</Button>}
       <Button variant="secondary" onClick={() => setView(state ? state.status === 'IN_PROGRESS' ? 'attempt' : 'result' : 'intro')}>Quay lại trắc nghiệm</Button>
     </> : null}
   </div>;

@@ -1,5 +1,23 @@
 # 06 — AI Working Log
 
+## [2026-10-02] Quiz 300 review fixes and release closure
+- **Agent:** Codex
+- **Thay đổi:** Restore the original handoff patch on isolated `codex/quiz-300-nq-fixes`;
+  bind lookup pagination to its submitted query; align migration filenames with verified rehearsal
+  history; bump the PWA shell cache and extend hosted browser acceptance with query-change/five-width checks.
+- **File đã sửa:** `src/pages/NqQuiz.jsx`, `public/sw.js`, `tests/public_first_auth.test.mjs`,
+  `scripts/nq-browser-acceptance.mjs`, the two NQ migration filenames, `.gitignore`,
+  `docs/brain/{01-architecture,03-decisions,04-current-tasks,06-ai-working-log}.md`,
+  `docs/quiz-300/{ACCEPTANCE,FIX_ACCEPTANCE}.md`.
+- **Lý do:** Resolve the P1 history mismatch and P2 mixed-query pagination from review, then finish
+  the authorized CI/hosting gates without altering the separate RAG checkout.
+- **Kiểm tra:** Full hosted migration bodies match local MD5 `78a7ab103c3bf524aa8a6fc34b64b730`
+  and `5fe9ab36f5a83149297267da8695ceea`; filenames now use `20261002134138`/`20261002140545`.
+  SQL and remote migration history are preserved. Final gate evidence is tracked in `FIX_ACCEPTANCE.md`.
+- **Rollback/forward-fix:** Keep the bank/topic DRAFT until the compatible frontend passes hosting;
+  revert frontend to the prior deployment and close only this bank/topic if rollout fails. Preserve
+  all 300 questions and attempt snapshots; never replay the additive SQL over an applied schema.
+
 ## [2026-10-02] NQ 300-question implementation and hosted rehearsal
 - **Agent:** Codex
 - **Starting SHA:** `8f3d99425e0147bf045c95988589c2b7e6704df1`; clean `master` cloned, task branch

@@ -16,6 +16,11 @@
   Do not infer a percentage or correct the source.
 - Seed starts a new bank/topic as DRAFT and never republish them on rerun. Publish both only
   after the new frontend is deployed; existing clients cannot use the specialized bank RPC.
+- Review follow-up: match the unpushed migration filenames to the hosted history timestamps after
+  comparing the complete SQL bodies. Preserve the applied SQL and remote history; no schema replay
+  or migration-history deletion is necessary.
+- Lookup load-more belongs to the last completed query, not the current input. Edited input requires
+  a new search before pagination. Hosted acceptance covers this regression and all five viewports.
 
 > Ghi lại quyết định kỹ thuật quan trọng để agent sau không "phát minh lại" hoặc đảo ngược
 > mà không biết lý do. Nguồn gốc: `docs/07-decisions.md`, README, lịch sử git, `docs/phase-2/`.
