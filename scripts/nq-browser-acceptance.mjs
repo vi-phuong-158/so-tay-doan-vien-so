@@ -20,13 +20,30 @@ const context = await browser.newContext({ viewport: { width: 390, height: 844 }
 const page = await context.newPage();
 const errors = [];
 const states = [];
+const authResponses = [];
+const guestApiErrors = [];
 let anonymousIdentityCreated = false;
 page.on('pageerror', (error) => errors.push(error.message));
 page.on('response', async (response) => {
-  if (guestMode && response.url().includes('/auth/v1/signup') && response.ok()) {
-    assert.equal(new URL(response.url()).hostname, 'znexculhbdjiflkczpyu.supabase.co');
-    const authResult = await response.json();
-    anonymousIdentityCreated = authResult.user?.is_anonymous === true;
+  const url = new URL(response.url());
+  if (guestMode && url.hostname === 'znexculhbdjiflkczpyu.supabase.co' && url.pathname.startsWith('/auth/v1/')) {
+    const observation = { path: url.pathname, grant_type: url.searchParams.get('grant_type'), status: response.status() };
+    try {
+      const result = await response.json();
+      if (result.user) anonymousIdentityCreated = result.user.is_anonymous === true;
+      if (result.msg || result.message) observation.message = String(result.msg || result.message).slice(0, 180);
+    } catch { /* Auth response may not have a JSON body. */ }
+    authResponses.push(observation);
+  }
+  if (guestMode && url.hostname === 'znexculhbdjiflkczpyu.supabase.co'
+    && url.pathname.endsWith('/rpc/ensure_nq_quiz_guest') && !response.ok()) {
+    const observation = { function: 'ensure_nq_quiz_guest', status: response.status() };
+    try {
+      const result = await response.json();
+      if (result.code) observation.code = result.code;
+      if (result.message) observation.message = String(result.message).slice(0, 180);
+    } catch { /* RPC response may not have a JSON body. */ }
+    guestApiErrors.push(observation);
   }
   if (response.url().includes('/rpc/nq_attempt') && response.ok()) {
     assert.equal(new URL(response.url()).hostname, 'znexculhbdjiflkczpyu.supabase.co');
@@ -180,7 +197,18 @@ try {
   }
 } catch (error) {
   await page.screenshot({ path: resolve(evidence, 'failure.png'), fullPage: true });
-  console.error('BROWSER_FAILURE', error.message, 'DOM', (await page.locator('body').innerText()).slice(0, 2200));
+  const guestSession = guestMode ? await page.evaluate(() => {
+    for (const key of Object.keys(localStorage)) {
+      if (!key.includes('auth-token')) continue;
+      try {
+        const session = JSON.parse(localStorage.getItem(key));
+        return { exists: Boolean(session), isAnonymous: session?.user?.is_anonymous === true };
+      } catch { return { exists: true, isAnonymous: false }; }
+    }
+    return { exists: false, isAnonymous: false };
+  }) : null;
+  console.error('BROWSER_FAILURE', error.message, 'DOM', (await page.locator('body').innerText()).slice(0, 2200),
+    'DIAGNOSTICS', JSON.stringify({ authResponses, guestApiErrors, guestSession }));
   process.exitCode = 1;
 } finally {
   await context.close(); await browser.close(); await server?.close();

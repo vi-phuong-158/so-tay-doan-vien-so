@@ -12,7 +12,9 @@
 - Branch `codex/quiz-300-public-access`, based on merged Quiz #60 commit `bafc23e`.
 - Fix: invisible Supabase anonymous session with a minimal `INVITED` profile for the existing attempt FK; private registry scopes access/cleanup to this bank; other app areas stay behind current active-user/RLS checks.
 - Keep quiz questions/answer keys private and served through trusted RPCs; guest attempt ownership uses anon Auth `uid`; clean only registered NQ guest identities and attempts after 30 days.
-- Rehearsal Auth setting, migration, anonymous browser acceptance, CI/PR are pending. Production database must not be accessed.
+- Rehearsal migrations `20261002171108` and `20261002172325` are applied; hosted `NQ_RUNTIME_ASSERTIONS_PASS`.
+- PR #61 is open; CI and Vercel Preview pass. Hosted browser test found Auth returns HTTP 422 `Anonymous sign-ins are disabled` before creating a guest session.
+- Enable Anonymous Sign-Ins in rehearsal, rerun no-login browser acceptance, then merge/deploy. Production database must not be accessed.
 
 ### NQ_300 Quiz implementation and review closure (2026-10-02)
 - Follow-up branch `codex/quiz-300-nq-fixes` restores the original handoff patch locally.

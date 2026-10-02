@@ -6,14 +6,27 @@
   exceeded the NQ_300 scope. The private registry now tracks only users entering this quiz. A
   follow-up migration creates the minimal `INVITED` profile required by the existing attempt FK.
 - **File đã sửa:** `supabase/migrations/20261002171108_nq_300_guest_access.sql`,
-  `supabase/migrations/20261002171700_nq_guest_attempt_profile.sql`, `scripts/nq-runtime-check.sql`,
+  `supabase/migrations/20261002172325_nq_guest_attempt_profile.sql`, `scripts/nq-runtime-check.sql`,
   `docs/brain/{01-architecture,03-decisions,04-current-tasks,06-ai-working-log}.md`.
 - **Lý do:** Preserve unrelated anonymous identities while retaining 30-day NQ guest data cleanup.
 - **Kiểm tra:** The broad cleanup was rejected before execution. The scoped migration applied to
-  rehearsal. Remote runtime test caught the existing profile FK and rolled back its fixtures; the
-  forward fix and updated CI/runtime assertions are pending.
+  rehearsal. Remote runtime test first caught the existing profile FK and rolled back its fixtures;
+  the forward fix now passes all hosted assertions and CI.
 - **Rollback/forward-fix:** Remove the NQ cleanup cron job and private registry through a forward
   migration; retain existing quiz data unless separately authorized.
+
+## [2026-10-03] NQ_300 rehearsal guest acceptance
+- **Agent:** Codex
+- **Thay đổi:** Applied the two scoped guest migrations to rehearsal and verified the backend. PR #61
+  and its Vercel Preview are ready. Browser acceptance remains blocked by the rehearsal Auth setting.
+- **File đã sửa:** `docs/brain/04-current-tasks.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Make NQ_300 visible and usable without interactive login while preserving other access boundaries.
+- **Kiểm tra:** Rehearsal SQL returned `NQ_RUNTIME_ASSERTIONS_PASS`, including RLS boundaries, grading,
+  answer-key withholding and targeted 30-day cleanup. CI jobs `build`, `test-db`, and `member-api-test`
+  passed; Vercel Preview is READY. A fresh guest browser received HTTP 422 `Anonymous sign-ins are
+  disabled`; no guest account was created. Production was not accessed.
+- **Rollback/forward-fix:** Migrations are additive. Close the NQ topic to stop new use and roll back
+  the frontend if needed; after enabling Anonymous Sign-Ins in rehearsal, rerun the browser gate.
 
 ## [2026-10-02] NQ_300 public guest access — implementation in progress
 - **Agent:** Codex
@@ -22,7 +35,7 @@
   is still in progress.
 - **File đã sửa:** `src/App.jsx`, `src/contexts/AuthContext.jsx`, `src/pages/NqQuiz.jsx`,
   `src/services/nqQuizService.js`, `supabase/config.toml`,
-  `supabase/migrations/20261002183000_nq_300_guest_access.sql`,
+  `supabase/migrations/20261002171108_nq_300_guest_access.sql`,
   `scripts/{build-nq-seed.py,nq-browser-acceptance.mjs,nq-runtime-check.sql}`, `tests/nq_quiz.test.mjs`,
   `docs/{01-product-spec.md,brain/{01-architecture,03-decisions,04-current-tasks,06-ai-working-log}.md}`.
 - **Lý do:** The quiz was published as INTERNAL_YOUTH and placed behind AuthGuard, so guests saw an
