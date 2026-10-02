@@ -2,9 +2,10 @@
 import assert from 'node:assert/strict';
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { createServer } from 'vite';
 
-const { chromium } = await import(`${process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES}/playwright/index.mjs`);
+const { chromium } = await import(pathToFileURL(resolve(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES, 'playwright/index.mjs')).href);
 const actor = JSON.parse(await readFile(process.env.NQ_BROWSER_ACTOR_FILE, 'utf8'));
 const evidence = resolve('docs/quiz-300/evidence');
 await mkdir(evidence, { recursive: true });
