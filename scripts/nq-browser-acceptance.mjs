@@ -23,13 +23,20 @@ page.on('pageerror', (error) => errors.push(error.message));
 page.on('response', async (response) => {
   if (response.url().includes('/rpc/nq_attempt') && response.ok()) {
     assert.equal(new URL(response.url()).hostname, 'znexculhbdjiflkczpyu.supabase.co');
-    const state = await response.json();
-    if (state) states.push(state);
+    // A navigation may discard a completed response body before this observer reads it.
+    // State assertions below still require the subsequent live response from the new page.
+    try {
+      const state = await response.json();
+      if (state) states.push(state);
+    } catch { /* The page's RPC consumer and subsequent state assertions remain authoritative. */ }
   }
 });
 page.on('dialog', (dialog) => dialog.accept());
 const quizPath = '/tri-thuc/trac-nghiem/7c620b81-6dc6-4a57-9908-3a1f68652a00';
 try {
+  if (process.env.NQ_PREVIEW_ACCESS_FILE) {
+    await page.goto((await readFile(process.env.NQ_PREVIEW_ACCESS_FILE, 'utf8')).trim());
+  }
   await page.goto(`${origin}/login`);
   console.log('LOGIN_DOM', (await page.locator('body').innerText()).slice(0, 500));
   await page.getByLabel('Email', { exact: true }).fill(actor.email);

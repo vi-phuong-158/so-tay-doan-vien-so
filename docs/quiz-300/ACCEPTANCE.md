@@ -1,5 +1,8 @@
 # QUIZ 300 — báo cáo triển khai và nghiệm thu
 
+> Historical handoff. The GitHub/hosting blocker below was resolved in the follow-up;
+> see [FIX_ACCEPTANCE.md](FIX_ACCEPTANCE.md) for current verified status and PR #60.
+
 ## VERDICT
 
 `QUIZ_300_END_TO_END_BLOCKED_GITHUB_WRITE_ACCESS`

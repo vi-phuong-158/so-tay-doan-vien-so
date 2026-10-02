@@ -8,12 +8,17 @@
 - **File đã sửa:** `src/pages/NqQuiz.jsx`, `public/sw.js`, `tests/public_first_auth.test.mjs`,
   `scripts/nq-browser-acceptance.mjs`, the two NQ migration filenames, `.gitignore`,
   `docs/brain/{01-architecture,03-decisions,04-current-tasks,06-ai-working-log}.md`,
-  `docs/quiz-300/{ACCEPTANCE,FIX_ACCEPTANCE}.md`.
+  `docs/quiz-300/{ACCEPTANCE,FIX_ACCEPTANCE}.md`, `docs/quiz-300/evidence/*`.
 - **Lý do:** Resolve the P1 history mismatch and P2 mixed-query pagination from review, then finish
   the authorized CI/hosting gates without altering the separate RAG checkout.
 - **Kiểm tra:** Full hosted migration bodies match local MD5 `78a7ab103c3bf524aa8a6fc34b64b730`
   and `5fe9ab36f5a83149297267da8695ceea`; filenames now use `20261002134138`/`20261002140545`.
-  SQL and remote migration history are preserved. Final gate evidence is tracked in `FIX_ACCEPTANCE.md`.
+  SQL and remote migration history are preserved. Local 208 frontend tests/lint/build PASS; full
+  remote CI 37024141701 PASS (844 pgTAP, 119 Deno, 273 Member API). Real rehearsal SQL/HTTP and hosted
+  Auth/browser PASS, including changed lookup query, five viewports and 20-minute auto-submit.
+  Promoted the verified frontend to the main Vercel alias, verified rehearsal public config/cache v3,
+  then published only NQ bank/topic. Removed temporary fixture actors/data/credentials.
+  Evidence, final PR-head checks and rollback are tracked in `FIX_ACCEPTANCE.md` and PR #60.
 - **Rollback/forward-fix:** Keep the bank/topic DRAFT until the compatible frontend passes hosting;
   revert frontend to the prior deployment and close only this bank/topic if rollout fails. Preserve
   all 300 questions and attempt snapshots; never replay the additive SQL over an applied schema.
