@@ -1,5 +1,31 @@
 # 01 — Architecture
 
+## Fixed Nghị quyết bank (2026-10-02)
+
+- Existing `/tri-thuc/trac-nghiem/:quizId` routes bank UUID `7c620b81-6dc6-4a57-9908-3a1f68652a00`
+  to `NqQuiz`; other quizzes retain the existing component and RPCs.
+- Code graph: `Quiz` → `NqQuiz` → `nqQuizService` → authenticated `nq_attempt` / `lookup_nq_questions`.
+- Reuses `quizzes`, `quiz_questions`, `quiz_options`, `quiz_attempts`, `quiz_answers`; adds
+  `bank_code`, `question_number`, `source_label`. No second question bank schema.
+- `quiz_private.attempt_snapshots` stores 30 sampled questions, shuffled options, immutable text/key,
+  deadline, status and autosaved selections. It has RLS and no client schema/table grant.
+- All lifecycle operations serialize by bank/user. Server clock decides expiry; late writes are
+  rejected and any subsequent operation finalizes saved answers at the deadline. The running
+  browser submits automatically; a closed browser finalizes on its next request.
+- Exam payload removes the key in SQL. Lookup and completed review intentionally return keys.
+- Existing generic attempt RPCs reject this bank, preserving their other quiz behavior.
+- `scripts/validate-nq-source.py` extracts Excel without text correction; canonical JSON and generated
+  bank-scoped SQL live outside frontend assets. Seed uses bank/number and question/label uniqueness.
+- Local browser pending selections contain only chosen IDs, keyed by user/attempt, and are discarded
+  after finalization. They never override backend expiry or contain the grading key.
+- CI runs legacy suites before two idempotent NQ seed executions and NQ SQL assertions.
+- Lookup pagination keeps its submitted query separate from the editable input. Changing the input
+  disables load-more until a new search replaces the rows and offset.
+- NQ migration filenames use the verified hosted history versions `20261002134138` and
+  `20261002140545`; their SQL bodies match the original handoff and are not reapplied.
+- The service-worker shell cache is versioned for this frontend rollout so cached older Quiz
+  clients receive the updated shell. Browser acceptance can target a hosted URL via `NQ_BASE_URL`.
+
 > Kiến trúc chi tiết ở `docs/03-architecture.md`; mô hình dữ liệu đầy đủ ở `docs/01-product-spec.md`
 > mục 8. File này là bản đồ vận hành + **Code Graph** để agent đọc trước khi sửa.
 

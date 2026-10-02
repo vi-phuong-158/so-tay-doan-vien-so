@@ -1,5 +1,27 @@
 # 03 — Technical Decisions
 
+## 2026-10-02 — Nghị quyết self-study has one fixed mode
+
+- Owner scope overrides older configurable Quiz requirements for `NQ_300` only: exactly 30 distinct
+  questions from the source 300, shuffled questions/options, 20 minutes, unlimited retries, no
+  pass/fail display or ranking. Existing quizzes keep their original behavior.
+- Add source number/option labels to existing tables; reuse attempts and final answers. Protect
+  the immutable grading snapshot in an unexposed schema instead of adding key JSON to readable
+  attempts. Do not change existing RLS/grants.
+- Save selected option IDs through the authenticated RPC. Finalize from saved answers, with
+  server time and ownership checks. Late/reconnected clients cannot submit new answers.
+- Use ordinary literal substring search plus `125` / `Câu 125` recognition, 20-row pagination.
+  No AI, embeddings, Excel import UI, or question management UI is added.
+- Excel G104 (question 103, D) is numeric `1`: retain that exact value as database text `1`.
+  Do not infer a percentage or correct the source.
+- Seed starts a new bank/topic as DRAFT and never republish them on rerun. Publish both only
+  after the new frontend is deployed; existing clients cannot use the specialized bank RPC.
+- Review follow-up: match the unpushed migration filenames to the hosted history timestamps after
+  comparing the complete SQL bodies. Preserve the applied SQL and remote history; no schema replay
+  or migration-history deletion is necessary.
+- Lookup load-more belongs to the last completed query, not the current input. Edited input requires
+  a new search before pagination. Hosted acceptance covers this regression and all five viewports.
+
 > Ghi lại quyết định kỹ thuật quan trọng để agent sau không "phát minh lại" hoặc đảo ngược
 > mà không biết lý do. Nguồn gốc: `docs/07-decisions.md`, README, lịch sử git, `docs/phase-2/`.
 

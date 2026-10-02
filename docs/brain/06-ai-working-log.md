@@ -1,5 +1,46 @@
 # 06 — AI Working Log
 
+## [2026-10-02] Quiz 300 review fixes and release closure
+- **Agent:** Codex
+- **Thay đổi:** Restore the original handoff patch on isolated `codex/quiz-300-nq-fixes`;
+  bind lookup pagination to its submitted query; align migration filenames with verified rehearsal
+  history; bump the PWA shell cache and extend hosted browser acceptance with query-change/five-width checks.
+- **File đã sửa:** `src/pages/NqQuiz.jsx`, `public/sw.js`, `tests/public_first_auth.test.mjs`,
+  `scripts/nq-browser-acceptance.mjs`, the two NQ migration filenames, `.gitignore`,
+  `docs/brain/{01-architecture,03-decisions,04-current-tasks,06-ai-working-log}.md`,
+  `docs/quiz-300/{ACCEPTANCE,FIX_ACCEPTANCE}.md`, `docs/quiz-300/evidence/*`.
+- **Lý do:** Resolve the P1 history mismatch and P2 mixed-query pagination from review, then finish
+  the authorized CI/hosting gates without altering the separate RAG checkout.
+- **Kiểm tra:** Full hosted migration bodies match local MD5 `78a7ab103c3bf524aa8a6fc34b64b730`
+  and `5fe9ab36f5a83149297267da8695ceea`; filenames now use `20261002134138`/`20261002140545`.
+  SQL and remote migration history are preserved. Local 208 frontend tests/lint/build PASS; full
+  remote CI 37024141701 PASS (844 pgTAP, 119 Deno, 273 Member API). Real rehearsal SQL/HTTP and hosted
+  Auth/browser PASS, including changed lookup query, five viewports and 20-minute auto-submit.
+  Promoted the verified frontend to the main Vercel alias, verified rehearsal public config/cache v3,
+  then published only NQ bank/topic. Removed temporary fixture actors/data/credentials.
+  Evidence, final PR-head checks and rollback are tracked in `FIX_ACCEPTANCE.md` and PR #60.
+- **Rollback/forward-fix:** Keep the bank/topic DRAFT until the compatible frontend passes hosting;
+  revert frontend to the prior deployment and close only this bank/topic if rollout fails. Preserve
+  all 300 questions and attempt snapshots; never replay the additive SQL over an applied schema.
+
+## [2026-10-02] NQ 300-question implementation and hosted rehearsal
+- **Agent:** Codex
+- **Starting SHA:** `8f3d99425e0147bf045c95988589c2b7e6704df1`; clean `master` cloned, task branch
+  `codex/quiz-300-nq`. No previous uncommitted work.
+- **Changes:** Existing Quiz route/table reuse; source STT and option labels; private attempt snapshot;
+  one fixed 30/20 mode, server autosave/expiry/grading, review and ordinary lookup; source extraction,
+  idempotent seed, frontend/SQL/HTTP/browser acceptance scripts and CI SQL integration.
+- **Files:** `NqQuiz.jsx`, `Quiz.jsx`, `nqQuizService.js`, `index.css`, `scripts/*nq*`, source JSON,
+  migration/seed, tests, CI and brain documentation; full list in task acceptance report.
+- **Reason:** Implement the owner's fixed self-study scope without duplicating the Phase 4 schema.
+- **Verified:** Source 300/300, A98/B94/C65/D43; hosted database content matches all source cells,
+  300 distinct STT 1–300, 1200 options, second seed stays 300. Hosted SQL lifecycle/security/search
+  assertions pass with fixture rollback. Actual password Auth + HTTP RPC and anonymous deny pass.
+  Frontend 208 tests pass, lint 0 errors/3 existing warnings, build passes.
+- **Remaining gates:** Browser and full regression/CI evidence are recorded in `docs/quiz-300/ACCEPTANCE.md`.
+  Git push lacks credentials; connected GitHub rejects branch creation with HTTP 403
+  `Resource not accessible by integration`. No merge is attempted.
+
 ## [2026-09-23] SOTAY_UI_FINAL_CLOSURE — audit scope correction before merge
 
 - **Agent:** Codex

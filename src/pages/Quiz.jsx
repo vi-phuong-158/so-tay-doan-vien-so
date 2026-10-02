@@ -5,6 +5,8 @@ import { Button, EmptyState, PageHeader } from '../components/common';
 import Skeleton from '../components/Skeleton';
 import { createQuizService } from '../services/quizService';
 import { supabase } from '../services/supabaseClient';
+import { NqQuiz } from './NqQuiz';
+import { NQ_QUIZ_ID } from '../services/nqQuizService';
 
 const quizService = createQuizService(supabase);
 const LIST_PATH = '/tri-thuc/chuyen-de';
@@ -129,7 +131,7 @@ function ResultView({ result, details, onBack }) {
   );
 }
 
-export function Quiz() {
+function ExistingQuiz() {
   const { quizId } = useParams();
   const navigate = useNavigate();
   const [view, setView] = useState('loading');
@@ -240,4 +242,9 @@ export function Quiz() {
       <Link className="quiz-back-link" to={LIST_PATH}>Quay lại kho tri thức</Link>
     </div>
   );
+}
+
+export function Quiz() {
+  const { quizId } = useParams();
+  return quizId === NQ_QUIZ_ID ? <NqQuiz key={quizId} /> : <ExistingQuiz />;
 }

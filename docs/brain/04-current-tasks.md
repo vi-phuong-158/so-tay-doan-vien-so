@@ -7,6 +7,21 @@
 
 ## Đang làm
 
+### NQ_300 Quiz implementation and review closure (2026-10-02)
+- Follow-up branch `codex/quiz-300-nq-fixes` restores the original handoff patch locally.
+- P1 resolved by matching filenames to the verified hosted versions `20261002134138`/`20261002140545`
+  with identical SQL; P2 fixed by binding pagination to the last completed lookup query.
+- CLI GitHub/Vercel authentication resolved the connector-only write blocker. PR #60 is pushed.
+- Full CI PASS: frontend 208, pgTAP 844, Deno 119, Member API 273; lint/build PASS.
+- Compatible frontend READY on `https://so-tay-doan-vien-so.vercel.app`, verified against rehearsal.
+- Hosted Auth/browser, auto-submit, lookup regression and five viewport checks PASS; bank/topic PUBLISHED.
+- Current follow-up evidence and rollout/rollback gates: `docs/quiz-300/FIX_ACCEPTANCE.md`.
+- Original historical branch `codex/quiz-300-nq`, starting `8f3d99425e0147bf045c95988589c2b7e6704df1`.
+- 300 source questions seeded/compared on verified rehearsal `znexculhbdjiflkczpyu`;
+  one fixed 30-question/20-minute mode, safe server lifecycle, review and lookup implemented.
+- Original `QUIZ_300_END_TO_END_BLOCKED_GITHUB_WRITE_ACCESS` is superseded by the follow-up gates.
+- Temporary acceptance actors/data cleaned; all 300 source questions retained. Production Supabase not accessed.
+
 ### SOTAY_UI_FINAL_CLOSURE (ĐÃ HOÀN TẤT — 2026-09-23)
 - **Base:** `master@2095ebb98c572f10a5b04a08396e3e3569fb1271`; PR #54 đã merge.
 - **PR/UI merge:** PR #57 exact audited head `0050f40357b9091d082971659aa37f84378dfdaf`, merge commit
