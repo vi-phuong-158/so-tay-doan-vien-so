@@ -111,11 +111,13 @@ begin
   assert exists(select 1 from cron.job where jobname='nq-quiz-guest-cleanup'), 'Guest accounts have bounded 30-day retention';
   assert not has_table_privilege('authenticated','public.quiz_questions','SELECT'), 'Guest Auth role cannot read question table';
   assert not has_table_privilege('authenticated','public.quiz_options','SELECT'), 'Guest Auth role cannot read answer-key table';
+  assert not has_table_privilege('authenticated','quiz_private.nq_guest_accounts','SELECT'), 'Guest cannot read the cleanup registry';
   perform set_config('request.jwt.claims','{"sub":"6f937301-3b91-4c21-bde5-804359703003","role":"authenticated","is_anonymous":true,"user_metadata":{"purpose":"nq_quiz_guest"}}',true);
   perform set_config('role','authenticated',true);
   perform public.ensure_nq_quiz_guest();
-  assert public.is_nq_300_guest(), 'Only an anonymous session with an invited NQ guest profile is treated as a guest';
+  assert public.is_nq_300_guest(), 'Only an anonymous session recorded in the NQ registry is treated as a guest';
   assert not public.is_active_user() and not public.has_role('MEMBER'), 'Guest session receives no active member role';
+  assert not exists(select 1 from public.profiles where id='6f937301-3b91-4c21-bde5-804359703003'), 'Guest session creates no member profile';
   assert (select count(*) from public.learning_topics where id='7c620b81-6dc6-4a57-9908-3a1f68652a01')=1, 'Guest sees the published NQ topic';
   assert (select count(*) from public.quizzes where id=bank)=1, 'Guest sees NQ quiz metadata';
   assert not exists(select 1 from public.learning_topics where id<>'7c620b81-6dc6-4a57-9908-3a1f68652a01'), 'Guest cannot read other topic metadata';
@@ -137,6 +139,16 @@ begin
   assert (r->>'unanswered')::integer=30 and r->'questions'->0 ? 'correct_option_id', 'Guest grading key appears only after submitting';
   assert public.lookup_nq_questions('1')->0->>'correct_answer'='B', 'Guest can use public source lookup';
   perform set_config('role','postgres',true);
+  assert exists(select 1 from quiz_private.nq_guest_accounts where user_id='6f937301-3b91-4c21-bde5-804359703003'), 'NQ guest is added to the private retention registry';
+  insert into auth.users(id,aud,role,is_anonymous,raw_app_meta_data,raw_user_meta_data)
+  values ('6f937301-3b91-4c21-bde5-804359703004','authenticated','authenticated',true,'{"provider":"anonymous","providers":["anonymous"]}','{}');
+  update quiz_private.nq_guest_accounts set created_at=now()-interval '31 days'
+    where user_id='6f937301-3b91-4c21-bde5-804359703003';
+  delete from auth.users account using quiz_private.nq_guest_accounts guest
+    where account.id=guest.user_id and account.is_anonymous is true
+      and guest.created_at<now()-interval '30 days';
+  assert not exists(select 1 from auth.users where id='6f937301-3b91-4c21-bde5-804359703003'), 'Expired NQ guests are removed';
+  assert exists(select 1 from auth.users where id='6f937301-3b91-4c21-bde5-804359703004'), 'Unregistered anonymous accounts are untouched';
 end $$;
 select 'NQ_RUNTIME_ASSERTIONS_PASS' as verdict;
 rollback;

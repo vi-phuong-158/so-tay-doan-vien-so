@@ -7,12 +7,14 @@
 - Code graph: `Knowledge` → public NQ quiz metadata → public NQ route → `NqQuiz` →
   `nqQuizService` → Supabase anonymous session → `ensure_nq_quiz_guest` / `nq_attempt` / lookup.
 - NQ_300 alone is public. Its route bypasses `AuthGuard`; other Quiz routes remain guarded.
-  Browser guests get an invisible anonymous Auth identity and an `INVITED` profile with no roles.
+  Browser guests get an invisible anonymous Auth identity recorded only in a private NQ guest
+  registry; they receive no application profile or roles.
 - RLS exposes only this published quiz/topic metadata to that anonymous identity. Questions, options,
   attempt snapshots and grading keys remain RPC-only; the NQ RPCs accept active members or the
   narrowly identified anonymous NQ guest. Other authenticated surfaces still require ACTIVE profile.
-- The client tags these anonymous identities with `nq_quiz_guest`; pg_cron removes all anonymous Auth
-  identities older than 30 days, following Supabase's supported cleanup pattern.
+- An unexposed `quiz_private.nq_guest_accounts` registry records identities that use NQ_300. Daily
+  pg_cron cleanup removes only registered anonymous NQ guests after 30 days; other anonymous Auth
+  identities are untouched.
 - Reuses `quizzes`, `quiz_questions`, `quiz_options`, `quiz_attempts`, `quiz_answers`; adds
   `bank_code`, `question_number`, `source_label`. No second question bank schema.
 - `quiz_private.attempt_snapshots` stores 30 sampled questions, shuffled options, immutable text/key,

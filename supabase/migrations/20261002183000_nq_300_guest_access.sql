@@ -9,6 +9,13 @@ where quiz.topic_id = topic.id
   and quiz.status = 'PUBLISHED'
   and topic.status = 'PUBLISHED';
 
+create table quiz_private.nq_guest_accounts (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+alter table quiz_private.nq_guest_accounts enable row level security;
+revoke all on table quiz_private.nq_guest_accounts from public, anon, authenticated;
+
 create or replace function public.is_nq_300_guest()
 returns boolean
 language sql
@@ -19,9 +26,8 @@ as $$
   select auth.uid() is not null
     and coalesce(auth.jwt() ->> 'is_anonymous', 'false') = 'true'
     and exists (
-      select 1 from public.profiles profile
-      where profile.id = auth.uid()
-        and profile.account_status = 'INVITED'
+      select 1 from quiz_private.nq_guest_accounts guest
+      where guest.user_id = auth.uid()
     );
 $$;
 revoke all on function public.is_nq_300_guest() from public, anon, authenticated;
@@ -114,16 +120,9 @@ begin
     raise exception 'QUIZ_NOT_PUBLISHED';
   end if;
 
-  insert into public.profiles(id, full_name, account_status)
-  values (guest_id, 'Khách làm bài', 'INVITED')
-  on conflict (id) do nothing;
-
-  if not exists (
-    select 1 from public.profiles
-    where id = guest_id and account_status = 'INVITED'
-  ) then
-    raise exception 'NQ_GUEST_PROFILE_INVALID';
-  end if;
+  insert into quiz_private.nq_guest_accounts(user_id)
+  values (guest_id)
+  on conflict (user_id) do nothing;
 
   return jsonb_build_object('ready', true);
 end;
@@ -193,9 +192,11 @@ begin
       'nq-quiz-guest-cleanup',
       '17 3 * * *',
       $cleanup$
-        delete from auth.users
-        where is_anonymous is true
-          and created_at < now() - interval '30 days';
+        delete from auth.users account
+        using quiz_private.nq_guest_accounts guest
+        where account.id = guest.user_id
+          and account.is_anonymous is true
+          and guest.created_at < now() - interval '30 days';
       $cleanup$
     );
   end if;

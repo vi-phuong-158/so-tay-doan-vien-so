@@ -10,8 +10,8 @@
 ### NQ_300 public guest access (2026-10-02)
 - User wants the published NQ_300 quiz free to everyone with no interactive login.
 - Branch `codex/quiz-300-public-access`, based on merged Quiz #60 commit `bafc23e`.
-- Fix: invisible purpose-scoped Supabase anonymous session for this bank only; topic PUBLIC; other app areas stay behind current active-user/RLS checks.
-- Keep quiz questions/answer keys private and served through trusted RPCs; guest attempt ownership uses anon Auth `uid`; clean anonymous identities and their attempts after 30 days.
+- Fix: invisible Supabase anonymous session recorded only for this bank in a private registry; topic PUBLIC; other app areas stay behind current active-user/RLS checks.
+- Keep quiz questions/answer keys private and served through trusted RPCs; guest attempt ownership uses anon Auth `uid`; clean only registered NQ guest identities and attempts after 30 days.
 - Rehearsal Auth setting, migration, anonymous browser acceptance, CI/PR are pending. Production database must not be accessed.
 
 ### NQ_300 Quiz implementation and review closure (2026-10-02)

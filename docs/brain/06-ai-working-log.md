@@ -1,5 +1,20 @@
 # 06 — AI Working Log
 
+## [2026-10-03] Scope NQ guest retention to quiz sessions
+- **Agent:** Codex
+- **Thay đổi:** Narrowed automatic cleanup after review identified that deleting every old
+  anonymous account would exceed the NQ_300 scope. A private registry now tracks anonymous users
+  only after they enter this quiz, creates no application profiles, and cleanup targets only those
+  registered guests.
+- **File đã sửa:** `supabase/migrations/20261002183000_nq_300_guest_access.sql`,
+  `scripts/nq-runtime-check.sql`, `docs/brain/{01-architecture,03-decisions,04-current-tasks,06-ai-working-log}.md`.
+- **Lý do:** Preserve unrelated anonymous identities, avoid cluttering member profiles, and limit NQ guest data retention to 30 days.
+- **Kiểm tra:** Unit/build/lint passed on the original scope. The first rehearsal migration was
+  rejected before execution; no database changes occurred. CI and rehearsal assertions are being
+  rerun against the narrowed cleanup.
+- **Rollback/forward-fix:** Remove the NQ cleanup cron job and private registry through a forward
+  migration; retain existing quiz data unless separately authorized.
+
 ## [2026-10-02] NQ_300 public guest access — implementation in progress
 - **Agent:** Codex
 - **Thay đổi:** User requested the NQ_300 quiz work freely without interactive login. Added a
