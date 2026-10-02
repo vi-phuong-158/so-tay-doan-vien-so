@@ -554,3 +554,23 @@
   .member-metrics span{font-size:11px}
   .knowledge-tabs .tab{font-size:11px}
 }
+/* Nghị quyết self-study uses the existing card, button and typography tokens. */
+.nq-screen .content-card{margin:16px 0;padding:20px;overflow-wrap:anywhere}
+.nq-intro,.nq-result{display:grid;gap:14px}
+.nq-result h2{font-size:32px;color:var(--brand-800)}
+.nq-result>strong{font-size:24px}
+.nq-screen .quiz-progress-head strong{display:flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums}
+.nq-screen .quiz-option{min-height:52px}
+.nq-screen .nq-correct{border-color:var(--success);background:var(--surface-soft)}
+.nq-option-note{display:block;color:var(--text-secondary);font-size:12px}
+.nq-actions{position:sticky;bottom:78px;display:grid;grid-template-columns:1fr 1fr;gap:8px;background:var(--surface-card);padding:12px;border-radius:var(--radius-md);box-shadow:var(--shadow-sm)}
+.nq-actions>button:last-child{grid-column:1/-1}
+.nq-question-nav{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:16px 0}
+.nq-question-nav button{min-height:44px;border:1px solid var(--border-default);border-radius:var(--radius-xs);background:var(--surface-card)}
+.nq-question-nav button.selected{background:var(--brand-100)}
+.nq-question-nav button[aria-current]{outline:2px solid var(--brand-800)}
+.nq-search{display:flex;gap:8px;margin:16px 0}
+.nq-search input{min-width:0;flex:1;border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:12px;background:var(--surface-card)}
+.nq-lookup-options{list-style:none;display:grid;gap:12px;margin:16px 0}
+.nq-key{color:var(--brand-800);font-weight:600}
+@media(min-width:768px){.nq-actions{bottom:20px;grid-template-columns:1fr 1fr 1fr}.nq-actions>button:last-child{grid-column:auto}.nq-question-nav{grid-template-columns:repeat(10,1fr)}}

@@ -1,5 +1,23 @@
 # 06 — AI Working Log
 
+## [2026-10-02] NQ 300-question implementation and hosted rehearsal
+- **Agent:** Codex
+- **Starting SHA:** `8f3d99425e0147bf045c95988589c2b7e6704df1`; clean `master` cloned, task branch
+  `codex/quiz-300-nq`. No previous uncommitted work.
+- **Changes:** Existing Quiz route/table reuse; source STT and option labels; private attempt snapshot;
+  one fixed 30/20 mode, server autosave/expiry/grading, review and ordinary lookup; source extraction,
+  idempotent seed, frontend/SQL/HTTP/browser acceptance scripts and CI SQL integration.
+- **Files:** `NqQuiz.jsx`, `Quiz.jsx`, `nqQuizService.js`, `index.css`, `scripts/*nq*`, source JSON,
+  migration/seed, tests, CI and brain documentation; full list in task acceptance report.
+- **Reason:** Implement the owner's fixed self-study scope without duplicating the Phase 4 schema.
+- **Verified:** Source 300/300, A98/B94/C65/D43; hosted database content matches all source cells,
+  300 distinct STT 1–300, 1200 options, second seed stays 300. Hosted SQL lifecycle/security/search
+  assertions pass with fixture rollback. Actual password Auth + HTTP RPC and anonymous deny pass.
+  Frontend 208 tests pass, lint 0 errors/3 existing warnings, build passes.
+- **Remaining gates:** Browser and full regression/CI evidence are recorded in `docs/quiz-300/ACCEPTANCE.md`.
+  Git push lacks credentials; connected GitHub rejects branch creation with HTTP 403
+  `Resource not accessible by integration`. No merge is attempted.
+
 ## [2026-09-23] SOTAY_UI_FINAL_CLOSURE — audit scope correction before merge
 
 - **Agent:** Codex

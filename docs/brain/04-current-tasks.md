@@ -7,6 +7,16 @@
 
 ## Đang làm
 
+### NQ_300 Quiz implementation (2026-10-02)
+- Branch `codex/quiz-300-nq`, starting `8f3d99425e0147bf045c95988589c2b7e6704df1`.
+- 300 source questions seeded/compared on verified rehearsal `znexculhbdjiflkczpyu`;
+  one fixed 30-question/20-minute mode, safe server lifecycle, review and lookup implemented.
+- Frontend 208/208, lint/build, NQ SQL/HTTP/browser and 140 related pgTAP assertions pass.
+- `QUIZ_300_END_TO_END_BLOCKED_GITHUB_WRITE_ACCESS`: git has no push credential; connected GitHub
+  branch creation returns HTTP 403. Frontend hosting/full exact-SHA CI remain unrun.
+- New bank/topic deliberately DRAFT pending new frontend deployment; all 300 questions retained.
+- Full report: `docs/quiz-300/ACCEPTANCE.md`. No merge, no production Supabase accessed.
+
 ### SOTAY_UI_FINAL_CLOSURE (ĐÃ HOÀN TẤT — 2026-09-23)
 - **Base:** `master@2095ebb98c572f10a5b04a08396e3e3569fb1271`; PR #54 đã merge.
 - **PR/UI merge:** PR #57 exact audited head `0050f40357b9091d082971659aa37f84378dfdaf`, merge commit

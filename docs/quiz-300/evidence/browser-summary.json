@@ -1,0 +1,11 @@
+{
+  "mobile": "PASS",
+  "desktop": "PASS",
+  "answer_leakage": "PASS",
+  "resume": "PASS",
+  "offline_reconnect": "PASS",
+  "lookup": "PASS",
+  "browser_errors": [],
+  "initial_attempt_id": "11f41ba4-e3ed-4fd5-bb9b-09a8d860d795",
+  "final_attempt_id": "0fa388f2-b42d-4029-a8b3-4981bbeba173"
+}

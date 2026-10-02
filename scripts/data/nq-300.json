@@ -1,0 +1,3602 @@
+[
+  {
+    "question_number": 1,
+    "question_text": "Chủ đề Báo cáo chính trị của Ban Chấp hành Trung ương Đoàn khóa XII tại Đại hội đại biểu toàn quốc Đoàn TNCS Hồ Chí Minh lần thứ XIII, nhiệm kỳ 2026 - 2031 là gì?",
+    "options": {
+      "A": "“Tuổi trẻ Việt Nam đoàn kết, sáng tạo, khởi nghiệp, lập nghiệp, góp phần xây dựng đất nước phồn vinh, hạnh phúc”.",
+      "B": "“Tự hào, vững tin theo Đảng, tuổi trẻ Việt Nam xây hoài bão lớn, chung sức, đồng lòng, tiên phong, tiến mạnh trong kỷ nguyên vươn mình của dân tộc”.",
+      "C": "“Khát vọng, bản lĩnh, trí tuệ, sáng tạo, tuổi trẻ Việt Nam tiên phong xây dựng và bảo vệ Tổ quốc”.",
+      "D": "“Tuổi trẻ Việt Nam phát huy truyền thống, tăng cường đoàn kết, đẩy mạnh tình nguyện, chuyển đổi số và hội nhập quốc tế”."
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 2,
+    "question_text": "Đại hội đại biểu toàn quốc Đoàn TNCS Hồ Chí Minh lần thứ XIII, nhiệm kỳ 2026 - 2031 đã xác định khẩu hiệu hành động là gì?",
+    "options": {
+      "A": "\"Tiên phong - Bản lĩnh - Đoàn kết - Sáng tạo - Phát triển",
+      "B": "“Bản lĩnh tự cường - Tiên phong sáng tạo - Khát vọng cống hiến - Làm chủ tương lai”",
+      "C": "“Tiên phong sáng tạo - Bản lĩnh tự cường - Khát vọng cống hiến - Làm chủ tương lai”",
+      "D": "“Khát vọng cống hiến - Bản lĩnh tự cường - Tiên phong sáng tạo - Làm chủ tương lai”"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 3,
+    "question_text": "Các chỉ tiêu trọng tâm được Đại hội đại biểu toàn quốc Đoàn TNCS Hồ Chí Minh lần thứ XIII, nhiệm kỳ 2026 - 2031 xác định gồm bao nhiêu chỉ tiêu?",
+    "options": {
+      "A": "14 chỉ tiêu",
+      "B": "13 chỉ tiêu",
+      "C": "11 chỉ tiêu",
+      "D": "12 chỉ tiêu"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 4,
+    "question_text": "Đại hội Đoàn toàn quốc lần thứ XIII xác định chỉ tiêu bao nhiêu lượt đoàn viên, thanh niên tham gia hoạt động tình nguyện do Đoàn, Hội tổ chức?",
+    "options": {
+      "A": "50 triệu lượt",
+      "B": "100 triệu lượt",
+      "C": "80 triệu lượt",
+      "D": "75 triệu lượt"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 5,
+    "question_text": "Đại hội Đoàn toàn quốc lần thứ XIII xác định chỉ tiêu có ít nhất bao nhiêu dự án khởi nghiệp đổi mới sáng tạo của thanh niên được hỗ trợ đầu ra sản phẩm, dịch vụ?",
+    "options": {
+      "A": "Ít nhất 850",
+      "B": "Ít nhất 750",
+      "C": "Ít nhất 800",
+      "D": "Ít nhất 900"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 6,
+    "question_text": "Đại hội Đoàn toàn quốc lần thứ XIII xác định chỉ tiêu tỷ lệ đoàn kết tập hợp thanh niên là bao nhiêu phần trăm?",
+    "options": {
+      "A": "85%",
+      "B": "75%",
+      "C": "80%",
+      "D": "90%"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 7,
+    "question_text": "Đại hội Đoàn toàn quốc lần thứ XIII xác định có bao nhiêu đoàn viên ưu tú được giới thiệu cho Đảng xem xét kết nạp?",
+    "options": {
+      "A": "900 nghìn đoàn viên ưu tú",
+      "B": "950 nghìn đoàn viên ưu tú",
+      "C": "01 triệu đoàn viên ưu tú",
+      "D": "1,5 triệu đoàn viên ưu tú"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 8,
+    "question_text": "Đại hội Đoàn toàn quốc lần thứ XIII xác định chỉ tiêu bao nhiêu thiếu nhi có hoàn cảnh khó khăn được tổ chức Đoàn, Hội, Đội các cấp hỗ trợ?",
+    "options": {
+      "A": "4,5 triệu thiếu nhi",
+      "B": "04 triệu thiếu nhi",
+      "C": "05 triệu thiếu nhi",
+      "D": "06 triệu thiếu nhi"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 9,
+    "question_text": "Đại hội Đoàn toàn quốc lần thứ XIII xác định chỉ tiêu có bao nhiêu thanh thiếu nhi tham gia các chương trình bồi dưỡng, nâng cao năng lực sử dụng ngoại ngữ và hội nhập quốc tế do tổ chức Đoàn, Hội, Đội tổ chức?",
+    "options": {
+      "A": "9 triệu thanh thiếu nhi",
+      "B": "10 triệu thanh thiếu nhi",
+      "C": "11 triệu thanh thiếu nhi",
+      "D": "12 triệu thanh thiếu nhi"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 10,
+    "question_text": "Đại hội Đoàn toàn quốc lần thứ XIII xác định chỉ tiêu ít nhất bao nhiêu phần trăm thanh thiếu nhi tham gia các hoạt động nâng cao năng lực số và sử dụng khoa học, công nghệ do Đoàn, Hội, Đội tổ chức?",
+    "options": {
+      "A": "ít nhất 60%",
+      "B": "ít nhất 70%",
+      "C": "ít nhất 80%",
+      "D": "ít nhất 90%"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 11,
+    "question_text": "Đại hội Đoàn toàn quốc lần thứ XIII xác định chỉ tiêu hằng năm có bao nhiêu phần trăm Đoàn cấp xã triển khai mô hình thanh niên tham gia giữ gìn an ninh, trật tự, phòng, chống tội phạm tại địa phương?",
+    "options": {
+      "A": "100%",
+      "B": "85%",
+      "C": "90%",
+      "D": "80%"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 12,
+    "question_text": "Đại hội Đoàn toàn quốc lần thứ XIII xác định chỉ tiêu hằng năm 100% Đoàn xã, phường, đặc khu xóa ít nhất bao nhiêu điểm đen về ô nhiễm môi trường, đồng thời duy trì bền vững kết quả đã đạt được?",
+    "options": {
+      "A": "01 điểm",
+      "B": "02 điểm",
+      "C": "03 điểm",
+      "D": "04 điểm"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 13,
+    "question_text": "Đại hội Đoàn toàn quốc lần thứ XIII đã xác định bao nhiêu nhiệm vụ đột phá của nhiệm kỳ?",
+    "options": {
+      "A": "5 nhiệm vụ đột phá",
+      "B": "4 nhiệm vụ đột phá",
+      "C": "6 nhiệm vụ đột phá",
+      "D": "7 nhiệm vụ đột phá"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 14,
+    "question_text": "Nội dung nào là một trong những nhiệm vụ đột phá được xác định trong nhiệm kỳ 2026 - 2031? ",
+    "options": {
+      "A": "Tăng cường tổ chức các hoạt động văn hóa, văn nghệ, thể dục, thể thao cho thanh thiếu nhi.",
+      "B": "Hỗ trợ nâng cao năng lực số, trí tuệ nhân tạo, khoa học công nghệ, góp phần nâng cao chất lượng nguồn nhân lực trẻ.",
+      "C": "Đẩy mạnh tuyên truyền, giáo dục truyền thống cách mạng, đạo đức và lối sống cho đoàn viên, thanh niên.",
+      "D": "Nâng cao chất lượng sinh hoạt chi đoàn và công tác quản lý đoàn viên tại cơ sở."
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 15,
+    "question_text": "Nội dung nào không phải là một trong những nhiệm vụ đột phá được xác định trong nhiệm kỳ 2026 - 2031?",
+    "options": {
+      "A": "Hỗ trợ nâng cao năng lực số, trí tuệ nhân tạo, khoa học công nghệ, góp phần nâng cao chất lượng nguồn nhân lực trẻ.",
+      "B": "Nâng cao chất lượng công tác tuyên truyền, giáo dục của Đoàn",
+      "C": "Đổi mới mạnh mẽ phương thức hoạt động của Đoàn phù hợp với mô hình tổ chức mới",
+      "D": "Tăng cường năng lực quản lý, điều phối hoạt động tình nguyện cho đội ngũ cán bộ Đoàn TNCS Hồ Chí Minh, Hội Liên hiệp Thanh niên Việt Nam, Hội Sinh viên Việt Nam các cấp"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 16,
+    "question_text": "Phong trào \"Tuổi trẻ Việt Nam tiên phong trong kỷ nguyên mới\" gồm bao nhiêu nội hàm \"tiên phong\"?",
+    "options": {
+      "A": "3 nội hàm",
+      "B": "5 nội hàm",
+      "C": "4 nội hàm",
+      "D": "2 nội hàm"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 17,
+    "question_text": "Chương trình \"Phát triển toàn diện thanh niên Việt Nam\" gồm bao nhiêu nội hàm chủ yếu?",
+    "options": {
+      "A": "5 nội hàm",
+      "B": "3 nội hàm",
+      "C": "4 nội hàm",
+      "D": "2 nội hàm"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 18,
+    "question_text": "Trong \"Phát huy thanh niên phát triển khoa học công nghệ, đổi mới sáng tạo, chuyển đổi số\", văn kiện Đại hội XIII xác định triển khai các mô hình nào trong hỗ trợ địa phương chuyển đổi số, ưu tiên hỗ trợ doanh nghiệp nhỏ và khu vực nông thôn?",
+    "options": {
+      "A": "Triển khai các mô hình “Tình nguyện viên số”, “Tổ công nghệ số cộng đồng”",
+      "B": "Triển khai các mô hình “Thanh niên số”, “Số hóa tại cộng đồng”",
+      "C": "Triển khai mô hình \"Đoàn viên, thanh niên ứng dụng số\"",
+      "D": "Các phương án trên không chính xác"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 19,
+    "question_text": "Đâu là nội hàm thuộc Chương trình \"Phát triển toàn diện thanh niên Việt Nam\"?",
+    "options": {
+      "A": "Trong nâng cao đời sống văn hóa tinh thần",
+      "B": "Trong rèn luyện, phát triển thể chất",
+      "C": "Trong học tập",
+      "D": "Cả 03 phương án trên đều đúng"
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 20,
+    "question_text": "Hãy cho biết nội hàm nào của phong trào \"Tuổi trẻ Việt Nam tiên phong trong kỷ nguyên mới cụ thể hóa tinh thần Nghị quyết số 57-NQ/TW của Bộ Chính trị về đột phá phát triển khoa học công nghệ, đổi mới sáng tạo và chuyển đổi số?",
+    "options": {
+      "A": "Tiên phong hội nhập quốc tế",
+      "B": "Tiên phong khởi nghiệp lập nghiệp, phát triển kinh tế đất nước",
+      "C": "Tiên phong phát triển khoa học công nghệ, đổi mới sáng tạo và chuyển đổi số",
+      "D": "Tiên phong trong các hoạt động tình nguyện vì cộng đồng"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 21,
+    "question_text": "Hãy cho biết nội hàm nào của phong trào \"Tuổi trẻ Việt Nam tiên phong trong kỷ nguyên mới\" cụ thể hóa tinh thần Nghị quyết số 59-NQ/TW của Bộ Chính trị về hội nhập quốc tế trong tình hình mới?",
+    "options": {
+      "A": "Tiên phong phát triển khoa học công nghệ, đổi mới sáng tạo và chuyển đổi số",
+      "B": "Tiên phong khởi nghiệp, lập nghiệp, phát triển kinh tế đất nước",
+      "C": "Tiên phong hội nhập quốc tế",
+      "D": "Tiên phong trong các hoạt động tình nguyện vì cộng đồng"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 22,
+    "question_text": "Hãy cho biết nội hàm nào của phong trào \"Tuổi trẻ Việt Nam tiên phong trong kỷ nguyên mới\" góp phần cụ thể hóa các chủ trương, nghị quyết của Đảng về phát triển kinh tế, nhất là phát triển kinh tế tư nhân?",
+    "options": {
+      "A": "Tiên phong hội nhập quốc tế",
+      "B": "Tiên phong khởi nghiệp, lập nghiệp, phát triển kinh tế đất nước",
+      "C": "Tiên phong trong các hoạt động tình nguyện vì cộng đồng",
+      "D": "Tiên phong tham gia bảo vệ Tổ quốc và giữ gìn an ninh, trật tự"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 23,
+    "question_text": "Văn kiện Đại hội Đoàn toàn quốc lần thứ XIII đánh giá chung như thế nào về công tác Đoàn và phong trào thanh thiếu nhi giai đoạn 2022 - 2026?",
+    "options": {
+      "A": "Đạt kết quả đồng đều ở cơ sở nhưng chưa có đóng góp rõ nét vào nhiệm vụ phát triển đất nước",
+      "B": "Chủ yếu duy trì các kết quả của nhiệm kỳ trước, chưa tạo được dấu ấn mới rõ nét",
+      "C": "Tập trung chủ yếu vào hoạt động tình nguyện, các lĩnh vực công tác khác còn ít chuyển biến",
+      "D": "Có nhiều đổi mới mạnh mẽ, đạt được những kết quả toàn diện và dấu ấn nổi bật, tiếp tục khẳng định vai trò của Đoàn TNCS Hồ Chí Minh trong giáo dục, bồi dưỡng, phát huy thanh niên và tham gia xây dựng, bảo vệ Tổ quốc"
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 24,
+    "question_text": "Theo Văn kiện Đại hội Đoàn toàn quốc lần thứ XIII, toàn Đoàn đã hoàn thành và vượt mức bao nhiêu chỉ tiêu của nhiệm kỳ XII?",
+    "options": {
+      "A": "12/13 chỉ tiêu",
+      "B": "11/12 chỉ tiêu",
+      "C": "10/12 chỉ tiêu",
+      "D": "12/12 chỉ tiêu"
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 25,
+    "question_text": "Trong đánh giá chung nhiệm kỳ XII, nội dung và phương thức hoạt động của Đoàn được đổi mới theo hướng nào?",
+    "options": {
+      "A": "Tăng số lượng hoạt động, lấy quy mô tham gia làm thước đo chủ yếu",
+      "B": "Tập trung chủ yếu vào các hoạt động quy mô lớn ở cấp Trung ương",
+      "C": "Ưu tiên hoạt động trực tuyến, từng bước thay thế các hoạt động trực tiếp",
+      "D": "Thiết thực, hiệu quả, lấy thanh niên làm trung tâm, phát huy vai trò chủ thể của thanh niên"
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 26,
+    "question_text": "Theo đánh giá chung của Văn kiện, tinh thần xung kích, tiên phong của đoàn viên, thanh niên trong nhiệm kỳ XII được khơi dậy và phát huy mạnh mẽ, nhất là trong những lĩnh vực nào?",
+    "options": {
+      "A": "Hoạt động giao lưu quốc tế, văn nghệ quần chúng và phong trào thi đua",
+      "B": "Văn hóa, nghệ thuật, thể dục thể thao và du lịch",
+      "C": "Công tác hành chính, quản lý nhà nước và xây dựng cơ sở vật chất",
+      "D": "Khoa học - công nghệ, đổi mới sáng tạo, khởi nghiệp và chuyển đổi số"
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 27,
+    "question_text": "Bài học kinh nghiệm về đổi mới nội dung, phương thức hoạt động của Đoàn nhấn mạnh yêu cầu nào?",
+    "options": {
+      "A": "Chuyển toàn bộ hoạt động của Đoàn sang môi trường số để phù hợp với thanh niên",
+      "B": "Thích ứng kịp thời với thực tiễn, kết hợp giá trị truyền thống với công cụ hiện đại, tăng cường chuyển đổi số và phối hợp hoạt động thực địa với hoạt động trên không gian mạng",
+      "C": "Giữ ổn định các phương thức truyền thống để bảo đảm tính thống nhất trong toàn hệ thống",
+      "D": "Chỉ đổi mới các hoạt động ở cấp Trung ương, còn cơ sở tiếp tục thực hiện theo mô hình hiện có"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 28,
+    "question_text": "Theo bài học kinh nghiệm thứ ba, mọi phong trào, chương trình của Đoàn phải xuất phát trước hết từ yếu tố nào?",
+    "options": {
+      "A": "Nhu cầu, nguyện vọng và lợi ích thiết thân, hợp pháp, chính đáng của thanh niên",
+      "B": "Khả năng huy động nguồn lực xã hội hóa của từng địa phương, đơn vị",
+      "C": "Yêu cầu tổ chức thật nhiều hoạt động để bảo đảm độ phủ phong trào",
+      "D": "Các mô hình đã triển khai thành công ở nhiệm kỳ trước"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 29,
+    "question_text": "Bài học kinh nghiệm về đội ngũ cán bộ Đoàn nhấn mạnh yêu cầu nào sau đây?",
+    "options": {
+      "A": "Ưu tiên cán bộ có kinh nghiệm hành chính, giảm yêu cầu trực tiếp tham gia phong trào",
+      "B": "Tập trung chuẩn hóa bằng cấp chuyên môn, coi đây là tiêu chí quyết định đối với cán bộ Đoàn",
+      "C": "Phát huy tính tiên phong, nêu gương; xây dựng cán bộ Đoàn, nhất là cán bộ cơ sở, có năng lực, tâm huyết, gắn bó với thanh thiếu nhi và có khả năng tập hợp, dẫn dắt",
+      "D": "Tăng số lượng cán bộ chuyên trách ở mọi cấp để bảo đảm hoạt động thường xuyên"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 30,
+    "question_text": "Bài học kinh nghiệm thứ năm của Văn kiện Đại hội XIII đặt ra yêu cầu trọng tâm nào?",
+    "options": {
+      "A": "Tăng cường kiểm tra, giám sát; coi trọng nghiên cứu lý luận, tổng kết thực tiễn, rút kinh nghiệm để kịp thời điều chỉnh chủ trương, hoạt động",
+      "B": "Tăng cường thi đua, khen thưởng và lấy số lượng mô hình mới làm tiêu chí đánh giá chủ yếu",
+      "C": "Tập trung kiểm tra tài chính, giảm kiểm tra việc thực hiện chủ trương công tác",
+      "D": "Chỉ tổ chức kiểm tra khi có dấu hiệu vi phạm hoặc phát sinh vụ việc phức tạp"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 31,
+    "question_text": "Mục tiêu nhiệm kỳ 2026 - 2031 xác định xây dựng thế hệ thanh niên Việt Nam thời kỳ mới trở thành những công dân như thế nào?",
+    "options": {
+      "A": "Công dân tiên phong trong kinh tế tri thức",
+      "B": "Công dân số có năng lực hội nhập",
+      "C": "Công dân sáng tạo của xã hội số",
+      "D": "Công dân toàn cầu mang hồn Việt"
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 32,
+    "question_text": "Theo mục tiêu tổng quát nhiệm kỳ 2026 - 2031, tổ chức Đoàn phải được xây dựng như thế nào?",
+    "options": {
+      "A": "Tập trung thực hiện chức năng tập hợp thanh niên và tổ chức hoạt động tình nguyện",
+      "B": "Vững mạnh chủ yếu về tổ chức, tập trung vào quản lý đoàn viên và tổ chức phong trào",
+      "C": "Trở thành tổ chức xã hội nghề nghiệp rộng rãi, hoạt động chủ yếu theo nhu cầu của thanh niên",
+      "D": "Vững mạnh toàn diện, thực sự là đội dự bị tin cậy của Đảng, lực lượng xung kích cách mạng, trường học xã hội chủ nghĩa của thanh niên, đại diện chăm lo và bảo vệ quyền, lợi ích hợp pháp, chính đáng của tuổi trẻ"
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 33,
+    "question_text": "Mục tiêu tổng quát nhiệm kỳ XIII xác định phong trào thanh niên phải trở thành môi trường để làm gì?",
+    "options": {
+      "A": "Tạo không khí thi đua rộng khắp và nâng cao số lượng đoàn viên tham gia hoạt động",
+      "B": "Giúp thanh thiếu nhi trưởng thành về lý tưởng, đạo đức, năng lực và trách nhiệm; đồng thời phát hiện nhân tố tiêu biểu, mô hình hay, cách làm hiệu quả",
+      "C": "Phát hiện chủ yếu các mô hình kinh tế, khởi nghiệp có khả năng nhân rộng",
+      "D": "Tạo nguồn cán bộ Đoàn chuyên trách cho các cấp trong hệ thống"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 34,
+    "question_text": "Nghị quyết Đại hội Đoàn toàn quốc lần thứ XIII xác định tiếp tục thực hiện bao nhiêu chương trình, đề án?",
+    "options": {
+      "A": "08 chương trình, đề án",
+      "B": "05 chương trình, đề án",
+      "C": "07 chương trình, đề án",
+      "D": "10 chương trình, đề án"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 35,
+    "question_text": "Chương trình nào về công tác giáo dục thanh thiếu nhi được xác định tiếp tục thực hiện trong nhiệm kỳ Đại hội XIII?",
+    "options": {
+      "A": "Chương trình “Giáo dục kỹ năng số và văn hóa số cho thanh niên giai đoạn 2026 - 2031”",
+      "B": "Chương trình “Giáo dục lý tưởng cách mạng, đạo đức, lối sống văn hóa cho thanh thiếu nhi trên không gian mạng giai đoạn 2022 - 2030”",
+      "C": "Chương trình “Xây dựng hình mẫu thanh niên Việt Nam thời kỳ mới giai đoạn 2026 - 2031”",
+      "D": "Chương trình “Thanh niên sống đẹp, sống có ích giai đoạn 2026 - 2030”"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 36,
+    "question_text": "Đề án nào về tài năng trẻ được xác định tiếp tục thực hiện trong nhiệm kỳ Đại hội XIII?",
+    "options": {
+      "A": "Đề án “Phát hiện, bồi dưỡng và phát huy Tài năng trẻ Việt Nam giai đoạn 2022 - 2030”",
+      "B": "Đề án “Phát triển nguồn nhân lực trẻ chất lượng cao giai đoạn 2026 - 2031”",
+      "C": "Đề án “Trí thức trẻ Việt Nam tiên phong đổi mới sáng tạo giai đoạn 2026 - 2030”",
+      "D": "Đề án “Ươm tạo tài năng trẻ Việt Nam trong kỷ nguyên số giai đoạn 2026 - 2031”"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 37,
+    "question_text": "Chương trình nào về khởi nghiệp được xác định tiếp tục thực hiện trong nhiệm kỳ Đại hội XIII?",
+    "options": {
+      "A": "Chương trình “Khởi nghiệp số cho thanh niên Việt Nam giai đoạn 2026 - 2030”",
+      "B": "Chương trình “Thanh niên làm giàu chính đáng giai đoạn 2026 - 2031”",
+      "C": "Chương trình “Hỗ trợ thanh niên khởi nghiệp giai đoạn 2022 - 2030”",
+      "D": "Chương trình “Phát triển doanh nhân trẻ Việt Nam giai đoạn 2026 - 2031”"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 38,
+    "question_text": "Chương trình nào về ngoại ngữ và hội nhập quốc tế được xác định tiếp tục thực hiện trong nhiệm kỳ Đại hội XIII?",
+    "options": {
+      "A": "Chương trình “Hỗ trợ nâng cao năng lực ngoại ngữ và hội nhập quốc tế cho thanh thiếu nhi Việt Nam giai đoạn 2022 - 2030”",
+      "B": "Chương trình “Ngoại ngữ cho thanh niên Việt Nam trong kỷ nguyên số giai đoạn 2026 - 2031”",
+      "C": "Chương trình “Công dân toàn cầu mang hồn Việt giai đoạn 2026 - 2030”",
+      "D": "Chương trình “Thanh niên Việt Nam chủ động hội nhập quốc tế giai đoạn 2026 - 2031”"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 39,
+    "question_text": "Chương trình nào về quản lý, điều phối hoạt động tình nguyện được xác định tiếp tục thực hiện trong nhiệm kỳ Đại hội XIII?",
+    "options": {
+      "A": "Chương trình “Tăng cường năng lực quản lý, điều phối hoạt động tình nguyện cho đội ngũ cán bộ Đoàn TNCS Hồ Chí Minh, Hội Liên hiệp Thanh niên Việt Nam, Hội Sinh viên Việt Nam các cấp, giai đoạn 2022 - 2030”",
+      "B": "Chương trình “Chuyên nghiệp hóa hoạt động tình nguyện của thanh niên giai đoạn 2026 - 2031”",
+      "C": "Chương trình “Mạng lưới tình nguyện quốc gia giai đoạn 2026 - 2030”",
+      "D": "Chương trình “Thanh niên tình nguyện vì cộng đồng bền vững giai đoạn 2026 - 2031”"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 40,
+    "question_text": "Đề án nào về công tác cán bộ Đoàn được xác định tiếp tục thực hiện trong nhiệm kỳ Đại hội XIII?",
+    "options": {
+      "A": "Đề án “Bồi dưỡng cán bộ Đoàn TNCS Hồ Chí Minh” giai đoạn 2023 - 2027",
+      "B": "Đề án “Chuẩn hóa cán bộ Đoàn các cấp” giai đoạn 2026 - 2031",
+      "C": "Đề án “Phát triển thủ lĩnh thanh niên trong kỷ nguyên số” giai đoạn 2026 - 2031",
+      "D": "Đề án “Nâng cao năng lực cán bộ Đoàn cơ sở” giai đoạn 2026 - 2030"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 41,
+    "question_text": "Đề án nào về chăm lo, đồng hành với thanh thiếu nhi vùng biên giới được xác định tiếp tục thực hiện trong nhiệm kỳ Đại hội XIII?",
+    "options": {
+      "A": "Đề án “Tuổi trẻ Việt Nam đồng hành với thanh thiếu nhi vùng biên giới giai đoạn 2025 - 2030”",
+      "B": "Đề án “Thanh niên xung kích xây dựng biên giới giai đoạn 2026 - 2031”",
+      "C": "Đề án “Nâng bước em tới trường vùng biên giới giai đoạn 2026 - 2030”",
+      "D": "Đề án “Tuổi trẻ vì biên cương Tổ quốc giai đoạn 2026 - 2031”"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 42,
+    "question_text": "Chỉ tiêu trọng tâm nhiệm kỳ XIII yêu cầu bao nhiêu % cán bộ đoàn, đoàn viên được học tập, quán triệt nghị quyết?",
+    "options": {
+      "A": "95%",
+      "B": "100%",
+      "C": "90%",
+      "D": "85%"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 43,
+    "question_text": "Chỉ tiêu nhiệm kỳ XIII yêu cầu cán bộ đoàn, đoàn viên không chỉ học tập mà còn phải đạt yêu cầu gì?",
+    "options": {
+      "A": "Có chứng chỉ xuất sắc",
+      "B": "Viết bài thu hoạch tay",
+      "C": "Đạt yêu cầu trong các đợt kiểm tra, đánh giá (được cấp chứng chỉ trực tuyến)",
+      "D": "Tham gia thi trực tiếp"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 44,
+    "question_text": "Chỉ tiêu nhiệm kỳ XIII đặt ra bao nhiêu công trình thanh niên tham gia phát triển, ứng dụng KHCN, đổi mới sáng tạo và chuyển đổi số?",
+    "options": {
+      "A": "100.000 công trình",
+      "B": "50.000 công trình",
+      "C": "80.000 công trình",
+      "D": "150.000 công trình"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 45,
+    "question_text": "Chỉ tiêu nhiệm kỳ XIII yêu cầu 100% Đoàn cấp tỉnh hằng năm triển khai công trình hỗ trợ hạ tầng dân sinh ở khu vực nào?",
+    "options": {
+      "A": "Các trường đại học",
+      "B": "Đô thị lớn",
+      "C": "Khu công nghiệp",
+      "D": "Biên giới, biển đảo"
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 46,
+    "question_text": "Chỉ tiêu trọng tâm nào về chuyển đổi số trong công tác quản lý cán bộ được đề ra cho toàn nhiệm kỳ 2026 - 2031?",
+    "options": {
+      "A": "Hằng năm, 90% thông tin cán bộ đoàn được công khai trên internet.",
+      "B": "Hằng năm, 80% cán bộ đoàn được cấp chứng chỉ năng lực số trực tuyến.",
+      "C": "Hằng năm, 100% thông tin đoàn viên, cán bộ đoàn các cấp được số hóa trên Phần mềm Quản lý đoàn viên.",
+      "D": "Hằng năm, 100% cán bộ đoàn được trang bị máy tính làm việc cá nhân."
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 47,
+    "question_text": "Theo đồng chí Tổng Bí thư, Chủ tịch nước, công tác Đoàn và phong trào thiếu niên, nhi đồng trong nhiệm kỳ 2022–2026 có những chuyển biến nổi bật nào?",
+    "options": {
+      "A": "Có nhiều hoạt động tập trung hơn, đồng bộ hơn và chuyên nghiệp hơn.",
+      "B": "Có nhiều đổi mới, thiết thực hơn, hiện đại hơn, gần thanh niên hơn.",
+      "C": "Có nhiều mô hình mới, phạm vi rộng hơn và nguồn lực lớn hơn",
+      "D": "Có quy mô lớn hơn, hình thức phong phú hơn và số lượng tham gia đông hơn."
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 48,
+    "question_text": "Công tác giáo dục lý tưởng cách mạng, đạo đức, lối sống, truyền thống lịch sử, văn hóa dân tộc nhiệm kỳ XII được đồng chí Tổng Bí thư, Chủ tịch nước đánh giá như thế nào?",
+    "options": {
+      "A": "Triển khai phong phú, chú trọng không gian số",
+      "B": "Sát với thực tiễn, nhu cầu của thanh niên",
+      "C": "Được triển khai dưới nhiều hình thức, có nhiều mô hình mới",
+      "D": "Triển khai phong phú, chú trọng không gian số, lan tỏa nhiều giá trị tốt đẹp"
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 49,
+    "question_text": "Đồng chí Tổng Bí thư, Chủ tịch nước đã chỉ ra hạn chế, bất cập gì trong công tác Đoàn nhiệm kỳ XII?",
+    "options": {
+      "A": "Công tác giáo dục lý tưởng cách mạng ở một số nơi còn chậm đổi mới, chưa thật sự chạm tới suy nghĩ, băn khoăn và khát vọng của thanh niên",
+      "B": "Việc tập hợp thanh niên ngoài khu vực truyền thống nhất là thanh niên công nhân, lao động tự do, thanh niên trong doanh nghiệp ngoài nhà nước, thanh niên trên nền tảng số còn khó khăn",
+      "C": "Một số phong trào còn dàn trải, nặng bề nổi, thiếu sản phẩm rõ nét",
+      "D": "Cả 03 phương án trên đều đúng"
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 50,
+    "question_text": "Đồng chí Tổng Bí thư, Chủ tịch nước đã chỉ ra hạn chế, bất cập gì về công tác giáo dục của Đoàn trong nhiệm kỳ XII?",
+    "options": {
+      "A": "Công tác giáo dục lý tưởng cách mạng còn hình thức, chưa có nhiều nội dung đổi mới",
+      "B": "Công tác giáo dục lý tưởng cách mạng còn dài trải, chưa đúng trọng tâm, trọng điểm",
+      "C": "Công tác giáo dục lý tưởng cách mạng ở một số nơi còn chậm đổi mới, chưa thật sự chạm tới suy nghĩ, băn khoăn và khát vọng của thanh niên",
+      "D": "Công tác giáo dục lý tưởng cách mạng có lúc chưa kịp thời, chưa có mô hình hay, hiệu quả trong giáo dục lý tưởng cách mạng"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 51,
+    "question_text": "Đồng chí Tổng Bí thư, Chủ tịch nước đã chỉ ra hạn chế, bất cập gì về công tác đoàn kết, tập hợp thanh niên của Đoàn trong nhiệm kỳ XII?",
+    "options": {
+      "A": "Việc đoàn kết, tập hợp thanh niên tại khu dân cư, tổ dân phố còn gặp nhiều khó khăn",
+      "B": "Việc tập hợp thanh niên ngoài khu vực truyền thống nhất là thanh niên công nhân, lao động tự do, thanh niên trong doanh nghiệp ngoài nhà nước, thanh niên trên nền tảng số còn khó khăn",
+      "C": "Việc đoàn kết, tập hợp thanh niên ngoài nước còn gặp nhiều khó khăn, hạn chế",
+      "D": "Việc đoàn kết, tập hợp thanh niên chưa có nhiều chuyển biến; tỷ lệ đoàn kết tập hợp thanh niên chưa đạt kỳ vọng đề ra"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 52,
+    "question_text": "Đồng chí Tổng Bí thư, Chủ tịch nước đã chỉ ra hạn chế, bất cập gì về triển khai phong trào của Đoàn trong nhiệm kỳ XII?",
+    "options": {
+      "A": "Các phong trào chưa có chiều sâu, ít mang lại giá trị thiết thực cho đời sống thanh niên",
+      "B": "Các phong trào chưa thực sự gắn liền với nhu cầu của thanh niên",
+      "C": "Một số phong trào chưa sát với nhu cầu thực tế, khiến đoàn viên cảm thấy xa rời quyền lợi cá nhân",
+      "D": "Một số phong trào còn dàn trải, nặng bề nổi, thiếu sản phẩm rõ nét"
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 53,
+    "question_text": "Đồng chí Tổng Bí thư, Chủ tịch nước đã chỉ ra hạn chế, bất cập gì về cán bộ Đoàn trong nhiệm kỳ XII?",
+    "options": {
+      "A": "Chất lượng cán bộ Đoàn, năng lực số, năng lực tham mưu chính sách, đối thoại và tổ chức thanh niên hành động chưa đồng đều",
+      "B": "Chất lượng tham mưu của cán bộ Đoàn còn thấp, chưa đáp ứng yêu cầu đề ra",
+      "C": "Cán bộ Đoàn ở một số cơ sở còn thiếu kỹ năng mềm, phương pháp vận động quần chúng còn cứng nhắc",
+      "D": "Cán bộ Đoàn ở một số cơ sở còn lúng túng trong việc nắm bắt tâm tư của thanh niên"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 54,
+    "question_text": "Đồng chí Tổng Bí thư, Chủ tịch nước nhấn mạnh bao nhiêu vấn đề để Đại hội quan tâm thảo luận, thống nhất thực hiện?",
+    "options": {
+      "A": "07 vấn đề ",
+      "B": "06 vấn đề ",
+      "C": "05 vấn đề ",
+      "D": "04 vấn đề "
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 55,
+    "question_text": "Nội hàm nào dưới đây được nhắc đến trong quan điểm của đồng chí Tổng Bí thư, Chủ tịch nước về công tác giáo dục lý tưởng cách mạng, bồi đắp lòng yêu nước trong giai đoạn tới?",
+    "options": {
+      "A": "Phương thức tuyên truyền, giáo dục, đặc biệt là ứng dụng công nghệ và chuyển đổi số, phù hợp với từng đối tượng thanh niên và đòi hỏi của tình hình thực tiễn",
+      "B": "Đoàn phải giáo dục bằng lý lẽ đúng, sự thật thuyết phục, tấm gương gần gũi, đối thoại chân thành và môi trường rèn luyện thực tiễn",
+      "C": "Đa dạng hóa hình thức học tập, tìm hiểu, tuyên truyền về chủ nghĩa Mác - Lênin, tư tưởng Hồ Chí Minh; chủ trương, nghị quyết của Đảng, pháp luật của Nhà nước",
+      "D": "Cả 03 phương án trên đều đúng"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 56,
+    "question_text": "Theo đồng chí Tổng Bí thư, Chủ tịch nước \"Để một quốc gia muốn phát triển nhanh, bền vững, tự chủ và hội nhập thành công\", thanh niên phải đáp ứng yêu cầu gì?",
+    "options": {
+      "A": "Thanh niên phải tích cực thi đua trong học tập, lao động",
+      "B": "Thanh niên cần chăm chỉ học tập, làm việc, tích cực tham gia vào các hoạt động xã hội",
+      "C": "Thanh niên phải bản lĩnh, giỏi chuyên môn, sáng tạo trong học tập, nghiên cứu khoa học",
+      "D": "Phải có lớp thanh niên giỏi chuyên môn, vững kỹ năng, sáng văn hóa, bền bản lĩnh và giàu trách nhiệm xã hội"
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 57,
+    "question_text": "Theo đồng chí Tổng Bí thư, Chủ tịch nước, Đoàn phải cổ vũ mạnh mẽ tinh thần nào đối với thanh niên Việt Nam để làm chủ tương lai?",
+    "options": {
+      "A": "\"Thanh niên Việt Nam làm chủ tương lai bằng tri thức, bản lĩnh và sáng tạo\"",
+      "B": "\"Thanh niên Việt Nam làm chủ tương lai thông qua tri thức và sáng tạo\"",
+      "C": "\"Thanh niên Việt Nam làm chủ tương lai nhờ tri thức, bản lĩnh và sáng tạo\"",
+      "D": "Các phương án trên không chính xác"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 58,
+    "question_text": "Theo đồng chí Tổng Bí thư, Chủ tịch nước, mỗi phong trào khi triển khai cần phải giải đáp được những nội dung gì?",
+    "options": {
+      "A": "Phục vụ lợi ích của đoàn viên, thanh niên và nhân dân",
+      "B": "Phục vụ ai, giải quyết việc gì, tạo sản phẩm gì, để lại mô hình gì, phát hiện cán bộ nào, bồi dưỡng đoàn viên ưu tú nào?",
+      "C": "Giải quyết được những việc khó của đất nước, tìm ra được những mô hình hay để nhân rộng",
+      "D": "Giải quyết được những vấn đề cấp bách của cuộc sống và nhu cầu của đoàn viên, thanh niên"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 59,
+    "question_text": "Theo đồng chí Tổng Bí thư, Chủ tịch nước, thanh niên ngày nay đối diện với những áp lực cụ thể nào?",
+    "options": {
+      "A": "Học gì, làm gì, tham gia vào các công việc chung của xã hội ra sao?",
+      "B": "Áp lực về kinh tế, công ăn việc làm",
+      "C": "Học gì, làm gì, lập nghiệp ở đâu, cạnh tranh ra sao, giữ mình thế nào, sống có ích thế nào trong một thế giới biến động nhanh?",
+      "D": "Cả 03 phương án trên đều đúng"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 60,
+    "question_text": "Theo đồng chí Tổng Bí thư, Chủ tịch nước, đất nước đang cần ở thanh niên một tinh thần mới như thế nào?",
+    "options": {
+      "A": "Nghĩ xa hơn, học nhanh hơn, làm tốt hơn, sống đẹp hơn, trách nhiệm hơn và cống hiến nhiều hơn",
+      "B": "Nghĩ rộng hơn, học tốt hơn, làm nhanh hơn, sống đẹp và có trách nhiệm hơn, cống hiến nhiều hơn",
+      "C": "Nghĩ rộng hơn, học nhanh hơn, làm tốt hơn, sống đẹp hơn, trách nhiệm hơn và cống hiến nhiều hơn",
+      "D": "Các phương án trên không chính xác"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 61,
+    "question_text": "Theo đồng chí Tổng Bí thư, Chủ tịch nước, mỗi thanh niên Việt Nam khi bước ra thế giới phải thể hiện hình ảnh đẹp của đất nước trên những phương diện nào?",
+    "options": {
+      "A": "Tự tin về tri thức, đàng hoàng về nhân cách, sâu sắc về văn hóa, trách nhiệm với Tổ quốc và thân thiện với bạn bè quốc tế",
+      "B": "Tự tin về tri thức, đàng hoàng về nhân cách, am hiểu về văn hóa, trách nhiệm với Tổ quốc và thân thiện với bạn bè quốc tế",
+      "C": "Tự tin về tri thức, chuẩn mực về nhân cách, sâu sắc về văn hóa, trách nhiệm với Tổ quốc và thân thiện với bạn bè quốc tế",
+      "D": "Tự tin về tri thức, đàng hoàng về nhân cách, sâu sắc về văn hóa, trách nhiệm với Tổ quốc và quan tâm đến bạn bè quốc tế"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 62,
+    "question_text": "Theo đồng chí Tổng Bí thư, Chủ tịch nước, để nuôi dưỡng hoài bão lớn, mỗi thanh niên Việt Nam cần bắt đầu từ những việc thường ngày nào?",
+    "options": {
+      "A": "Học tập nghiêm túc, lao động sáng tạo, sống trung thực, kỷ luật, nhân ái, tự tin; tự hào về dân tộc, yêu thương đồng bào, tôn trọng pháp luật, bảo vệ lẽ phải…",
+      "B": "Học tập nghiêm túc, lao động hăng say, sống trung thực, kỷ luật, nhân ái, trách nhiệm; tự hào về dân tộc, yêu thương đồng bào, tôn trọng pháp luật, bảo vệ lẽ phải…",
+      "C": "Học tập nghiêm túc, lao động sáng tạo, sống trung thực, kỷ luật, nhân ái, trách nhiệm; tự hào về dân tộc, yêu thương đồng bào, tôn trọng pháp luật, bảo vệ lẽ phải, dấn thân vì việc chung…",
+      "D": "Học tập nghiêm túc, lao động sáng tạo, sống trung thực, kỷ luật, nhân ái, trách nhiệm; tự hào về dân tộc, yêu thương đồng bào, chấp hành pháp luật, bảo vệ lẽ phải…"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 63,
+    "question_text": "Theo đồng chí Tổng Bí thư, Chủ tịch nước, công tác thanh niên là trách nhiệm của những chủ thể nào",
+    "options": {
+      "A": "Trách nhiệm của gia đình, nhà trường và xã hội; không phải nhiệm vụ riêng của Đoàn",
+      "B": "Trách nhiệm của Đảng, Nhà nước, cả hệ thống chính trị và xã hội.",
+      "C": "Trách nhiệm của Đảng, Nhà nước, cả hệ thống chính trị, gia đình, nhà trường và xã hội; không phải nhiệm vụ riêng của Đoàn",
+      "D": "Trách nhiệm của Đảng, Nhà nước, gia đình, nhà trường và xã hội; không phải nhiệm vụ riêng của Đoàn"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 64,
+    "question_text": "Theo đồng chí Tổng Bí thư, Chủ tịch nước, đầu tư cho thanh niên chính là gì?",
+    "options": {
+      "A": "Đầu tư cho thanh niên chính là đầu tư cho năng lực cạnh tranh lâu dài của đất nước.",
+      "B": "Đầu tư cho thanh niên chính là đầu tư cho thế hệ tương lai của đất nước.",
+      "C": "Đầu tư cho thanh niên chính là đầu tư cho vận mệnh, tương lai của đất nước.",
+      "D": "Các phương án trên không chính xác"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 65,
+    "question_text": "Theo đồng chí Tổng Bí thư, Chủ tịch nước, Đoàn cần phải quan tâm nhiều hơn đến đối tượng nào?",
+    "options": {
+      "A": "Thanh niên tại nơi cư trú, dân tộc thiểu số, tôn giáo, yếu thế, khuyết tật, hoàn lương, thanh niên Việt Nam ở nước ngoài",
+      "B": "Thanh niên công nhân, nông thôn, sau xuất ngũ, dân tộc thiểu số, tôn giáo, yếu thế, khuyết tật, hoàn lương, thanh niên Việt Nam ở nước ngoài",
+      "C": "Thanh niên tại các địa bàn vùng sâu, vùng xa, khuyết tật, hoàn lương, thanh niên Việt Nam ở nước ngoài",
+      "D": "Thanh niên không có việc làm, thanh niên yếu thế, khuyết tật, hoàn lương"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 66,
+    "question_text": "Theo đồng chí Tổng Bí thư, Chủ tịch nước, chính quyền các cấp cần cụ thể hóa nội dung gì để hỗ trợ thanh niên?",
+    "options": {
+      "A": "Chính sách học tập, việc làm, nhà ở, khởi nghiệp, thiết chế văn hóa, thể thao, sức khỏe tinh thần, môi trường sáng tạo cho thanh niên",
+      "B": "Chính sách học tập, lao động, khởi nghiệp, thiết chế văn hóa, thể thao, sức khỏe tinh thần, môi trường sáng tạo cho thanh niên",
+      "C": "Chính sách học tập, vui chơi, giải trí, thiết chế văn hóa, thể thao, sức khỏe tinh thần.",
+      "D": "Chính sách học tập, lao động tại nước ngoài, môi trường sáng tạo cho thanh niên"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 67,
+    "question_text": "Theo Điều lệ Đoàn sửa đổi, vị trí của Đoàn TNCS Hồ Chí Minh trong hệ thống chính trị được quy định như thế nào?",
+    "options": {
+      "A": "Là cơ quan quản lý nhà nước về công tác thanh niên",
+      "B": "Là tổ chức xã hội độc lập",
+      "C": "Là tổ chức chính trị - xã hội trực thuộc Mặt trận Tổ quốc Việt Nam, được tổ chức và hoạt động thống nhất trong Mặt trận Tổ quốc Việt Nam",
+      "D": "Là tổ chức liên hiệp xã hội của thanh niên Việt Nam"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 68,
+    "question_text": "Theo Điều lệ Đoàn sửa đổi, hội nghị chi đoàn xét đồng ý kết nạp đoàn viên mới khi có sự biểu quyết tán thành với số lượng và thành phần tham gia như thế nào?",
+    "options": {
+      "A": "Trên hai phần ba (2/3) tổng số đoàn viên có mặt tại hội nghị",
+      "B": "Trên một phần hai (1/2) tổng số đoàn viên có mặt tại hội nghị",
+      "C": "Trên một phần hai (1/2) tổng số đoàn viên được triệu tập",
+      "D": "Trên hai phần ba (2/3) tổng số đoàn viên được triệu tập"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 69,
+    "question_text": "Điều lệ Đoàn sửa đổi đã bổ sung nội dung nào liên quan đến việc xem xét xóa tên đoàn viên không tham gia sinh hoạt?",
+    "options": {
+      "A": "Trừ trường hợp đoàn viên được miễn sinh hoạt đoàn",
+      "B": "Bổ sung trường hợp đoàn viên đi làm kinh tế xa",
+      "C": "Trừ trường hợp đoàn viên nghỉ ốm đau dài ngày",
+      "D": "Bổ sung trường hợp đoàn viên học tập ở nước ngoài"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 70,
+    "question_text": "Nội dung nào được sửa đổi, bổ sung về Thẻ đoàn viên nhằm phù hợp với xu thế về ứng dụng khoa học công nghệ, chuyển đổi số?",
+    "options": {
+      "A": "Đoàn viên được cấp Thẻ đoàn viên điện tử",
+      "B": "Đoàn viên không cần sử dụng Thẻ đoàn viên trong sinh hoạt",
+      "C": "Đoàn viên được tự in Thẻ đoàn viên qua phần mềm",
+      "D": "Đoàn viên được cấp Thẻ đoàn viên bằng chất liệu nhựa cứng có mã QR"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 71,
+    "question_text": "Điều lệ Đoàn sửa đổi quy định trong trường hợp đặc biệt, cơ quan lãnh đạo các cấp của Đoàn do cơ quan nào chỉ định?",
+    "options": {
+      "A": "Đoàn cấp trên có thẩm quyền",
+      "B": "Ủy ban Nhân dân cấp tỉnh trở lên",
+      "C": "Cấp ủy Đảng cùng cấp",
+      "D": "Ban Thường vụ Trung ương Đoàn"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 72,
+    "question_text": "Theo Điều lệ Đoàn sửa đổi, Nghị quyết của đại hội, hội nghị của Đoàn chỉ có giá trị khi nào?",
+    "options": {
+      "A": "Trên một phần hai (1/2) số thành viên được triệu tập tán thành",
+      "B": "Trên một phần hai (1/2) số thành viên có mặt tán thành",
+      "C": "Trên hai phần ba (2/3) số thành viên có mặt tán thành",
+      "D": "Trên hai phần ba (2/3) số thành viên được triệu tập tán thành"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 73,
+    "question_text": "Theo Điều lệ Đoàn sửa đổi, trường hợp nào cần báo cáo xin ý kiến cấp ủy cùng cấp và đoàn cấp trên trực tiếp để thành lập tổ chức đoàn?",
+    "options": {
+      "A": "Thành lập đoàn cơ sở đối với những đơn vị chưa đủ 30 đoàn viên",
+      "B": "Thành lập Đoàn cơ sở khi đơn vị có từ 02 chi đoàn trở lên",
+      "C": "Thành lập Chi đoàn có dưới 03 đoàn viên",
+      "D": "Thành lập chi đoàn cơ sở đối với những đơn vị có dưới 30 đoàn viên"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 74,
+    "question_text": "Theo Điều lệ Đoàn sửa đổi, trường hợp nào sau đây đại biểu dự đại hội có thể bị bác bỏ tư cách đại biểu?",
+    "options": {
+      "A": "Đại biểu đang trong thời gian xem xét kỷ luật, vi phạm pháp luật và các trường hợp vi phạm khác theo quy định",
+      "B": "Đại biểu thôi tham gia Ban Chấp hành cấp triệu tập đại hội",
+      "C": "Đại biểu chuyển công tác sang cơ quan khác trong hệ thống chính trị",
+      "D": "Đại biểu tự ý vắng mặt không tham gia phiên họp trù bị"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 75,
+    "question_text": "Khi tiến hành bầu cử các chức danh của Đoàn theo Điều lệ Đoàn sửa đổi, điều kiện để một người được bầu trúng cử là gì?",
+    "options": {
+      "A": "Phải có trên một phần hai (1/2) số thành viên được triệu tập tán thành",
+      "B": "Phải có trên một phần hai (1/2) số người có mặt tán thành",
+      "C": "Phải có trên hai phần ba (2/3) số người có mặt tán thành",
+      "D": "Phải có trên hai phần ba (2/3) số thành viên được triệu tập tán thành"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 76,
+    "question_text": "Theo Điều lệ Đoàn sửa đổi, chức danh lãnh đạo nào được Ban Chấp hành Trung ương Đoàn bầu trong số các Ủy viên Ban Thường vụ Trung ương Đoàn?",
+    "options": {
+      "A": "Bí thư cấp tỉnh và tương đương",
+      "B": "Bí thư thường trực Trung ương Đoàn",
+      "C": "Ủy viên Ủy ban Kiểm tra Trung ương Đoàn",
+      "D": "Ủy viên Ban Chấp hành Trung ương Đoàn"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 77,
+    "question_text": "Theo Điều lệ Đoàn sửa đổi, Đoàn khối được quy định thành lập như thế nào?",
+    "options": {
+      "A": "Đoàn các cấp thành lập Đoàn khối theo đề nghị của Mặt trận Tổ quốc Việt Nam cùng cấp",
+      "B": "Đoàn khối được thành lập theo quy định của Đảng.",
+      "C": "Đoàn khối được thành lập tương ứng với cơ cấu tổ chức của Đảng",
+      "D": "Đoàn khối được thành lập từ cấp xã trở lên tương ứng với cơ cấu tổ chức của Đảng."
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 78,
+    "question_text": "Theo Điều lệ Đoàn sửa đổi, đơn vị có dưới 30 đoàn viên có thể thành lập tổ chức nào sau đây?",
+    "options": {
+      "A": "Chi đoàn cơ sở",
+      "B": "Phân đoàn",
+      "C": "Đoàn cơ sở",
+      "D": "Liên chi đoàn"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 79,
+    "question_text": "Theo Điều lệ Đoàn sửa đổi, Ban Chấp hành Đoàn cấp tỉnh, cấp xã và tương đương thực hiện nhiệm vụ gì để giải quyết những vấn đề có liên quan đến công tác Đoàn và phong trào thanh thiếu nhi?",
+    "options": {
+      "A": "Báo cáo, đề xuất với tổ chức Đoàn cấp trên trực tiếp",
+      "B": "Kiến nghị, đề xuất với Mặt trận Tổ quốc cùng cấp và phối hợp với các cơ quan Nhà nước, các đoàn thể và các tổ chức kinh tế, xã hội ",
+      "C": "Đề xuất với Hội đồng nhân dân, Ủy ban nhân dân cùng cấp",
+      "D": "Kiến nghị, đề xuất với Mặt trận Tổ quốc Việt Nam và các tổ chức chính trị - xã hội cùng cấp, các tổ chức Hội được Đảng giao nhiệm vụ"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 80,
+    "question_text": "Theo Điều lệ Đoàn, hình thức kỷ luật nào sau đây áp dụng đối với đoàn viên khi vi phạm?",
+    "options": {
+      "A": "Khiển trách, cảnh cáo, giải tán",
+      "B": "Khiển trách, phê bình trước hội nghị, khai trừ",
+      "C": "Khiển trách, cảnh cáo, khai trừ",
+      "D": "Khiển trách, cảnh cáo, cách chức"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 81,
+    "question_text": "Trong nhiệm kỳ XII, mô hình nào sau đây là cách làm mới, đem lại hiệu quả trong học tập và làm theo tư tưởng, đạo đức, phong cách Hồ Chí Minh?",
+    "options": {
+      "A": "Sổ tay điện tử thanh niên",
+      "B": "Nhật ký điện tử thanh niên làm theo lời Bác",
+      "C": "Sổ tay thanh niên làm theo lời Bác",
+      "D": "Nhật ký thanh niên tiên tiến"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 82,
+    "question_text": "Nhiệm kỳ XII, cuộc vận động nào thu hút sự quan tâm, hưởng ứng mạnh mẽ để giáo dục lòng yêu nước qua việc treo bản đồ tại nơi học tập, sinh hoạt, công tác?\n",
+    "options": {
+      "A": "Tôi yêu Tổ quốc tôi",
+      "B": "Hành trình non sông",
+      "C": "Tự hào một dải non sông",
+      "D": "Tự hào Việt Nam"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 83,
+    "question_text": "Đề án nào được triển khai trong nhiệm kỳ XII để thu thập, lưu giữ câu chuyện của các nhân chứng lịch sử?",
+    "options": {
+      "A": "Câu chuyện thời hoa lửa ",
+      "B": "Hành trình lịch sử",
+      "C": "Nhân chứng lịch sử",
+      "D": "Ký ức thời hoa lửa"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 84,
+    "question_text": "Trong nhiệm kỳ XII, cuộc vận động nào góp phần lan tỏa cái đẹp, định hình chuẩn mực ứng xử trên không gian mạng?",
+    "options": {
+      "A": " Tuổi trẻ lan tỏa điều hay",
+      "B": "Thanh niên sống đẹp",
+      "C": "Mỗi ngày một tin tốt, mỗi tuần một câu chuyện đẹp",
+      "D": "Thanh niên ứng xử văn minh"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 85,
+    "question_text": "Tỷ lệ thanh niên được tuyên truyền, phổ biến nghị quyết, chính sách, pháp luật đạt được trong nhiệm kỳ XII là bao nhiêu?",
+    "options": {
+      "A": "85%",
+      "B": "83%",
+      "C": "90%",
+      "D": "80%"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 86,
+    "question_text": "Theo đánh giá nhiệm kỳ XII, công tác nắm bắt dư luận xã hội trong thanh niên được ứng dụng công nghệ gì?",
+    "options": {
+      "A": "Dữ liệu lớn, AI",
+      "B": "Internet vạn vật (IoT)",
+      "C": "Thực tế ảo (VR)",
+      "D": "Chuỗi khối (Blockchain)"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 87,
+    "question_text": "Đâu là chiến dịch truyền thông đa nền tảng do Đoàn tổ chức dịp kỷ niệm 50 năm giải phóng miền Nam, thống nhất đất nước được xếp hạng 1 trong các chiến dịch truyền thông tháng 4/2025 với 3,6 tỷ lượt xem?",
+    "options": {
+      "A": "Đoàn của chúng ta",
+      "B": "Hòa bình đẹp lắm",
+      "C": "Rạng rỡ Việt Nam",
+      "D": "Tự hào tôi là người Việt Nam"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 88,
+    "question_text": "Đâu là chiến dịch truyền thông đa nền tảng do Đoàn tổ chức dịp kỷ niệm 80 năm Cách mạng tháng Tám thành công và Quốc khánh 2/9 được xếp hạng 1 trong các chiến dịch truyền thông tháng 8,9/2025 với 10,8 tỷ lượt xem?",
+    "options": {
+      "A": "Rạng rỡ Việt Nam",
+      "B": "Hòa bình đẹp lắm",
+      "C": "Tự hào Việt Nam",
+      "D": "Tự hào tôi là người Việt Nam"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 89,
+    "question_text": "Nhiệm kỳ XII, hoạt động nào góp phần giáo dục đạo đức, lối sống, xây dựng chuẩn mực trên môi trường số?",
+    "options": {
+      "A": "Ứng xử văn minh trên không gian mạng",
+      "B": "Thanh niên làm chủ không gian số",
+      "C": "Văn hóa mạng xã hội",
+      "D": "Tuổi trẻ và mạng xã hội"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 90,
+    "question_text": "Theo định hướng trong nhiệm kỳ XIII, nền tảng học lý luận chính trị sẽ được phát triển trên ứng dụng (App) nào?",
+    "options": {
+      "A": "Sổ tay đảng viên",
+      "B": "Đoàn viên số",
+      "C": "Tuổi trẻ Việt Nam",
+      "D": "Thanh niên Việt Nam"
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 91,
+    "question_text": "Văn kiện Đại hội Đoàn toàn quốc lần thứ XIII xác định chủ trương nào để thực hiện Chỉ thị số 07-CT/TW của Bộ Chính trị",
+    "options": {
+      "A": "Học tập và làm theo tư tưởng, đạo đức, phong cách Hồ Chí Minh",
+      "B": "Học tập và thực hành theo tư tưởng, đạo đức, phương pháp, phong cách Hồ Chí Minh",
+      "C": "Tuổi trẻ Việt Nam vâng lời Bác dạy",
+      "D": "Tuổi trẻ Việt Nam học tập và làm theo lời Bác"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 92,
+    "question_text": "Chương trình hành động thực hiện Nghị quyết Đại hội XIII của Đoàn đề ra việc tổ chức sinh hoạt chính trị trong thanh niên với chủ đề gì vào dịp kỷ niệm sinh nhật Bác?",
+    "options": {
+      "A": "Nhớ về Bác - Lòng ta trong sáng hơn",
+      "B": "Nhớ lời Bác dạy",
+      "C": "Tuổi trẻ nhớ Bác",
+      "D": "Thanh niên làm theo lời Bác"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 93,
+    "question_text": "Hệ sinh thái số nào nhằm thực hiện việc học tập và làm theo tư tưởng, đạo đức, phong cách Hồ Chí Minh được đề cập trong Chương trình hành động thực hiện Nghị quyết ĐH XIII? ",
+    "options": {
+      "A": "Bảo tàng số Bác Hồ với tuổi trẻ Việt Nam",
+      "B": "Thư viện số thanh niên",
+      "C": "Bản đồ số hóa chi đoàn",
+      "D": "Phần mềm đánh giá cán bộ Đoàn"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 94,
+    "question_text": "Theo định hướng nhiệm kỳ XIII, đoàn viên hoàn thành việc học tập chuyên đề trên Ứng dụng (App) Thanh niên Việt Nam sẽ được cấp gì?",
+    "options": {
+      "A": "Giấy khen",
+      "B": "Huy hiệu điện tử",
+      "C": "Chứng chỉ trực tuyến",
+      "D": "Bằng khen"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 95,
+    "question_text": "Mô hình nào trong công tác giáo dục truyền thống, đền ơn đáp nghĩa, uống nước nhớ nguồn dịp 27/7 được Văn kiện Đại hội Đoàn toàn quốc lần thứ XIII xác định nhân rộng trong cả nước?",
+    "options": {
+      "A": "Bữa cơm gia đình",
+      "B": "Áo lụa tặng Bà",
+      "C": "Gặp gỡ nhân chứng lịch sử",
+      "D": "\"Bữa cơm gia đình, ấm tình lòng Mẹ\", \"Bữa cơm sum vầy, ấm áp yêu thương\""
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 96,
+    "question_text": "Cuộc vận động nào được Văn kiện Đại hội Đoàn toàn quốc lần thứ XIII xác định để cụ thể hóa chủ trương xây dựng hệ giá trị quốc gia, hệ giá trị văn hóa, hệ giá trị gia đình và bản sắc văn hóa con người Việt Nam?\n",
+    "options": {
+      "A": "Xây dựng giá trị hình mẫu thanh niên Việt Nam thời kỳ mới",
+      "B": "Mỗi ngày một tin tốt, mỗi tuần một câu chuyện đẹp",
+      "C": "Ứng xử văn minh trên không gian mạng",
+      "D": "Đại hội thanh niên tiên tiến làm theo lời Bác"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 97,
+    "question_text": "Trung ương Đoàn đã phát triển nền tảng học lý luận chính trị cho đoàn viên mới kết nạp và cán bộ Đoàn trên ứng dụng (APP) nào?",
+    "options": {
+      "A": "Thanh niên Việt",
+      "B": "Thanh niên Việt Nam",
+      "C": "Tuổi trẻ Việt",
+      "D": "doanthanhnien.vn"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 98,
+    "question_text": "Trong nhiệm kỳ XIII, Trung ương Đoàn sẽ cung cấp nền tảng để các tỉnh, thành đoàn xây dựng hệ thống gì?",
+    "options": {
+      "A": "Bảo tàng số Đoàn cấp tỉnh",
+      "B": "Sàn thương mại điện tử",
+      "C": "Kênh truyền hình số",
+      "D": "Mạng xã hội riêng"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 99,
+    "question_text": "Đề án nào trong nhiệm kỳ XIII được tổ chức Đoàn xác định tiếp tục thực hiện để lưu giữ và tuyên truyền các câu chuyện lịch sử?",
+    "options": {
+      "A": "Đề án Câu chuyện thời hoa lửa",
+      "B": "Đề án Ký ức sống mãi",
+      "C": "Đề án Viết tiếp câu chuyện hòa bình",
+      "D": "Đề án Hòa bình đẹp lắm"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 100,
+    "question_text": "Trong nhiệm kỳ XIII, Đoàn cấp tỉnh mỗi năm tổ chức bao nhiêu trào lưu tích cực trên không gian mạng?",
+    "options": {
+      "A": "Từ 1-2 trào lưu",
+      "B": "Từ 3-5 trào lưu",
+      "C": " Ít nhất 10 trào lưu",
+      "D": "Mỗi tháng 1 trào lưu"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 101,
+    "question_text": "Văn kiện Đại hội Đoàn toàn quốc lần thứ XIII xác định mô hình nào được thành lập tại mỗi tổ chức Đoàn cấp trên cơ sở tại địa bàn dân cư để tuyên truyền pháp luật?",
+    "options": {
+      "A": "Đội tuyên truyền pháp luật",
+      "B": "Tổ thanh niên tư vấn",
+      "C": "Đội hình tư vấn pháp lý trẻ",
+      "D": "Câu lạc bộ luật sư trẻ"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 102,
+    "question_text": "Đâu không phải là một giải pháp nắm bắt dư luận xã hội được nêu trong Văn kiện Đại hội Đoàn toàn quốc lần thứ XIII?",
+    "options": {
+      "A": "Thông qua công cụ trí tuệ nhân tạo và dữ liệu lớn",
+      "B": "Thông qua báo cáo từ cơ sở",
+      "C": "Thông qua Câu lạc bộ lý luận trẻ",
+      "D": "Thông qua phản ánh của báo chí, mạng xã hội "
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 103,
+    "question_text": "Chỉ tiêu đoàn viên, thanh niên sử dụng Ứng dụng Thanh niên Việt Nam thường xuyên trong nhiệm kỳ XIII phấn đấu đạt bao nhiêu %?",
+    "options": {
+      "A": "Ít nhất 70%",
+      "B": "Ít nhất 80%",
+      "C": " Ít nhất 50%",
+      "D": 1
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 104,
+    "question_text": "Đề án nào được triển khai nhằm phát triển mạng lưới truyền thông của Đoàn trên nền tảng số?",
+    "options": {
+      "A": "Đề án tăng cường thông tin tích cực và phát triển mạng lưới truyền thông của Đoàn trên nền tảng số ",
+      "B": "Đề án số hóa truyền thông",
+      "C": "Đề án mạng xã hội thanh niên",
+      "D": "Đề án truyền thông số 2030"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 105,
+    "question_text": "Mục tiêu đối với các cơ quan báo chí của Đoàn trong công tác chuyển đổi số là gì?",
+    "options": {
+      "A": "Đạt mức độ khá",
+      "B": "Đạt mức độ trưởng thành chuyển đổi số xuất sắc ",
+      "C": "Chỉ phát hành báo điện tử",
+      "D": "Mở rộng phát sóng truyền hình"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 106,
+    "question_text": "Chỉ tiêu về nền tảng mạng xã hội của cơ quan báo chí Đoàn phấn đấu đạt bao nhiêu người theo dõi?",
+    "options": {
+      "A": "Trên 5 triệu người",
+      "B": "Trên 500 nghìn người",
+      "C": "Trên 1 triệu người",
+      "D": "Trên 2 triệu người"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 107,
+    "question_text": "Chương trình hành động thực hiện Nghị quyết ĐH XIII của Đoàn yêu cầu mỗi cán bộ Đoàn phải là người như thế nào trong công tác tuyên truyền?",
+    "options": {
+      "A": "Người quản lý xuất sắc",
+      "B": " Nhà hùng biện",
+      "C": "Chuyên gia công nghệ",
+      "D": "Người truyền cảm hứng "
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 108,
+    "question_text": "Mỗi cơ sở Đoàn được định hướng xây dựng trở thành gì trong công tác tuyên truyền giáo dục?",
+    "options": {
+      "A": "Trường học lý luận",
+      "B": "Điểm tựa niềm tin",
+      "C": "Nơi sinh hoạt số",
+      "D": "Trung tâm văn hóa"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 109,
+    "question_text": "Mỗi đoàn viên được kỳ vọng trở thành gì trong cộng đồng theo định hướng nhiệm kỳ XIII?",
+    "options": {
+      "A": "Người giám sát",
+      "B": "Người lãnh đạo",
+      "C": "Hạt nhân tích cực",
+      "D": "Chuyên gia tư vấn"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 110,
+    "question_text": "Chương trình hành động thực hiện Nghị quyết xác định nguyên tắc về \"nêu gương\" như thế nào?",
+    "options": {
+      "A": "Cán bộ Đoàn nêu gương cho đoàn viên; đoàn viên nêu gương cho thanh niên; đoàn viên, thanh niên nêu gương cho thiếu niên, nhi đồng",
+      "B": "Cán bộ Đoàn cấp trên nêu gương cho cán bộ Đoàn cấp dưới; cán bộ Đoàn nêu gương cho đoàn viên; đoàn viên nêu gương cho thanh niên; đoàn viên, thanh niên nêu gương cho thiếu niên, nhi đồng",
+      "C": "Cán bộ Đoàn nêu gương cho đoàn viên; đoàn viên, thanh niên nêu gương cho thiếu niên, nhi đồng",
+      "D": "Cán bộ Đoàn cấp trên nêu gương cho cán bộ Đoàn cấp dưới; đoàn viên, thanh niên nêu gương cho thiếu niên, nhi đồng"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 111,
+    "question_text": "Trong giáo dục đạo đức lối sống, Đoàn gắn Cuộc vận động “Xây dựng giá trị hình mẫu...” với hệ giá trị nào?",
+    "options": {
+      "A": "Hệ giá trị hội nhập",
+      "B": "Hệ giá trị kinh tế",
+      "C": "Hệ giá trị công nghệ",
+      "D": "Hệ giá trị quốc gia, văn hóa, gia đình"
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 112,
+    "question_text": "Đâu KHÔNG phải là quan điểm chỉ đạo chung về công tác tuyên truyền, giáo dục của Đoàn trong nhiệm kỳ 2026 - 2031?",
+    "options": {
+      "A": "Công tác tuyên truyền, giáo dục phải được tiến hành thường xuyên, toàn diện, có trọng tâm, phù hợp với từng nhóm thanh thiếu nhi",
+      "B": "Nội dung giáo dục phải gắn với thực tiễn đất nước, nhiệm vụ của địa phương, đơn vị và nhu cầu của thanh niên; kết hợp giữa “xây” và “chống”, giữa tuyên truyền với tổ chức hành động.",
+      "C": "Lấy việc bồi dưỡng lý tưởng cách mạng, lòng yêu nước, bản lĩnh chính trị, đạo đức, lối sống văn hóa và khát vọng cống hiến làm mục tiêu cốt lõi",
+      "D": "Khuyến khích đoàn viên, thanh niên tham gia mạng lưới học thuật, hội đồng khoa học trẻ, diễn đàn trí thức, hợp tác quốc tế "
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 113,
+    "question_text": "Văn kiện và Chương trình hành động thực hiện Nghị quyết Đại hội Đoàn toàn quốc lần thứ XIII xác định tổ chức đồng loạt hoạt động nào trong dịp kỷ niệm ngày thương binh, liệt sĩ hằng năm",
+    "options": {
+      "A": "Câu chuyện thời hoa lửa",
+      "B": "Lễ Thắp nến tri ân các Anh hùng liệt sĩ",
+      "C": "Giao lưu tiếp lửa truyền thống",
+      "D": "Sinh hoạt chi đoàn \"Tháng bảy tri ân\""
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 114,
+    "question_text": "Phong trào nổi bật nào được đoàn viên, thanh niên hưởng ứng sôi nổi trong nhiệm kỳ XII thuộc mảng Tuổi trẻ sáng tạo?",
+    "options": {
+      "A": "Phong trào \"Sáng tạo công nghệ\" và \"Tri thức số\"",
+      "B": "Phong trào \"Thanh niên số hóa\" và \"Học lập trình\"",
+      "C": "Phong trào \"Chuyển đổi số toàn diện\" và \"AI cho thiếu nhi\"",
+      "D": "Phong trào \"Bình dân học vụ số\" và \"Phổ cập AI\""
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 115,
+    "question_text": "Trong nhiệm kỳ XII, tỷ lệ thanh thiếu nhi được tiếp cận các hoạt động nâng cao năng lực số đạt bao nhiêu %?",
+    "options": {
+      "A": "74,5%",
+      "B": "68,5%",
+      "C": "60%",
+      "D": "80%"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 116,
+    "question_text": "Theo kết quả thực hiện chỉ tiêu nhiệm kỳ XII, tỷ lệ thanh niên sử dụng dịch vụ công trực tuyến đạt bao nhiêu %?",
+    "options": {
+      "A": "50%",
+      "B": "60%",
+      "C": "70%",
+      "D": "67.3%"
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 117,
+    "question_text": "Tỷ lệ thanh niên sử dụng tài khoản thanh toán điện tử đạt được trong nhiệm kỳ XII là bao nhiêu %?",
+    "options": {
+      "A": "70%",
+      "B": "83.25%",
+      "C": "75%",
+      "D": "90%"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 118,
+    "question_text": "Trong công tác quản lý đoàn viên nhiệm kỳ XII, công cụ công nghệ nào đã được ứng dụng để tối giản quy trình?",
+    "options": {
+      "A": "Phần mềm Quản lý đoàn viên và thẻ đoàn viên điện tử",
+      "B": "Ứng dụng VNeID và Cổng dịch vụ công",
+      "C": "Cơ sở dữ liệu quốc gia về thanh niên",
+      "D": "Hệ thống quản trị nội bộ Trung ương Đoàn"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 119,
+    "question_text": "Công nghệ hiện đại nào bước đầu được Trung ương Đoàn ứng dụng để phân tích dư luận xã hội trong thanh niên ở nhiệm kỳ XII?",
+    "options": {
+      "A": "Điện toán đám mây và Blockchain",
+      "B": "Mạng Internet vạn vật (IoT) và Big Data",
+      "C": "Dữ liệu lớn (Big Data) và Trí tuệ nhân tạo (AI)",
+      "D": "Công nghệ thực tế ảo (VR) và AI"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 120,
+    "question_text": "Trong nhiệm kỳ XII, tổ chức Đoàn đã tích cực tham gia quảng bá di tích lịch sử, văn hóa bằng hình thức số hóa nào?",
+    "options": {
+      "A": "In ấn cẩm nang tra cứu điện tử",
+      "B": "Số hóa bằng mã QR, website và bản đồ số địa chỉ đỏ",
+      "C": "Số hóa bằng mã vạch và ứng dụng di động độc lập",
+      "D": "Xây dựng video 3D và bảo tàng thực tế ảo"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 121,
+    "question_text": "Giải pháp nào dưới đây thuộc nội dung Tiên phong phát triển KHCN, đổi mới sáng tạo và chuyển đổi số nhiệm kỳ XIII?",
+    "options": {
+      "A": "Miễn phí hoàn toàn các khóa đào tạo chuyên gia AI",
+      "B": "Xây dựng 10.000 phòng máy tính tại các xã biên giới ",
+      "C": "Tích hợp giáo dục an ninh mạng và đạo đức số trong các diễn đàn, cuộc thi về công nghệ",
+      "D": "Phổ cập 100% kỹ năng lập trình cho đoàn viên"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 122,
+    "question_text": "Phong trào \"Bình dân học vụ số cho thanh niên\" hướng tới mục tiêu 100% thanh thiếu nhi cơ bản làm chủ công nghệ số vào năm nào?",
+    "options": {
+      "A": "Năm 2030",
+      "B": "Năm 2027",
+      "C": "Năm 2028",
+      "D": "Năm 2031"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 123,
+    "question_text": "Nòng cốt thanh niên phát triển KHCN, đổi mới sáng tạo và chuyển đổi số góp phần đóng góp vào mục tiêu kinh tế số chiếm bao nhiêu % GDP?",
+    "options": {
+      "A": "10% GDP",
+      "B": "30% GDP",
+      "C": "25% GDP ",
+      "D": "35% GDP"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 124,
+    "question_text": "Nội dung nào sau đây là 01 trong 05 nhiệm vụ đột phá của nhiệm kỳ XIII liên quan đến công nghệ và nguồn nhân lực trẻ?",
+    "options": {
+      "A": "Phổ cập 100% kỹ năng lập trình cho học sinh, sinh viên",
+      "B": "Xây dựng 1.000 phòng lab công nghệ cao tại các xã khó khăn",
+      "C": "Hỗ trợ nâng cao năng lực số, trí tuệ nhân tạo, khoa học công nghệ, góp phần nâng cao chất lượng nguồn nhân lực trẻ",
+      "D": "Số hóa toàn bộ tài liệu giảng dạy trong hệ thống giáo dục"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 125,
+    "question_text": "Theo Chương trình hành động, phong trào \"Bình dân học vụ số cho thanh niên\" gồm những hợp phần nào?",
+    "options": {
+      "A": " \"Bình dân học AI\", \"Phổ cập kỹ năng số\", \"An toàn mạng cho thanh niên\"",
+      "B": "\"Xóa mù công nghệ\", \"Ứng dụng AI\", \"Kỹ năng số cộng đồng\"",
+      "C": "\"Kỹ năng số\", \"An toàn mạng\", \"Sáng tạo nội dung số\"",
+      "D": "\"Phổ cập Internet\", \"Học lập trình cơ bản\", \"An toàn thông tin\" "
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 126,
+    "question_text": "Chương trình hành động đề ra giải pháp thí điểm mô hình nào hỗ trợ khởi nghiệp gắn với Hội Doanh nhân trẻ và trường đại học?",
+    "options": {
+      "A": "Quỹ đổi mới sáng tạo trẻ",
+      "B": "\"Trung tâm sáng tạo thanh niên\" ",
+      "C": "\"Không gian khởi nghiệp số\"",
+      "D": "\"Trạm hỗ trợ khởi nghiệp thanh niên\""
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 127,
+    "question_text": "Trong Chương trình hành động, mô hình đội hình nào được thành lập để hỗ trợ các trường học xây dựng thư viện số, lớp học thông minh?",
+    "options": {
+      "A": "Đội hình \"Tình nguyện viên công nghệ\" ",
+      "B": "Đội hình \"Thanh niên chuyển đổi số học đường\"",
+      "C": "Đội hình \"Tri thức trẻ chuyển đổi số\"",
+      "D": "Đội hình \"Công nghệ số tương lai\""
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 128,
+    "question_text": "Một trong những nội dung xây dựng môi trường khởi nghiệp cho thanh niên là:",
+    "options": {
+      "A": "Tổ chức các cuộc thi văn nghệ",
+      "B": "Tổ chức ngày hội tư vấn khởi nghiệp",
+      "C": "Tổ chức hội khỏe Phù Đổng",
+      "D": "Tổ chức liên hoan nghệ thuật\n"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 129,
+    "question_text": "Nội dung nào được chú trọng trong các chương trình tập huấn hỗ trợ thanh niên khởi nghiệp?",
+    "options": {
+      "A": "Nghiệp vụ công tác Đội",
+      "B": "Quản trị doanh nghiệp, kinh doanh số",
+      "C": "Lý luận chính trị",
+      "D": "Quốc phòng - an ninh"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 130,
+    "question_text": "Chương trình nào được tiếp tục hỗ trợ nhằm phát triển kinh tế địa phương?",
+    "options": {
+      "A": "Mỗi xã một nhà văn hoá",
+      "B": "Mỗi xã một sản phẩm (OCOP)",
+      "C": "Mỗi xã một sân vận động",
+      "D": "Mỗi xã một thư viện"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 131,
+    "question_text": "Thanh niên được hỗ trợ quảng bá sản phẩm thông qua hình thức nào?",
+    "options": {
+      "A": "Triển lãm ảnh",
+      "B": "Sàn thương mại điện tử và livestream",
+      "C": "Hội diễn văn nghệ",
+      "D": "Phát thanh cơ sở"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 132,
+    "question_text": "Đoàn các cấp tăng cường kết nối thanh niên khởi nghiệp với đối tượng nào?",
+    "options": {
+      "A": "Các câu lạc bộ văn nghệ",
+      "B": "Các nhà đầu tư và quỹ hỗ trợ khởi nghiệp",
+      "C": "Các đoàn thể thao",
+      "D": "Các đơn vị quân đội"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 133,
+    "question_text": "Đối tượng nào được ưu tiên hỗ trợ trong hoạt động khởi nghiệp, lập nghiệp?",
+    "options": {
+      "A": "Chỉ sinh viên",
+      "B": "Thanh niên nông thôn, thanh niên khuyết tật, thanh niên hoàn lương, thanh niên xuất ngũ",
+      "C": "Chỉ học sinh THPT",
+      "D": "Chỉ cán bộ Đoàn"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 134,
+    "question_text": "Nguồn vốn nào được khai thác để hỗ trợ thanh niên phát triển kinh tế?",
+    "options": {
+      "A": "Ngân hàng Chính sách xã hội",
+      "B": "Tất cả các đáp án trên",
+      "C": "Nguồn vốn xã hội hóa",
+      "D": "Quỹ quốc gia về việc làm"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 135,
+    "question_text": "Giải pháp nào được triển khai nhằm hỗ trợ các dự án khởi nghiệp của thanh niên?",
+    "options": {
+      "A": "Miễn lệ phí đăng ký doanh nghiệp",
+      "B": "Hỗ trợ thủ tục vay vốn",
+      "C": "Miễn toàn bộ thuế thu nhập",
+      "D": "Cấp đất sản xuất miễn phí"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 136,
+    "question_text": "Mô hình nào được tiếp tục củng cố nhằm phát huy vai trò thanh niên trong phát triển kinh tế?",
+    "options": {
+      "A": "Câu lạc bộ lý luận trẻ",
+      "B": "Câu lạc bộ thanh niên làm kinh tế giỏi",
+      "C": "Câu lạc bộ ngoại ngữ",
+      "D": "Câu lạc bộ kỹ năng"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 137,
+    "question_text": "Đội ngũ doanh nhân trẻ được khuyến khích phát huy vai trò chủ yếu trong lĩnh vực nào?\n",
+    "options": {
+      "A": "Quản lý nhà nước về doanh nghiệp",
+      "B": "Đồng hành với thanh niên khởi nghiệp, đổi mới sáng tạo và phát triển kinh tế",
+      "C": "Chỉ cán bộ Đoàn",
+      "D": "Quản lý thị trường"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 138,
+    "question_text": "Một trong những nhiệm vụ của Hội Doanh nhân trẻ Việt Nam là:",
+    "options": {
+      "A": "Cấp phép thành lập doanh nghiệp",
+      "B": "Đồng hành, kết nối và hỗ trợ thanh niên khởi nghiệp, phát triển doanh nghiệp",
+      "C": "Quản lý hoạt động đầu tư nước ngoài",
+      "D": "Quản lý hoạt động xuất nhập khẩu"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 139,
+    "question_text": "Tổ chức Hội nào được xác định tiếp tục phát huy vai trò trong việc đồng hành với thanh niên phát triển kinh tế và đội ngũ doanh nhân trẻ?",
+    "options": {
+      "A": "Hội Doanh nhân trẻ Việt Nam",
+      "B": "Hội Sinh viên Việt Nam",
+      "C": "Hội Thầy thuốc trẻ Việt Nam",
+      "D": "Hội Tin học trẻ Việt Nam"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 140,
+    "question_text": "Cuộc vận động nào được xác định nhằm khuyến khích đoàn viên, thanh niên tham gia xây dựng và lan tỏa các thương hiệu sản phẩm \"Made in Vietnam\", \"Make in Vietnam\"?\n",
+    "options": {
+      "A": "Cuộc vận động \"Người Việt Nam đi du lịch Việt Nam\"",
+      "B": "Cuộc vận động \"Cả nước chung tay vì người nghèo\"",
+      "C": "Cuộc vận động \"Toàn dân đoàn kết xây dựng đời sống văn hóa\"",
+      "D": "Cuộc vận động \"Người Việt Nam ưu tiên dùng hàng Việt Nam\""
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 141,
+    "question_text": "Phong trào thi đua về phát triển kinh tế được triển khai trong tuổi trẻ nhằm góp phần thực hiện mục tiêu nào?",
+    "options": {
+      "A": "Tăng trưởng bền vững 2 con số giai đoạn 2026 - 2030",
+      "B": "Hoàn thành chuyển đổi số quốc gia trước năm 2030",
+      "C": "Thành lập 1 triệu doanh nghiệp",
+      "D": "Đưa Việt Nam trở thành nước phát triển vào năm 2035"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 142,
+    "question_text": "Mô hình kinh tế nào được khuyến khích xây dựng, phát triển phù hợp với điều kiện thực tiễn của địa phương?",
+    "options": {
+      "A": "Kinh tế chia sẻ",
+      "B": "Kinh tế xanh, kinh tế tuần hoàn",
+      "C": "Kinh tế số",
+      "D": "Kinh tế biển"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 143,
+    "question_text": "Vai trò nào của Hội Doanh nhân trẻ Việt Nam được xác định trong nhiệm kỳ 2026 - 2031?",
+    "options": {
+      "A": "Cấp chứng nhận doanh nghiệp trẻ",
+      "B": "Quản lý các quỹ đầu tư khởi nghiệp",
+      "C": "Thẩm định các dự án đầu tư của thanh niên",
+      "D": "Thúc đẩy phát triển kinh tế tư nhân\n"
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 144,
+    "question_text": "Đối tượng nào được xác định là một trong những nhóm tham gia các khóa tập huấn, tư vấn, đào tạo chuyên sâu nhằm nâng cao năng lực quản trị doanh nghiệp đổi mới sáng tạo?",
+    "options": {
+      "A": "Doanh nhân trẻ",
+      "B": "Cán bộ Đội",
+      "C": "Thiếu nhi",
+      "D": "Học sinh trung học phổ thông"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 145,
+    "question_text": "Tinh thần nào được xác định cần khơi dậy trong thanh niên nhằm thúc đẩy khởi nghiệp, lập nghiệp và phát triển kinh tế đất nước?",
+    "options": {
+      "A": "Tinh thần hội nhập quốc tế",
+      "B": "Khát vọng vươn lên làm giàu chính đáng bằng tri thức, sáng tạo và tinh thần trách nhiệm với cộng đồng",
+      "C": "Tinh thần xung kích bảo vệ Tổ quốc",
+      "D": "Tinh thần tình nguyện vì cộng đồng"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 146,
+    "question_text": "Theo Văn kiện Đại hội Đoàn toàn quốc lần thứ XIII, công tác quốc tế thanh niên nhiệm kỳ Đại hội XII được đánh giá như thế nào?",
+    "options": {
+      "A": "Chủ yếu mở rộng số lượng hoạt động giao lưu quốc tế, nhưng chất lượng hợp tác chưa có chuyển biến rõ nét",
+      "B": "Tiếp tục có những bước phát triển mới về chiều sâu, chất lượng được nâng lên, phương thức triển khai sáng tạo, linh hoạt, thích ứng",
+      "C": "Tập trung chủ yếu vào các hoạt động song phương, chưa tham gia các cơ chế hợp tác đa phương",
+      "D": "Chủ yếu hỗ trợ thanh niên đi học tập, lao động ở nước ngoài, chưa gắn với công tác đối ngoại Nhân dân"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 147,
+    "question_text": "Trong nhiệm kỳ Đại hội XII, Đoàn TNCS Hồ Chí Minh và Ủy ban Quốc gia về thanh niên Việt Nam đã đạt kết quả nào trong tham gia các cơ chế hợp tác đa phương về thanh niên?",
+    "options": {
+      "A": "Chỉ tham gia các cơ chế hợp tác song phương với các nước láng giềng",
+      "B": "Tích cực tham gia, có sáng kiến trong các cơ chế hợp tác đa phương, đặc biệt là hợp tác thanh niên ASEAN, ASEAN+",
+      "C": "Tập trung chủ yếu vào các diễn đàn của các tổ chức phi chính phủ quốc tế",
+      "D": "Chủ yếu tham gia các hoạt động giao lưu văn hóa, chưa đề xuất sáng kiến trong các cơ chế đa phương"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 148,
+    "question_text": "Theo Văn kiện Đại hội Đoàn toàn quốc lần thứ XIII, công tác thanh niên ngoài nước trong nhiệm kỳ Đại hội XII đạt kết quả nổi bật nào?",
+    "options": {
+      "A": "Đạt kết quả trong kết nối, định hướng, hỗ trợ, phát triển và mở rộng các tổ chức Đoàn, Hội Thanh niên, Sinh viên Việt Nam ở ngoài nước; hỗ trợ thanh niên, sinh viên Việt Nam trong học tập, nghiên cứu khoa học, đời sống và việc làm",
+      "B": "Tập trung chủ yếu vào việc thành lập mới tổ chức Đoàn ở tất cả các quốc gia có thanh niên Việt Nam sinh sống",
+      "C": "Chủ yếu tổ chức các hoạt động văn hóa, văn nghệ cho thanh niên, sinh viên Việt Nam ở nước ngoài",
+      "D": "Tập trung chủ yếu vào hỗ trợ thủ tục xuất nhập cảnh và giới thiệu việc làm tại nước ngoài"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 149,
+    "question_text": "Theo Văn kiện Đại hội Đoàn toàn quốc lần thứ XIII, công tác thông tin, tuyên truyền đối ngoại và hội nhập quốc tế cần phát huy, sử dụng hiệu quả những kênh nào?",
+    "options": {
+      "A": "Chỉ các hội nghị, hội thảo trực tiếp",
+      "B": "Chỉ các cơ quan báo chí của Đoàn",
+      "C": "Hệ thống báo chí, mạng xã hội và ứng dụng “Thanh niên Việt Nam”",
+      "D": "Chủ yếu thông qua các cơ quan đại diện Việt Nam ở nước ngoài"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 150,
+    "question_text": "Theo Văn kiện Đại hội Đoàn toàn quốc lần thứ XIII, định hướng chung về mở rộng hợp tác và hội nhập quốc tế thanh niên trong nhiệm kỳ XIII là gì?",
+    "options": {
+      "A": "Tập trung chủ yếu vào hợp tác song phương với các nước láng giềng",
+      "B": "Tiếp tục mở rộng, đa phương hóa, đa dạng hóa, chủ động và tích cực hội nhập quốc tế",
+      "C": "Ưu tiên mở rộng số lượng đoàn ra, đoàn vào",
+      "D": "Tập trung vào các hoạt động giao lưu văn hóa, hữu nghị"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 151,
+    "question_text": "Theo Văn kiện Đại hội Đoàn toàn quốc lần thứ XIII, trong mở rộng quan hệ hữu nghị và hợp tác quốc tế, tổ chức Đoàn cần chú trọng quan hệ với nhóm đối tác nào sau đây?",
+    "options": {
+      "A": "Chủ yếu các tổ chức phi chính phủ quốc tế hoạt động tại Việt Nam",
+      "B": "Chỉ các quốc gia phát triển và các trung tâm kinh tế lớn",
+      "C": "Chỉ các quốc gia có đông thanh niên Việt Nam học tập, lao động",
+      "D": "Các nước láng giềng, bạn bè truyền thống, nước có quan hệ hữu nghị đặc biệt, đối tác chiến lược, đối tác chiến lược toàn diện và các tổ chức đa phương mà Việt Nam là thành viên"
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 152,
+    "question_text": "Theo Văn kiện Đại hội Đoàn toàn quốc lần thứ XIII, yêu cầu đối với các cam kết, bản ghi nhớ và thỏa thuận hợp tác quốc tế về thanh niên là gì?",
+    "options": {
+      "A": "Thực hiện các cam kết khu vực, quốc tế về thanh niên mà Việt Nam tham gia và triển khai hiệu quả các bản ghi nhớ, thỏa thuận hợp tác quốc tế thanh niên đã ký kết",
+      "B": "Rà soát để giảm số lượng các thỏa thuận hợp tác quốc tế",
+      "C": "Chỉ tiếp tục thực hiện các thỏa thuận hợp tác song phương",
+      "D": "Chuyển toàn bộ việc triển khai các thỏa thuận cho Đoàn cấp tỉnh"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 153,
+    "question_text": "Theo Văn kiện Đại hội Đoàn toàn quốc lần thứ XIII, một nhóm nhiệm vụ cơ bản của “Tiên phong hội nhập quốc tế” là tạo môi trường để thanh thiếu nhi nâng cao những năng lực nào?",
+    "options": {
+      "A": "Năng lực ngoại ngữ và hội nhập quốc tế",
+      "B": "Năng lực quản lý nhà nước và hành chính công",
+      "C": "Năng lực quản trị doanh nghiệp và đầu tư quốc tế",
+      "D": "Năng lực tổ chức sự kiện và truyền thông quốc tế"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 154,
+    "question_text": "Theo Văn kiện Đại hội Đoàn toàn quốc lần thứ XIII, các tổ chức Đoàn, Hội Sinh viên, Hội Thanh niên - Sinh viên Việt Nam ở nước ngoài cần phát huy vai trò gì?",
+    "options": {
+      "A": "Tăng cường kết nối thanh niên, sinh viên Việt Nam đang học tập, lao động ở nước ngoài với các hoạt động của tổ chức Đoàn, Hội trong nước",
+      "B": "Trực tiếp quản lý toàn bộ thanh niên Việt Nam đang sinh sống ở nước ngoài",
+      "C": "Là đầu mối thực hiện các thủ tục học tập, lao động ở nước ngoài",
+      "D": "Chủ trì các hoạt động ngoại giao của Việt Nam liên quan đến thanh niên"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 155,
+    "question_text": "Theo Văn kiện Đại hội Đoàn toàn quốc lần thứ XIII, việc vận động các nguồn lực trong và ngoài nước trong lĩnh vực hội nhập quốc tế nhằm mục tiêu cơ bản nào?",
+    "options": {
+      "A": "Hỗ trợ đoàn viên, thanh thiếu nhi hội nhập quốc tế an toàn",
+      "B": "Tăng số lượng đoàn đại biểu thanh niên đi nước ngoài",
+      "C": "Mở rộng hệ thống cơ sở vật chất của tổ chức Đoàn",
+      "D": "Tài trợ chủ yếu cho các chương trình giao lưu văn hóa quốc tế"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 156,
+    "question_text": "Theo Văn kiện Đại hội Đoàn toàn quốc lần thứ XIII, những nguồn lực nào được vận động để hỗ trợ các hoạt động đối ngoại thanh thiếu nhi?",
+    "options": {
+      "A": "Nguồn lực tài chính và chuyên môn từ các tổ chức quốc tế, tổ chức phi chính phủ, cơ quan đại diện nước ngoài tại Việt Nam và các đối tác",
+      "B": "Chỉ nguồn viện trợ từ các chính phủ nước ngoài",
+      "C": "Chỉ nguồn kinh phí của các doanh nghiệp có vốn đầu tư nước ngoài",
+      "D": "Chủ yếu nguồn đóng góp của thanh niên Việt Nam ở nước ngoài"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 157,
+    "question_text": "Theo Văn kiện Đại hội Đoàn toàn quốc lần thứ XIII, một định hướng lớn nhằm nâng cao chất lượng công tác hội nhập quốc tế trong hệ thống Đoàn là gì?",
+    "options": {
+      "A": "Nâng cao hiệu lực, hiệu quả chỉ đạo, điều phối công tác hội nhập quốc tế và phát huy vai trò tích cực, chủ động của các cấp bộ Đoàn",
+      "B": "Tập trung toàn bộ hoạt động hội nhập quốc tế về Trung ương Đoàn",
+      "C": "Tăng số lượng tổ chức chuyên trách về đối ngoại tại tất cả các cấp",
+      "D": "Chuyển trọng tâm từ hội nhập quốc tế sang giao lưu hữu nghị song phương"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 158,
+    "question_text": "Theo Văn kiện Đại hội Đoàn toàn quốc lần thứ XIII, cần tăng cường bồi dưỡng những năng lực nào cho đội ngũ cán bộ Đoàn chủ chốt để đáp ứng yêu cầu hội nhập quốc tế?",
+    "options": {
+      "A": "Năng lực ngoại ngữ và kỹ năng làm việc trong môi trường quốc tế",
+      "B": "Kỹ năng quản lý dự án đầu tư nước ngoài và thương mại quốc tế",
+      "C": "Kỹ năng ngoại giao chuyên nghiệp tương đương cán bộ ngoại giao",
+      "D": "Kỹ năng quản lý doanh nghiệp và đàm phán thương mại"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 159,
+    "question_text": "Theo Văn kiện Đại hội Đoàn toàn quốc lần thứ XIII, công nghệ số được ứng dụng trong lĩnh vực hội nhập quốc tế nhằm mục đích nào?",
+    "options": {
+      "A": "Quản lý và điều phối công tác hội nhập quốc tế",
+      "B": "Thay thế các hoạt động giao lưu, hợp tác trực tiếp",
+      "C": "Thực hiện toàn bộ hoạt động đối ngoại thanh niên trên môi trường số",
+      "D": "Đánh giá trình độ ngoại ngữ của toàn bộ đoàn viên"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 160,
+    "question_text": "Theo Chương trình hành động thực hiện Nghị quyết Đại hội Đoàn toàn quốc lần thứ XIII, công tác tuyên truyền đối ngoại thanh niên được định hướng đổi mới theo hướng nào?",
+    "options": {
+      "A": "Hiện đại, sáng tạo, ứng dụng công nghệ và chuyển đổi số",
+      "B": "Tập trung chủ yếu vào các ấn phẩm in truyền thống",
+      "C": "Chuyển trọng tâm sang tuyên truyền trực tiếp tại cơ sở",
+      "D": "Chỉ tập trung tuyên truyền bằng ngoại ngữ"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 161,
+    "question_text": "Theo Chương trình hành động thực hiện Nghị quyết Đại hội Đoàn toàn quốc lần thứ XIII, tổ chức Đoàn cần tích cực tham gia những cơ chế hợp tác đa phương về thanh niên nào?",
+    "options": {
+      "A": "ASEAN, ASEAN+, Liên Hợp Quốc, Liên đoàn Thanh niên Dân chủ Thế giới và các diễn đàn khu vực, quốc tế",
+      "B": "Chỉ các cơ chế hợp tác thanh niên trong ASEAN",
+      "C": "Chỉ các diễn đàn của Liên Hợp Quốc",
+      "D": "Chủ yếu các tổ chức thanh niên của các nước láng giềng"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 162,
+    "question_text": "Theo Chương trình hành động thực hiện Nghị quyết Đại hội Đoàn toàn quốc lần thứ XIII, một định hướng cơ bản để nâng cao năng lực ngoại ngữ cho thanh thiếu nhi là gì?",
+    "options": {
+      "A": "Chỉ tập trung đào tạo tiếng Anh cho cán bộ Đoàn chuyên trách",
+      "B": "Phát triển, nhân rộng các mô hình không gian ngoại ngữ, Câu lạc bộ tiếng Anh và hỗ trợ nâng cao năng lực các ngoại ngữ khác ngoài tiếng Anh",
+      "C": "Tổ chức bắt buộc các kỳ thi chứng chỉ ngoại ngữ quốc tế",
+      "D": "Chỉ triển khai các mô hình ngoại ngữ tại trường đại học"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 163,
+    "question_text": "Theo Chương trình hành động thực hiện Nghị quyết Đại hội Đoàn toàn quốc lần thứ XIII, các hoạt động giao lưu, tình nguyện quốc tế, trao đổi học thuật, trại hè, diễn đàn sáng tạo nhằm góp phần phát triển những năng lực nào cho thanh niên?",
+    "options": {
+      "A": "Năng lực quản lý hành chính và lãnh đạo tổ chức",
+      "B": "Khả năng sử dụng ngoại ngữ, hiểu biết văn hóa quốc tế và kỹ năng làm việc toàn cầu",
+      "C": "Kỹ năng đầu tư, thương mại và tài chính quốc tế",
+      "D": "Kỹ năng tổ chức sự kiện và vận động tài trợ"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 164,
+    "question_text": "Theo Chương trình hành động thực hiện Nghị quyết Đại hội Đoàn toàn quốc lần thứ XIII, việc kết nối cộng đồng người Việt Nam ở nước ngoài, trí thức trẻ, cựu du học sinh và chuyên gia trẻ người Việt Nam ở nước ngoài nhằm phát huy những đóng góp nào?",
+    "options": {
+      "A": "Chủ yếu vận động nguồn tài chính cho các hoạt động của Đoàn",
+      "B": "Chia sẻ tri thức, kinh nghiệm; quảng bá hình ảnh Việt Nam và đóng góp vào các chương trình, dự án phát triển đất nước",
+      "C": "Tổ chức các đoàn thanh niên Việt Nam đi học tập dài hạn ở nước ngoài",
+      "D": "Thay thế các chương trình hợp tác quốc tế của tổ chức Đoàn trong nước"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 165,
+    "question_text": "Theo Chương trình hành động thực hiện Nghị quyết Đại hội Đoàn toàn quốc lần thứ XIII, trong công tác đối ngoại Nhân dân, tổ chức Đoàn cần tiếp tục phát huy vai trò nào?",
+    "options": {
+      "A": "Vai trò chủ trì toàn bộ hoạt động đối ngoại của các tổ chức thanh niên Việt Nam",
+      "B": "Vai trò nòng cốt chính trị, đồng thời nâng cao năng lực đại diện tiếng nói thanh niên Việt Nam tại các diễn đàn khu vực và quốc tế",
+      "C": "Vai trò quản lý các tổ chức thanh niên nước ngoài hoạt động tại Việt Nam",
+      "D": "Vai trò đại diện Nhà nước trong các cơ chế hợp tác thanh niên quốc tế"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 166,
+    "question_text": "Phong trào chủ lực của công tác Đoàn trong nhiệm kỳ XII là gì?",
+    "options": {
+      "A": "Tuổi trẻ sáng tạo",
+      "B": "Thanh niên tình nguyện",
+      "C": "Tuổi trẻ xung kích bảo vệ Tổ quốc",
+      "D": "Đồng hành với thanh niên"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 167,
+    "question_text": "Chủ trương nào được cụ thể hóa trong phong trào Thanh niên tình nguyện?",
+    "options": {
+      "A": "03 đồng hành",
+      "B": "03 liên kết",
+      "C": "03 xung kích",
+      "D": "03 trách nhiệm"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 168,
+    "question_text": "Xây dựng nông thôn mới được triển khai theo hướng nào?",
+    "options": {
+      "A": "Nông nghiệp công nghệ cao",
+      "B": "Nông nghiệp số, nông thôn thông minh",
+      "C": "Nông nghiệp sinh thái, nông thôn hiện đại, nông dân văn minh",
+      "D": "Nông thôn xanh, nông dân số"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 169,
+    "question_text": "Các đội hình tình nguyện phục vụ cộng đồng được duy trì tại địa điểm nào?",
+    "options": {
+      "A": "Trung tâm hành chính công",
+      "B": "Khu công nghiệp, khu chế xuất",
+      "C": "Khu vui chơi, giải trí, điểm di tích, danh lam thắng cảnh",
+      "D": "Trường học, bệnh viện"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 170,
+    "question_text": "Chương trình nào được triển khai nhằm bảo vệ môi trường và ứng phó với biến đổi khí hậu?",
+    "options": {
+      "A": "Xuân tình nguyện",
+      "B": "Tiếp sức mùa thi",
+      "C": "Vì một Việt Nam xanh",
+      "D": "Tháng Ba biên giới"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 171,
+    "question_text": "Hoạt động nào được toàn Đoàn đồng loạt ra quân?",
+    "options": {
+      "A": "Chủ nhật đỏ",
+      "B": "Hãy làm sạch biển",
+      "C": "Ngày Chủ nhật xanh",
+      "D": "Xuân tình nguyện"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 172,
+    "question_text": "Đội hình phòng, chống thiên tai được tổ chức phù hợp với yếu tố nào?",
+    "options": {
+      "A": "Điều kiện kinh tế",
+      "B": "Quy mô dân số",
+      "C": "Đặc thù từng vùng",
+      "D": "Số lượng đoàn viên"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 173,
+    "question_text": "Cuộc vận động nào góp phần giảm tình trạng sử dụng rượu, bia khi tham gia giao thông?",
+    "options": {
+      "A": "Hãy làm sạch biển",
+      "B": "Mỗi ngày một tin tốt",
+      "C": "Thanh niên với văn hóa giao thông",
+      "D": "Vì một Việt Nam xanh"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 174,
+    "question_text": "Chương trình nào sau đây là hoạt động an sinh xã hội được triển khai trong phong trào Thanh niên tình nguyện?",
+    "options": {
+      "A": "Ngày Chủ nhật xanh",
+      "B": "Hãy làm sạch biển",
+      "C": "Tình nguyện mùa Đông",
+      "D": "Chống rác thải nhựa"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 175,
+    "question_text": "Hoạt động tình nguyện chuyên tiếp tục được tăng cường tại địa bàn nào?",
+    "options": {
+      "A": "Khu công nghiệp",
+      "B": "Đô thị lớn",
+      "C": "Vùng sâu, vùng xa, vùng khó khăn",
+      "D": "Các trường đại học"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 176,
+    "question_text": "Trung ương Đoàn xây dựng và vận hành hệ thống nào phục vụ hoạt động tình nguyện?",
+    "options": {
+      "A": "Kho học liệu số",
+      "B": "Mạng lưới Tình nguyện Quốc gia",
+      "C": "Cổng thông tin tình nguyện quốc gia",
+      "D": "Cổng thanh niên số"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 177,
+    "question_text": "Chủ trương nào được thực hiện trong triển khai hoạt động tình nguyện?",
+    "options": {
+      "A": "Ba liên kết",
+      "B": "Liên kết vùng",
+      "C": "Đa liên kết",
+      "D": "Ba đồng hành"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 178,
+    "question_text": "Mỗi tỉnh, thành đoàn xây dựng ít nhất bao nhiêu dự án tình nguyện dài hạn trong nhiệm kỳ?",
+    "options": {
+      "A": "04 dự án",
+      "B": "02 dự án",
+      "C": "03 dự án",
+      "D": "05 dự án"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 179,
+    "question_text": "Mỗi tỉnh, thành Đoàn đảm nhận ít nhất bao nhiêu xã biên giới kết nghĩa?",
+    "options": {
+      "A": "03 xã",
+      "B": "02 xã",
+      "C": "01 xã",
+      "D": "05 xã"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 180,
+    "question_text": "Mô hình nào được duy trì thường xuyên trong hoạt động tình nguyện?",
+    "options": {
+      "A": "Chủ nhật đỏ",
+      "B": "Tiếp sức mùa thi",
+      "C": "Ngày Thứ bảy tình nguyện",
+      "D": "Hành trình đỏ"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 181,
+    "question_text": "Hằng năm triển khai ít nhất bao nhiêu công trình thanh niên cấp toàn quốc?",
+    "options": {
+      "A": "04 công trình",
+      "B": "02 công trình",
+      "C": "03 công trình",
+      "D": "01 công trình"
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 182,
+    "question_text": "Trong nhiệm kỳ, Đoàn cấp tỉnh phối hợp thành lập ít nhất đội hình nào?",
+    "options": {
+      "A": "Đội hình Bình dân học vụ số",
+      "B": "Đội hình Phản ứng nhanh",
+      "C": "Đội hình Chuyển đổi số",
+      "D": "Đội hình Kỹ sư trẻ xây dựng nông thôn mới"
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 183,
+    "question_text": "Trong nhiệm kỳ, toàn Đoàn phấn đấu đoàn viên, thanh niên trồng mới bao nhiêu cây xanh?",
+    "options": {
+      "A": "150 triệu cây",
+      "B": "50 triệu cây",
+      "C": "120 triệu cây",
+      "D": "100 triệu cây"
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 184,
+    "question_text": "Hoạt động nào được tổ chức nhằm tôn vinh thanh niên tình nguyện?",
+    "options": {
+      "A": "Giải thưởng Sao Đỏ",
+      "B": "Liên hoan Tuổi trẻ sáng tạo",
+      "C": "Ngày hội Thanh niên sáng tạo",
+      "D": "Giải thưởng tình nguyện quốc gia"
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 185,
+    "question_text": "Trong nhiệm kỳ XII, hoạt động nào góp phần củng cố thế trận lòng dân, xây dựng nền quốc phòng toàn dân?",
+    "options": {
+      "A": "Khởi nghiệp sáng tạo",
+      "B": "Tình nguyện quốc tế",
+      "C": "Phát triển kinh tế tư nhân",
+      "D": "Các hoạt động hậu phương quân đội, công an "
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 186,
+    "question_text": "Theo Chương trình hành động thực hiện Nghị quyết Đại hội XIII, tổ chức Đoàn sẽ phối hợp tuyên truyền vận động thanh niên đăng ký tham gia gì?",
+    "options": {
+      "A": "Khởi nghiệp kinh doanh",
+      "B": "Du học nước ngoài",
+      "C": "Xuất khẩu lao động",
+      "D": "Khám tuyển nghĩa vụ quân sự"
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 187,
+    "question_text": "Trong nhiệm kỳ XIII, tổ chức Đoàn hỗ trợ đặc biệt cho nhóm thanh niên nhập ngũ nào?",
+    "options": {
+      "A": "Thanh niên là đảng viên",
+      "B": "Thanh niên thành thị",
+      "C": "Thanh niên học giỏi",
+      "D": "Thanh niên có hoàn cảnh khó khăn "
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 188,
+    "question_text": "Hoạt động nào được Đoàn các cấp tổ chức cho đoàn viên thanh niên hoàn thành nghĩa vụ quân sự trở về địa phương?",
+    "options": {
+      "A": "Tặng nhà tình nghĩa",
+      "B": "Cử đi du học",
+      "C": "Cấp vốn khởi nghiệp miễn phí",
+      "D": "Tư vấn, đào tạo nghề, giới thiệu việc làm"
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 189,
+    "question_text": "Phong trào nào được triển khai cho Thanh niên Quân đội trong nhiệm kỳ XIII?\n",
+    "options": {
+      "A": "Thanh niên Quân đội tiến bước",
+      "B": "Quân đội tiên phong số",
+      "C": "Tuổi trẻ Quân đội sáng tạo",
+      "D": "Thanh niên Quân đội 3 tiên phong quyết thắng "
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 190,
+    "question_text": "Thanh niên Công an Nhân dân gương mẫu, đi đầu trong thực hiện phong trào thi đua nào do Bộ Công an phát động?",
+    "options": {
+      "A": "Sáu điều Bác dạy",
+      "B": "Công an nhân dân dũng cảm",
+      "C": "Vì an ninh Tổ quốc",
+      "D": "Ba nhất"
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 191,
+    "question_text": "Mô hình thanh niên làm kinh tế tại khu vực biên giới, biển đảo phải gắn với nhiệm vụ gì?",
+    "options": {
+      "A": "Bảo đảm quốc phòng, an ninh ",
+      "B": "Thu hút đầu tư nước ngoài",
+      "C": "Chuyển đổi số toàn diện",
+      "D": "Phát triển du lịch sinh thái"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 192,
+    "question_text": "Chương trình hành động thực hiện Nghị quyết ĐH XIII yêu cầu định kỳ hằng năm tổ chức hành trình nào?",
+    "options": {
+      "A": "Hành trình tuổi trẻ vì biển đảo quê hương ",
+      "B": "Hành trình tuổi trẻ hướng về biển khơi",
+      "C": "Hành trình biển đảo quê hương tôi",
+      "D": "Hành trình ra khơi"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 193,
+    "question_text": "Cơ chế liên kết 4 lực lượng giữ gìn an ninh trật tự ở cấp xã gồm quân đội, công an, thanh niên trên địa bàn dân cư và đối tượng nào?",
+    "options": {
+      "A": "Thanh niên trường học",
+      "B": "Thanh niên trí thức",
+      "C": "Thanh niên tôn giáo",
+      "D": "Thanh niên công nhân"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 194,
+    "question_text": "Chủ trương bố trí Phó Bí thư Đoàn kiêm nhiệm trên địa bàn dân cư tập trung vào đối tượng nào?",
+    "options": {
+      "A": "Cán bộ, chiến sĩ trẻ trong quân đội, công an ",
+      "B": "Giáo viên trẻ",
+      "C": "Công chức xã",
+      "D": "Sinh viên mới ra trường"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 195,
+    "question_text": "Mỗi cấp bộ đoàn hằng năm tổ chức tối thiểu bao nhiêu hoạt động tuyên truyền về chủ quyền biển đảo?",
+    "options": {
+      "A": "Tối thiểu 01 hoạt động ",
+      "B": "Tối thiểu 02 hoạt động",
+      "C": "Không bắt buộc",
+      "D": "Tối thiểu 03 hoạt động"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 196,
+    "question_text": "Các cấp bộ đoàn phấn đấu mỗi năm hỗ trợ, giúp đỡ ít nhất bao nhiêu thanh niên chậm tiến, tái hòa nhập cộng đồng?",
+    "options": {
+      "A": " Ít nhất 01 thanh niên",
+      "B": "Ít nhất 05 thanh niên",
+      "C": "Ít nhất 03 thanh niên",
+      "D": "Ít nhất 02 thanh niên"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 197,
+    "question_text": "Dự án nào được triển khai từ năm 2026 liên quan đến công tác phòng chống ma túy?",
+    "options": {
+      "A": "Triển khai Đội Thanh niên xung kích tham gia phòng, chống ma túy",
+      "B": "Thanh niên tình nguyện cai nghiện",
+      "C": "Tuổi trẻ nói không với ma túy",
+      "D": "Câu lạc bộ thanh niên không ma túy"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 198,
+    "question_text": "Trong nhiệm kỳ XIII, các tỉnh, thành đoàn có biên giới, giáp biển có ít nhất bao nhiêu mô hình thanh niên làm kinh tế tại khu vực biên giới, biển đảo gắn với bảo đảm quốc phòng, an ninh?",
+    "options": {
+      "A": "01 mô hình",
+      "B": " 03 mô hình",
+      "C": "05 mô hình",
+      "D": "06 mô hình"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 199,
+    "question_text": "Theo báo cáo kết quả triển khai thực hiện Nghị quyết Đại hội Đoàn toàn quốc lần thứ XII, phong trào nào sau đây được triển khai nhằm phát huy tinh thần hiếu học của học sinh, sinh viên?",
+    "options": {
+      "A": "Tuổi trẻ thi đua xây dựng xã hội học tập, đẩy mạnh học tập suốt đời",
+      "B": "Thanh niên tình nguyện vì cộng đồng",
+      "C": "Tuổi trẻ sáng tạo và khởi nghiệp.",
+      "D": "Tuổi trẻ xung kích bảo vệ Tổ quốc"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 200,
+    "question_text": "Phong trào nào sau đây được triển khai dành cho học sinh khối THPT, TTGDNN - GDTX?",
+    "options": {
+      "A": "Phong trào Học sinh 3 tốt",
+      "B": "Phong trào Học sinh 3 rèn luyện",
+      "C": "Phong trào Sinh viên 5 tốt",
+      "D": "Cả 3 phương án trên"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 201,
+    "question_text": "Phong trào nào sau đây được triển khai nhằm tôn vinh và tạo động lực cho đối tượng giảng dạy? ",
+    "options": {
+      "A": "Tri thức trẻ vì giáo dục",
+      "B": "Nhà giáo trẻ tiêu biểu",
+      "C": "Người lái đò thầm lặng",
+      "D": "Nâng bước em tới trường"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 202,
+    "question_text": "Phong trào nào sau đây được triển khai dành cho khối sinh viên đang theo học tại các trường cao đẳng, đại học, học viện?",
+    "options": {
+      "A": "Phong trào Học sinh 3 rèn luyện",
+      "B": "Phong trào Sinh viên 5 tốt",
+      "C": "Phong trào Học sinh 3 tốt",
+      "D": "Cả 3 phương án trên"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 203,
+    "question_text": "Đề án “Xây dựng xã hội học tập” được triển khai trong giai đoạn nào?",
+    "options": {
+      "A": "Năm 2024 - năm 2029",
+      "B": "Năm 2021 - năm 2030",
+      "C": "Năm 2025 - năm 2030",
+      "D": "Năm 2022 - năm 2027"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 204,
+    "question_text": "Phong trào nào sau đây được triển khai dành cho học sinh đang đào tạo trình độ Trung cấp trong các cơ sở GDNN?",
+    "options": {
+      "A": "Phong trào Sinh viên 5 tốt",
+      "B": "Phong trào Học sinh 3 rèn luyện",
+      "C": "Phong trào Học sinh 3 tốt",
+      "D": "Cả 3 phương án trên"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 205,
+    "question_text": "Trong nhiệm vụ, giải pháp công tác Đoàn và phong trào thanh thiếu nhi nhiệm kỳ 2026 - 2031, để lan tỏa gương thanh niên tiêu biểu trong học tập, nội dung nào sau đây cần được đẩy mạnh?",
+    "options": {
+      "A": "Tư vấn, hỗ trợ sức khỏe tinh thần và kỹ năng xử lý áp lực",
+      "B": "Đẩy mạnh các hoạt động truyền thông và xây dựng hình ảnh, lan tỏa gương thanh niên tiêu biểu",
+      "C": "Phát triển các quỹ, học bổng và giải thưởng hỗ trợ sinh viên",
+      "D": "Các hoạt động vui chơi giải trí quy mô lớn"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 206,
+    "question_text": "Trong nhiệm vụ, giải pháp công tác Đoàn và phong trào thanh thiếu nhi nhiệm kỳ 2026 - 2031, hoạt động nào được triển khai nhằm tư vấn và hỗ trợ sức khỏe tinh thần cho học sinh, sinh viên?",
+    "options": {
+      "A": "Đổi mới phương thức thông tin cơ chế, chính sách, pháp luật về giáo dục đào tạo cho thanh niên.",
+      "B": "Tư vấn và hỗ trợ sức khỏe tinh thần và kỹ năng xử lý áp lực trong học tập.",
+      "C": "Tăng cường các tiết học lý thuyết chuyên sâu trên lớp",
+      "D": "Đẩy mạnh kết nối sinh viên với doanh nghiệp và mở rộng cơ hội thực tập"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 207,
+    "question_text": "Trong nhiệm vụ, giải pháp công tác Đoàn và phong trào thanh thiếu nhi nhiệm kỳ 2026 - 2031, Việc mở rộng các sân chơi và tạo môi trường học tập nhằm khuyến khích thanh niên chủ động cập nhật nội dung gì?",
+    "options": {
+      "A": "Các quy định về kỷ luật lao động",
+      "B": "Tạo môi trường khuyến khích thanh niên chủ động cập nhật Tri thức mới và nâng cao kỹ năng số",
+      "C": "Các xu hướng giải trí mới nhất",
+      "D": "Các phương pháp canh tác truyền thống"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 208,
+    "question_text": "Trong nhiệm vụ, giải pháp công tác Đoàn và phong trào thanh thiếu nhi nhiệm kỳ 2026 - 2031, Thanh niên được khuyến khích nâng cao năng lực để có khả năng làm việc trong môi trường nào?",
+    "options": {
+      "A": "Môi trường làm việc độc lập và hạn chế sự giao tiếp xã hội",
+      "B": "Môi trường đa ngành, đa văn hóa",
+      "C": "Môi trường lao động thủ công đơn giản",
+      "D": "Môi trường làm việc  mang tính chất truyền thống"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 209,
+    "question_text": "Trong nhiệm vụ, giải pháp công tác Đoàn và phong trào thanh thiếu nhi nhiệm kỳ 2026 - 2031, mô hình trường học nào được đề cập cần hỗ trợ xây dựng để tạo điều kiện cho thanh niên học tập?",
+    "options": {
+      "A": "Trường học nội trú vùng cao",
+      "B": "Trường học thông minh",
+      "C": "Trường học năng khiếu nghệ thuật.",
+      "D": "Trường học nghề cơ bản."
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 210,
+    "question_text": "Trong nhiệm vụ, giải pháp công tác Đoàn và phong trào thanh thiếu nhi nhiệm kỳ 2026 - 2031, đâu là nhiệm vụ chính của \"đội hình thanh niên tình nguyện chuyển đổi số học đường\" là gì?",
+    "options": {
+      "A": "Kiểm tra nề nếp và đồng phục của học sinh.",
+      "B": "Hỗ trợ kỹ thuật cho giáo viên và học sinh.",
+      "C": "Tổ chức các hoạt động lao động dọn dẹp vệ sinh.",
+      "D": "Thay thế đội ngũ giáo viên trong việc quản lý và giảng dạy các lớp học"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 211,
+    "question_text": "Trong nhiệm vụ, giải pháp công tác Đoàn và phong trào thanh thiếu nhi nhiệm kỳ 2026 - 2031, Chương trình nào sau đây cần được triển khai nhằm hỗ trợ học sinh, sinh viên đến trường? ",
+    "options": {
+      "A": "Tiếp sức đến trường",
+      "B": "Mùa hè xanh",
+      "C": "Đồng hành cùng thanh niên",
+      "D": " Thắp sáng ước mơ thiếu nhi Việt Nam."
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 212,
+    "question_text": "Trong nhiệm vụ, giải pháp công tác Đoàn và phong trào thanh thiếu nhi nhiệm kỳ 2026 - 2031, các công trình và phần việc thanh niên hỗ trợ thiết thực cho học sinh, sinh viên, giảng viên trẻ cần được tập trung vào các khu vực nào?",
+    "options": {
+      "A": "Vùng sâu, vùng xa, vùng khó khăn, xã biên giới, đặc khu.",
+      "B": "Các thành phố lớn và khu đô thị sầm uất. ",
+      "C": "Các khu công nghiệp và khu chế xuất. ",
+      "D": "Các trung tâm đào tạo ngoại ngữ quốc tế."
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 213,
+    "question_text": "Trong nhiệm vụ, giải pháp công tác Đoàn và phong trào thanh thiếu nhi nhiệm kỳ 2026 - 2031, để khuyến khích sinh viên tích cực hơn trong học tập và nghiên cứu khoa học cần triển khai giải pháp nào?",
+    "options": {
+      "A": "Phát triển các quỹ, học bổng và giải thưởng",
+      "B": "Đẩy mạnh kết nối sinh viên với doanh nghiệp để mở rộng cơ hội thực tập và trải nghiệm nghề nghiệp.",
+      "C": "Yêu cầu sinh viên phải hoàn thành thực tập trước khi tốt nghiệp.",
+      "D": "Cả 3 phương án trên"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 214,
+    "question_text": "Trong nhiệm vụ, giải pháp công tác Đoàn và phong trào thanh thiếu nhi nhiệm kỳ 2026 - 2031, mục đích chính của việc đẩy mạnh kết nối sinh viên với doanh nghiệp là gì?",
+    "options": {
+      "A": "Mở rộng cơ hội thực tập, trải nghiệm nghề nghiệp và tham gia thực tế.\n",
+      "B": "Để hỗ trợ các doanh nghiệp trong việc số hóa dữ liệu giáo dục và quản lý lớp học thông minh",
+      "C": "Để giảm bớt vai trò đào tạo của các nhà trường.",
+      "D": "Để tìm kiếm nguồn tài trợ cho các phong trào Đoàn - Hội. "
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 215,
+    "question_text": "Trong nhiệm vụ, giải pháp công tác Đoàn và phong trào thanh thiếu nhi nhiệm kỳ 2026 - 2031, một trong những nhiệm vụ trọng tâm để hỗ trợ thanh niên học tập là gì?",
+    "options": {
+      "A": "Tham gia xây dựng, hoàn thiện chính sách hỗ trợ thanh niên học tập.\n",
+      "B": "Tập trung xây dựng các trung tâm vui chơi giải trí uy mô lớn cho thanh niên",
+      "C": "Tập trung các hoạt động vào khối giáo dục phổ thông.",
+      "D": "Ưu tiên phát triển các ngành nghề truyền thống và giảm bớt việc đào tạo kỹ năng số"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 216,
+    "question_text": "Trong nhiệm vụ, giải pháp công tác Đoàn và phong trào thanh thiếu nhi nhiệm kỳ 2026 - 2031, thanh niên và các tổ chức liên quan cần phát huy vai trò gì trong xây dựng, hoàn thiện chính sách hỗ trợ thanh niên học tập?",
+    "options": {
+      "A": "Vai trò giám sát, phản biện xã hội, tham gia xây dựng pháp luật, chính sách.\n",
+      "B": "Vai trò thay thế đội ngũ quản lý trong việc thực thi các chính sách ưu đãi tuyển sinh tại địa phương",
+      "C": "Vai trò quảng bá hình ảnh cho các cơ sở giáo dục tư nhân.",
+      "D": "Vai trò tổ chức các sự kiện giải trí quốc tế để quảng bá cho các chương trình mục tiêu quốc gia"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 217,
+    "question_text": "Trong nhiệm vụ, giải pháp công tác Đoàn và phong trào thanh thiếu nhi nhiệm kỳ 2026 - 2031, tổ chức Đoàn tham gia giám sát, phản biện xã hội tập trung vào những chính sách nào đối với học sinh, sinh viên? ",
+    "options": {
+      "A": "Chính sách về hỗ trợ tài chính, ưu đãi tuyển sinh, và bảo vệ quyền lợi học tập cho học sinh, sinh viên",
+      "B": "Chính sách về đào tạo kỹ năng nghề nghiệp và kết nối cung cầu lao động tại địa phương",
+      "C": "Chính sách tăng doanh thu cho các cơ sở đào tạo.",
+      "D": "Chính sách về bảo hiểm y tế học đường, hỗ trợ nhà ở công vụ và phát triển quỹ khởi nghiệp thanh niên."
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 218,
+    "question_text": "Trong nhiệm kỳ XII, tổ chức Đoàn kiên trì vận động đoàn viên, thanh niên tham gia rèn luyện ít nhất bao nhiêu môn thể thao?",
+    "options": {
+      "A": "Ít nhất 01 môn thể thao",
+      "B": "Các môn thể thao mạo hiểm",
+      "C": " Nhiều môn thể thao",
+      "D": "Ít nhất 02 môn thể thao"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 219,
+    "question_text": "Hoạt động tư vấn, khám và phát thuốc miễn phí trong nhiệm kỳ XIII chủ yếu dành cho đối tượng nào?",
+    "options": {
+      "A": "Nhân dân và thanh thiếu nhi khó khăn tại các địa bàn khó khăn",
+      "B": "Cán bộ đoàn chuyên trách cấp cơ sở",
+      "C": "Doanh nhân trẻ",
+      "D": "Sinh viên xuất sắc"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 220,
+    "question_text": "Công tác chăm sóc sức khỏe, nâng cao thể chất trong nhiệm kỳ XII đã đạt kết quả gì nổi bật?",
+    "options": {
+      "A": "Đa dạng hóa các loại hình hoạt động thể dục, thể thao",
+      "B": "Cấp thẻ tập gym miễn phí",
+      "C": "Xây dựng bệnh viện thanh niên",
+      "D": "Bắt buộc mọi thanh niên tập thể thao"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 221,
+    "question_text": "Việc giám sát, phản biện xã hội nhiệm kỳ XII đã kiến nghị nội dung gì liên quan đến thể chất thanh niên?",
+    "options": {
+      "A": "Chăm sóc sức khỏe, nâng cao đời sống tinh thần",
+      "B": "Giảm học phí môn thể chất",
+      "C": "Trợ cấp mua dụng cụ thể thao",
+      "D": "Miễn phí toàn bộ viện phí"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 222,
+    "question_text": "Chuỗi công trình do Trung ương Đoàn TNCS Hồ Chí Minh, Trung ương Hội Liên hiệp Thanh niên Việt Nam thực hiện nhằm xây dựng không gian thể thao cộng đồng và lan tỏa tinh thần sống khỏe, sống tích cực trong thanh niên có tên là gì?",
+    "options": {
+      "A": "Công trình “Không gian thể thao thanh niên - Tiếp năng lượng, bừng sức trẻ”",
+      "B": "Công trình “Sân thể thao công đồng”",
+      "C": "Công trình “Nhà thi đấu đa năng cộng đồng”",
+      "D": "Công trình “Khu thể thao đa năng”"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 223,
+    "question_text": "Theo định hướng nhiệm kỳ XIII, đâu KHÔNG phải giải pháp nâng cao nhận thức, kỹ năng, tạo động lực cho thanh niên rèn luyện thể chất?",
+    "options": {
+      "A": "Nâng cao nhận thức về chăm sóc sức khỏe tinh thần, xây dựng lối sống cân bằng, tích cực",
+      "B": "Xây dựng các tài liệu, ấn phẩm, chương trình hướng dẫn tập luyện thể thao phù hợp với điều kiện thực tế.",
+      "C": "Hướng dẫn kiến thức, kỹ năng chăm sóc sức khỏe toàn diện góp phần hình thành thói quen khám sức khỏe định kỳ trong thanh niên",
+      "D": "Đẩy mạnh tuyên truyền, giáo dục nâng cao nhận thức về vai trò của rèn luyện thể chất, xây dựng lối sống lành mạnh trong thanh thiếu niên."
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 224,
+    "question_text": "Xu hướng phát triển các loại hình hoạt động thể dục, thể thao trong nhiệm kỳ XIII là gì?",
+    "options": {
+      "A": " Đa dạng hóa các loại hình hoạt động thể dục, thể thao phù hợp với từng nhóm đối tượng",
+      "B": "Phát triển các môn thể thao thế mạnh, môn thể thao có sự thu hút đoàn viên thanh niên tham gia đông đảo",
+      "C": "Phát triển các môn thể thao mới, các môn thể thao là xu thế mới của thể thao quốc tế",
+      "D": "Phát triển các loại hình hoạt động thể dục, thể thao là thế mạnh của Việt Nam"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 225,
+    "question_text": "Tài liệu, ấn phẩm nào sẽ được Đoàn xây dựng để hỗ trợ phát triển thể chất trong nhiệm kỳ XIII?",
+    "options": {
+      "A": "Tài liệu, ấn phẩm, chương trình hướng dẫn tập luyện thể thao phù hợp",
+      "B": "Sách giáo khoa giáo dục thể chất",
+      "C": "Cẩm nang thi đấu quốc tế",
+      "D": "Sổ tay vận động viên"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 226,
+    "question_text": "Giải pháp tạo môi trường rèn luyện thể thao nhiệm kỳ XIII hướng tới quy mô tổ chức giải như thế nào?",
+    "options": {
+      "A": "Tổ chức các giải thể thao quy mô, hiện đại, hội nhập quốc tế; nâng cao chất lượng các giải thể thao truyền thống ",
+      "B": "Tổ chức trực tuyến 100%",
+      "C": "Tổ chức giải nghiệp dư quy mô nhỏ, tạo nguồn, ươm mầm các tài năng thể thao cho đội tuyển quốc gia",
+      "D": "Tập trung tổ chức các giải thể thao ở cấp độ cơ sở đoàn"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 227,
+    "question_text": "Nhiệm kỳ XIII, Đoàn đẩy mạnh các phong trào, trào lưu rèn luyện thể thao trên môi trường nào?",
+    "options": {
+      "A": "Môi trường số",
+      "B": "Thể thao trong trường học",
+      "C": "Tại địa bàn dân cư, sân chơi cộng đồng",
+      "D": "Tại các khu công nghiệp, khu chế xuất"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 228,
+    "question_text": "Đối với thanh niên không có điều kiện ra ngoài, Đoàn hỗ trợ hình thức tập luyện nào?",
+    "options": {
+      "A": "Chương trình tập luyện tại nhà",
+      "B": "Tặng máy tập phù hợp",
+      "C": "Bắt buộc ra sân vận động",
+      "D": "Thuê huấn luyện viên riêng"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 229,
+    "question_text": "Hoạt động y tế cộng đồng nào được Đoàn tăng cường tổ chức để chăm sóc lối sống lành mạnh thanh niên?",
+    "options": {
+      "A": "Khám sàng lọc sức khỏe, tư vấn, hướng dẫn điều chỉnh lối sống khoa học, lành mạnh.",
+      "B": "Phát tiền hỗ trợ mua thực phẩm",
+      "C": "Bắt buộc đi ngủ sớm",
+      "D": "Cấm sử dụng điện thoại ban đêm"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 230,
+    "question_text": "Nội dung tham gia xây dựng chính sách của Đoàn về phát triển thể chất tập trung vào việc gì?",
+    "options": {
+      "A": "Góp ý, giám sát việc thực hiện chính sách, pháp luật về sức khỏe thanh niên hằng năm",
+      "B": "Miễn giảm thuế kinh doanh thể thao",
+      "C": "Chính sách trả lương vận động viên",
+      "D": "Luật thi đấu thể thao chuyên nghiệp"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 231,
+    "question_text": "Giải pháp đề xuất chính sách của Đoàn nhằm nâng cao thể chất thanh thiếu nhi học đường là gì?",
+    "options": {
+      "A": "Đề xuất tăng số tiết học giáo dục thể chất trong chương trình chính khóa.",
+      "B": "Đề xuất xây dựng nhà thi đấu đa năng cho 100% trường tiểu học.",
+      "C": "Tham mưu xây dựng các chương trình, mô hình chăm sóc sức khỏe học đường và phát triển thể chất. ",
+      "D": "Tham mưu bãi bỏ các môn thể thao có tính đối kháng mạnh trong trường học."
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 232,
+    "question_text": "Giải pháp nào sau đây giúp phát hiện và bồi dưỡng sớm năng khiếu thể thao trong thiếu nhi? ",
+    "options": {
+      "A": "Tổ chức cuộc thi tuyển chọn trực tuyến qua video clip.",
+      "B": " Đưa các môn thể thao chuyên nghiệp vào trường mầm non.",
+      "C": "Duy trì hoạt động phát hiện, bồi dưỡng của hệ thống Cung, Nhà thiếu nhi",
+      "D": "Phối hợp với các lò đào tạo bóng đá nước ngoài."
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 233,
+    "question_text": "Giải pháp nào trong Chương trình hành động thực hiện Nghị quyết Đại hội XIII được đề ra để phát hiện, bồi dưỡng các vận động viên trẻ tài năng?",
+    "options": {
+      "A": "Huy động nguồn lực để phát triên các câu lạc bộ thể thao trên toàn quốc.",
+      "B": "Thành lập các trung tâm thể thao phức hợp.",
+      "C": "Tổ chức các giải thể dục, thể thao phù hợp với từng nhóm tuổi",
+      "D": "Mời các chuyên gia thể thao quốc tế về Việt Nam để tìm kiếm tài năng thể thao trẻ"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 234,
+    "question_text": "Lồng ghép kiến nghị về chính sách phát triển thể chất được thực hiện qua kênh nào hằng năm? ",
+    "options": {
+      "A": "Bỏ phiếu kín tại chi đoàn",
+      "B": "Lập diễn đàn mạng",
+      "C": "Đối thoại, giám sát xã hội",
+      "D": "Biểu tình ôn hòa"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 235,
+    "question_text": "Câu lạc bộ, đội, nhóm thể thao trong thanh niên sẽ được định hướng phát triển như thế nào?",
+    "options": {
+      "A": "Chỉ tập trung môn bóng đá",
+      "B": "Sáp nhập thành một tổ chức duy nhất",
+      "C": "Duy trì và phát triển đa dạng",
+      "D": "Giải tán các nhóm nghiệp dư"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 236,
+    "question_text": "Hoạt động thể chất của thiếu nhi trong phong trào \"Thiếu nhi làm theo 5 điều Bác dạy\" được cụ thể hóa bằng nội dung nào? ",
+    "options": {
+      "A": "Tổ chức hội khỏe Phù Đổng toàn quốc hằng năm.",
+      "B": "Bắt buộc học bơi đối với tất cả học sinh tiểu học.",
+      "C": "Các chương trình đồng hành nâng cao sức khỏe thể chất cho thiếu nhi hằng năm",
+      "D": "Tham gia câu lạc bộ bóng đá của liên đội."
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 237,
+    "question_text": "Hình thức truyền thông nào được tăng cường để tạo động lực rèn luyện thể chất?",
+    "options": {
+      "A": "Chiếu phim thể thao nước ngoài",
+      "B": "Đăng tải bài viết y khoa chuyên sâu",
+      "C": "Lan tỏa hình mẫu thanh niên tích cực rèn luyện ",
+      "D": "Báo cáo thống kê bệnh tật"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 238,
+    "question_text": "Đoàn thanh niên tuyên truyền, vận động thanh niên xây dựng nếp sống văn hóa văn minh tiến bộ trong việc nào?",
+    "options": {
+      "A": "Cách thức tiêu dùng và chi tiêu tài chính hằng ngày.",
+      "B": "Việc tổ chức các lễ kỷ niệm của gia đình hằng năm.",
+      "C": "Việc cưới, việc tang, lễ hội, xóa bỏ các hủ tục, tập quán lạc hậu.",
+      "D": "Việc lựa chọn trang phục hiện đại khi đi du lịch."
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 239,
+    "question_text": "Lực lượng nào được Đoàn tăng cường kết nối để tham gia nhiệm vụ chấn hưng văn hóa nhiệm kỳ XII?",
+    "options": {
+      "A": "Nhà đầu tư nước ngoài",
+      "B": " Kỹ sư công nghệ",
+      "C": "Văn nghệ sĩ trẻ, người nổi tiếng có ảnh hưởng tích cực",
+      "D": "Chuyên gia kinh tế"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 240,
+    "question_text": "Các cơ quan báo chí, xuất bản của Đoàn đã làm gì để làm phong phú đời sống tinh thần thanh niên trong nhiệm kỳ XII?",
+    "options": {
+      "A": "Ngừng phát hành báo giấy",
+      "B": "Chuyển sang làm ứng dụng game",
+      "C": "Chủ động sản xuất các ấn phẩm văn hóa",
+      "D": "Chỉ tập trung tin tức kinh tế"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 241,
+    "question_text": "Công tác chăm lo đời sống văn hóa, tinh thần trong nhiệm kỳ XII chú trọng vào nhóm đối tượng nào?",
+    "options": {
+      "A": "Chỉ du học sinh",
+      "B": "Thanh niên công nhân, khu công nghiệp, dân tộc thiểu số",
+      "C": "Chỉ sinh viên ở các thành phố lớn",
+      "D": "Chỉ cán bộ cơ quan nhà nước"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 242,
+    "question_text": "Hệ thống nào tiếp tục phát huy hiệu quả trong vui chơi giải trí cho thiếu nhi nhiệm kỳ XII? ",
+    "options": {
+      "A": "Khu trung tâm thương mại",
+      "B": "Cung văn hóa, nhà thiếu nhi",
+      "C": "Các quán cà phê sách",
+      "D": "Công viên giải trí tư nhân"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 243,
+    "question_text": "Giải pháp nhiệm kỳ XIII: Đoàn sẽ phổ biến kiến thức, kỹ năng gì để giáo dục giá trị gia đình?",
+    "options": {
+      "A": "Kỹ năng lái xe an toàn",
+      "B": "Kỹ năng tiền hôn nhân",
+      "C": "Kỹ năng lập trình",
+      "D": "Kỹ năng đàm phán thương mại"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 244,
+    "question_text": "Theo định hướng XIII, trong các chương trình, hoạt động đối thoại, giám sát xã hội hằng năm, tổ chức đoàn sẽ tăng cường ứng phó với thách thức nào?",
+    "options": {
+      "A": "Bùng nổ dân số",
+      "B": "Già hóa dân số",
+      "C": "Khủng hoảng kinh tế",
+      "D": "Ô nhiễm không khí"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 245,
+    "question_text": "Đoàn tổ chức các loại hình nghệ thuật theo xu hướng nào để nâng cao đời sống văn hóa tinh thần (nhiệm kỳ XIII)?",
+    "options": {
+      "A": "Bỏ qua văn hóa truyền thống",
+      "B": "Hiện đại, gắn với bảo tồn giá trị văn hóa truyền thống",
+      "C": "Hoàn toàn theo xu hướng nước ngoài",
+      "D": "Chỉ biểu diễn nghệ thuật hàn lâm"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 246,
+    "question_text": "Theo định hướng XIII, không gian văn hóa, nghệ thuật sẽ được mở rộng đặc biệt tại đâu?",
+    "options": {
+      "A": "Chỉ trên không gian mạng",
+      "B": "Khu công nghiệp, vùng sâu, vùng xa, biên giới",
+      "C": "Chỉ tại thủ đô Hà Nội",
+      "D": "Các khu đô thị cao cấp"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 247,
+    "question_text": "Mạng lưới nào sẽ được xây dựng và duy trì để hỗ trợ nhóm thanh niên dễ tổn thương?",
+    "options": {
+      "A": "Mạng lưới tìm việc làm",
+      "B": "Mạng lưới tư vấn tâm lý",
+      "C": "Mạng lưới du học sinh",
+      "D": "Mạng lưới vay vốn"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 248,
+    "question_text": "Nghị quyết số 80-NQ/TW của Bộ Chính trị được Đoàn quán triệt triển khai có nội dung về vấn đề gì?  ",
+    "options": {
+      "A": "Về tinh gọn bộ máy hệ thống chính trị.",
+      "B": "Về phát triển văn hóa Việt Nam trong thời kỳ mới",
+      "C": "Về chuyển đổi số quốc gia đến năm 2030",
+      "D": "Về Chiến lược bảo vệ Tổ quốc trong tình hình mới"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 249,
+    "question_text": "Hoạt động mới nào được tổ chức nhằm tôn vinh những người hoạt động tích cực trên không gian mạng?",
+    "options": {
+      "A": "Giải thưởng Tác giả số tiêu biểu của năm do Đoàn trao tặng.",
+      "B": "Liên hoan toàn quốc và tôn vinh thanh niên làm sáng tạo nội dung số tích cực.",
+      "C": "Ngày hội KOLs trẻ vì cộng đồng toàn quốc.",
+      "D": "Liên hoan các ngôi sao mạng xã hội Việt Nam xuất sắc hằng năm."
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 250,
+    "question_text": "Đoàn tổ chức hoạt động gì để hỗ trợ và khuyến khích thanh niên phát triển các ngành công nghiệp văn hóa? ",
+    "options": {
+      "A": "Cung cấp vốn vay không lãi suất cho các nghệ sĩ trẻ khởi nghiệp.",
+      "B": "Tổ chức các liên hoan, cuộc thi ý tưởng khởi nghiệp trong lĩnh vực văn hóa. ",
+      "C": "Thành lập công ty biểu diễn nghệ thuật thanh niên chuyên nghiệp.",
+      "D": "Tổ chức các lớp đào tạo đạo diễn, diễn viên miễn phí hằng năm."
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 251,
+    "question_text": "Chính sách chăm lo đời sống văn hóa, tinh thần cần được tham mưu ưu tiên cho nhóm nào?",
+    "options": {
+      "A": "Thanh niên thành phố lớn",
+      "B": "Thanh niên ở nước ngoài",
+      "C": "Thanh niên công nhân, vùng khó khăn, dân tộc thiểu số",
+      "D": "Cán bộ quản lý cấp cao"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 252,
+    "question_text": "Mô hình nào được thành lập để gìn giữ, bảo tồn và lan tỏa giá trị văn hóa trong cộng đồng?",
+    "options": {
+      "A": "Đội thanh niên làm kinh tế",
+      "B": "Đội thanh niên bảo vệ trật tự",
+      "C": "Đội hình thanh niên tham gia gìn giữ bản sắc văn hóa",
+      "D": "Đội tình nguyện xây nhà"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 253,
+    "question_text": "Để nâng cao văn hóa đọc, định kỳ hằng năm Đoàn tổ chức hoạt động nào cho thanh thiếu nhi? ",
+    "options": {
+      "A": "Tổ chức ngày hội đổi sách cũ lấy đồ dùng học tập.",
+      "B": "Yêu cầu mỗi đoàn viên mua ít nhất 02 cuốn sách mới hằng năm.",
+      "C": "Tổ chức các hoạt động, cuộc thi để phát huy thói quen đọc sách.",
+      "D": "Tổ chức các buổi bình luận sách trực tuyến hằng tuần."
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 254,
+    "question_text": "Lồng ghép cơ chế chính sách nâng cao đời sống tinh thần cho thanh niên được thực hiện qua hoạt động nào? ",
+    "options": {
+      "A": "Các chiến dịch truyền thông của Đoàn trên mạng xã hội hằng năm.",
+      "B": "Các cuộc họp hội đồng nhân dân các cấp định kỳ hằng quý.",
+      "C": "Lồng ghép kiến nghị trong hoạt động đối thoại, giám sát xã hội hằng năm. ",
+      "D": "Diễn đàn \"Khát vọng cống hiến - Lẽ sống thanh niên\" hằng năm."
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 255,
+    "question_text": "Giải pháp nào giúp phổ biến tác phẩm văn hóa có giá trị nhân văn cao đến thanh niên? ",
+    "options": {
+      "A": "Phát sách báo in miễn phí toàn quốc",
+      "B": "Chỉ phát trên đài phát thanh",
+      "C": "Sử dụng hình thức hiện đại trên các nền tảng số ",
+      "D": "Bắt buộc thanh niên mua sách"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 256,
+    "question_text": "Công trình thiết chế văn hóa nào do hệ thống Đoàn quản lý tiếp tục phát huy hiệu quả? ",
+    "options": {
+      "A": "Các nhà hát kịch và trung tâm triển lãm mỹ thuật cấp tỉnh.",
+      "B": "Các bảo tàng lịch sử và rạp chiếu phim quốc gia.",
+      "C": " Cung văn hóa thanh thiếu nhi, nhà văn hóa, thiết chế văn hóa thể thao của Đoàn.",
+      "D": "Các thư viện công cộng cấp huyện."
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 257,
+    "question_text": "Theo Chương trình hành động thực hiện Nghị quyết, giải thưởng nào được Trung ương Đoàn tổ chức trao hằng năm vào dịp kỷ niệm Ngày thành lập Đoàn TNCS Hồ Chí Minh?",
+    "options": {
+      "A": "Giải thưởng Tuổi trẻ sáng tạo",
+      "B": "Giải thưởng 26 tháng 3",
+      "C": "Giải thưởng Lý Tự Trọng",
+      "D": "Giải thưởng Kim Đồng"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 258,
+    "question_text": "Chương trình hành động thực hiện Nghị quyết quy định Hội thi Bí thư Đoàn cơ sở giỏi toàn quốc được tổ chức định kỳ bao lâu một lần?",
+    "options": {
+      "A": "3 năm 1 lần",
+      "B": "Hằng năm",
+      "C": "2 năm 1 lần",
+      "D": "5 năm 1 lần"
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 259,
+    "question_text": "Phương châm đi cơ sở của cán bộ Đoàn trong việc thực hiện chủ trương \"1+2\" giai đoạn 2026 - 2031 là gì?",
+    "options": {
+      "A": "\"4 không, 3 rõ\"",
+      "B": "\"3 gần, 5 phải\"",
+      "C": "\"3 cùng, 3 rõ\"",
+      "D": "\"3 bám, 3 rõ\""
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 260,
+    "question_text": "Chương trình hành động thực hiện Nghị quyết đề xuất hoàn thiện các quy định về tác phong, lề lối công tác của cán bộ Đoàn theo những tiêu chí nào?",
+    "options": {
+      "A": "\"3 bám\", \"5 làm\", \"4 tránh\"",
+      "B": "\"3 cùng\", \"3 rõ\"",
+      "C": "\"3 gần\", \"5 phải\", \"4 không\"",
+      "D": "\"4 gần\", \"4 phải\", \"3 không\""
+    },
+    "correct_answer": "C",
+    "recognition_level": null
+  },
+  {
+    "question_number": 261,
+    "question_text": "Đổi mới công tác đánh giá cán bộ đoàn theo Chương trình hành động thực hiện Nghị quyết được thực hiện theo hướng nào?",
+    "options": {
+      "A": "Lấy ý kiến biểu quyết của đoàn viên tại chi đoàn làm căn cứ duy nhất",
+      "B": "Lấy nhận xét của cấp ủy đảng cùng cấp làm căn cứ chính",
+      "C": "Lấy đánh giá của đoàn viên làm căn cứ",
+      "D": "Lấy kết quả, sản phẩm công việc và dữ liệu thực hiện nhiệm vụ làm căn cứ đánh giá"
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 262,
+    "question_text": "Đề án trọng điểm nào dưới đây liên quan trực tiếp đến việc bồi dưỡng cán bộ Đoàn giai đoạn 2023 - 2027 được phê duyệt?",
+    "options": {
+      "A": "Đề án 'Đoàn kết, tập hợp thanh niên công nhân'.",
+      "B": "Đề án 'Đào tạo tài năng trẻ Việt Nam'.",
+      "C": "Đề án 'Nâng cao năng lực số cho cán bộ Đoàn'.",
+      "D": "Đề án 'Bồi dưỡng cán bộ Đoàn Thanh niên Cộng sản Hồ Chí Minh'."
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 263,
+    "question_text": "Theo Chương trình hành động thực hiện Nghị quyết Đại hội XIII, lề lối công tác của cán bộ Đoàn được định hướng điều chỉnh theo phương châm hành động nào?",
+    "options": {
+      "A": "“Xung kích, tiên phong, sáng tạo, hiệu quả”.",
+      "B": "“Giảm lý thuyết, tăng thực hành; bớt báo cáo, thêm kiểm tra”.",
+      "C": "“Tăng cường đi cơ sở, giảm làm việc tại văn phòng”.",
+      "D": "“Giảm hội họp, tăng hành động; bớt khẩu hiệu, thêm kết quả”."
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 264,
+    "question_text": "Cơ sở dữ liệu cán bộ Đoàn toàn quốc được xây dựng tích hợp trên nền tảng công nghệ nào?",
+    "options": {
+      "A": "Ứng dụng VNeID.",
+      "B": "Trang thông tin điện tử Trung ương Đoàn.",
+      "C": "Hệ thống cơ sở dữ liệu quốc gia về dân cư.",
+      "D": "Phần mềm Quản lý đoàn viên (tích hợp với Ứng dụng Thanh niên Việt Nam)."
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 265,
+    "question_text": "Đề án nào dưới đây được triển khai trong giai đoạn 2026 – 2031 song song với Đề án bồi dưỡng cán bộ Đoàn?",
+    "options": {
+      "A": "Đề án 'Đào tạo lãnh đạo trẻ tương lai'.",
+      "B": "Đề án 'Phổ cập kỹ năng số cho thanh thiếu niên Việt Nam'.",
+      "C": "Đề án 'Phát triển đội ngũ cán bộ Hội Liên hiệp Thanh niên'.",
+      "D": "Đề án “Bồi dưỡng cán bộ Mặt trận Tổ quốc Việt Nam, các tổ chức chính trị - xã hội giai đoạn 2026 – 2031”."
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 266,
+    "question_text": "Tiêu chuẩn về tác phong và lề lối làm việc '3 gần' của cán bộ Đoàn bao gồm những nội dung nào?",
+    "options": {
+      "A": "Gần gia đình - gần thanh niên - gần doanh nghiệp.",
+      "B": "Gần thanh niên - gần đảng - gần nhân dân.",
+      "C": "Gần cơ sở - gần địa bàn dân cư - gần trường học.",
+      "D": "Gần thanh niên - gần cơ sở - gần không gian số."
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 267,
+    "question_text": "Tiêu chuẩn tác phong '5 phải' của cán bộ Đoàn bao gồm những yêu cầu nào?",
+    "options": {
+      "A": "Phải lắng nghe - phải thấu hiểu - phải rèn luyện - phải cống hiến - phải làm chủ.",
+      "B": "Phải đi cơ sở - phải tuyên truyền - phải học tập - phải đổi mới - phải kỷ luật.",
+      "C": "Phải tận tụy - phải trung thực - phải sáng tạo - phải gương mẫu - phải dũng cảm.",
+      "D": "Phải lắng nghe - phải đối thoại - phải làm mẫu - phải chịu trách nhiệm - phải báo cáo kết quả."
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 268,
+    "question_text": "Tiêu chuẩn tác phong '4 không' của cán bộ Đoàn bao gồm những nội dung nào?",
+    "options": {
+      "A": "Không nói suông - không trì hoãn - không né tránh - không vi phạm kỷ luật.",
+      "B": "Không lãng phí - không tham nhũng - không bè phái - không trì trệ.",
+      "C": "Không hình thức - không quan liêu - không tham nhũng - không lười học.",
+      "D": "Không hình thức - không né tránh - không đùn đẩy - không làm sai chức năng."
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 269,
+    "question_text": "Chủ trương nào liên quan đến nhân sự cán bộ chủ chốt tại cơ sở được triển khai nhằm đáp ứng yêu cầu tinh giản bộ máy?",
+    "options": {
+      "A": "Chủ trương sáp nhập hoàn toàn chức danh Bí thư và Phó Bí thư.",
+      "B": "Chủ trương Bí thư kiêm nhiệm Phó Bí thư.",
+      "C": "Chủ trương tuyển dụng 100% cán bộ chuyên trách.",
+      "D": "Chủ trương Phó Bí thư kiêm nhiệm phù hợp với yêu cầu sắp xếp tổ chức bộ máy."
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 270,
+    "question_text": "Đâu là một trong những nội dung trọng tâm trong nhiệm vụ và giải pháp về công tác tổ chức cơ sở đoàn nhiệm kỳ 2026 - 2031",
+    "options": {
+      "A": "Tập trung xây dựng Đoàn vững mạnh về chính trị, tư tưởng, đạo đức, tổ chức và hành động",
+      "B": "Xây dựng tổ chức Đoàn gần thanh niên, hiểu thanh niên, tin thanh niên",
+      "C": "Xây dựng tổ chức Đoàn gần thanh niên, hiểu thanh niên, tin thanh niên, giao việc và dẫn dắt thanh niên trưởng thành",
+      "D": "Tập trung xây dựng Đoàn vững mạnh về chính trị, tư tưởng, đạo đức, tổ chức và hành động; gần thanh niên, hiểu thanh niên, tin thanh niên, giao việc và dẫn dắt thanh niên trưởng thành"
+    },
+    "correct_answer": "D",
+    "recognition_level": null
+  },
+  {
+    "question_number": 271,
+    "question_text": "Kết luận nào sau đây liên quan đến tổ chức cơ sở đoàn được đề cập ban hành trong Chương trình hành động thực hiện Nghị quyết?",
+    "options": {
+      "A": "Kết luận về giải pháp nâng cao chất lượng hoạt động tổ chức cơ sở Đoàn trên địa bàn dân cư giai đoạn 2026-2031 ",
+      "B": "Kết luận về giải pháp nâng cao chất lượng cán bộ Đoàn trên địa bàn dân cư giai đoạn 2026-2031 ",
+      "C": "Kết luận về giải pháp nâng cao chất lượng đoàn viên trên địa bàn dân cư",
+      "D": "Kết luận về giải pháp nâng cao chất lượng hoạt động trên địa bàn dân cư giai đoạn 2026-2031 "
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 272,
+    "question_text": "Việc đăng tải tài liệu sinh hoạt Chi đoàn được thực hiện khi nào trên phần mềm Quản lý đoàn viên? ",
+    "options": {
+      "A": "Hằng tháng",
+      "B": "Hằng quý",
+      "C": "Mỗi 6 tháng",
+      "D": "Hằng năm"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 273,
+    "question_text": "Theo Chương trình hành động thực hiện Nghị quyết, bộ tài liệu định hướng sinh hoạt chi đoàn hằng tháng được biên soạn và tích hợp trên nền tảng nào?",
+    "options": {
+      "A": "Ứng dụng Thanh niên Việt Nam",
+      "B": "Website Trung ương Đoàn",
+      "C": "Trang fanpage Facebook của Đoàn",
+      "D": "Bản tin nội bộ bằng giấy"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 274,
+    "question_text": "Chương trình hành động thực hiện Nghị quyết đề ra giải pháp ban hành Hướng dẫn xây dựng những nội dung nào trong công tác tổ chức cơ sở Đoàn giai đoạn 2026 - 2031?",
+    "options": {
+      "A": "Đoàn cơ sở '3 chủ động' và 'Chi đoàn mạnh'",
+      "B": "Đoàn cơ sở '4 chủ động' và 'Chi đoàn xuất sắc'",
+      "C": "Đoàn cơ sở '3 cùng' và 'Chi đoàn tiên phong'",
+      "D": "Đoàn cơ sở '3 vững mạnh' và 'Chi đoàn kiểu mẫu'"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 275,
+    "question_text": "Đề án nào sau đây liên quan đến phát triển tổ chức Đoàn, Hội được đề cập ban hành trong Chương trình hành động thực hiện Nghị quyết?",
+    "options": {
+      "A": "Đề án phát triển tổ chức Đoàn, Hội trong khu công nghiệp, khu chế xuất",
+      "B": "Đề án phát triển tổ chức Đoàn, Hội trong các trường ngoài công lập",
+      "C": "Đề án phát triển tổ chức Đoàn, Hội trong doanh nghiệp nhà nước",
+      "D": "Đề án phát triển tổ chức Đoàn, Hội tại địa bàn vùng biên giới"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 276,
+    "question_text": "Hướng dẫn nào sau đây liên quan đến tổ chức cơ sở đoàn được đề cập ban hành trong Chương trình hành động thực hiện Nghị quyết?",
+    "options": {
+      "A": "Hướng dẫn thành lập tổ chức Đoàn, Hội trong doanh nghiệp ngoài Nhà nước ",
+      "B": "Hướng dẫn thành lập tổ chức Đoàn, Hội trong trường học",
+      "C": "Hướng dẫn thành lập tổ chức Đoàn, Hội trong doanh nghiệp nhà nước",
+      "D": "Hướng dẫn thành lập tổ chức Đoàn, Hội trong lực lượng vũ trang"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 277,
+    "question_text": "Căn cứ theo Điều lệ Đoàn, Chi đoàn có từ bao nhiêu đoàn viên trở lên thì được bầu Ban chấp hành?",
+    "options": {
+      "A": "Có từ 9 đoàn viên trở lên",
+      "B": "Có từ 8 đoàn viên trở lên",
+      "C": "Có từ 10 đoàn viên trở lên",
+      "D": "Có từ 15 đoàn viên trở lên"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 278,
+    "question_text": "Căn cứ theo Điều lệ Đoàn, nhiệm kỳ Đại hội Đoàn các trường Đại học, Cao đẳng là?",
+    "options": {
+      "A": "5 năm 2 lần",
+      "B": "5 năm 1 lần",
+      "C": "2,5 năm 1 lần",
+      "D": "1 năm 1 lần"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 279,
+    "question_text": "Căn cứ theo Điều lệ Đoàn, đơn vị có từ bao nhiêu đoàn viên trở lên thì được thành lập chi đoàn?",
+    "options": {
+      "A": "Từ 3 đoàn viên trở lên",
+      "B": "Từ 2 đoàn viên trở lên",
+      "C": "Từ 4 đoàn viên trở lên",
+      "D": "Từ 5 đoàn viên trở lên"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 280,
+    "question_text": "Căn cứ theo Điều lệ Đoàn, điều kiện để đơn vi thành lập Đoàn cơ sở là gì?",
+    "options": {
+      "A": "Có từ 2 chi đoàn trở lên và có ít nhất 30 đoàn viên",
+      "B": "Có từ 3 chi đoàn trở lên và có ít nhất 40 đoàn viên",
+      "C": "Có từ 3 chi đoàn trở lên và có ít nhất 30 đoàn viên",
+      "D": "Có từ 2 chi đoàn trở lên và có ít nhất 40 đoàn viên"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 281,
+    "question_text": "Căn cứ theo Điều lệ Đoàn, nhiệm kỳ Đại hội chi đoàn khu vực địa bàn dân cư là?",
+    "options": {
+      "A": "1 năm 1 lần",
+      "B": "5 năm 2 lần",
+      "C": "2,5 năm 1 lần",
+      "D": "5 năm 1 lần"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 282,
+    "question_text": "Căn cứ theo Điều lệ Đoàn, nhiệm kỳ Đại hội Đoàn cơ sở khu vực địa bàn dân cư là?",
+    "options": {
+      "A": "5 năm 1 lần",
+      "B": "5 năm 2 lần",
+      "C": "2,5 năm 1 lần",
+      "D": "1 năm 1 lần"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 283,
+    "question_text": "Căn cứ theo Điều lệ Đoàn, nhiệm kỳ Đại hội Chi đoàn khu vực trường học là?",
+    "options": {
+      "A": "1 năm 1 lần",
+      "B": "5 năm 2 lần",
+      "C": "2,5 năm 1 lần",
+      "D": "5 năm 1 lần"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 284,
+    "question_text": "Căn cứ theo Điều lệ Đoàn, nhiệm kỳ Đại hội Chi đoàn, Chi đoàn cơ sở trong các cơ quan hành chính sự nghiệp, doanh nghiệp là?",
+    "options": {
+      "A": "5 năm 2 lần",
+      "B": "5 năm 1 lần",
+      "C": "2,5 năm 1 lần",
+      "D": "1 năm 1 lần"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 285,
+    "question_text": "Theo Điều lệ Đoàn TNCS Hồ Chí Minh, độ tuổi xét kết nạp đoàn viên là:",
+    "options": {
+      "A": "Từ đủ 16 đến 30 tuổi",
+      "B": "Từ đủ 16 đến 29 tuổi",
+      "C": "Từ đủ 15 đến 28 tuổi",
+      "D": "Từ đủ 18 đến 35 tuổi"
+    },
+    "correct_answer": "A",
+    "recognition_level": null
+  },
+  {
+    "question_number": 286,
+    "question_text": "Đoàn viên được công nhận trưởng thành Đoàn khi nào?",
+    "options": {
+      "A": "Hết nhiệm kỳ công tác",
+      "B": "Đủ 32 tuổi",
+      "C": "Đủ 30 tuổi",
+      "D": "Đủ 35 tuổi"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 287,
+    "question_text": "Khi chuyển nơi học tập, công tác hoặc cư trú, đoàn viên phải thực hiện điều gì?",
+    "options": {
+      "A": "Xin cấp lại thẻ đoàn viên",
+      "B": "Chuyển sinh hoạt Đoàn theo quy định",
+      "C": "Kết nạp lại vào Đoàn",
+      "D": "Báo cáo cấp ủy địa phương"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 288,
+    "question_text": "Đoàn viên có bao nhiêu nhiệm vụ cơ bản theo Điều lệ Đoàn?",
+    "options": {
+      "A": "2 nhiệm vụ",
+      "B": "3 nhiệm vụ",
+      "C": "4 nhiệm vụ",
+      "D": "5 nhiệm vụ"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 289,
+    "question_text": "Đoàn viên có quyền nào sau đây?",
+    "options": {
+      "A": "Tham gia quyết định mọi công việc của địa phương",
+      "B": "Ứng cử, đề cử và bầu cử cơ quan lãnh đạo các cấp của Đoàn theo quy định",
+      "C": "Quyết định kết nạp đoàn viên mới",
+      "D": "Ban hành nghị quyết của chi đoàn"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 290,
+    "question_text": "Thẻ đoàn viên được sử dụng với mục đích nào sau đây?",
+    "options": {
+      "A": "Chứng minh nhân dân",
+      "B": "Chứng nhận tư cách đoàn viên và phục vụ sinh hoạt Đoàn",
+      "C": "Thay thế căn cước công dân",
+      "D": "Làm thẻ ngân hàng"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 291,
+    "question_text": "Trường hợp nào sau đây là trường hợp đoàn viên bị xóa tên khỏi danh sách đoàn viên?",
+    "options": {
+      "A": "Tham gia hoạt động tình nguyện",
+      "B": "Không tham gia sinh hoạt Đoàn, không đóng đoàn phí trong thời gian theo quy định mà không có lý do chính đáng",
+      "C": "Đi học xa nhà",
+      "D": "Chuyển nơi cư trú"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 292,
+    "question_text": "Đoàn phí của đoàn viên được thực hiện theo:",
+    "options": {
+      "A": "Hướng dẫn của Bộ Nội vụ",
+      "B": "Quy định và hướng dẫn của Ban Bí thư Trung ương Đoàn",
+      "C": "Quy định của UBND cấp xã",
+      "D": "Quy định của Chính phủ"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 293,
+    "question_text": "Việc quản lý hồ sơ đoàn viên hiện nay được thực hiện theo cách nào?",
+    "options": {
+      "A": "Chỉ quản lý trên phần mềm Quản lý đoàn viên",
+      "B": "Quản lý bằng hồ sơ giấy và dữ liệu điện tử theo quy định",
+      "C": "Chỉ quản lý bằng hồ sơ giấy",
+      "D": "Không cần lưu hồ sơ"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 294,
+    "question_text": "Khi có thay đổi thông tin cá nhân, đoàn viên cần làm gì?",
+    "options": {
+      "A": "Báo với bạn cùng chi đoàn",
+      "B": "Thông báo để tổ chức Đoàn cập nhật hồ sơ, dữ liệu đoàn viên",
+      "C": "Chỉ cập nhật khi chuyển sinh hoạt",
+      "D": "Không cần cập nhật"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 295,
+    "question_text": "Mục đích của công tác quản lý đoàn viên là?",
+    "options": {
+      "A": "Thu đoàn phí",
+      "B": "Theo dõi, quản lý, đánh giá, phát triển đoàn viên và phục vụ công tác tổ chức của Đoàn",
+      "C": "Quản lý hộ khẩu",
+      "D": "Quản lý tài chính"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 296,
+    "question_text": "Khi đoàn viên được kết nạp Đảng, đoàn viên sẽ? ",
+    "options": {
+      "A": "Đương nhiên thôi sinh hoạt Đoàn",
+      "B": "Vẫn tiếp tục sinh hoạt Đoàn nếu còn trong độ tuổi theo Điều lệ Đoàn",
+      "C": "Bị xóa tên khỏi danh sách đoàn viên",
+      "D": "Chuyển sang sinh hoạt Công đoàn"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 297,
+    "question_text": "Một trong những nguyên tắc quản lý dữ liệu đoàn viên là?",
+    "options": {
+      "A": "Chỉ thu thập dữ liệu khi có sự đồng ý của chi đoàn",
+      "B": "Bảo đảm chính xác, đầy đủ, bảo mật và sử dụng đúng mục đích theo quy định",
+      "C": "Được tự ý chỉnh sửa dữ liệu",
+      "D": "Cung cấp dữ liệu cho mọi tổ chức có nhu cầu"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 298,
+    "question_text": "Đơn vị nào chịu trách nhiệm trực tiếp quản lý đoàn viên trong sinh hoạt thường xuyên?",
+    "options": {
+      "A": "Ban Chấp hành Trung ương Đoàn",
+      "B": "Chi đoàn nơi đoàn viên sinh hoạt",
+      "C": "Ban Thường vụ tỉnh đoàn",
+      "D": "Cấp ủy địa phương"
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 299,
+    "question_text": "Theo quy định về công tác quản lý đoàn viên, khi đoàn viên chuyển sinh hoạt Đoàn, tổ chức Đoàn nơi đi có trách nhiệm gì?",
+    "options": {
+      "A": "Thông báo cho tổ chức Đoàn nơi đến.",
+      "B": "Thực hiện thủ tục chuyển sinh hoạt, cập nhật trạng thái và chuyển hồ sơ đoàn viên theo quy định.",
+      "C": "Yêu cầu đoàn viên làm lại hồ sơ kết nạp tại nơi đến.",
+      "D": "Xóa ngay toàn bộ thông tin đoàn viên trên hệ thống quản lý."
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  },
+  {
+    "question_number": 300,
+    "question_text": "Theo định hướng nhiệm kỳ XIII, công tác kiểm tra, giám sát cần được đổi mới theo hướng nào là chủ yếu?",
+    "options": {
+      "A": "Chỉ tập trung xử lý khi có đơn thư tố cáo.",
+      "B": " Chủ động phòng ngừa, phát hiện sớm, ngăn ngừa vi phạm từ sớm, từ xa.",
+      "C": "Chỉ kiểm tra khi có dấu hiệu vi phạm nghiêm trọng.",
+      "D": " Tập trung kiểm tra công tác tài chính."
+    },
+    "correct_answer": "B",
+    "recognition_level": null
+  }
+]
