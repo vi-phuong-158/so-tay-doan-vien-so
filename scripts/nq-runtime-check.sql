@@ -117,7 +117,7 @@ begin
   perform public.ensure_nq_quiz_guest();
   assert public.is_nq_300_guest(), 'Only an anonymous session recorded in the NQ registry is treated as a guest';
   assert not public.is_active_user() and not public.has_role('MEMBER'), 'Guest session receives no active member role';
-  assert not exists(select 1 from public.profiles where id='6f937301-3b91-4c21-bde5-804359703003'), 'Guest session creates no member profile';
+  assert exists(select 1 from public.profiles where id='6f937301-3b91-4c21-bde5-804359703003' and account_status='INVITED'), 'Guest profile satisfies the attempt FK but remains non-active';
   assert (select count(*) from public.learning_topics where id='7c620b81-6dc6-4a57-9908-3a1f68652a01')=1, 'Guest sees the published NQ topic';
   assert (select count(*) from public.quizzes where id=bank)=1, 'Guest sees NQ quiz metadata';
   assert not exists(select 1 from public.learning_topics where id<>'7c620b81-6dc6-4a57-9908-3a1f68652a01'), 'Guest cannot read other topic metadata';

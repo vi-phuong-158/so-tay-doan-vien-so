@@ -2,16 +2,16 @@
 
 ## [2026-10-03] Scope NQ guest retention to quiz sessions
 - **Agent:** Codex
-- **Thay đổi:** Narrowed automatic cleanup after review identified that deleting every old
-  anonymous account would exceed the NQ_300 scope. A private registry now tracks anonymous users
-  only after they enter this quiz, creates no application profiles, and cleanup targets only those
-  registered guests.
-- **File đã sửa:** `supabase/migrations/20261002183000_nq_300_guest_access.sql`,
-  `scripts/nq-runtime-check.sql`, `docs/brain/{01-architecture,03-decisions,04-current-tasks,06-ai-working-log}.md`.
-- **Lý do:** Preserve unrelated anonymous identities, avoid cluttering member profiles, and limit NQ guest data retention to 30 days.
-- **Kiểm tra:** Unit/build/lint passed on the original scope. The first rehearsal migration was
-  rejected before execution; no database changes occurred. CI and rehearsal assertions are being
-  rerun against the narrowed cleanup.
+- **Thay đổi:** Narrowed cleanup after review identified that deleting every old anonymous account
+  exceeded the NQ_300 scope. The private registry now tracks only users entering this quiz. A
+  follow-up migration creates the minimal `INVITED` profile required by the existing attempt FK.
+- **File đã sửa:** `supabase/migrations/20261002171108_nq_300_guest_access.sql`,
+  `supabase/migrations/20261002171700_nq_guest_attempt_profile.sql`, `scripts/nq-runtime-check.sql`,
+  `docs/brain/{01-architecture,03-decisions,04-current-tasks,06-ai-working-log}.md`.
+- **Lý do:** Preserve unrelated anonymous identities while retaining 30-day NQ guest data cleanup.
+- **Kiểm tra:** The broad cleanup was rejected before execution. The scoped migration applied to
+  rehearsal. Remote runtime test caught the existing profile FK and rolled back its fixtures; the
+  forward fix and updated CI/runtime assertions are pending.
 - **Rollback/forward-fix:** Remove the NQ cleanup cron job and private registry through a forward
   migration; retain existing quiz data unless separately authorized.
 

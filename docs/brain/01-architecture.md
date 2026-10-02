@@ -7,8 +7,9 @@
 - Code graph: `Knowledge` → public NQ quiz metadata → public NQ route → `NqQuiz` →
   `nqQuizService` → Supabase anonymous session → `ensure_nq_quiz_guest` / `nq_attempt` / lookup.
 - NQ_300 alone is public. Its route bypasses `AuthGuard`; other Quiz routes remain guarded.
-  Browser guests get an invisible anonymous Auth identity recorded only in a private NQ guest
-  registry; they receive no application profile or roles.
+  Browser guests get an invisible anonymous Auth identity and a minimal `INVITED` profile required
+  by the existing `quiz_attempts.user_id` foreign key; they receive no roles. A private NQ registry
+  keeps quiz authorization and cleanup scoped to this bank.
 - RLS exposes only this published quiz/topic metadata to that anonymous identity. Questions, options,
   attempt snapshots and grading keys remain RPC-only; the NQ RPCs accept active members or the
   narrowly identified anonymous NQ guest. Other authenticated surfaces still require ACTIVE profile.

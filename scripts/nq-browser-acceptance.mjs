@@ -1,4 +1,4 @@
-// Acceptance harness only: real Auth and RPC; credentials come from an untracked fixture file.
+// Acceptance harness only: real Auth and RPC; member credentials are needed only outside guest mode.
 import assert from 'node:assert/strict';
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';

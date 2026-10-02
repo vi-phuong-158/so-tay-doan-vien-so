@@ -27,9 +27,10 @@
 - **Quyết định:** The owner explicitly requests free use by everyone. Publish only the NQ_300 parent
   topic and route this fixed bank outside `AuthGuard`; do not open the existing configurable Quiz,
   Member, Work, Profile or Admin routes.
-- **Identity:** The NQ page silently uses Supabase Anonymous Auth. First use records the identity
-  only in a private NQ guest registry; it creates no application profile or roles and fails all
-  existing active-user gates. Login/email/password remain absent from the quiz flow.
+- **Identity:** The NQ page silently uses Supabase Anonymous Auth. First use creates a minimal
+  `INVITED` profile required by the existing `quiz_attempts.user_id` foreign key, with no roles, and
+  records the UID in a private NQ registry. It fails all existing active-user gates.
+  Login/email/password remain absent from the quiz flow.
 - **Data boundary:** RLS exposes only NQ topic/quiz metadata for that anonymous identity. The
   question bank, answer options, snapshots, grading and attempt mutations stay behind NQ RPCs.
   Attempt ownership remains `auth.uid()`, including cross-session denial. Generic Quiz RPCs and
