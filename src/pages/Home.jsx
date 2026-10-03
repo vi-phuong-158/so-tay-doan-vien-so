@@ -163,7 +163,7 @@ export function Home() {
             <div>
               <span className="home-public-kicker">TRI THỨC CÔNG KHAI</span>
               <h2>Tìm văn bản và chuyên đề đã công bố</h2>
-              <p>Nội dung công khai mở trực tiếp. Tài khoản cần thiết khi đồng chí làm bài hoặc xem khu vực nội bộ.</p>
+              <p>Nội dung công khai mở trực tiếp. Tài khoản cần thiết khi bạn làm bài hoặc xem khu vực nội bộ.</p>
             </div>
             <div className="home-public-actions">
               <Link className="button button-primary" to="/tri-thuc">Mở kho tri thức</Link>

@@ -2408,3 +2408,16 @@
   build local (Supabase giả, chưa có Vercel Preview cho commit này) ở 360/390/430: không scroll ngang, không
   phần tử tràn, nút Đăng nhập 1 dòng; quick-card cao 113/112/98 px (trước 102/102/88 do chip icon lớn hơn,
   vượt khoảng 88–103 cũ ở 360/390); desktop 1280 giữ nguyên (hero 22 px, sidebar 268 px, nút gradient).
+
+## [2026-10-03] Mobile consistency nhóm B
+- **Agent:** Claude Code
+- **Thay đổi:** Top bar mobile dùng chung nền xanh thương hiệu (trước đó trắng ở Đổi mới, Cá nhân/Công việc khi
+  chưa đăng nhập…); Đăng nhập có liên kết "Về trang chủ" và bỏ logo trùng ở thẻ đơn vị; bỏ cụm "cho tài khoản
+  của bạn" ở trạng thái trống công khai, Trang chủ khách xưng "bạn" thống nhất; ô trống trong `.document-list`
+  hết viền kép. Chỉ CSS/JSX hiển thị; không đổi route/API/auth.
+- **File đã sửa:** `src/index.css`, `src/pages/{Home,Knowledge,LearningTopics}.jsx`, `src/pages/auth/Login.jsx`,
+  `tests/home_mobile_responsive.test.mjs`, `docs/mobile-consistency/**`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Nhóm B trong đề xuất rà soát UI (đầu trang mỗi trang một kiểu, Đăng nhập ngõ cụt, lời văn, viền kép).
+- **Kiểm tra:** `npm test` 219/219, lint 0 errors/3 warning cũ, build PASS. Bản build local (Supabase giả) ở 390/360/1280:
+  top bar `rgb(18,87,196)` 66 px, không scroll ngang, liên kết Về trang chủ điều hướng đúng, desktop không đổi.
+  Chưa có Vercel Preview/đăng nhập thật.
