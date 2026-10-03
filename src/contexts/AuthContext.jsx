@@ -37,18 +37,23 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
+      const isAnonymous = Boolean(session?.user?.is_anonymous);
+      setUser(isAnonymous ? null : (session?.user ?? null));
+      if (session?.user && !isAnonymous) {
         fetchProfileAndRoles(session.user.id);
       } else {
+        setProfile(null);
+        setProfileError(null);
+        setRoles([]);
         setLoading(false);
       }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
+      const isAnonymous = Boolean(session?.user?.is_anonymous);
+      setUser(isAnonymous ? null : (session?.user ?? null));
+      if (session?.user && !isAnonymous) {
         fetchProfileAndRoles(session.user.id);
       } else {
         setProfile(null);

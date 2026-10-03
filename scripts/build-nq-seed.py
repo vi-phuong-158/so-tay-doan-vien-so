@@ -19,7 +19,7 @@ def build(questions):
                and all(v is not None and str(v).strip() for v in q['options'].values())
                and isinstance(q['question_text'], str) and q['question_text'].strip() for q in questions)
     sql = ['begin;', f"select pg_advisory_xact_lock(hashtext('{BANK_ID}:seed'));",
-           f"insert into public.learning_topics(id,title,status,visibility_level) values('{TOPIC_ID}','Trắc nghiệm Nghị quyết','DRAFT','INTERNAL_YOUTH') on conflict(id) do nothing;",
+           f"insert into public.learning_topics(id,title,status,visibility_level) values('{TOPIC_ID}','Trắc nghiệm Nghị quyết','DRAFT','PUBLIC') on conflict(id) do nothing;",
            f"insert into public.quizzes(id,topic_id,title,bank_code,pass_score,time_limit_minutes,max_attempts,shuffle_questions,shuffle_options,status) values('{BANK_ID}','{TOPIC_ID}','Trắc nghiệm Nghị quyết','NQ_300',0,20,null,true,true,'DRAFT') on conflict(id) do update set title=excluded.title,bank_code=excluded.bank_code,time_limit_minutes=20,max_attempts=null,shuffle_questions=true,shuffle_options=true;"]
     for q in questions:
         number = q['question_number']

@@ -33,7 +33,10 @@ test('countdown derives from backend deadline; reload and local clock changes do
 
 test('attempt state and lookup use separate trusted RPCs; submission sends no client grading result', async () => {
   const calls = [];
-  const service = createNqQuizService({ rpc: async (name, args) => { calls.push([name, args]); return { data: {}, error: null }; } });
+  const service = createNqQuizService({
+    auth: { getSession: async () => ({ data: { session: { user: { id: 'member', is_anonymous: false } } }, error: null }) },
+    rpc: async (name, args) => { calls.push([name, args]); return { data: {}, error: null }; }
+  });
   await service.attempt('resume');
   await service.attempt('answer', 'attempt', 'question', 'option');
   await service.attempt('submit', 'attempt');
@@ -41,4 +44,26 @@ test('attempt state and lookup use separate trusted RPCs; submission sends no cl
   assert.equal(calls[0][0], 'nq_attempt');
   assert.deepEqual(calls[2][1], { p_action: 'submit', p_attempt_id: 'attempt', p_question_id: null, p_option_id: null });
   assert.deepEqual(calls[3], ['lookup_nq_questions', { p_search: 'Câu 125', p_offset: 0 }]);
+});
+
+test('guest sessions are created without interactive credentials and provision only the NQ guest profile', async () => {
+  const calls = [];
+  let user = null;
+  const service = createNqQuizService({
+    auth: {
+      getSession: async () => ({ data: { session: user ? { user } : null }, error: null }),
+      signInAnonymously: async (options) => {
+        calls.push(['signInAnonymously', options]);
+        user = { id: 'guest', is_anonymous: true };
+        return { data: { user }, error: null };
+      }
+    },
+    rpc: async (name, args) => { calls.push([name, args]); return { data: {}, error: null }; }
+  });
+
+  await service.attempt('resume');
+  assert.deepEqual(calls.map(([name]) => name), ['signInAnonymously', 'ensure_nq_quiz_guest', 'nq_attempt']);
+  assert.deepEqual(calls[0][1], { options: { data: { purpose: 'nq_quiz_guest' } } });
+  await service.lookup('Câu 125');
+  assert.deepEqual(calls.slice(-2).map(([name]) => name), ['ensure_nq_quiz_guest', 'lookup_nq_questions']);
 });

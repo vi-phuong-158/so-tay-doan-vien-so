@@ -1,5 +1,72 @@
 # 06 — AI Working Log
 
+## [2026-10-03] NQ_300 public guest runtime and security acceptance
+- **Agent:** Codex
+- **Thay đổi:** Audit PR #61 exact starting head `c2fda47295a5c3aff228a1319020611e58890c16`;
+  đồng bộ master `bb722841d14a0a2c27f3928e294b9b356ecde659`, giữ cả hai mục task khi resolve
+  conflict. Đưa đúng migration privilege boundary đã có trên rehearsal vào source; thêm pgTAP
+  ownership regression và cross-guest/cleanup assertions. Không replay migration đã áp dụng.
+- **File đã sửa:** `supabase/migrations/20261003091716_nq_guest_privilege_boundary.sql`,
+  `supabase/tests/nq_guest_privilege_boundary.sql`, `scripts/nq-runtime-check.sql`,
+  `docs/brain/{01-architecture,03-decisions,04-current-tasks,06-ai-working-log}.md`,
+  `docs/quiz-300/PUBLIC_GUEST_ACCEPTANCE.md`; các thay đổi master được giữ nguyên khi merge.
+- **Lý do:** Anonymous Auth dùng role authenticated; INVITED không chặn ownership-only policies.
+  Rehearsal có migration chưa được ghi vào branch; cần source/runtime parity và regression độc lập.
+- **Kiểm tra:** Anonymous HTTP 200, JWT anonymous; hai SDK clients độc lập bị từ chối foreign
+  read/answer/submit/review; direct key/private schema denied; chấm đúng 30/30 sau shuffle; lookup,
+  retry, resume, server expiry PASS. Hosted SQL assertions PASS, pgTAP mới 12/12. Local root/frontend
+  220/220, lint 0 errors/3 warning cũ, build thành công. Browser starting-head: no-login, refresh
+  giữ 2 đáp án, đề thi không overflow ở 360/390/412/768/1440. Manual-submit confirmation bị timeout
+  công cụ, nên browser acceptance chưa đạt; CI/Preview phải chạy lại exact final head trước merge.
+  Production Supabase không thay đổi; chưa tuyên bố end-to-end PASS. Chi tiết và gate còn thiếu ở
+  `docs/quiz-300/PUBLIC_GUEST_ACCEPTANCE.md`.
+
+## [2026-10-03] Scope NQ guest retention to quiz sessions
+- **Agent:** Codex
+- **Thay đổi:** Narrowed cleanup after review identified that deleting every old anonymous account
+  exceeded the NQ_300 scope. The private registry now tracks only users entering this quiz. A
+  follow-up migration creates the minimal `INVITED` profile required by the existing attempt FK.
+- **File đã sửa:** `supabase/migrations/20261002171108_nq_300_guest_access.sql`,
+  `supabase/migrations/20261002172325_nq_guest_attempt_profile.sql`, `scripts/nq-runtime-check.sql`,
+  `docs/brain/{01-architecture,03-decisions,04-current-tasks,06-ai-working-log}.md`.
+- **Lý do:** Preserve unrelated anonymous identities while retaining 30-day NQ guest data cleanup.
+- **Kiểm tra:** The broad cleanup was rejected before execution. The scoped migration applied to
+  rehearsal. Remote runtime test first caught the existing profile FK and rolled back its fixtures;
+  the forward fix now passes all hosted assertions and CI.
+- **Rollback/forward-fix:** Remove the NQ cleanup cron job and private registry through a forward
+  migration; retain existing quiz data unless separately authorized.
+
+## [2026-10-03] NQ_300 rehearsal guest acceptance
+- **Agent:** Codex
+- **Thay đổi:** Applied the two scoped guest migrations to rehearsal and verified the backend. PR #61
+  and its Vercel Preview are ready. Browser acceptance remains blocked by the rehearsal Auth setting.
+- **File đã sửa:** `docs/brain/04-current-tasks.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Make NQ_300 visible and usable without interactive login while preserving other access boundaries.
+- **Kiểm tra:** Rehearsal SQL returned `NQ_RUNTIME_ASSERTIONS_PASS`, including RLS boundaries, grading,
+  answer-key withholding and targeted 30-day cleanup. CI jobs `build`, `test-db`, and `member-api-test`
+  passed; Vercel Preview is READY. A fresh guest browser received HTTP 422 `Anonymous sign-ins are
+  disabled`; no guest account was created. Production was not accessed.
+- **Rollback/forward-fix:** Migrations are additive. Close the NQ topic to stop new use and roll back
+  the frontend if needed; after enabling Anonymous Sign-Ins in rehearsal, rerun the browser gate.
+
+## [2026-10-02] NQ_300 public guest access — implementation in progress
+- **Agent:** Codex
+- **Thay đổi:** User requested the NQ_300 quiz work freely without interactive login. Added a
+  bank-specific guest Auth/RLS design, public listing route and 30-day guest retention; acceptance
+  is still in progress.
+- **File đã sửa:** `src/App.jsx`, `src/contexts/AuthContext.jsx`, `src/pages/NqQuiz.jsx`,
+  `src/services/nqQuizService.js`, `supabase/config.toml`,
+  `supabase/migrations/20261002171108_nq_300_guest_access.sql`,
+  `scripts/{build-nq-seed.py,nq-browser-acceptance.mjs,nq-runtime-check.sql}`, `tests/nq_quiz.test.mjs`,
+  `docs/{01-product-spec.md,brain/{01-architecture,03-decisions,04-current-tasks,06-ai-working-log}.md}`.
+- **Lý do:** The quiz was published as INTERNAL_YOUTH and placed behind AuthGuard, so guests saw an
+  empty list. The owner clarified the bank should be usable without signing in.
+- **Kiểm tra:** Frontend 209/209 PASS; lint 0 errors (3 existing Fast Refresh warnings); Vite build
+  PASS; guest browser harness syntax PASS; source/runtime SQL, CI and hosted anonymous-auth acceptance
+  remain pending on rehearsal.
+- **Rollback/forward-fix:** Close only the NQ bank/topic to stop new attempts; keep all question data.
+  Roll back the frontend to the previous deployment. Do not replay migrations; use a forward-fix.
+
 ## [2026-10-02] Quiz 300 review fixes and release closure
 - **Agent:** Codex
 - **Thay đổi:** Restore the original handoff patch on isolated `codex/quiz-300-nq-fixes`;
@@ -2444,3 +2511,10 @@
 - **Lý do:** Phát hiện khi đo bản đăng nhập trên Preview #64: ô đầu thiếu nền chip, lệch với hai ô còn lại.
 - **Kiểm tra:** `npm test` 223/223, lint 0 errors/3 warning cũ, build PASS. Bản đã đăng nhập đo bằng tài khoản thử do owner tự tạo và
   tự đăng nhập; đã đo lại sau khi push (xem kết quả trong PR).
+
+## [2026-10-03] Gỡ xung đột PR #61 với master
+- **Agent:** Claude Code
+- **Thay đổi:** Gộp `master` (sau PR #62/#63/#64) vào `codex/quiz-300-public-access`; chỉ xung đột tài liệu.
+- **File đã sửa:** `docs/brain/04-current-tasks.md` (giữ mục NQ_300 và mục UI polish của master, bỏ khối `BRAND_LOGO_PENDING_OWNER_ASSET` đã đóng).
+- **Lý do:** PR #61 ở trạng thái CONFLICTING; mã và migration tự gộp, không đổi.
+- **Kiểm tra:** `npm test` 224/224, `npm run lint` 0 lỗi, `npm run build` PASS trên kết quả gộp; CI chạy lại trên head mới.

@@ -7,6 +7,15 @@
 
 ## Đang làm
 
+### NQ_300 public guest access (2026-10-02)
+- User wants the published NQ_300 quiz free to everyone with no interactive login.
+- Branch `codex/quiz-300-public-access`, based on merged Quiz #60 commit `bafc23e`.
+- Fix: invisible Supabase anonymous session with a minimal `INVITED` profile for the existing attempt FK; private registry scopes access/cleanup to this bank; other app areas stay behind current active-user/RLS checks.
+- Keep quiz questions/answer keys private and served through trusted RPCs; guest attempt ownership uses anon Auth `uid`; clean only registered NQ guest identities and attempts after 30 days.
+- Rehearsal migrations `20261002171108` and `20261002172325` are applied; hosted `NQ_RUNTIME_ASSERTIONS_PASS`.
+- Owner enabled Anonymous Sign-Ins; live Auth now returns 200 with anonymous JWT/user. Acceptance on the updated PR head is in progress; no merge until every gate is evidenced.
+- Reconcile the already-applied `20261003091716_nq_guest_privilege_boundary` migration into source and regression tests. Production Supabase remains outside scope.
+
 ### UI polish sau PR #62/#63 (2026-10-03) — nhánh `ui/brand-logo-and-home-latest`
 - **Logo:** owner chỉ định `logo-dtn.jpg`; trùng byte với nguồn `logo-doan.jpg` đang dùng →
   `BRAND_LOGO_OWNER_CONFIRMED`, đóng `BRAND_LOGO_PENDING_OWNER_ASSET`, không đổi ảnh/icon.

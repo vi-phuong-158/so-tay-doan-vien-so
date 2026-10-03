@@ -1,4 +1,4 @@
-// Acceptance harness only: real Auth and RPC; credentials come from an untracked fixture file.
+// Acceptance harness only: real Auth and RPC; member credentials are needed only outside guest mode.
 import assert from 'node:assert/strict';
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
@@ -6,7 +6,8 @@ import { pathToFileURL } from 'node:url';
 import { createServer } from 'vite';
 
 const { chromium } = await import(pathToFileURL(resolve(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES, 'playwright/index.mjs')).href);
-const actor = JSON.parse(await readFile(process.env.NQ_BROWSER_ACTOR_FILE, 'utf8'));
+const guestMode = process.env.NQ_GUEST_MODE === '1';
+const actor = guestMode ? null : JSON.parse(await readFile(process.env.NQ_BROWSER_ACTOR_FILE, 'utf8'));
 const evidence = resolve('docs/quiz-300/evidence');
 await mkdir(evidence, { recursive: true });
 const origin = process.env.NQ_BASE_URL || 'http://127.0.0.1:5174';
@@ -19,8 +20,31 @@ const context = await browser.newContext({ viewport: { width: 390, height: 844 }
 const page = await context.newPage();
 const errors = [];
 const states = [];
+const authResponses = [];
+const guestApiErrors = [];
+let anonymousIdentityCreated = false;
 page.on('pageerror', (error) => errors.push(error.message));
 page.on('response', async (response) => {
+  const url = new URL(response.url());
+  if (guestMode && url.hostname === 'znexculhbdjiflkczpyu.supabase.co' && url.pathname.startsWith('/auth/v1/')) {
+    const observation = { path: url.pathname, grant_type: url.searchParams.get('grant_type'), status: response.status() };
+    try {
+      const result = await response.json();
+      if (result.user) anonymousIdentityCreated = result.user.is_anonymous === true;
+      if (result.msg || result.message) observation.message = String(result.msg || result.message).slice(0, 180);
+    } catch { /* Auth response may not have a JSON body. */ }
+    authResponses.push(observation);
+  }
+  if (guestMode && url.hostname === 'znexculhbdjiflkczpyu.supabase.co'
+    && url.pathname.endsWith('/rpc/ensure_nq_quiz_guest') && !response.ok()) {
+    const observation = { function: 'ensure_nq_quiz_guest', status: response.status() };
+    try {
+      const result = await response.json();
+      if (result.code) observation.code = result.code;
+      if (result.message) observation.message = String(result.message).slice(0, 180);
+    } catch { /* RPC response may not have a JSON body. */ }
+    guestApiErrors.push(observation);
+  }
   if (response.url().includes('/rpc/nq_attempt') && response.ok()) {
     assert.equal(new URL(response.url()).hostname, 'znexculhbdjiflkczpyu.supabase.co');
     // A navigation may discard a completed response body before this observer reads it.
@@ -37,12 +61,14 @@ try {
   if (process.env.NQ_PREVIEW_ACCESS_FILE) {
     await page.goto((await readFile(process.env.NQ_PREVIEW_ACCESS_FILE, 'utf8')).trim());
   }
-  await page.goto(`${origin}/login`);
-  console.log('LOGIN_DOM', (await page.locator('body').innerText()).slice(0, 500));
-  await page.getByLabel('Email', { exact: true }).fill(actor.email);
-  await page.getByLabel('Mật khẩu', { exact: true }).fill(actor.password);
-  await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
-  await page.waitForURL(origin + '/', { timeout: 45000 });
+  if (!guestMode) {
+    await page.goto(`${origin}/login`);
+    console.log('LOGIN_DOM', (await page.locator('body').innerText()).slice(0, 500));
+    await page.getByLabel('Email', { exact: true }).fill(actor.email);
+    await page.getByLabel('Mật khẩu', { exact: true }).fill(actor.password);
+    await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
+    await page.waitForURL(origin + '/', { timeout: 45000 });
+  }
   if (process.env.NQ_EXPIRY_ONLY) {
     await page.goto(`${origin}${quizPath}`);
     await page.getByRole('button', { name: 'Làm đề khác', exact: true }).waitFor({ timeout: 45000 });
@@ -69,6 +95,10 @@ try {
   await page.getByRole('tab', { name: 'Trắc nghiệm', exact: true }).click();
   await page.getByRole('link', { name: /Trắc nghiệm Nghị quyết/ }).click({ timeout: 45000 });
   await page.getByRole('button', { name: 'Bắt đầu thi', exact: true }).waitFor({ timeout: 45000 });
+  if (guestMode) {
+    assert.equal(anonymousIdentityCreated, true, 'A non-interactive Supabase guest session was created');
+    await page.getByText('Miễn phí, không cần đăng nhập.', { exact: false }).waitFor();
+  }
   await page.screenshot({ path: resolve(evidence, 'mobile-intro.png'), fullPage: true });
   await page.getByRole('button', { name: 'Bắt đầu thi', exact: true }).click();
   await page.getByText('Câu 1 / 30', { exact: true }).waitFor({ timeout: 45000 });
@@ -159,14 +189,26 @@ try {
   assert.deepEqual(errors, []);
   const summary = { mobile: 'PASS', desktop: 'PASS', answer_leakage: 'PASS',
     resume: 'PASS', offline_reconnect: 'PASS', lookup: 'PASS', lookup_query_change: 'PASS',
-    viewports: [360, 390, 430, 768, 1440], origin, browser_errors: errors,
+    viewports: [360, 390, 430, 768, 1440], origin, auth_mode: guestMode ? 'anonymous_no_login' : 'member',
+    browser_errors: errors,
     initial_attempt_id: first.attempt_id, final_attempt_id: retry.attempt_id };
   await writeFile(resolve(evidence, 'browser-summary.json'), JSON.stringify(summary, null, 2) + '\n');
   console.log(JSON.stringify(summary));
   }
 } catch (error) {
   await page.screenshot({ path: resolve(evidence, 'failure.png'), fullPage: true });
-  console.error('BROWSER_FAILURE', error.message, 'DOM', (await page.locator('body').innerText()).slice(0, 2200));
+  const guestSession = guestMode ? await page.evaluate(() => {
+    for (const key of Object.keys(localStorage)) {
+      if (!key.includes('auth-token')) continue;
+      try {
+        const session = JSON.parse(localStorage.getItem(key));
+        return { exists: Boolean(session), isAnonymous: session?.user?.is_anonymous === true };
+      } catch { return { exists: true, isAnonymous: false }; }
+    }
+    return { exists: false, isAnonymous: false };
+  }) : null;
+  console.error('BROWSER_FAILURE', error.message, 'DOM', (await page.locator('body').innerText()).slice(0, 2200),
+    'DIAGNOSTICS', JSON.stringify({ authResponses, guestApiErrors, guestSession }));
   process.exitCode = 1;
 } finally {
   await context.close(); await browser.close(); await server?.close();

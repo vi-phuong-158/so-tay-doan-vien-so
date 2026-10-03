@@ -4,7 +4,21 @@
 
 - Existing `/tri-thuc/trac-nghiem/:quizId` routes bank UUID `7c620b81-6dc6-4a57-9908-3a1f68652a00`
   to `NqQuiz`; other quizzes retain the existing component and RPCs.
-- Code graph: `Quiz` → `NqQuiz` → `nqQuizService` → authenticated `nq_attempt` / `lookup_nq_questions`.
+- Code graph: `Knowledge` → public NQ quiz metadata → public NQ route → `NqQuiz` →
+  `nqQuizService` → Supabase anonymous session → `ensure_nq_quiz_guest` / `nq_attempt` / lookup.
+- NQ_300 alone is public. Its route bypasses `AuthGuard`; other Quiz routes remain guarded.
+  Browser guests get an invisible anonymous Auth identity and a minimal `INVITED` profile required
+  by the existing `quiz_attempts.user_id` foreign key; they receive no roles. A private NQ registry
+  keeps quiz authorization and cleanup scoped to this bank.
+- RLS exposes only this published quiz/topic metadata to that anonymous identity. Questions, options,
+  attempt snapshots and grading keys remain RPC-only; the NQ RPCs accept active members or the
+  narrowly identified anonymous NQ guest. Other authenticated surfaces still require ACTIVE profile.
+- `20261003091716_nq_guest_privilege_boundary` additionally restricts legacy owner-only AI and
+  announcement-read policies and profile updates for registered NQ guests. These policies are
+  exercised by `supabase/tests/nq_guest_privilege_boundary.sql`; permanent user ownership is preserved.
+- An unexposed `quiz_private.nq_guest_accounts` registry records identities that use NQ_300. Daily
+  pg_cron cleanup removes only registered anonymous NQ guests after 30 days; other anonymous Auth
+  identities are untouched.
 - Reuses `quizzes`, `quiz_questions`, `quiz_options`, `quiz_attempts`, `quiz_answers`; adds
   `bank_code`, `question_number`, `source_label`. No second question bank schema.
 - `quiz_private.attempt_snapshots` stores 30 sampled questions, shuffled options, immutable text/key,
@@ -16,7 +30,7 @@
 - Existing generic attempt RPCs reject this bank, preserving their other quiz behavior.
 - `scripts/validate-nq-source.py` extracts Excel without text correction; canonical JSON and generated
   bank-scoped SQL live outside frontend assets. Seed uses bank/number and question/label uniqueness.
-- Local browser pending selections contain only chosen IDs, keyed by user/attempt, and are discarded
+- Local browser pending selections contain only chosen IDs, keyed by Auth user/attempt, and are discarded
   after finalization. They never override backend expiry or contain the grading key.
 - CI runs legacy suites before two idempotent NQ seed executions and NQ SQL assertions.
 - Lookup pagination keeps its submitted query separate from the editable input. Changing the input

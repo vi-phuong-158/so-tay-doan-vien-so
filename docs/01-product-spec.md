@@ -547,6 +547,10 @@ Mỗi chuyên đề gồm:
 
 Không coi kết quả trắc nghiệm là căn cứ đánh giá chính thức nếu chưa có quy định nghiệp vụ rõ ràng.
 
+Riêng ngân hàng NQ_300 đã được chủ sản phẩm yêu cầu mở miễn phí không cần đăng nhập. Phiên khách ẩn
+danh chỉ phục vụ bài này; kết quả/lượt thi gắn với thiết bị trình duyệt và có thể mất khi xóa dữ liệu
+trình duyệt. Lượt khách được giữ tối đa 30 ngày. Quyền truy cập các khu vực khác không thay đổi.
+
 ---
 
 # 7.7. Trợ lý AI

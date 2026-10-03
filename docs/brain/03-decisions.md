@@ -1,5 +1,16 @@
 # 03 — Technical Decisions
 
+## [2026-10-03] NQ guest ownership policy boundary and schema reconciliation
+
+- Legacy owner-only policies do not require ACTIVE accounts, so an INVITED profile is insufficient
+  to exclude anonymous NQ guests from AI persistence and profile edits. Restrictive policies exclude
+  registered NQ guests on those surfaces while preserving permanent user behavior.
+- Rehearsal already contains migration `20261003091716_nq_guest_privilege_boundary`; restore its
+  verified SQL into source under the same version, without replaying or editing applied migrations.
+- Regression covers live RLS, two guest owners, completed-review denial and cleanup of old registered
+  guests while retaining permanent, recent and unrelated anonymous identities. Cleanup tests limit
+  the production cron predicate to exact disposable fixture IDs inside a rolled-back transaction.
+
 ## 2026-10-02 — Nghị quyết self-study has one fixed mode
 
 - Owner scope overrides older configurable Quiz requirements for `NQ_300` only: exactly 30 distinct
@@ -21,6 +32,27 @@
   or migration-history deletion is necessary.
 - Lookup load-more belongs to the last completed query, not the current input. Edited input requires
   a new search before pagination. Hosted acceptance covers this regression and all five viewports.
+
+## [2026-10-02] NQ_300 is free without interactive login
+
+- **Quyết định:** The owner explicitly requests free use by everyone. Publish only the NQ_300 parent
+  topic and route this fixed bank outside `AuthGuard`; do not open the existing configurable Quiz,
+  Member, Work, Profile or Admin routes.
+- **Identity:** The NQ page silently uses Supabase Anonymous Auth. First use creates a minimal
+  `INVITED` profile required by the existing `quiz_attempts.user_id` foreign key, with no roles, and
+  records the UID in a private NQ registry. It fails all existing active-user gates.
+  Login/email/password remain absent from the quiz flow.
+- **Data boundary:** RLS exposes only NQ topic/quiz metadata for that anonymous identity. The
+  question bank, answer options, snapshots, grading and attempt mutations stay behind NQ RPCs.
+  Attempt ownership remains `auth.uid()`, including cross-session denial. Generic Quiz RPCs and
+  public (unauthenticated-role) callers remain denied.
+- **Retention and abuse:** Anonymous signup uses Supabase's per-IP rate limit. A private registry
+  marks sessions that actually enter NQ_300; daily pg_cron cleanup deletes only those anonymous
+  accounts and their quiz data 30 days after first use. Other anonymous identities are untouched.
+  Interactive CAPTCHA is not part of this no-friction flow. Enable Anonymous Sign-Ins only on the
+  rehearsal project after this migration and its NQ-only RLS gates are in place; keep production untouched.
+- **Supersedes:** the 2026-09-20 rule that all Quiz routes require login, for this single NQ_300 bank
+  only. Other Quiz and application authorization remains unchanged.
 
 > Ghi lại quyết định kỹ thuật quan trọng để agent sau không "phát minh lại" hoặc đảo ngược
 > mà không biết lý do. Nguồn gốc: `docs/07-decisions.md`, README, lịch sử git, `docs/phase-2/`.
