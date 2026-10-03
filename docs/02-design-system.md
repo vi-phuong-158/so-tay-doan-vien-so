@@ -30,15 +30,33 @@ Nguyên tắc tổng quát:
 
 ## 2. Tệp tham chiếu thiết kế
 
-- Logo tham chiếu: `logo-reference.png`
-- Concept UI đã chốt: `design-reference.png`
+> **BRAND_LOGO_PENDING_OWNER_ASSET** — Logo hiện tại **chỉ là giải pháp tạm thời, chưa được nghiệm thu**.
+> `logo-doan-badge.png` được tách từ asset cũ `logo-doan.jpg` (huy hiệu "THANH NIÊN VIỆT NAM"), chưa
+> đáp ứng yêu cầu của owner về logo Đoàn Thanh niên. Không tự vẽ hoặc lấy logo không rõ nguồn.
 
-Trong repo nên đặt tại:
+Khi owner cung cấp file logo Đoàn TNCS Hồ Chí Minh chuẩn, phải thay **đồng bộ** tất cả:
+
+| Vị trí | File / nơi dùng |
+|---|---|
+| Header (Trang chủ, top bar, sidebar) | `src/components/common.jsx` (`Brand`), kích thước trong `src/index.css` |
+| Đăng nhập | `src/pages/auth/Login.jsx` (`.login-hero`, `.organization-card`) |
+| Favicon | `index.html`, `preview.html`, `public/brand/favicon-64.png` |
+| PWA manifest | `public/manifest.webmanifest` |
+| App icon / apple-touch-icon | `public/brand/app-icon-192.png`, `app-icon-512.png` |
+| Splash / icon liên quan | chưa có splash riêng; rà lại khi bổ sung |
+| Cache | tăng `CACHE` trong `public/sw.js` + cập nhật `tests/public_first_auth.test.mjs`, `tests/home_mobile_responsive.test.mjs` |
+
+Các file đang dùng (tạm thời):
 
 ```text
-public/brand/logo-reference.png
-public/brand/design-reference.png
+public/brand/logo-doan.jpg          # asset cũ trong repo, giữ nguyên làm nguồn
+public/brand/logo-doan-badge.png    # tạm thời: huy hiệu tách từ logo-doan.jpg
+public/brand/app-icon-192.png       # tạm thời: sinh từ huy hiệu trên
+public/brand/app-icon-512.png       # tạm thời
+public/brand/favicon-64.png         # tạm thời
 ```
+
+- Concept UI đã chốt: `design-reference.png`
 
 ---
 
@@ -46,12 +64,10 @@ public/brand/design-reference.png
 
 ### 3.1. Logo
 
-Logo sử dụng ngôn ngữ hình ảnh:
-
-- Khối nền xanh dương bo tròn.
-- Phần dưới tạo hình tam giác đỏ.
-- Ngôi sao vàng làm điểm nhấn.
-- Viền trắng giúp logo rõ trên nền xanh đậm.
+Logo **tạm thời** (chờ asset chuẩn của owner) là **huy hiệu "THANH NIÊN VIỆT NAM"**: khối xanh dương bo góc phía trên, đáy nhọn,
+khung chữ xanh đậm viền trắng, tam giác đỏ và ngôi sao vàng. Logo **rộng hơn cao** (≈ 1,88 : 1) nên
+luôn đặt theo **chiều cao**, `width:auto` — không ép thành ô vuông, không bo góc, không đổ bóng, không
+`object-fit:cover`.
 
 Logo nên được sử dụng tại:
 
@@ -64,15 +80,19 @@ Logo nên được sử dụng tại:
 
 Không nên lặp logo ở mọi card, mọi danh sách hoặc mọi modal.
 
-### 3.2. Kích thước logo
+### 3.2. Kích thước logo (theo chiều cao)
 
-| Vị trí | Kích thước đề xuất |
-|---|---:|
-| Favicon | 32 × 32 px |
-| Header mobile | 28–32 px |
-| Splash screen | 88–112 px |
-| Trang đăng nhập | 72–88 px |
-| Desktop header | 36–40 px |
+| Vị trí | Chiều cao | Chiều rộng tương ứng |
+|---|---:|---:|
+| Favicon | 64 px (file) | — |
+| Header mobile (Trang chủ, top bar) | 32 px | ≈ 60 px |
+| Sidebar desktop | 34 px | ≈ 64 px |
+| Trang đăng nhập | 40 px | ≈ 75 px |
+| Thẻ đơn vị (đăng nhập) | 30 px | ≈ 57 px |
+| Icon PWA | 512 / 192 px | huy hiệu chiếm 66% chiều rộng |
+
+Header mobile: tên ứng dụng một dòng, tên đơn vị tối đa hai dòng; khối chữ có `min-width:0` để co
+lại, nút hành động bên phải (`Đăng nhập`/chuông) không co và không xuống dòng.
 
 ### 3.3. Khoảng trống an toàn
 

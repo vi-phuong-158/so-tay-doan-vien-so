@@ -1,5 +1,26 @@
 # 06 — AI Working Log
 
+## [2026-10-03] NQ_300 public guest runtime and security acceptance
+- **Agent:** Codex
+- **Thay đổi:** Audit PR #61 exact starting head `c2fda47295a5c3aff228a1319020611e58890c16`;
+  đồng bộ master `bb722841d14a0a2c27f3928e294b9b356ecde659`, giữ cả hai mục task khi resolve
+  conflict. Đưa đúng migration privilege boundary đã có trên rehearsal vào source; thêm pgTAP
+  ownership regression và cross-guest/cleanup assertions. Không replay migration đã áp dụng.
+- **File đã sửa:** `supabase/migrations/20261003091716_nq_guest_privilege_boundary.sql`,
+  `supabase/tests/nq_guest_privilege_boundary.sql`, `scripts/nq-runtime-check.sql`,
+  `docs/brain/{01-architecture,03-decisions,04-current-tasks,06-ai-working-log}.md`,
+  `docs/quiz-300/PUBLIC_GUEST_ACCEPTANCE.md`; các thay đổi master được giữ nguyên khi merge.
+- **Lý do:** Anonymous Auth dùng role authenticated; INVITED không chặn ownership-only policies.
+  Rehearsal có migration chưa được ghi vào branch; cần source/runtime parity và regression độc lập.
+- **Kiểm tra:** Anonymous HTTP 200, JWT anonymous; hai SDK clients độc lập bị từ chối foreign
+  read/answer/submit/review; direct key/private schema denied; chấm đúng 30/30 sau shuffle; lookup,
+  retry, resume, server expiry PASS. Hosted SQL assertions PASS, pgTAP mới 12/12. Local root/frontend
+  220/220, lint 0 errors/3 warning cũ, build thành công. Browser starting-head: no-login, refresh
+  giữ 2 đáp án, đề thi không overflow ở 360/390/412/768/1440. Manual-submit confirmation bị timeout
+  công cụ, nên browser acceptance chưa đạt; CI/Preview phải chạy lại exact final head trước merge.
+  Production Supabase không thay đổi; chưa tuyên bố end-to-end PASS. Chi tiết và gate còn thiếu ở
+  `docs/quiz-300/PUBLIC_GUEST_ACCEPTANCE.md`.
+
 ## [2026-10-03] Scope NQ guest retention to quiz sessions
 - **Agent:** Codex
 - **Thay đổi:** Narrowed cleanup after review identified that deleting every old anonymous account
@@ -2417,3 +2438,53 @@
   no-evidence PASS. Authenticated runtime/Member API vẫn BLOCKED đúng nghĩa; không tạo fixture giả,
   không dùng service role ở frontend và không chạm production. PR #57 exact head
   `a6d7f02c8d6aaa3da64b4c2e5175be4e0f3bf8ca`, CI run `35700532914` xanh toàn bộ.
+
+## [2026-10-03] Home mobile responsive + logo Đoàn
+- **Agent:** Claude Code
+- **Thay đổi:** Sửa responsive Trang chủ tại 360/390/430: card "Tri thức công khai" về một cột, CTA
+  dưới nội dung; 3 quick-action card gọn (≤2 dòng tiêu đề, cao 88–103 px thay vì 94–135 px); header
+  mobile logo 32 px, chữ co được, nút Đăng nhập không xuống dòng; token `--bottom-nav-h` + padding
+  đáy `.home-page`; logo TẠM THỜI bằng huy hiệu tách từ asset cũ `logo-doan.jpg` (BRAND_LOGO_PENDING_OWNER_ASSET, chưa nghiệm thu), gỡ `app-icon.svg`, thêm
+  icon PWA/favicon; cập nhật `docs/02-design-system.md`; bump cache SW lên v4.
+- **File đã sửa:** `src/index.css`, `src/components/common.jsx`, `src/pages/auth/Login.jsx`,
+  `index.html`, `preview.html`, `public/{manifest.webmanifest,sw.js}`,
+  `public/brand/{logo-doan-badge.png,app-icon-192.png,app-icon-512.png,favicon-64.png}` (mới),
+  `public/brand/app-icon.svg` (xóa), `tests/home_mobile_responsive.test.mjs` (mới),
+  `tests/public_first_auth.test.mjs` (đổi tên cache v3→v4), `docs/02-design-system.md`,
+  `docs/brain/{01-architecture,03-decisions,06-ai-working-log}.md`, `docs/home-mobile-responsive/**`.
+- **Lý do:** Rule mobile của `.home-public-card` thiếu `grid-template-columns` nên bị ép cột hẹp
+  (tiêu đề 5 dòng ở 360 px); logo cũ là ảnh vuông nền vải nên huy hiệu quá nhỏ; xem báo cáo chi tiết
+  ở `docs/home-mobile-responsive/REPORT.md`.
+- **Kiểm tra:** Chromium thật (Playwright) + font Be Vietnam Pro, 360×800/390×844/430×932, cả khách
+  và đã đăng nhập (phiên/REST giả lập): không scroll ngang, không phần tử tràn, không text tràn,
+  chừa 32 px trên bottom nav. Thêm 320/600/768/960/1280, Login, trang con. `npm test` 213/213,
+  lint 0 errors/3 warning cũ, build PASS.
+
+## [2026-10-03] Mobile UI polish nhóm A (PR #62)
+- **Agent:** Claude Code
+- **Thay đổi:** Hero Trang chủ mobile chỉ bo hai góc dưới (`0 0 24px 24px`) để hết lộ nền trắng ở góc trên;
+  `theme-color`/`theme_color` đổi `#0D47A1` → `#1257C4` cho khớp hero; 3 quick-card khách dùng chung tông
+  xanh, chip icon 34 px, icon `file-search`/`school`/`bulb` (thêm `FileSearch`, `GraduationCap` vào `Icon.jsx`);
+  bottom nav có pill `--brand-100` sau icon tab đang chọn; nút chính mobile phẳng (không gradient/bóng);
+  nút Đăng nhập ở hero thành pill trắng chữ xanh. Chỉ trong `@media (max-width:960px)`, desktop không đổi.
+- **File đã sửa:** `src/index.css`, `src/components/Icon.jsx`, `src/pages/Home.jsx`, `index.html`,
+  `preview.html`, `public/manifest.webmanifest`, `tests/home_mobile_responsive.test.mjs`,
+  `docs/home-mobile-responsive/{vercel-preview,local-polish}/**`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Phản hồi của owner: góc trên hero lộ trắng, icon trông cũ. Không đổi route/API/auth.
+- **Kiểm tra:** `npm test` 215/215, lint 0 errors/3 warning cũ, build PASS. Chromium (browser pane) trên bản
+  build local (Supabase giả, chưa có Vercel Preview cho commit này) ở 360/390/430: không scroll ngang, không
+  phần tử tràn, nút Đăng nhập 1 dòng; quick-card cao 113/112/98 px (trước 102/102/88 do chip icon lớn hơn,
+  vượt khoảng 88–103 cũ ở 360/390); desktop 1280 giữ nguyên (hero 22 px, sidebar 268 px, nút gradient).
+
+## [2026-10-03] Mobile consistency nhóm B
+- **Agent:** Claude Code
+- **Thay đổi:** Top bar mobile dùng chung nền xanh thương hiệu (trước đó trắng ở Đổi mới, Cá nhân/Công việc khi
+  chưa đăng nhập…); Đăng nhập có liên kết "Về trang chủ" và bỏ logo trùng ở thẻ đơn vị; bỏ cụm "cho tài khoản
+  của bạn" ở trạng thái trống công khai, Trang chủ khách xưng "bạn" thống nhất; ô trống trong `.document-list`
+  hết viền kép. Chỉ CSS/JSX hiển thị; không đổi route/API/auth.
+- **File đã sửa:** `src/index.css`, `src/pages/{Home,Knowledge,LearningTopics}.jsx`, `src/pages/auth/Login.jsx`,
+  `tests/home_mobile_responsive.test.mjs`, `docs/mobile-consistency/**`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Nhóm B trong đề xuất rà soát UI (đầu trang mỗi trang một kiểu, Đăng nhập ngõ cụt, lời văn, viền kép).
+- **Kiểm tra:** `npm test` 219/219, lint 0 errors/3 warning cũ, build PASS. Bản build local (Supabase giả) ở 390/360/1280:
+  top bar `rgb(18,87,196)` 66 px, không scroll ngang, liên kết Về trang chủ điều hướng đúng, desktop không đổi.
+  Chưa có Vercel Preview/đăng nhập thật.

@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { Icon } from '../../components/Icon';
 
 export const Login = () => {
   const [email, setEmail] = useState('');
@@ -34,9 +35,10 @@ export const Login = () => {
   return (
     <div className="page login-page">
       <main className="login-shell">
+        <Link className="login-back" to="/"><Icon name="chevron-left" size={18} />Về trang chủ</Link>
         <section className="login-card" aria-labelledby="login-title">
           <header className="login-hero">
-            <img src="/brand/logo-doan.jpg" alt="Logo Đoàn Thanh niên Việt Nam" />
+            <img src="/brand/logo-doan-badge.png" width="452" height="240" alt="Logo Đoàn Thanh niên Việt Nam" />
             <div>
               <h1 id="login-title">Sổ tay Đoàn viên số</h1>
               <p>Nền tảng công tác Đoàn của tuổi trẻ Công an tỉnh Phú Thọ</p>
@@ -83,7 +85,6 @@ export const Login = () => {
         </section>
 
         <aside className="organization-card">
-          <img src="/brand/logo-doan.jpg" alt="" />
           <div>
             <strong>Ban Thanh niên Công an tỉnh Phú Thọ</strong>
             <span>Sổ tay Đoàn viên số</span>

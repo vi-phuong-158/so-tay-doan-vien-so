@@ -139,9 +139,9 @@ export function Home() {
         <div className="metrics-grid overlap" aria-label={isGuest ? 'Lối vào nội dung công khai' : 'Tổng quan hoạt động'}>
           {isGuest ? (
             <>
-              <MetricCard href="/tri-thuc/van-ban" icon="file" label="Văn bản công khai" value="Tra cứu" />
-              <MetricCard href="/tri-thuc/chuyen-de" icon="book" label="Chuyên đề" value="Học tập" tone="orange" />
-              <MetricCard href="/doi-moi-sang-tao" icon="bulb" label="Đổi mới sáng tạo" value="Khám phá" tone="green" />
+              <MetricCard href="/tri-thuc/van-ban" icon="file-search" label="Văn bản công khai" value="Tra cứu" tone="blue" />
+              <MetricCard href="/tri-thuc/chuyen-de" icon="school" label="Chuyên đề" value="Học tập" tone="blue" />
+              <MetricCard href="/doi-moi-sang-tao" icon="bulb" label="Đổi mới sáng tạo" value="Khám phá" tone="blue" />
             </>
           ) : (
             <>
@@ -163,7 +163,7 @@ export function Home() {
             <div>
               <span className="home-public-kicker">TRI THỨC CÔNG KHAI</span>
               <h2>Tìm văn bản và chuyên đề đã công bố</h2>
-              <p>Nội dung công khai mở trực tiếp. Tài khoản cần thiết khi đồng chí làm bài hoặc xem khu vực nội bộ.</p>
+              <p>Nội dung công khai mở trực tiếp. Tài khoản cần thiết khi bạn làm bài hoặc xem khu vực nội bộ.</p>
             </div>
             <div className="home-public-actions">
               <Link className="button button-primary" to="/tri-thuc">Mở kho tri thức</Link>

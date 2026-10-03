@@ -129,7 +129,7 @@ export function LearningTopics() {
           <EmptyState
             icon="book"
             title="Chưa có chuyên đề"
-            description="Chưa có chuyên đề học tập nào được công bố cho tài khoản của bạn."
+            description="Chưa có chuyên đề học tập nào được công bố."
           />
         )}
 

@@ -8,7 +8,8 @@ insert into auth.users(id,aud,role,email,raw_app_meta_data,raw_user_meta_data)
 values ('6f937301-3b91-4c21-bde5-804359703001','authenticated','authenticated','nq-sql-a@example.invalid','{}','{}'),
        ('6f937301-3b91-4c21-bde5-804359703002','authenticated','authenticated','nq-sql-b@example.invalid','{}','{}');
 insert into auth.users(id,aud,role,is_anonymous,raw_app_meta_data,raw_user_meta_data)
-values ('6f937301-3b91-4c21-bde5-804359703003','authenticated','authenticated',true,'{"provider":"anonymous","providers":["anonymous"]}','{"purpose":"nq_quiz_guest"}');
+values ('6f937301-3b91-4c21-bde5-804359703003','authenticated','authenticated',true,'{"provider":"anonymous","providers":["anonymous"]}','{"purpose":"nq_quiz_guest"}'),
+       ('6f937301-3b91-4c21-bde5-804359703005','authenticated','authenticated',true,'{"provider":"anonymous","providers":["anonymous"]}','{}');
 insert into public.profiles(id,full_name,account_status)
 values ('6f937301-3b91-4c21-bde5-804359703001','NQ acceptance A','ACTIVE'),
        ('6f937301-3b91-4c21-bde5-804359703002','NQ acceptance B','ACTIVE');
@@ -16,7 +17,7 @@ values ('6f937301-3b91-4c21-bde5-804359703001','NQ acceptance A','ACTIVE'),
 do $$
 <<checks>>
 declare s jsonb; r jsonb; q jsonb; option_id uuid; correct_id uuid; attempt_id uuid; old_id uuid;
-  v_count integer; safe_questions jsonb; deadline text; bank uuid;
+  v_count integer; safe_questions jsonb; deadline text; bank uuid; guest_b_attempt uuid; action text;
 begin
   select id into bank from public.quizzes where bank_code='NQ_300';
   assert (select count(*) from public.quiz_questions where quiz_id=bank)=300, '300 questions';
@@ -127,6 +128,29 @@ begin
   attempt_id := (s->>'attempt_id')::uuid;
   assert jsonb_array_length(s->'questions')=30 and s::text !~ 'correct|is_correct|answer_key', 'Guest gets 30 questions without answer keys';
   assert public.nq_attempt('resume')->>'attempt_id'=attempt_id::text, 'Guest attempt resumes on the same anonymous session';
+  q := s->'questions'->0;
+  perform set_config('request.jwt.claims','{"sub":"6f937301-3b91-4c21-bde5-804359703005","role":"authenticated","is_anonymous":true}',true);
+  perform public.ensure_nq_quiz_guest();
+  guest_b_attempt := (public.nq_attempt('start')->>'attempt_id')::uuid;
+  foreach action in array array['read','answer','submit'] loop
+    begin
+      perform public.nq_attempt(action,attempt_id,(q->>'id')::uuid,(q->'options'->0->>'id')::uuid);
+      raise exception 'Guest B accessed Guest A attempt';
+    exception when raise_exception then
+      if sqlerrm<>'ATTEMPT_SCOPE_DENIED' then raise; end if;
+    end;
+  end loop;
+  assert not exists(select 1 from public.quiz_attempts where id=attempt_id), 'Guest B cannot directly read Guest A attempt';
+  perform set_config('request.jwt.claims','{"sub":"6f937301-3b91-4c21-bde5-804359703003","role":"authenticated","is_anonymous":true}',true);
+  foreach action in array array['read','answer','submit'] loop
+    begin
+      perform public.nq_attempt(action,guest_b_attempt,(q->>'id')::uuid,(q->'options'->0->>'id')::uuid);
+      raise exception 'Guest A accessed Guest B attempt';
+    exception when raise_exception then
+      if sqlerrm<>'ATTEMPT_SCOPE_DENIED' then raise; end if;
+    end;
+  end loop;
+  assert not exists(select 1 from public.quiz_attempts where id=guest_b_attempt), 'Guest A cannot directly read Guest B attempt';
   perform set_config('request.jwt.claims','{"sub":"6f937301-3b91-4c21-bde5-804359703002","role":"authenticated"}',true);
   begin
     perform public.nq_attempt('read',attempt_id);
@@ -137,6 +161,14 @@ begin
   perform set_config('request.jwt.claims','{"sub":"6f937301-3b91-4c21-bde5-804359703003","role":"authenticated","is_anonymous":true,"user_metadata":{"purpose":"nq_quiz_guest"}}',true);
   r := public.nq_attempt('submit',attempt_id);
   assert (r->>'unanswered')::integer=30 and r->'questions'->0 ? 'correct_option_id', 'Guest grading key appears only after submitting';
+  perform set_config('request.jwt.claims','{"sub":"6f937301-3b91-4c21-bde5-804359703005","role":"authenticated","is_anonymous":true}',true);
+  begin
+    perform public.nq_attempt('read',attempt_id);
+    raise exception 'Guest B read Guest A completed review';
+  exception when raise_exception then
+    if sqlerrm<>'ATTEMPT_SCOPE_DENIED' then raise; end if;
+  end;
+  perform set_config('request.jwt.claims','{"sub":"6f937301-3b91-4c21-bde5-804359703003","role":"authenticated","is_anonymous":true}',true);
   assert public.lookup_nq_questions('1')->0->>'correct_answer'='B', 'Guest can use public source lookup';
   perform set_config('role','postgres',true);
   assert exists(select 1 from quiz_private.nq_guest_accounts where user_id='6f937301-3b91-4c21-bde5-804359703003'), 'NQ guest is added to the private retention registry';
@@ -144,11 +176,17 @@ begin
   values ('6f937301-3b91-4c21-bde5-804359703004','authenticated','authenticated',true,'{"provider":"anonymous","providers":["anonymous"]}','{}');
   update quiz_private.nq_guest_accounts set created_at=now()-interval '31 days'
     where user_id='6f937301-3b91-4c21-bde5-804359703003';
+  insert into quiz_private.nq_guest_accounts(user_id,created_at)
+  values ('6f937301-3b91-4c21-bde5-804359703001',now()-interval '31 days');
+  -- Apply the cron predicate only to this transaction's disposable fixtures.
   delete from auth.users account using quiz_private.nq_guest_accounts guest
     where account.id=guest.user_id and account.is_anonymous is true
-      and guest.created_at<now()-interval '30 days';
+      and guest.created_at<now()-interval '30 days'
+      and account.id in ('6f937301-3b91-4c21-bde5-804359703001','6f937301-3b91-4c21-bde5-804359703003','6f937301-3b91-4c21-bde5-804359703005');
   assert not exists(select 1 from auth.users where id='6f937301-3b91-4c21-bde5-804359703003'), 'Expired NQ guests are removed';
   assert exists(select 1 from auth.users where id='6f937301-3b91-4c21-bde5-804359703004'), 'Unregistered anonymous accounts are untouched';
+  assert exists(select 1 from auth.users where id='6f937301-3b91-4c21-bde5-804359703001'), 'Registered permanent accounts are never removed';
+  assert exists(select 1 from auth.users where id='6f937301-3b91-4c21-bde5-804359703005'), 'Recent registered guests retain their identity';
 end $$;
 select 'NQ_RUNTIME_ASSERTIONS_PASS' as verdict;
 rollback;

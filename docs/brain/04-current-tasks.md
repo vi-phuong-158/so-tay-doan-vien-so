@@ -13,8 +13,15 @@
 - Fix: invisible Supabase anonymous session with a minimal `INVITED` profile for the existing attempt FK; private registry scopes access/cleanup to this bank; other app areas stay behind current active-user/RLS checks.
 - Keep quiz questions/answer keys private and served through trusted RPCs; guest attempt ownership uses anon Auth `uid`; clean only registered NQ guest identities and attempts after 30 days.
 - Rehearsal migrations `20261002171108` and `20261002172325` are applied; hosted `NQ_RUNTIME_ASSERTIONS_PASS`.
-- PR #61 is open; CI and Vercel Preview pass. Hosted browser test found Auth returns HTTP 422 `Anonymous sign-ins are disabled` before creating a guest session.
-- Enable Anonymous Sign-Ins in rehearsal, rerun no-login browser acceptance, then merge/deploy. Production database must not be accessed.
+- Owner enabled Anonymous Sign-Ins; live Auth now returns 200 with anonymous JWT/user. Acceptance on the updated PR head is in progress; no merge until every gate is evidenced.
+- Reconcile the already-applied `20261003091716_nq_guest_privilege_boundary` migration into source and regression tests. Production Supabase remains outside scope.
+
+### BRAND_LOGO_PENDING_OWNER_ASSET (2026-10-03)
+- Logo hiện tại (`public/brand/logo-doan-badge.png` và icon PWA/favicon sinh từ nó) là **tạm thời**,
+  chưa đáp ứng yêu cầu logo Đoàn Thanh niên của owner. **Không tự vẽ logo, không lấy logo không rõ nguồn.**
+- Chờ owner cung cấp file logo chuẩn; khi có thì thay đồng bộ Header, Login, favicon, PWA manifest,
+  app icon, splash/icon liên quan theo bảng ở `docs/02-design-system.md` mục 2.
+- Responsive mobile Trang chủ: xem `docs/home-mobile-responsive/REPORT.md`.
 
 ### NQ_300 Quiz implementation and review closure (2026-10-02)
 - Follow-up branch `codex/quiz-300-nq-fixes` restores the original handoff patch locally.
