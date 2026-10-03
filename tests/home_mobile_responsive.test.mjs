@@ -74,3 +74,11 @@ test('guest-facing copy does not mention an account the visitor does not have', 
   }
   assert.match(read('src/pages/Home.jsx'), /Tài khoản cần thiết khi bạn làm bài/);
 });
+
+test('mobile bottom nav and metric cards are each defined once per breakpoint', () => {
+  const count = (re) => (css.match(re) || []).length;
+  assert.equal(count(/[{}]\s*\.bottom-nav\{/g), 2, '.bottom-nav: hidden on desktop + one mobile block');
+  assert.equal(count(/[{}]\s*\.metric-card\{/g), 2, '.metric-card: one base + one mobile block');
+  assert.equal(count(/[{}]\s*\.bottom-nav a\{/g), 1);
+  assert.equal(count(/[{}]\s*\.bottom-nav a\.active\{/g), 1);
+});
