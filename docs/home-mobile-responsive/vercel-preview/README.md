@@ -43,3 +43,29 @@ chỉ đã đo trên bản build local (xem `../REPORT.md`) — cần kiểm tra
 - `preview-guest-360-bottom.png` (360×520), `preview-guest-390-bottom.png` (390×520), `preview-guest-430-bottom.png` (430×480) — đã cuộn hết
 
 > Logo vẫn là **BRAND_LOGO_PENDING_OWNER_ASSET** — không phải nghiệm thu logo cuối cùng.
+
+---
+
+# Đo lại sau mobile polish (commit `95de179`, Vercel Preview, 2026-10-03)
+
+Phiên khách, Chromium của browser pane, DPR 2. Preview đã phục vụ bản mới (`theme-color` = `#1257C4`).
+
+| Hạng mục | 360×800 | 390×844 | 430×932 |
+|---|---|---|---|
+| `scrollWidth` / `clientWidth`; phần tử / text tràn | 360/360; 0/0 | 390/390; 0/0 | 430/430; 0/0 |
+| Hero `border-radius` (góc trên vuông) | `0 0 24px 24px` | như 360 | như 360 |
+| Nút Đăng nhập (pill trắng, chữ xanh) | 108×44, 1 dòng, mép phải 344 | 107×44, 1 dòng, 374 | 107×44, 1 dòng, 414 |
+| Tên app / đơn vị / logo | 1 / 2 dòng / 60×32 | 1 / 2 / 60×32 | 1 / 1 / 60×32 |
+| Quick card (rộng×cao, tiêu đề) | 104×113, 1 dòng | 114×112, 1 dòng | 127×98, 1 dòng |
+| Chip icon | 34×34, nền #E7F2FF (cả 3 ô) | như 360 | như 360 |
+| Card công khai | 1 cột 292 px; h2 1, p 2; nút dưới, 160×44, không bóng, nền #1257C4 | 323 px; như 360 | 363 px; như 360 |
+| Pill tab Trang chủ | 54×26, #DCEBFF | như 360 | như 360 |
+| Chừa trên bottom nav khi cuộn hết (360×520, 390×520, 430×480) | 33 px | 33 px | 32 px |
+| Be Vietnam Pro | `fonts.check` true | true | true |
+
+- Quick card cao 112–113 px ở 360/390 (vượt khoảng 88–103 cũ do chip icon 34 px và dòng phụ xuống 2 dòng) — thay đổi có chủ đích.
+- Refresh trực tiếp `/`, `/tri-thuc`, `/tri-thuc/van-ban`, `/login`: 200; `sw.js` cache `v4`; `logo-doan-badge.png` 200; cache chỉ còn `so-tay-doan-vien-v4`.
+- Console: chỉ có CSP chặn `vercel.live/.../feedback.js` (thanh góp ý Vercel chèn vào Preview, không phải code app).
+- Desktop 1280: hero 22 px + gradient, sidebar 268 px, nút gradient, bottom nav ẩn, không cuộn ngang.
+- Ảnh: `polish-preview-guest-360.png`, `polish-preview-guest-390.png`, `polish-preview-guest-430.png`.
+  (Ảnh 390/430 là một ô cắt từ ảnh chụp bị lát gạch của browser pane — chất lượng thấp hơn thật.)
