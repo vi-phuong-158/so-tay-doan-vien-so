@@ -30,11 +30,12 @@ Nguyên tắc tổng quát:
 
 ## 2. Tệp tham chiếu thiết kế
 
-> **BRAND_LOGO_PENDING_OWNER_ASSET** — Logo hiện tại **chỉ là giải pháp tạm thời, chưa được nghiệm thu**.
-> `logo-doan-badge.png` được tách từ asset cũ `logo-doan.jpg` (huy hiệu "THANH NIÊN VIỆT NAM"), chưa
-> đáp ứng yêu cầu của owner về logo Đoàn Thanh niên. Không tự vẽ hoặc lấy logo không rõ nguồn.
+> **BRAND_LOGO_OWNER_CONFIRMED (2026-10-03)** — Owner chỉ định `logo-dtn.jpg` làm logo chính thức. File này
+> trùng khớp từng byte (SHA-256 `814d9131…afdb43`) với nguồn `public/brand/logo-doan.jpg` mà
+> `logo-doan-badge.png` và các icon được tách ra, nên **không cần thay ảnh**; trạng thái
+> `BRAND_LOGO_PENDING_OWNER_ASSET` đã đóng. Không tự vẽ hoặc lấy logo không rõ nguồn.
 
-Khi owner cung cấp file logo Đoàn TNCS Hồ Chí Minh chuẩn, phải thay **đồng bộ** tất cả:
+Nếu sau này owner đổi logo, phải thay **đồng bộ** tất cả:
 
 | Vị trí | File / nơi dùng |
 |---|---|
@@ -46,14 +47,14 @@ Khi owner cung cấp file logo Đoàn TNCS Hồ Chí Minh chuẩn, phải thay *
 | Splash / icon liên quan | chưa có splash riêng; rà lại khi bổ sung |
 | Cache | tăng `CACHE` trong `public/sw.js` + cập nhật `tests/public_first_auth.test.mjs`, `tests/home_mobile_responsive.test.mjs` |
 
-Các file đang dùng (tạm thời):
+Các file đang dùng:
 
 ```text
-public/brand/logo-doan.jpg          # asset cũ trong repo, giữ nguyên làm nguồn
-public/brand/logo-doan-badge.png    # tạm thời: huy hiệu tách từ logo-doan.jpg
-public/brand/app-icon-192.png       # tạm thời: sinh từ huy hiệu trên
-public/brand/app-icon-512.png       # tạm thời
-public/brand/favicon-64.png         # tạm thời
+public/brand/logo-doan.jpg          # nguồn chính thức (= logo-dtn.jpg của owner)
+public/brand/logo-doan-badge.png    # huy hiệu tách từ nguồn, nền trong suốt, 452×240
+public/brand/app-icon-192.png       # sinh từ huy hiệu trên
+public/brand/app-icon-512.png       # sinh từ huy hiệu (vùng an toàn maskable)
+public/brand/favicon-64.png         # sinh từ huy hiệu
 ```
 
 - Concept UI đã chốt: `design-reference.png`
@@ -64,7 +65,7 @@ public/brand/favicon-64.png         # tạm thời
 
 ### 3.1. Logo
 
-Logo **tạm thời** (chờ asset chuẩn của owner) là **huy hiệu "THANH NIÊN VIỆT NAM"**: khối xanh dương bo góc phía trên, đáy nhọn,
+Logo chính thức (owner xác nhận 2026-10-03) là **huy hiệu "THANH NIÊN VIỆT NAM"**: khối xanh dương bo góc phía trên, đáy nhọn,
 khung chữ xanh đậm viền trắng, tam giác đỏ và ngôi sao vàng. Logo **rộng hơn cao** (≈ 1,88 : 1) nên
 luôn đặt theo **chiều cao**, `width:auto` — không ép thành ô vuông, không bo góc, không đổ bóng, không
 `object-fit:cover`.

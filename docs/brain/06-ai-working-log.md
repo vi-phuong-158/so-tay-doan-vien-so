@@ -2421,3 +2421,26 @@
 - **Kiểm tra:** `npm test` 219/219, lint 0 errors/3 warning cũ, build PASS. Bản build local (Supabase giả) ở 390/360/1280:
   top bar `rgb(18,87,196)` 66 px, không scroll ngang, liên kết Về trang chủ điều hướng đúng, desktop không đổi.
   Chưa có Vercel Preview/đăng nhập thật.
+
+## [2026-10-03] Gộp CSS lặp, xác nhận logo, mục "Mới công bố" cho khách
+- **Agent:** Claude Code
+- **Thay đổi:** (1) Gộp `.bottom-nav` (3 khối ≤960 + 1 khối ≤380 chết) và `.metric-card` (4 nơi) về một khối hiệu lực;
+  (2) owner chỉ định `logo-dtn.jpg` — trùng byte với `logo-doan.jpg` (nguồn badge/icon) → đóng
+  `BRAND_LOGO_PENDING_OWNER_ASSET`, không đổi ảnh; (3) Trang chủ khách thêm mục "Mới công bố" (3 văn bản + 2 chuyên
+  đề công khai mới nhất) dùng service/card có sẵn, ẩn khi không có dữ liệu.
+- **File đã sửa:** `src/index.css`, `src/pages/Home.jsx`, `src/components/common.jsx`,
+  `tests/home_mobile_responsive.test.mjs`, `docs/02-design-system.md`, `docs/brain/{03-decisions,04-current-tasks,06-ai-working-log}.md`,
+  `docs/home-latest-public/**`.
+- **Lý do:** 4 việc owner yêu cầu sau PR #63 (CSS lặp, logo, khoảng trống Trang chủ khách, kiểm tra bản đăng nhập).
+- **Kiểm tra:** CSS: computed style + hộp phần tử giống hệt trước/sau ở 6 trang × 5 bề rộng (30/30). "Mới công bố": build
+  local + Supabase REST giả lập ở 360/390/430/1280, không tràn, 5 thẻ, ẩn khi không có dữ liệu. `npm test`, lint, build PASS.
+  Bản đã đăng nhập: chờ owner tự đăng nhập tài khoản thử nghiệm để đo.
+
+## [2026-10-03] Ô icon "Thông báo mới" (Trang chủ đã đăng nhập) + bằng chứng bản đăng nhập
+- **Agent:** Claude Code
+- **Thay đổi:** Ô "Thông báo mới" thêm `tone="blue"` để có nền ô icon như hai ô còn lại; ghi kết quả đo bản đã đăng nhập
+  (Trang chủ, Công việc, Cá nhân, Thông báo, Đổi mới, Tri thức ở 360/390/430) và ảnh Preview vào `docs/home-latest-public/`.
+- **File đã sửa:** `src/pages/Home.jsx`, `tests/home_mobile_responsive.test.mjs`, `docs/home-latest-public/**`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Phát hiện khi đo bản đăng nhập trên Preview #64: ô đầu thiếu nền chip, lệch với hai ô còn lại.
+- **Kiểm tra:** `npm test` 223/223, lint 0 errors/3 warning cũ, build PASS. Bản đã đăng nhập đo bằng tài khoản thử do owner tự tạo và
+  tự đăng nhập; đã đo lại sau khi push (xem kết quả trong PR).

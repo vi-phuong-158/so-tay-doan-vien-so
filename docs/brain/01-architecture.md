@@ -114,7 +114,7 @@ supabase/
 | `src/components/Icon.jsx` | One `name`-to-Lucide adapter; decorative SVGs are hidden from assistive technology | `Layout`, pages, common components | `lucide-react` |
 | `src/components/Skeleton.jsx` | Shared animated loading placeholder with live status semantics | Data-backed list/detail pages | `index.css` surface tokens |
 | `src/index.css` | Design tokens (incl. `--bottom-nav-h` driving bottom-nav height and `.home-page` bottom padding), shared visual primitives, focus states, responsive layout and auth modal sheet rules | All frontend routes | Be Vietnam Pro, brand tokens |
-| `src/pages/Home.jsx` | Public-first landing and shortcuts to documents, learning and Ask AI | route `/` | `AuthContext`, shared components |
+| `src/pages/Home.jsx` | Public-first landing and shortcuts to documents, learning and Ask AI; guests also see the newest public documents/topics ("Mới công bố") | route `/` | `AuthContext`, shared components, `documentService.listDocuments`, `learningService.listTopics`, `DocumentCard` (`Documents.jsx`), `TopicCard` (`LearningTopics.jsx`) |
 | `src/pages/Knowledge.jsx` | Hub Văn bản/Chuyên đề/Trắc nghiệm, tìm kiếm và điều hướng tới nội dung | route `/tri-thuc` | `documentService`, `learningService`, `quizService`, `Icon`, `common` |
 | `src/pages/AskAi.jsx` | Chat, gợi ý câu hỏi, trạng thái no-evidence và nguồn trích dẫn | route `/tri-thuc/hoi-ai` | `aiService`, `Icon`, `common` |
 | `src/pages/ReportAssignmentDetail.jsx` | Chi tiết, tải lên, nộp báo cáo và lịch sử phiên bản | route `/cong-viec/bao-cao/:assignmentId` | `reportService`, `AuthContext`, `Icon`, `common` |

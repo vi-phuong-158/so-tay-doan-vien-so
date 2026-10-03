@@ -3,10 +3,15 @@ import { Link } from 'react-router-dom';
 import { Icon } from '../components/Icon';
 import { Brand, Progress, StatusBadge } from '../components/common';
 import { NotificationBell } from '../components/NotificationBell';
+import Skeleton from '../components/Skeleton';
+import { DocumentCard } from './Documents';
+import { TopicCard } from './LearningTopics';
 import { useAuth } from '../contexts/AuthContext';
 import { createReportService } from '../services/reportService';
 import { createNotificationService } from '../services/notificationService';
 import { createMemberService } from '../services/memberService';
+import { createDocumentService } from '../services/documentService';
+import { createLearningService } from '../services/learningService';
 import { supabase } from '../services/supabaseClient';
 import {
   formatReportDate,
@@ -26,6 +31,10 @@ const notificationService = createNotificationService(supabase);
 const memberService = createMemberService(supabase, {
   baseUrl: import.meta.env.VITE_MEMBER_API_URL
 });
+const documentService = createDocumentService(supabase);
+const learningService = createLearningService(supabase);
+const LATEST_DOCUMENTS = 3;
+const LATEST_TOPICS = 2;
 
 function getDueSoonAssignments(assignments) {
   const cutoff = Date.now() + 7 * 24 * 60 * 60 * 1000;
@@ -69,6 +78,30 @@ export function Home() {
   const canOpenDashboard = (roles || []).includes('YOUTH_ADMIN');
   const [assignments, setAssignments] = useState([]);
   const [metrics, setMetrics] = useState({ notificationCount: null, dueSoonCount: null, memberCount: null });
+  const [latest, setLatest] = useState({ loading: true, documents: [], topics: [] });
+
+  // Guest home shows the newest public items; RLS already limits both lists to published PUBLIC content.
+  useEffect(() => {
+    if (!isGuest) return undefined;
+    let mounted = true;
+    const loadLatest = async () => {
+      const [documentResult, topicResult] = await Promise.allSettled([
+        documentService.listDocuments({ page: 0, pageSize: LATEST_DOCUMENTS }),
+        learningService.listTopics({ page: 0, pageSize: LATEST_TOPICS })
+      ]);
+      if (!mounted) return;
+      setLatest({
+        loading: false,
+        documents: documentResult.status === 'fulfilled' ? documentResult.value.items : [],
+        topics: topicResult.status === 'fulfilled' ? topicResult.value.items : []
+      });
+    };
+    const timer = setTimeout(loadLatest, 0);
+    return () => {
+      mounted = false;
+      clearTimeout(timer);
+    };
+  }, [isGuest]);
 
   useEffect(() => {
     let mounted = true;
@@ -145,7 +178,7 @@ export function Home() {
             </>
           ) : (
             <>
-              <MetricCard href="/ca-nhan/thong-bao" icon="bell" label="Thông báo mới" value={metrics.notificationCount ?? '—'} />
+              <MetricCard href="/ca-nhan/thong-bao" icon="bell" label="Thông báo mới" value={metrics.notificationCount ?? '—'} tone="blue" />
               <MetricCard href="/cong-viec" icon="clock" label="Việc sắp hạn" value={metrics.dueSoonCount ?? '—'} tone="orange" />
               <MetricCard
                 href={canManageMembers ? '/quan-ly-doan-vien' : undefined}
@@ -170,7 +203,23 @@ export function Home() {
               <Link className="home-text-link" to="/tri-thuc/hoi-ai"><Icon name="sparkles" size={17} />Hỏi AI</Link>
             </div>
           </section>
-        ) : (
+        ) : null}
+
+        {isGuest && (latest.loading || latest.documents.length > 0 || latest.topics.length > 0) && (
+          <section className="home-section home-latest" aria-label="Nội dung mới công bố">
+            <SectionHeading number="01" title="Mới công bố" action="Xem tất cả" to="/tri-thuc" />
+            <div className="document-list">
+              {latest.loading
+                ? <Skeleton lines={4} />
+                : <>
+                  {latest.documents.map((item) => <DocumentCard key={item.id} item={item} />)}
+                  {latest.topics.map((topic) => <TopicCard key={topic.id} topic={topic} />)}
+                </>}
+            </div>
+          </section>
+        )}
+
+        {isGuest ? null : (
           <>
             <section className="home-section">
               <SectionHeading number="01" title="Việc cần làm" action="Tất cả" to="/cong-viec" />
