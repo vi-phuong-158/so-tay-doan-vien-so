@@ -34,4 +34,7 @@
 
 ## Phát hiện nhỏ (đã sửa trong PR này)
 - Trang chủ đã đăng nhập: ô **"Thông báo mới"** thiếu nền ô icon. Đã thêm `tone="blue"` (commit "fix(home): give the notification quick card its icon chip").
-- Ảnh: `auth-home-360.png` (chụp **trước** khi sửa), `auth-innovation-360.jpg`, `auth-work-360.jpg`, `auth-profile-360.jpg`.
+- Đo lại sau khi sửa (Preview commit `4a45848`, đã xóa cache service worker): chip 3 ô = 34 px, nền `#E7F2FF` / `#FFF2DF` / `#E7F7F0`
+  (ô đầu đã có nền xanh); 360/390/430 đều không cuộn ngang, 0 tràn, 3 ô cao 98 px, tiêu đề 1 dòng.
+  Lưu ý: máy đã mở trang trước đó phải tải lại thêm một lần mới nhận bản mới (cache-first của service worker).
+- Ảnh: `auth-home-360.png` (chụp **trước** khi sửa), `auth-home-after-fix-360.jpg` (sau khi sửa), `auth-innovation-360.jpg`, `auth-work-360.jpg`, `auth-profile-360.jpg`.
