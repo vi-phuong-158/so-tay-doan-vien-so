@@ -36,7 +36,7 @@ export const Login = () => {
       <main className="login-shell">
         <section className="login-card" aria-labelledby="login-title">
           <header className="login-hero">
-            <img src="/brand/logo-doan.jpg" alt="Logo Đoàn Thanh niên Việt Nam" />
+            <img src="/brand/logo-doan-badge.png" width="452" height="240" alt="Logo Đoàn Thanh niên Việt Nam" />
             <div>
               <h1 id="login-title">Sổ tay Đoàn viên số</h1>
               <p>Nền tảng công tác Đoàn của tuổi trẻ Công an tỉnh Phú Thọ</p>
@@ -83,7 +83,7 @@ export const Login = () => {
         </section>
 
         <aside className="organization-card">
-          <img src="/brand/logo-doan.jpg" alt="" />
+          <img src="/brand/logo-doan-badge.png" width="452" height="240" alt="" />
           <div>
             <strong>Ban Thanh niên Công an tỉnh Phú Thọ</strong>
             <span>Sổ tay Đoàn viên số</span>
