@@ -74,3 +74,29 @@ test('guest-facing copy does not mention an account the visitor does not have', 
   }
   assert.match(read('src/pages/Home.jsx'), /Tài khoản cần thiết khi bạn làm bài/);
 });
+
+test('mobile bottom nav and metric cards are each defined once per breakpoint', () => {
+  const count = (re) => (css.match(re) || []).length;
+  assert.equal(count(/[{}]\s*\.bottom-nav\{/g), 2, '.bottom-nav: hidden on desktop + one mobile block');
+  assert.equal(count(/[{}]\s*\.metric-card\{/g), 2, '.metric-card: one base + one mobile block');
+  assert.equal(count(/[{}]\s*\.bottom-nav a\{/g), 1);
+  assert.equal(count(/[{}]\s*\.bottom-nav a\.active\{/g), 1);
+});
+
+test('brand logo is the owner-confirmed asset and no longer marked as pending', () => {
+  assert.doesNotMatch(read('src/components/common.jsx'), /BRAND_LOGO_PENDING_OWNER_ASSET/);
+  assert.match(read('docs/02-design-system.md'), /BRAND_LOGO_OWNER_CONFIRMED/);
+});
+
+test('guest home lists the newest public documents and topics through the existing RLS-bound services', () => {
+  const home = read('src/pages/Home.jsx');
+  assert.match(home, /documentService\.listDocuments\(\{ page: 0, pageSize: LATEST_DOCUMENTS \}\)/);
+  assert.match(home, /learningService\.listTopics\(\{ page: 0, pageSize: LATEST_TOPICS \}\)/);
+  assert.match(home, /if \(!isGuest\) return undefined;/);
+  // Hidden once loaded with nothing to show, so the guest home never renders an empty box.
+  assert.match(home, /isGuest && \(latest\.loading \|\| latest\.documents\.length > 0 \|\| latest\.topics\.length > 0\)/);
+});
+
+test('signed-in notification card gets the same blue icon chip as the other quick cards', () => {
+  assert.match(read('src/pages/Home.jsx'), /icon="bell" label="Thông báo mới"[^>]*tone="blue"/);
+});

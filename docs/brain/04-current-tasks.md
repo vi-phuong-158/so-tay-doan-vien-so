@@ -16,11 +16,12 @@
 - Owner enabled Anonymous Sign-Ins; live Auth now returns 200 with anonymous JWT/user. Acceptance on the updated PR head is in progress; no merge until every gate is evidenced.
 - Reconcile the already-applied `20261003091716_nq_guest_privilege_boundary` migration into source and regression tests. Production Supabase remains outside scope.
 
-### BRAND_LOGO_PENDING_OWNER_ASSET (2026-10-03)
-- Logo hiện tại (`public/brand/logo-doan-badge.png` và icon PWA/favicon sinh từ nó) là **tạm thời**,
-  chưa đáp ứng yêu cầu logo Đoàn Thanh niên của owner. **Không tự vẽ logo, không lấy logo không rõ nguồn.**
-- Chờ owner cung cấp file logo chuẩn; khi có thì thay đồng bộ Header, Login, favicon, PWA manifest,
-  app icon, splash/icon liên quan theo bảng ở `docs/02-design-system.md` mục 2.
+### UI polish sau PR #62/#63 (2026-10-03) — nhánh `ui/brand-logo-and-home-latest`
+- **Logo:** owner chỉ định `logo-dtn.jpg`; trùng byte với nguồn `logo-doan.jpg` đang dùng →
+  `BRAND_LOGO_OWNER_CONFIRMED`, đóng `BRAND_LOGO_PENDING_OWNER_ASSET`, không đổi ảnh/icon.
+- **CSS:** gộp `.bottom-nav`/`.metric-card` bị khai báo lặp; computed style giống hệt trước/sau.
+- **Trang chủ khách:** mục "Mới công bố" (văn bản + chuyên đề công khai, dùng service có sẵn).
+- **Đã đăng nhập:** cần owner tự đăng nhập tài khoản thử nghiệm trong trình duyệt để đo; agent không nhập mật khẩu.
 - Responsive mobile Trang chủ: xem `docs/home-mobile-responsive/REPORT.md`.
 
 ### NQ_300 Quiz implementation and review closure (2026-10-02)
