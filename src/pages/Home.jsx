@@ -178,7 +178,7 @@ export function Home() {
             </>
           ) : (
             <>
-              <MetricCard href="/ca-nhan/thong-bao" icon="bell" label="Thông báo mới" value={metrics.notificationCount ?? '—'} />
+              <MetricCard href="/ca-nhan/thong-bao" icon="bell" label="Thông báo mới" value={metrics.notificationCount ?? '—'} tone="blue" />
               <MetricCard href="/cong-viec" icon="clock" label="Việc sắp hạn" value={metrics.dueSoonCount ?? '—'} tone="orange" />
               <MetricCard
                 href={canManageMembers ? '/quan-ly-doan-vien' : undefined}

@@ -96,3 +96,7 @@ test('guest home lists the newest public documents and topics through the existi
   // Hidden once loaded with nothing to show, so the guest home never renders an empty box.
   assert.match(home, /isGuest && \(latest\.loading \|\| latest\.documents\.length > 0 \|\| latest\.topics\.length > 0\)/);
 });
+
+test('signed-in notification card gets the same blue icon chip as the other quick cards', () => {
+  assert.match(read('src/pages/Home.jsx'), /icon="bell" label="Thông báo mới"[^>]*tone="blue"/);
+});
