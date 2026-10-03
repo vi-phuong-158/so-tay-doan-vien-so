@@ -2377,7 +2377,7 @@
 - **Thay đổi:** Sửa responsive Trang chủ tại 360/390/430: card "Tri thức công khai" về một cột, CTA
   dưới nội dung; 3 quick-action card gọn (≤2 dòng tiêu đề, cao 88–103 px thay vì 94–135 px); header
   mobile logo 32 px, chữ co được, nút Đăng nhập không xuống dòng; token `--bottom-nav-h` + padding
-  đáy `.home-page`; thay logo bằng huy hiệu Đoàn (tách từ `logo-doan.jpg`), gỡ `app-icon.svg`, thêm
+  đáy `.home-page`; logo TẠM THỜI bằng huy hiệu tách từ asset cũ `logo-doan.jpg` (BRAND_LOGO_PENDING_OWNER_ASSET, chưa nghiệm thu), gỡ `app-icon.svg`, thêm
   icon PWA/favicon; cập nhật `docs/02-design-system.md`; bump cache SW lên v4.
 - **File đã sửa:** `src/index.css`, `src/components/common.jsx`, `src/pages/auth/Login.jsx`,
   `index.html`, `preview.html`, `public/{manifest.webmanifest,sw.js}`,

@@ -7,6 +7,13 @@
 
 ## Đang làm
 
+### BRAND_LOGO_PENDING_OWNER_ASSET (2026-10-03)
+- Logo hiện tại (`public/brand/logo-doan-badge.png` và icon PWA/favicon sinh từ nó) là **tạm thời**,
+  chưa đáp ứng yêu cầu logo Đoàn Thanh niên của owner. **Không tự vẽ logo, không lấy logo không rõ nguồn.**
+- Chờ owner cung cấp file logo chuẩn; khi có thì thay đồng bộ Header, Login, favicon, PWA manifest,
+  app icon, splash/icon liên quan theo bảng ở `docs/02-design-system.md` mục 2.
+- Responsive mobile Trang chủ: xem `docs/home-mobile-responsive/REPORT.md`.
+
 ### NQ_300 Quiz implementation and review closure (2026-10-02)
 - Follow-up branch `codex/quiz-300-nq-fixes` restores the original handoff patch locally.
 - P1 resolved by matching filenames to the verified hosted versions `20261002134138`/`20261002140545`

@@ -1006,12 +1006,12 @@ không nới, không skip bất kỳ assertion nào**; test 14/15/16/26 vẫn đ
   **Scope correction (2026-09-23):** local report draft persistence was removed before merge. The
   closure changes report presentation only; report text is not written to browser storage.
 
-## [2026-10-03] HOME_MOBILE_RESPONSIVE — Logo huy hiệu Đoàn và layout mobile Trang chủ
+## [2026-10-03] HOME_MOBILE_RESPONSIVE — Layout mobile Trang chủ; logo TẠM THỜI (BRAND_LOGO_PENDING_OWNER_ASSET)
 
-- **Quyết định:** UI dùng `public/brand/logo-doan-badge.png` (huy hiệu tách từ `logo-doan.jpg` do
-  owner cung cấp) theo chiều cao, `width:auto`. Gỡ `app-icon.svg` (icon tự tạo); favicon/PWA/
-  apple-touch-icon sinh từ cùng huy hiệu. Repo chưa có biểu tượng ngọn đuốc – ngôi sao; nếu owner
-  muốn dùng, cần cung cấp file chính thức.
+- **Quyết định (tạm thời, chưa nghiệm thu):** UI dùng `public/brand/logo-doan-badge.png` (huy hiệu
+  tách từ asset cũ `logo-doan.jpg`; chưa đáp ứng yêu cầu logo Đoàn Thanh niên của owner) theo chiều cao, `width:auto`. Gỡ `app-icon.svg` (icon tự tạo); favicon/PWA/
+  apple-touch-icon sinh từ cùng huy hiệu. Không tự vẽ/lấy logo không rõ nguồn; chờ owner
+  cung cấp file chuẩn rồi thay đồng bộ theo `docs/02-design-system.md` mục 2.
 - **Quyết định:** Card "Tri thức công khai" một cột ở ≤960 px (rule mobile trước đây không đặt lại
   `grid-template-columns`, nên cột `auto` của desktop chiếm gần hết chiều rộng). 3 quick-action card
   dùng `repeat(3,minmax(0,1fr))`, tiêu đề tối đa 2 dòng. Chiều cao bottom nav là token

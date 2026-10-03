@@ -30,26 +30,33 @@ Nguyên tắc tổng quát:
 
 ## 2. Tệp tham chiếu thiết kế
 
-- Logo chính thức của Đoàn (nguồn): `public/brand/logo-doan.jpg` — ảnh gốc do owner cung cấp, **không
-  dùng trực tiếp trong giao diện** (nền vải xanh vuông 2000 × 2001 px).
-- Logo dùng trong UI: `public/brand/logo-doan-badge.png` — huy hiệu tách từ ảnh gốc, nền trong suốt,
-  tỉ lệ 452 : 240 (≈ 1,88 : 1), không chỉnh sửa hình/màu/chữ.
-- Icon ứng dụng sinh từ cùng huy hiệu: `app-icon-192.png`, `app-icon-512.png`, `favicon-64.png`.
-- Concept UI đã chốt: `design-reference.png`
+> **BRAND_LOGO_PENDING_OWNER_ASSET** — Logo hiện tại **chỉ là giải pháp tạm thời, chưa được nghiệm thu**.
+> `logo-doan-badge.png` được tách từ asset cũ `logo-doan.jpg` (huy hiệu "THANH NIÊN VIỆT NAM"), chưa
+> đáp ứng yêu cầu của owner về logo Đoàn Thanh niên. Không tự vẽ hoặc lấy logo không rõ nguồn.
 
-Trong repo đặt tại:
+Khi owner cung cấp file logo Đoàn TNCS Hồ Chí Minh chuẩn, phải thay **đồng bộ** tất cả:
+
+| Vị trí | File / nơi dùng |
+|---|---|
+| Header (Trang chủ, top bar, sidebar) | `src/components/common.jsx` (`Brand`), kích thước trong `src/index.css` |
+| Đăng nhập | `src/pages/auth/Login.jsx` (`.login-hero`, `.organization-card`) |
+| Favicon | `index.html`, `preview.html`, `public/brand/favicon-64.png` |
+| PWA manifest | `public/manifest.webmanifest` |
+| App icon / apple-touch-icon | `public/brand/app-icon-192.png`, `app-icon-512.png` |
+| Splash / icon liên quan | chưa có splash riêng; rà lại khi bổ sung |
+| Cache | tăng `CACHE` trong `public/sw.js` + cập nhật `tests/public_first_auth.test.mjs`, `tests/home_mobile_responsive.test.mjs` |
+
+Các file đang dùng (tạm thời):
 
 ```text
-public/brand/logo-doan.jpg          # nguồn gốc, giữ nguyên
-public/brand/logo-doan-badge.png    # logo hiển thị
-public/brand/app-icon-192.png
-public/brand/app-icon-512.png
-public/brand/favicon-64.png
+public/brand/logo-doan.jpg          # asset cũ trong repo, giữ nguyên làm nguồn
+public/brand/logo-doan-badge.png    # tạm thời: huy hiệu tách từ logo-doan.jpg
+public/brand/app-icon-192.png       # tạm thời: sinh từ huy hiệu trên
+public/brand/app-icon-512.png       # tạm thời
+public/brand/favicon-64.png         # tạm thời
 ```
 
-> Không dùng logo tự tạo (từng là `app-icon.svg`, đã gỡ). Muốn đổi sang biểu tượng Đoàn khác
-> (ví dụ ngọn đuốc – ngôi sao) phải do owner cung cấp file chính thức; khi đó thay
-> `logo-doan.jpg`, tạo lại `logo-doan-badge.png` và các icon, rồi cập nhật mục này.
+- Concept UI đã chốt: `design-reference.png`
 
 ---
 
@@ -57,7 +64,7 @@ public/brand/favicon-64.png
 
 ### 3.1. Logo
 
-Logo là **huy hiệu "THANH NIÊN VIỆT NAM"** của Đoàn: khối xanh dương bo góc phía trên, đáy nhọn,
+Logo **tạm thời** (chờ asset chuẩn của owner) là **huy hiệu "THANH NIÊN VIỆT NAM"**: khối xanh dương bo góc phía trên, đáy nhọn,
 khung chữ xanh đậm viền trắng, tam giác đỏ và ngôi sao vàng. Logo **rộng hơn cao** (≈ 1,88 : 1) nên
 luôn đặt theo **chiều cao**, `width:auto` — không ép thành ô vuông, không bo góc, không đổ bóng, không
 `object-fit:cover`.
