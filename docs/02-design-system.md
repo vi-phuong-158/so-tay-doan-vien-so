@@ -30,15 +30,26 @@ Nguyên tắc tổng quát:
 
 ## 2. Tệp tham chiếu thiết kế
 
-- Logo tham chiếu: `logo-reference.png`
+- Logo chính thức của Đoàn (nguồn): `public/brand/logo-doan.jpg` — ảnh gốc do owner cung cấp, **không
+  dùng trực tiếp trong giao diện** (nền vải xanh vuông 2000 × 2001 px).
+- Logo dùng trong UI: `public/brand/logo-doan-badge.png` — huy hiệu tách từ ảnh gốc, nền trong suốt,
+  tỉ lệ 452 : 240 (≈ 1,88 : 1), không chỉnh sửa hình/màu/chữ.
+- Icon ứng dụng sinh từ cùng huy hiệu: `app-icon-192.png`, `app-icon-512.png`, `favicon-64.png`.
 - Concept UI đã chốt: `design-reference.png`
 
-Trong repo nên đặt tại:
+Trong repo đặt tại:
 
 ```text
-public/brand/logo-reference.png
-public/brand/design-reference.png
+public/brand/logo-doan.jpg          # nguồn gốc, giữ nguyên
+public/brand/logo-doan-badge.png    # logo hiển thị
+public/brand/app-icon-192.png
+public/brand/app-icon-512.png
+public/brand/favicon-64.png
 ```
+
+> Không dùng logo tự tạo (từng là `app-icon.svg`, đã gỡ). Muốn đổi sang biểu tượng Đoàn khác
+> (ví dụ ngọn đuốc – ngôi sao) phải do owner cung cấp file chính thức; khi đó thay
+> `logo-doan.jpg`, tạo lại `logo-doan-badge.png` và các icon, rồi cập nhật mục này.
 
 ---
 
@@ -46,12 +57,10 @@ public/brand/design-reference.png
 
 ### 3.1. Logo
 
-Logo sử dụng ngôn ngữ hình ảnh:
-
-- Khối nền xanh dương bo tròn.
-- Phần dưới tạo hình tam giác đỏ.
-- Ngôi sao vàng làm điểm nhấn.
-- Viền trắng giúp logo rõ trên nền xanh đậm.
+Logo là **huy hiệu "THANH NIÊN VIỆT NAM"** của Đoàn: khối xanh dương bo góc phía trên, đáy nhọn,
+khung chữ xanh đậm viền trắng, tam giác đỏ và ngôi sao vàng. Logo **rộng hơn cao** (≈ 1,88 : 1) nên
+luôn đặt theo **chiều cao**, `width:auto` — không ép thành ô vuông, không bo góc, không đổ bóng, không
+`object-fit:cover`.
 
 Logo nên được sử dụng tại:
 
@@ -64,15 +73,19 @@ Logo nên được sử dụng tại:
 
 Không nên lặp logo ở mọi card, mọi danh sách hoặc mọi modal.
 
-### 3.2. Kích thước logo
+### 3.2. Kích thước logo (theo chiều cao)
 
-| Vị trí | Kích thước đề xuất |
-|---|---:|
-| Favicon | 32 × 32 px |
-| Header mobile | 28–32 px |
-| Splash screen | 88–112 px |
-| Trang đăng nhập | 72–88 px |
-| Desktop header | 36–40 px |
+| Vị trí | Chiều cao | Chiều rộng tương ứng |
+|---|---:|---:|
+| Favicon | 64 px (file) | — |
+| Header mobile (Trang chủ, top bar) | 32 px | ≈ 60 px |
+| Sidebar desktop | 34 px | ≈ 64 px |
+| Trang đăng nhập | 40 px | ≈ 75 px |
+| Thẻ đơn vị (đăng nhập) | 30 px | ≈ 57 px |
+| Icon PWA | 512 / 192 px | huy hiệu chiếm 66% chiều rộng |
+
+Header mobile: tên ứng dụng một dòng, tên đơn vị tối đa hai dòng; khối chữ có `min-width:0` để co
+lại, nút hành động bên phải (`Đăng nhập`/chuông) không co và không xuống dòng.
 
 ### 3.3. Khoảng trống an toàn
 

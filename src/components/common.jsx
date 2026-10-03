@@ -4,7 +4,7 @@ import { getReportStatus } from '../lib/status.mjs';
 
 export function Brand({ compact = false }) {
   return <div className={`brand ${compact ? 'brand-compact' : ''}`}>
-    <img src="/brand/logo-doan.jpg" alt="Logo Đoàn Thanh niên Việt Nam" />
+    <img src="/brand/logo-doan-badge.png" width="452" height="240" alt="Logo Đoàn Thanh niên Việt Nam" />
     <div><strong>Sổ tay Đoàn viên số</strong>{!compact && <span>Ban Thanh niên Công an tỉnh Phú Thọ</span>}</div>
   </div>;
 }

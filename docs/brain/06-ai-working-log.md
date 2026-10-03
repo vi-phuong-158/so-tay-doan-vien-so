@@ -2371,3 +2371,24 @@
   no-evidence PASS. Authenticated runtime/Member API vẫn BLOCKED đúng nghĩa; không tạo fixture giả,
   không dùng service role ở frontend và không chạm production. PR #57 exact head
   `a6d7f02c8d6aaa3da64b4c2e5175be4e0f3bf8ca`, CI run `35700532914` xanh toàn bộ.
+
+## [2026-10-03] Home mobile responsive + logo Đoàn
+- **Agent:** Claude Code
+- **Thay đổi:** Sửa responsive Trang chủ tại 360/390/430: card "Tri thức công khai" về một cột, CTA
+  dưới nội dung; 3 quick-action card gọn (≤2 dòng tiêu đề, cao 88–103 px thay vì 94–135 px); header
+  mobile logo 32 px, chữ co được, nút Đăng nhập không xuống dòng; token `--bottom-nav-h` + padding
+  đáy `.home-page`; thay logo bằng huy hiệu Đoàn (tách từ `logo-doan.jpg`), gỡ `app-icon.svg`, thêm
+  icon PWA/favicon; cập nhật `docs/02-design-system.md`; bump cache SW lên v4.
+- **File đã sửa:** `src/index.css`, `src/components/common.jsx`, `src/pages/auth/Login.jsx`,
+  `index.html`, `preview.html`, `public/{manifest.webmanifest,sw.js}`,
+  `public/brand/{logo-doan-badge.png,app-icon-192.png,app-icon-512.png,favicon-64.png}` (mới),
+  `public/brand/app-icon.svg` (xóa), `tests/home_mobile_responsive.test.mjs` (mới),
+  `tests/public_first_auth.test.mjs` (đổi tên cache v3→v4), `docs/02-design-system.md`,
+  `docs/brain/{01-architecture,03-decisions,06-ai-working-log}.md`, `docs/home-mobile-responsive/**`.
+- **Lý do:** Rule mobile của `.home-public-card` thiếu `grid-template-columns` nên bị ép cột hẹp
+  (tiêu đề 5 dòng ở 360 px); logo cũ là ảnh vuông nền vải nên huy hiệu quá nhỏ; xem báo cáo chi tiết
+  ở `docs/home-mobile-responsive/REPORT.md`.
+- **Kiểm tra:** Chromium thật (Playwright) + font Be Vietnam Pro, 360×800/390×844/430×932, cả khách
+  và đã đăng nhập (phiên/REST giả lập): không scroll ngang, không phần tử tràn, không text tràn,
+  chừa 32 px trên bottom nav. Thêm 320/600/768/960/1280, Login, trang con. `npm test` 213/213,
+  lint 0 errors/3 warning cũ, build PASS.

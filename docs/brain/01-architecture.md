@@ -110,10 +110,10 @@ supabase/
 | `src/services/supabaseClient.js` | Client Supabase (anon key) | `AuthContext`, `pages/auth/*`, `pages/Admin` | `VITE_SUPABASE_URL/ANON_KEY` |
 | `src/components/Guards.jsx` | `AuthGuard` (chặn chưa đăng nhập/inactive), `RoleGuard` | `App.jsx` | `useAuth`, react-router |
 | `src/components/Layout.jsx` | `AppShell`: Sidebar + shared five-item `BottomNavigation` + `<Outlet/>`; guest and authenticated shells use the same primary destinations | `App.jsx` (public pages and guarded private pages) | `useAuth`, `Icon`, `common` |
-| `src/components/common.jsx` | `Brand`, `Button`, page/state primitives, `AuthRequiredState`, native `Modal` | Shared pages and guards | `Icon`, report status helpers, React dialog APIs |
+| `src/components/common.jsx` | `Brand` (logo `public/brand/logo-doan-badge.png`, sizing in `index.css`), `Button`, page/state primitives, `AuthRequiredState`, native `Modal` | Shared pages and guards | `Icon`, report status helpers, React dialog APIs |
 | `src/components/Icon.jsx` | One `name`-to-Lucide adapter; decorative SVGs are hidden from assistive technology | `Layout`, pages, common components | `lucide-react` |
 | `src/components/Skeleton.jsx` | Shared animated loading placeholder with live status semantics | Data-backed list/detail pages | `index.css` surface tokens |
-| `src/index.css` | Design tokens, shared visual primitives, focus states, responsive layout and auth modal sheet rules | All frontend routes | Be Vietnam Pro, brand tokens |
+| `src/index.css` | Design tokens (incl. `--bottom-nav-h` driving bottom-nav height and `.home-page` bottom padding), shared visual primitives, focus states, responsive layout and auth modal sheet rules | All frontend routes | Be Vietnam Pro, brand tokens |
 | `src/pages/Home.jsx` | Public-first landing and shortcuts to documents, learning and Ask AI | route `/` | `AuthContext`, shared components |
 | `src/pages/Knowledge.jsx` | Hub Văn bản/Chuyên đề/Trắc nghiệm, tìm kiếm và điều hướng tới nội dung | route `/tri-thuc` | `documentService`, `learningService`, `quizService`, `Icon`, `common` |
 | `src/pages/AskAi.jsx` | Chat, gợi ý câu hỏi, trạng thái no-evidence và nguồn trích dẫn | route `/tri-thuc/hoi-ai` | `aiService`, `Icon`, `common` |
