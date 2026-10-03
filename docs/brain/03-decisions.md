@@ -1023,3 +1023,12 @@ không nới, không skip bất kỳ assertion nào**; test 14/15/16/26 vẫn đ
 - **Cập nhật 2026-10-03 — BRAND_LOGO_OWNER_CONFIRMED:** owner chỉ định `logo-dtn.jpg` làm logo chính thức;
   file trùng byte với `public/brand/logo-doan.jpg` (nguồn của `logo-doan-badge.png`/icon), nên quyết định
   "logo tạm thời" ở trên được nâng thành **chính thức**, không thay ảnh.
+
+## [2026-10-03] HOME_LATEST_PUBLIC — Mục "Mới công bố" trên Trang chủ khách
+
+- **Quyết định:** Trang chủ khách hiển thị tối đa 3 văn bản + 2 chuyên đề mới nhất bằng chính
+  `documentService.listDocuments` / `learningService.listTopics` và `DocumentCard` / `TopicCard`. Không thêm
+  endpoint/RPC/bảng; phạm vi dữ liệu vẫn do RLS quyết định (khách chỉ thấy PUBLIC đã công bố).
+- **Quyết định:** Mục ẩn khi tải xong mà không có nội dung (hoặc lỗi) để không hiện hộp rỗng; chỉ tải khi chưa đăng nhập.
+- **Lưu ý phụ thuộc:** `Home.jsx` giờ import `DocumentCard`/`TopicCard` từ trang Văn bản/Chuyên đề — đổi markup hai card
+  này sẽ ảnh hưởng Trang chủ.

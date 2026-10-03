@@ -87,3 +87,12 @@ test('brand logo is the owner-confirmed asset and no longer marked as pending', 
   assert.doesNotMatch(read('src/components/common.jsx'), /BRAND_LOGO_PENDING_OWNER_ASSET/);
   assert.match(read('docs/02-design-system.md'), /BRAND_LOGO_OWNER_CONFIRMED/);
 });
+
+test('guest home lists the newest public documents and topics through the existing RLS-bound services', () => {
+  const home = read('src/pages/Home.jsx');
+  assert.match(home, /documentService\.listDocuments\(\{ page: 0, pageSize: LATEST_DOCUMENTS \}\)/);
+  assert.match(home, /learningService\.listTopics\(\{ page: 0, pageSize: LATEST_TOPICS \}\)/);
+  assert.match(home, /if \(!isGuest\) return undefined;/);
+  // Hidden once loaded with nothing to show, so the guest home never renders an empty box.
+  assert.match(home, /isGuest && \(latest\.loading \|\| latest\.documents\.length > 0 \|\| latest\.topics\.length > 0\)/);
+});
