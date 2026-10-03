@@ -209,7 +209,7 @@ export function Knowledge() {
               <EmptyState
                 icon="file"
                 title="Chưa có văn bản"
-                description="Chưa có văn bản nào được công bố cho tài khoản của bạn."
+                description="Chưa có văn bản nào được công bố."
               />
             )}
 
@@ -261,7 +261,7 @@ export function Knowledge() {
               <EmptyState
                 icon="book"
                 title="Chưa có chuyên đề"
-                description="Chưa có chuyên đề học tập nào được công bố cho tài khoản của bạn."
+                description="Chưa có chuyên đề học tập nào được công bố."
               />
             )}
 

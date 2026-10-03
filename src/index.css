@@ -246,7 +246,6 @@
 .login-error{justify-content:center;padding:9px}
 .login-note{padding:0 22px 19px;text-align:center;color:var(--text-muted);font-size:11px}
 .organization-card{display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--border-default);border-radius:16px;background:#fff;box-shadow:var(--shadow-sm)}
-.organization-card img{width:auto;height:30px;flex:none;object-fit:contain}
 .organization-card strong,.organization-card span{display:block}
 .organization-card strong{font-size:11px}
 .organization-card span{margin-top:2px;color:var(--text-muted);font-size:11px}
@@ -583,3 +582,11 @@
 .nq-lookup-options{list-style:none;display:grid;gap:12px;margin:16px 0}
 .nq-key{color:var(--brand-800);font-weight:600}
 @media(min-width:768px){.nq-actions{bottom:20px;grid-template-columns:1fr 1fr 1fr}.nq-actions>button:last-child{grid-column:auto}.nq-question-nav{grid-template-columns:repeat(10,1fr)}}
+.login-back{justify-self:start;min-height:44px;display:inline-flex;align-items:center;gap:4px;color:var(--brand-700);font-size:12px;font-weight:600}
+.document-list .empty-state{margin-top:0;border:0;border-radius:0;background:transparent}
+@media(max-width:960px){
+  .mobile-topbar{height:calc(66px + env(safe-area-inset-top));padding-top:env(safe-area-inset-top);background:var(--brand-700);border-bottom:0}
+  .mobile-topbar .brand strong{color:#fff}
+  .mobile-topbar .icon-button{border-color:rgba(255,255,255,.24);background:rgba(255,255,255,.16);color:#fff}
+  .mobile-topbar .icon-button i{border-color:var(--brand-700)}
+}
