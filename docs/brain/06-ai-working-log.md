@@ -2392,3 +2392,19 @@
   và đã đăng nhập (phiên/REST giả lập): không scroll ngang, không phần tử tràn, không text tràn,
   chừa 32 px trên bottom nav. Thêm 320/600/768/960/1280, Login, trang con. `npm test` 213/213,
   lint 0 errors/3 warning cũ, build PASS.
+
+## [2026-10-03] Mobile UI polish nhóm A (PR #62)
+- **Agent:** Claude Code
+- **Thay đổi:** Hero Trang chủ mobile chỉ bo hai góc dưới (`0 0 24px 24px`) để hết lộ nền trắng ở góc trên;
+  `theme-color`/`theme_color` đổi `#0D47A1` → `#1257C4` cho khớp hero; 3 quick-card khách dùng chung tông
+  xanh, chip icon 34 px, icon `file-search`/`school`/`bulb` (thêm `FileSearch`, `GraduationCap` vào `Icon.jsx`);
+  bottom nav có pill `--brand-100` sau icon tab đang chọn; nút chính mobile phẳng (không gradient/bóng);
+  nút Đăng nhập ở hero thành pill trắng chữ xanh. Chỉ trong `@media (max-width:960px)`, desktop không đổi.
+- **File đã sửa:** `src/index.css`, `src/components/Icon.jsx`, `src/pages/Home.jsx`, `index.html`,
+  `preview.html`, `public/manifest.webmanifest`, `tests/home_mobile_responsive.test.mjs`,
+  `docs/home-mobile-responsive/{vercel-preview,local-polish}/**`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Phản hồi của owner: góc trên hero lộ trắng, icon trông cũ. Không đổi route/API/auth.
+- **Kiểm tra:** `npm test` 215/215, lint 0 errors/3 warning cũ, build PASS. Chromium (browser pane) trên bản
+  build local (Supabase giả, chưa có Vercel Preview cho commit này) ở 360/390/430: không scroll ngang, không
+  phần tử tràn, nút Đăng nhập 1 dòng; quick-card cao 113/112/98 px (trước 102/102/88 do chip icon lớn hơn,
+  vượt khoảng 88–103 cũ ở 360/390); desktop 1280 giữ nguyên (hero 22 px, sidebar 268 px, nút gradient).

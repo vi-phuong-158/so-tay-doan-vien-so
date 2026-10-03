@@ -369,6 +369,9 @@
   .bottom-nav{left:0;right:0;bottom:0;height:calc(var(--bottom-nav-h) + env(safe-area-inset-bottom));padding:5px 7px calc(5px + env(safe-area-inset-bottom));border:0;border-top:1px solid var(--border-default);border-radius:0;background:#fff;box-shadow:0 -5px 18px rgba(20,56,105,.07);backdrop-filter:none}
   .bottom-nav a{border-radius:12px;gap:1px}
   .bottom-nav a.active{background:transparent;color:var(--brand-700)}
+  .bottom-nav .nav-icon{display:inline-flex;padding:2px 16px;border-radius:999px;transition:background .15s}
+  .bottom-nav a.active .nav-icon{background:var(--brand-100)}
+  .bottom-nav a.active small{font-weight:700}
   .bottom-nav small{font-size:11px}
   .page--appbar{width:100%;max-width:none;padding:0 0 calc(100px + env(safe-area-inset-bottom))}
   .page--appbar>.page-header{min-height:76px;margin:0;padding:calc(13px + env(safe-area-inset-top)) 16px 15px;align-items:center;background:#1257c4;color:#fff}
@@ -382,11 +385,12 @@
   .page--appbar .empty-state{margin-top:14px}
   .page--appbar .campaign-list{grid-template-columns:1fr}
   .home-page{width:100%;padding:0 0 calc(var(--bottom-nav-h) + 32px + env(safe-area-inset-bottom))}
-  .home-hero{min-height:0;padding:calc(14px + env(safe-area-inset-top)) 16px 60px;background:#1257c4}
+  .home-hero{min-height:0;padding:calc(14px + env(safe-area-inset-top)) 16px 60px;background:#1257c4;border-radius:0 0 24px 24px}
   .home-hero .hero-top{display:flex;gap:12px}
   .home-hero .hero-top>.brand{flex:1 1 0;min-width:0}
   .home-hero .hero-top>:not(.brand){flex:none}
-  .hero-login{white-space:nowrap}
+  .button-primary,.button-primary:hover{background:var(--brand-700);box-shadow:none}
+  .hero-login{white-space:nowrap;border-color:transparent;border-radius:999px;background:#fff;color:var(--brand-700);font-weight:600}
   .home-hero .brand{gap:9px}
   .home-hero .brand img{width:auto;height:32px}
   .home-hero .brand strong{font-size:12px}
@@ -400,7 +404,7 @@
   .home-body{width:100%;padding:0 16px}
   .metrics-grid.overlap{margin-top:-37px;gap:8px;grid-template-columns:repeat(3,minmax(0,1fr))}
   .metric-card{min-width:0;min-height:0;padding:10px 9px;border:1px solid rgba(222,232,246,.9);border-radius:14px;background:#fff;box-shadow:0 7px 18px rgba(20,56,105,.08);backdrop-filter:none}
-  .metric-icon{width:26px;height:26px;margin-bottom:4px;border-radius:9px}
+  .metric-icon{width:34px;height:34px;margin-bottom:6px;border-radius:10px}
   .metric-card strong{font-size:16px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .metric-card small{display:-webkit-box;margin-top:2px;font-size:11px;line-height:1.3;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .home-section{margin-top:23px}

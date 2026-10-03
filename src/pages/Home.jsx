@@ -139,9 +139,9 @@ export function Home() {
         <div className="metrics-grid overlap" aria-label={isGuest ? 'Lối vào nội dung công khai' : 'Tổng quan hoạt động'}>
           {isGuest ? (
             <>
-              <MetricCard href="/tri-thuc/van-ban" icon="file" label="Văn bản công khai" value="Tra cứu" />
-              <MetricCard href="/tri-thuc/chuyen-de" icon="book" label="Chuyên đề" value="Học tập" tone="orange" />
-              <MetricCard href="/doi-moi-sang-tao" icon="bulb" label="Đổi mới sáng tạo" value="Khám phá" tone="green" />
+              <MetricCard href="/tri-thuc/van-ban" icon="file-search" label="Văn bản công khai" value="Tra cứu" tone="blue" />
+              <MetricCard href="/tri-thuc/chuyen-de" icon="school" label="Chuyên đề" value="Học tập" tone="blue" />
+              <MetricCard href="/doi-moi-sang-tao" icon="bulb" label="Đổi mới sáng tạo" value="Khám phá" tone="blue" />
             </>
           ) : (
             <>

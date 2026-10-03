@@ -37,3 +37,18 @@ test('home page reserves room for the fixed bottom navigation', () => {
   assert.match(css, /--bottom-nav-h:62px/);
   assert.match(css, /\.home-page\{width:100%;padding:0 0 calc\(var\(--bottom-nav-h\) \+ 32px \+ env\(safe-area-inset-bottom\)\)\}/);
 });
+
+test('mobile hero is full-bleed: only the bottom corners are rounded and the status bar matches', () => {
+  assert.match(css, /\.home-hero\{min-height:0;[^}]*background:#1257c4;border-radius:0 0 24px 24px\}/);
+  for (const file of ['index.html', 'preview.html']) assert.match(read(file), /name="theme-color" content="#1257C4"/, file);
+  assert.match(read('public/manifest.webmanifest'), /"theme_color": "#1257C4"/);
+});
+
+test('guest quick cards share one icon tone and the bottom nav marks the active tab with a pill', () => {
+  const home = read('src/pages/Home.jsx');
+  assert.match(home, /icon="file-search"[^>]*tone="blue"/);
+  assert.match(home, /icon="school"[^>]*tone="blue"/);
+  assert.match(home, /icon="bulb"[^>]*tone="blue"/);
+  assert.match(css, /\.bottom-nav a\.active \.nav-icon\{background:var\(--brand-100\)\}/);
+  assert.match(css, /\.button-primary,\.button-primary:hover\{background:var\(--brand-700\);box-shadow:none\}/);
+});
