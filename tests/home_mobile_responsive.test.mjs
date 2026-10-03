@@ -82,3 +82,8 @@ test('mobile bottom nav and metric cards are each defined once per breakpoint', 
   assert.equal(count(/[{}]\s*\.bottom-nav a\{/g), 1);
   assert.equal(count(/[{}]\s*\.bottom-nav a\.active\{/g), 1);
 });
+
+test('brand logo is the owner-confirmed asset and no longer marked as pending', () => {
+  assert.doesNotMatch(read('src/components/common.jsx'), /BRAND_LOGO_PENDING_OWNER_ASSET/);
+  assert.match(read('docs/02-design-system.md'), /BRAND_LOGO_OWNER_CONFIRMED/);
+});

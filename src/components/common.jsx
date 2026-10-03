@@ -2,7 +2,7 @@ import { useEffect, useId, useRef } from 'react';
 import { Icon } from './Icon';
 import { getReportStatus } from '../lib/status.mjs';
 
-// BRAND_LOGO_PENDING_OWNER_ASSET: temporary badge; replace with owner's official logo (docs/02-design-system.md §2).
+// Official badge cut from the owner-confirmed logo (docs/02-design-system.md §2); swap all brand files together.
 export function Brand({ compact = false }) {
   return <div className={`brand ${compact ? 'brand-compact' : ''}`}>
     <img src="/brand/logo-doan-badge.png" width="452" height="240" alt="Logo Đoàn Thanh niên Việt Nam" />

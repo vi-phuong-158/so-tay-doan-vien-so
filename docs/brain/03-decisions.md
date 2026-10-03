@@ -1020,3 +1020,6 @@ không nới, không skip bất kỳ assertion nào**; test 14/15/16/26 vẫn đ
   UI/logo mới); `tests/public_first_auth.test.mjs` cập nhật theo.
 - **Phạm vi:** Chỉ frontend (CSS, `Brand`, `Login`, asset, manifest). Không đổi route, API, service,
   auth hay RLS. Bằng chứng: `docs/home-mobile-responsive/`.
+- **Cập nhật 2026-10-03 — BRAND_LOGO_OWNER_CONFIRMED:** owner chỉ định `logo-dtn.jpg` làm logo chính thức;
+  file trùng byte với `public/brand/logo-doan.jpg` (nguồn của `logo-doan-badge.png`/icon), nên quyết định
+  "logo tạm thời" ở trên được nâng thành **chính thức**, không thay ảnh.
