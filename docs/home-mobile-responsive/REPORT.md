@@ -36,3 +36,27 @@ không đổi), Đăng nhập 360/1280, trang con `/tri-thuc/van-ban` 360.
 - Phiên đăng nhập trong ảnh `after-auth-*` là giả lập ở trình duyệt (không có tài khoản thật, không
   chạm Supabase/production). Con số "Đoàn viên" hiển thị "—" vì Member API giả lập không khớp.
 - Repo không có `DESIGN.md`; tài liệu thiết kế là `docs/02-design-system.md` (đã cập nhật).
+
+## Acceptance trên bản production build local (2026-10-03, HEAD `f4e3fa6`)
+
+> **Không phải bằng chứng Vercel Preview.** Môi trường chạy bị chặn `*.vercel.app`, nên chạy `vite build`
+> của đúng HEAD, phục vụ bằng server mô phỏng `vercel.json` (rewrite SPA + toàn bộ header, gồm CSP),
+> kiểm tra bằng Chromium thật. Preview thật vẫn cần chạy lại khi có truy cập.
+
+| Hạng mục | 360×800 | 390×844 | 430×932 |
+|---|---|---|---|
+| Scroll ngang / phần tử tràn / text tràn (khách và đăng nhập giả lập) | 0 / 0 / 0 | 0 / 0 / 0 | 0 / 0 / 0 |
+| Card "Tri thức công khai" | tiêu đề 1 dòng, 292 px | 1 dòng, 322 px | 1 dòng, 362 px |
+| 3 quick card | tiêu đề 1 dòng, cao 103 px | 1 dòng, 103 px | 1 dòng, 88 px |
+| Header | tên app 1 dòng, đơn vị 2 dòng, nút Đăng nhập 1 dòng | như 360 | cả hai 1 dòng |
+| Bottom nav che nội dung | không (chừa 32 px khi cuộn hết) | không (32 px) | không (32 px) |
+| Be Vietnam Pro | đã nạp (400/600/700) | đã nạp | đã nạp |
+| Refresh trực tiếp `/`, `/tri-thuc`, `/tri-thuc/van-ban`, `/login` | 200, hiển thị đúng sau reload | như 360 | như 360 |
+
+**Service worker (nâng cấp thật master → PR, cùng origin):** build master (cache `v3`, logo cũ) → thay
+bằng build PR → reload lần 1 vẫn thấy giao diện cũ (cache-first, SW mới cài và dọn `v3` ở nền) → reload
+lần 2 hiển thị giao diện mới, cache chỉ còn `v4`. Tức là không cần xóa dữ liệu trình duyệt thủ công,
+nhưng người dùng cũ cần **một lần tải lại thêm** sau lần triển khai đầu.
+
+Ghi chú: font được nạp từ file Google Fonts tải về và trả lại qua route của Playwright (trình duyệt test
+không tự ra được internet). Phiên đăng nhập và Supabase REST là giả lập. Ảnh: `local-prod-build/`.
