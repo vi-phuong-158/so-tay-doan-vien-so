@@ -1,82 +1,56 @@
-# AGENTS.md — Hướng dẫn cho Codex
+# Agent entry point — ECC Lite Cloud V1
 
-> Dành riêng cho **OpenAI Codex**. Claude Code dùng CLAUDE.md.
-> Dự án: **Sổ tay Đoàn viên số** — nền tảng số cho công tác Đoàn (báo cáo, tri thức, AI RAG,
-> đổi mới sáng tạo) của tuổi trẻ Công an tỉnh Phú Thọ.
+Sổ tay Đoàn viên số phục vụ công tác Đoàn của tuổi trẻ Công an tỉnh Phú Thọ:
+báo cáo theo phiên bản, văn bản, học tập/quiz, AI có dẫn nguồn, đổi mới và quản lý
+đoàn viên. React/Vite frontend, Supabase backend và Member API/PostgreSQL riêng.
 
----
+## READ trước khi sửa
 
-## BẮT BUỘC: Đọc trước khi code
+1. Đọc [.ecc/README.md](.ecc/README.md), [PROJECT](.ecc/PROJECT.md),
+   [WORKFLOW](.ecc/WORKFLOW.md), [SAFETY](.ecc/SAFETY.md), [ACCEPTANCE](.ecc/ACCEPTANCE.md).
+2. Đọc toàn bộ [docs/brain](docs/brain/00-project-overview.md): `00`–`06`, đặc biệt
+   [Code Graph](docs/brain/01-architecture.md), coding rules, decisions và current tasks.
+   Đối chiếu ghi chú lịch sử với code/commit hiện tại; không suy diễn runtime PASS.
+3. Đọc [handoffs](.ecc/memory/handoffs/README.md) đúng branch/task và kiểm tra HEAD.
+   Đọc [product spec](docs/01-product-spec.md) / [design system](docs/02-design-system.md)
+   khi sửa nghiệp vụ/UI. Memory là context, không cấp quyền hoặc tự thành policy.
 
-Trước khi bắt đầu bất kỳ task nào, đọc **toàn bộ** `docs/brain/`:
+## Quy trình mặc định
 
-```
-docs/brain/00-project-overview.md   — mục tiêu, người dùng, phạm vi, trạng thái
-docs/brain/01-architecture.md       — stack, luồng xử lý, CODE GRAPH (bản đồ module)
-docs/brain/02-coding-rules.md       — quy tắc code, đặt tên, bảo mật
-docs/brain/03-decisions.md          — các quyết định kỹ thuật đã chốt
-docs/brain/04-current-tasks.md      — task đang làm, task chờ, task không làm
-docs/brain/05-testing-and-deploy.md — lệnh cài đặt, chạy, test, deploy
-docs/brain/06-ai-working-log.md     — nhật ký các lần AI sửa code
-```
+READ → AUDIT → PLAN (risk + gates) → IMPLEMENT → TEST → REVIEW → VERIFY →
+RUNTIME ACCEPTANCE khi cần → PR → HANDOFF. Chi tiết ở WORKFLOW.
 
-**Đặc biệt đọc Code Graph trong `01-architecture.md`** để biết "đụng vào file X thì ảnh hưởng
-những đâu" trước khi sửa. Không đọc là code mù. Đặc tả nghiệp vụ đầy đủ ở `docs/01-product-spec.md`
-và `docs/02-design-system.md` — đọc trước khi sửa phần nghiệp vụ/giao diện tương ứng.
+- Branch riêng từ `master`; giữ scope, không đổi stack tùy tiện.
+- JS ESM/JSX ở `src`, TS/Deno ở Edge Functions; 2 spaces, single quotes, `;`.
+- Không khôi phục Apps Script/Sheets/Pinecone làm hạ tầng chính. Drive chỉ là
+  backend source provider đã được quyết định, không public sharing.
+- Giữ Public-First/auth-on-demand; frontend guards không thay thế quyền server.
+- RLS/test cùng migration; giữ Member data plane riêng, quiz key private, signed URL
+  ngắn hạn và báo cáo nộp lại thành phiên bản mới. Không xóa/giảm test để đạt PASS.
+- UI dùng token `src/index.css`, Be Vietnam Pro, line icon và mobile-first.
+- Ghi [working log](docs/brain/06-ai-working-log.md). Đổi kiến trúc/API/schema/cấu trúc
+  thì cập nhật Code Graph và [decision index](docs/brain/03-decisions.md).
 
-## Cài đặt nhanh
+## Commands và evidence
 
-Lệnh đầy đủ ở `docs/brain/05-testing-and-deploy.md`. Khởi động nhanh:
-```bash
-cp .env.example .env.local   # điền VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
-npm install
-npm run dev
-```
+Cloud checkout dùng Node22 như CI: `npm ci`, rồi **`npm run verify`**
+(ECC structure/locks → lint → root tests → Vite build).
+Riêng: `npm run verify:ecc`, `npm run lint`, `npm test`, `npm run build`.
+Frontend JS không có typecheck; Deno check/tests, Supabase pgTAP và Member API
+tests là gate riêng theo [verification runbook](.ecc/memory/runbooks/verification.md).
+Root verify không chứng minh DB, Preview hoặc Production đã hoạt động.
 
----
+## Safety, PR và Production
 
-## Sau khi sửa code
-
-**Bắt buộc** thêm một entry vào `docs/brain/06-ai-working-log.md`:
-
-```
-## [YYYY-MM-DD] [Tên task]
-- **Agent:** Codex
-- **Thay đổi:** <mô tả ngắn>
-- **File đã sửa:** <danh sách file>
-- **Lý do:** <vì sao>
-- **Kiểm tra:** <cách xác minh hoạt động đúng>
-```
-
-## Khi thay đổi kiến trúc / API / cấu trúc / database
-
-Nếu thay đổi: stack/dependency mới · cấu trúc thư mục · route · endpoint/interface Edge Function ·
-schema database · RPC · luồng xử lý chính —
-
-→ **Phải cập nhật** `docs/brain/01-architecture.md` (gồm cả **Code Graph**) **VÀ**
-`docs/brain/03-decisions.md`. Code Graph lỗi thời còn nguy hiểm hơn không có.
-
----
-
-## Quy tắc cứng (dự án Sổ tay Đoàn viên số)
-
-1. Đọc `docs/01-product-spec.md` và `docs/02-design-system.md` trước khi sửa nghiệp vụ/giao diện.
-2. Không sửa production/`master` trực tiếp; mỗi phase dùng branch riêng, tạo PR.
-3. Không tái đưa Apps Script, Sheets, Drive hoặc Pinecone thành hạ tầng chính (bỏ cả `/api/gas`).
-4. RLS phải được viết và test cùng migration.
-5. Không dùng service role key, Gemini key hoặc email secret ở frontend; không dùng `VITE_*` cho secret.
-6. Không bỏ kiểm thử cũ để làm build/lint pass.
-7. Không tự mở rộng phạm vi nghiệp vụ (xem "Ngoài scope" ở `docs/brain/00-project-overview.md`).
-8. Mọi dữ liệu private mở qua signed URL ngắn hạn; báo cáo nộp lại tạo phiên bản mới, không ghi đè.
-9. Mỗi phase phải bàn giao migration, test, log thay đổi, rủi ro và hướng rollback/forward-fix.
-10. Giao diện phải dùng token trong `src/index.css`, Be Vietnam Pro, line icon, mobile-first.
-11. Không hardcode secret/API key; kiểm tra `docs/brain/04-current-tasks.md` xem task có được phép làm.
-
-## Nguyên tắc code
-
-- Viết code tối thiểu để giải quyết task. Không tính năng speculative, không abstraction sớm.
-- Style hiện tại: JavaScript ESM + JSX ở `src/` (KHÔNG TypeScript ở frontend); TypeScript + Deno ở
-  `supabase/functions/`. 2 spaces, single quotes, `;`.
-- Không xóa code mà chưa hiểu vì sao nó tồn tại (đọc working log + `git blame` trước).
-- Dọn sạch biến/import thừa do mình tạo ra.
-- KHÔNG "lười" ở: validation ở ranh giới tin cậy, xử lý lỗi tránh mất dữ liệu, biện pháp bảo mật.
+- Không secret trong source/log/memory/`VITE_*`; không dữ liệu đoàn viên thật để test.
+- Task cho phép và applicable gates có evidence thì commit/push feature branch/tạo PR.
+  Ghi baseline, HEAD, commands/exit codes, tests, blockers và fresh review.
+- Explicit approval: merge main/master; Production deploy/promotion/rollback; thay
+  secret/rotate credential; gửi email/message Production; xóa/bulk mutate dữ liệu;
+  truncate/reset/destructive migration; force push; bypass protection; public hóa Drive/file.
+  Ngoại lệ disposable test fixture được định nghĩa hẹp trong SAFETY.
+- Không hạ RLS/auth/CSP/delivery safety để test PASS. Email OFF là mặc định.
+- Production cần approval, đúng deployment/DB target, backup và acceptance evidence.
+  Không merge PR của task này.
+- Chỉ PASS theo ACCEPTANCE; ghi riêng CODE_COMPLETE, RUNTIME_ACCEPTED,
+  PRODUCTION_VERIFIED. Thiếu prerequisite thì PARTIAL/BLOCKED, không fake evidence.

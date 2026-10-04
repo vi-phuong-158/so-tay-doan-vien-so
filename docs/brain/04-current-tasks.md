@@ -1,11 +1,19 @@
 # 04 — Current Tasks
 
-> Cập nhật mỗi khi bắt đầu hoặc hoàn thành task. Agent đọc đây để biết được phép làm gì.
+> Cập nhật khi bắt đầu/hoàn thành task. Agent đọc để biết trạng thái và ưu tiên.
+> Task list/lịch sử không tự cấp approval; quyền thao tác từ user task và .ecc/SAFETY.
 > Trạng thái triển khai chi tiết: `docs/04-implementation-status.md`; kế hoạch phase: `docs/phase-2/`.
 
 ---
 
 ## Đang làm
+
+### ECC Lite Cloud V1 (2026-10-04) — authorized standalone tooling task
+- Branch `codex/ecc-lite-cloud-v1`, base `master@c03f2d5cab298c6469a22a8c2049f6620e813b11`.
+- User yêu cầu audit/research/implementation/tests/fresh review/PR; không mở Phase 6
+  hoặc sửa app/DB/secret/Production. [Handoff](../../.ecc/memory/handoffs/2026-10-04-ecc-lite-cloud-v1.md)
+  records candidate evidence/blockers. Commit/push/PR theo required gates; không merge.
+- Hosted Member/runtime blockers trước đây vẫn giữ nguyên.
 
 ### NQ_300 public guest access (2026-10-02)
 - User wants the published NQ_300 quiz free to everyone with no interactive login.

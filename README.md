@@ -11,11 +11,17 @@ Nền tảng số phục vụ đoàn viên, cán bộ Đoàn, Ban Thanh niên v�
 - Có schema/RLS/RPC, Edge Functions và Member API theo các phase đã nghiệm thu kỹ thuật.
 - Trạng thái UI closure và các runtime gate còn lại được ghi tại `docs/ui-final-closure/FINAL_ACCEPTANCE.md`.
 
+## Agent workflow (ECC Lite Cloud V1)
+
+Agent mới đọc [AGENTS.md](AGENTS.md), rồi [.ecc/README.md](.ecc/README.md).
+Policy/workflow/acceptance và Git-backed handoff dùng chung cho Codex, Claude và agent khác.
+Không cần ECC installer, hooks hoặc global config.
+
 ## Chạy bằng Vite
 
 ```bash
 cp .env.example .env.local
-npm install
+npm ci
 npm run dev
 ```
 
@@ -31,9 +37,9 @@ python -m http.server 4173
 ## Kiểm thử
 
 ```bash
-npm test
-npm run lint
-npm run build
+npm ci
+npm run verify   # ECC structure/locks + lint + root tests + build
+# DB/Deno/Member/runtime là gates riêng: .ecc/memory/runbooks/verification.md
 ```
 
 ## Nguyên tắc production

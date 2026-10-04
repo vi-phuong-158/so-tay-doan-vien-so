@@ -1,5 +1,15 @@
 # 01 — Architecture
 
+## ECC Lite Cloud V1 — Agent operations (2026-10-04)
+
+Code graph: `AGENTS.md` → `.ecc/{README,PROJECT,WORKFLOW,SAFETY,ACCEPTANCE}` →
+project docs/brain + Markdown memory; `CLAUDE.md` → AGENTS, không policy riêng.
+`npm run verify` → `scripts/verify-ecc.mjs` (structure/links/locks) → lint → root tests
+(including `tests/ecc_lite.test.mjs`) → build. Existing CI build job invokes verify;
+DB/Deno/Member jobs unchanged. No hooks/runtime/global config/new dependency.
+[Decision](../../.ecc/memory/decisions/0001-ecc-lite-cloud-v1.md),
+[pre-implementation audit](../../.ecc/AUDIT.md).
+
 ## Fixed Nghị quyết bank (2026-10-02)
 
 - Existing `/tri-thuc/trac-nghiem/:quizId` routes bank UUID `7c620b81-6dc6-4a57-9908-3a1f68652a00`

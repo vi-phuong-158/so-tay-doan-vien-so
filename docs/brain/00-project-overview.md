@@ -51,7 +51,15 @@ Không chỉ là thư viện tài liệu mà là nền tảng gắn **thông tin
 luồng. Kế thừa có chọn lọc frontend từ dự án `baovenentang` nhưng **loại bỏ hoàn toàn** Google
 Apps Script, Google Sheets/Drive làm hạ tầng chính và Pinecone — thay bằng Supabase + pgvector.
 
-## Trạng thái dự án (2026-08-09)
+## Trạng thái hiện tại — đọc source trước khi dùng ghi chú cũ
+
+[2026-10-04] Public-First, các vertical slices và NQ_300 guest flow đã nối service/RPC/API.
+Bản đồ hiện tại ở [.ecc/PROJECT.md](../../.ecc/PROJECT.md) và Code Graph `01-architecture.md`.
+Frontend đã có Vercel deployment; hosted Member API/backup/restore và một số authenticated
+runtime gates vẫn theo phase reports, không suy ra Production acceptance từ UI/CI PASS.
+Phần dưới giữ nguyên như lịch sử Phase 1/2, không mô tả current runtime.
+
+## Trạng thái lịch sử (2026-08-09)
 
 Đang phát triển, **chưa production**.
 
