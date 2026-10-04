@@ -2537,3 +2537,9 @@
   while local installation/lint/build/backend gates are blocked. Keep PARTIAL until
   applicable gates pass; no merge/Production approval.
 - Changes remain the reviewed ECC Lite scope; no app/DB behavior change.
+
+- Delivery: Draft PR #65, source head ab3f5586e8edcc81853ce13bc6e79bb91e630872;
+  CI37202265221 all3jobs PASS: root231, Member273, pgTAP856/33files, Deno119, NQ
+  assertions. Preview READY + HTTP smoke PASS; Chromium browser launch blocked
+  by socket EPERM/SIGTRAP, so overall PARTIAL and no RUNTIME_ACCEPTED claim.
+  Existing root dependency audit reports 3 vulnerabilities; manifests/locks unchanged.

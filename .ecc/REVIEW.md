@@ -1,7 +1,8 @@
 # Fresh-context acceptance evidence — 2026-10-04
 
-Candidate: uncommitted codex/ecc-lite-cloud-v1 on
-c03f2d5cab298c6469a22a8c2049f6620e813b11. Review PASS is scoped to this diff,
+Originally reviewed candidate: working-tree codex/ecc-lite-cloud-v1 on
+c03f2d5cab298c6469a22a8c2049f6620e813b11; delivered initial head
+ab3f5586e8edcc81853ce13bc6e79bb91e630872. Review PASS is scoped to this diff,
 not a commit/PR/runtime certificate. Final documentation corrections get re-reviewed.
 
 ## AGENTS-only fresh-agent simulation
@@ -51,3 +52,11 @@ Raw reports/logs are session artifacts under /tmp; this sanitized summary is the
 record. Final handoff/report changes require structural/diff and affected semantic review.
 Production NOT_REQUESTED; no approval inferred from review. Overall task is PARTIAL
 until missing gates and delivery are completed.
+
+## Delivery supplement
+
+Explicit user approval permitted Draft PR before locally blocked gates. PR #65 is
+Draft/pushed, never merged. Initial candidate CI run37202265221 SUCCESS, verified
+merge/head tree parity; source and full backend gates now have machine evidence.
+Final evidence-only supplement preserves scoped review results and PARTIAL browser
+runtime blocker; it does not invent acceptance or expand Production authorization.
