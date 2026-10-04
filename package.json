@@ -9,6 +9,8 @@
     "preview": "vite preview",
     "test": "node --test tests/*.test.mjs",
     "lint": "eslint src",
+    "verify:ecc": "node scripts/verify-ecc.mjs",
+    "verify": "npm run verify:ecc && npm run lint && npm test && npm run build",
     "test:phase5:runtime": "node scripts/phase5-runtime-acceptance.mjs"
   },
   "dependencies": {

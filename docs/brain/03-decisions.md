@@ -1,5 +1,13 @@
 # 03 — Technical Decisions
 
+## [2026-10-04] ECC Lite Cloud V1
+
+Provider-neutral AGENTS + thin CLAUDE; repo-local policy/Markdown context; reuse
+existing checks via verify + original dependency-free structural validator. No upstream
+executables/hooks/daemon/global state. [ADR 0001](../../.ecc/memory/decisions/0001-ecc-lite-cloud-v1.md)
+records alternatives/evidence. Acceptance and destructive approval boundaries live in
+.ecc policies; historical decisions/logs do not authorize Production actions.
+
 ## [2026-10-03] NQ guest ownership policy boundary and schema reconciliation
 
 - Legacy owner-only policies do not require ACTIVE accounts, so an INVITED profile is insufficient

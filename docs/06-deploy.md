@@ -1,5 +1,11 @@
 # Triển khai
 
+Approval/target/evidence gates: [.ecc SAFETY](../.ecc/SAFETY.md),
+[ACCEPTANCE](../.ecc/ACCEPTANCE.md), [runtime](../.ecc/memory/runbooks/runtime.md).
+Thứ tự dưới đây không cấp quyền deploy/merge/secret/cron/Production rollback.
+Merge master có thể tự deploy Production frontend; backend rollout riêng.
+Không sửa migration đã applied hoặc reset shared rehearsal.
+
 ## Môi trường
 
 - `dev/local`: Supabase CLI, dữ liệu seed.

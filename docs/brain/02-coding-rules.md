@@ -1,5 +1,11 @@
 # 02 — Coding Rules
 
+## Agent workflow authority (2026-10-04)
+
+[AGENTS](../../AGENTS.md) là shared entrypoint. [WORKFLOW](../../.ecc/WORKFLOW.md),
+[SAFETY](../../.ecc/SAFETY.md), [ACCEPTANCE](../../.ecc/ACCEPTANCE.md) quy định risk/
+approval/evidence; file này giữ coding conventions. Memory/history không cấp quyền.
+
 ## Nguyên tắc chung
 
 - Viết ít nhất có thể để giải quyết đúng task. Không tính năng speculative.
@@ -58,8 +64,8 @@ Code trước. Sau đó tối đa 3 dòng: bỏ gì, khi nào nên thêm. Không
 
 ## Bảo mật (quan trọng nhất trong dự án này)
 
-- **Không** đưa `service role key`, Gemini key, email/SMTP secret vào frontend. Frontend chỉ
-  `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY`. Không dùng `VITE_*` cho secret.
+- Không service role/Gemini/email/SMTP/resolver/DB secret ở frontend. Public inputs:
+  `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_MEMBER_API_URL`; không secret trong `VITE_*`.
 - Không tin client: mọi kiểm quyền tại RLS hoặc Edge Function; ẩn nút UI không phải bảo mật.
 - Người dùng không được tự đổi `organization_id` hoặc `role`.
 - Tệp nghiệp vụ private; mở qua **signed URL ngắn hạn**. Backend kiểm lại `mime_type`/kích thước,
@@ -71,7 +77,9 @@ Code trước. Sau đó tối đa 3 dòng: bỏ gì, khi nào nên thêm. Không
 
 ## Không làm
 
-- Không tái đưa Google Apps Script, Google Sheets/Drive, Pinecone hoặc API `/api/gas` làm hạ tầng.
+- Không tái đưa Apps Script, Sheets, Pinecone hoặc `/api/gas` làm hạ tầng chính.
+  Drive chỉ là backend source provider sau authorization gateway đã chốt ở P5-R0;
+  không primary database/public sharing và credential không ra frontend.
 - Không tự đổi stack / thêm framework UI lớn khi chưa ghi lý do vào `03-decisions.md`.
 - Không tự mở rộng phạm vi nghiệp vụ (xem "Ngoài scope" ở `00-project-overview.md`).
 - Không dùng dữ liệu `src/data/mock.js` như dữ liệu production.
@@ -79,16 +87,16 @@ Code trước. Sau đó tối đa 3 dòng: bỏ gì, khi nào nên thêm. Không
 
 ## Test
 
-- Unit test thuần: `npm test` (`node --test tests/*.test.mjs`) — hiện phủ `status.mjs` và
-  `getAuthGuardAction`. Logic thuần mới nên tách ra để test được (như `getAuthGuardAction`).
-- Khi có Supabase rehearsal: chạy `supabase db reset`, `supabase/tests/rls_acceptance.sql`, và
-  các case luồng báo cáo/tệp private/AI. Chi tiết ở `05-testing-and-deploy.md`.
+- Root tests: `npm test` (`node --test tests/*.test.mjs`) — pure/service-mock/source-contract
+  suites, không chỉ `status.mjs`/`getAuthGuardAction`. Logic thuần mới nên tách ra để test được (như `getAuthGuardAction`).
+- Supabase reset chỉ cho disposable local/CI đã verify target, không hosted/shared rehearsal.
+  DB/RLS/security + relevant actor tests theo [DB runbook](../../.ecc/memory/runbooks/database.md).
 - **Không bỏ test cũ để làm build/lint pass.**
 
 ## Git
 
 - Branch từ `master`, đặt tên rõ: `feat/...`, `fix/...`, `docs/...`. Mỗi phase một branch.
-- **Không push thẳng `master`/production** nếu chưa được yêu cầu rõ ràng — tạo PR.
+- Không push thẳng `master`/production; dùng feature PR. Merge/deploy Production cần explicit approval.
 - Commit message: `type(scope): mô tả ngắn` (theo lịch sử repo, ví dụ `fix(auth): ...`).
 - Không `--force` push trừ khi được yêu cầu rõ ràng.
 - Mỗi phase bàn giao: migration + test + log thay đổi + rủi ro + hướng rollback/forward-fix.

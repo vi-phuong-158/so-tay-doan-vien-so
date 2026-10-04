@@ -3,11 +3,18 @@
 > Mọi lệnh để dựng môi trường, chạy, test, build, deploy. Agent đọc đây thay vì đoán lệnh.
 > Chi tiết bổ sung: `docs/05-testing.md`, `docs/06-deploy.md`.
 
+## ECC Lite verification (2026-10-04)
+
+Cloud setup dùng Node22 + npm ci theo lockfile, rồi npm run verify.
+DB/Deno/Member/runtime gates riêng: [runbook](../../.ecc/memory/runbooks/verification.md).
+[SAFETY](../../.ecc/SAFETY.md)/[ACCEPTANCE](../../.ecc/ACCEPTANCE.md) áp dụng cho
+mọi deploy, secret/cron/provider và destructive command dưới đây.
+
 ## Cài đặt môi trường local
 
 ```bash
 cp .env.example .env.local
-npm install
+npm ci
 ```
 
 Biến môi trường frontend (`.env.local`, không commit — chỉ giá trị public):
@@ -42,12 +49,13 @@ npm run build
 ## Test
 
 ```bash
-npm test          # node --test tests/*.test.mjs (unit thuần: status.mjs, AuthGuard)
+npm test          # root pure/service-mock/source-contract suites
 npm run lint      # eslint src
 ```
 
 ### Bắt buộc chạy khi có Supabase rehearsal
-1. `supabase db reset` và kiểm tra toàn bộ migration.
+1. Migration/RLS trên disposable local/CI đã verify target theo DB runbook. Reset chỉ
+   ở local stack do session tạo; không reset hosted/shared rehearsal nếu chưa explicit approval.
 2. Tạo 2 tổ chức, 2 cán bộ chi đoàn, 1 quản trị viên.
 3. Chạy các case trong `supabase/tests/rls_acceptance.sql`.
 4. Test luồng nộp báo cáo, nộp lại, review, quá hạn.

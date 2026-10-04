@@ -1,5 +1,18 @@
 # 06 — AI Working Log
 
+## [2026-10-04] ECC Lite Cloud V1 implementation
+- **Agent:** Codex Cloud
+- **Thay đổi:** Pre-edit audit, pinned ECC research, shared AGENTS + CLAUDE pointer, .ecc
+  policies/context/templates/runbooks, original structural/lock verifier + Node failure-case tests,
+  reuse verify trong existing CI.
+- **File đã sửa:** AGENTS/CLAUDE/README, .ecc, scripts/verify-ecc.mjs, tests/ecc_lite.test.mjs,
+  package.json, CI build step, docs/brain 00–06, docs/05-testing.md, docs/06-deploy.md.
+- **Lý do:** Portable cloud onboarding và explicit safety/evidence; reconcile stale mock/reset
+  guidance. Không thay app/DB/credentials/deployment hoặc bỏ old tests.
+- **Kiểm tra:** Evidence, limitations/fresh review và delivery gates ở
+  [handoff](../../.ecc/memory/handoffs/2026-10-04-ecc-lite-cloud-v1.md); không dùng baseline CI
+  thay candidate PASS. Không Production action hoặc merge.
+
 ## [2026-10-03] NQ_300 public guest runtime and security acceptance
 - **Agent:** Codex
 - **Thay đổi:** Audit PR #61 exact starting head `c2fda47295a5c3aff228a1319020611e58890c16`;
@@ -2518,3 +2531,15 @@
 - **File đã sửa:** `docs/brain/04-current-tasks.md` (giữ mục NQ_300 và mục UI polish của master, bỏ khối `BRAND_LOGO_PENDING_OWNER_ASSET` đã đóng).
 - **Lý do:** PR #61 ở trạng thái CONFLICTING; mã và migration tự gộp, không đổi.
 - **Kiểm tra:** `npm test` 224/224, `npm run lint` 0 lỗi, `npm run build` PASS trên kết quả gộp; CI chạy lại trên head mới.
+
+## [2026-10-04] ECC Lite Draft PR delivery exception
+- User explicitly approved feature-branch commit/push and Draft PR to obtain CI evidence
+  while local installation/lint/build/backend gates are blocked. Keep PARTIAL until
+  applicable gates pass; no merge/Production approval.
+- Changes remain the reviewed ECC Lite scope; no app/DB behavior change.
+
+- Delivery: Draft PR #65, source head ab3f5586e8edcc81853ce13bc6e79bb91e630872;
+  CI37202265221 all3jobs PASS: root231, Member273, pgTAP856/33files, Deno119, NQ
+  assertions. Preview READY + HTTP smoke PASS; Chromium browser launch blocked
+  by socket EPERM/SIGTRAP, so overall PARTIAL and no RUNTIME_ACCEPTED claim.
+  Existing root dependency audit reports 3 vulnerabilities; manifests/locks unchanged.
