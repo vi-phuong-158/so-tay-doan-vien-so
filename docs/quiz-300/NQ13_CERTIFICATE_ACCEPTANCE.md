@@ -109,9 +109,10 @@ The database runtime and a real rehearsal certificate passed. End-to-end browser
 
 - PR: [#67](https://github.com/vi-phuong-158/so-tay-doan-vien-so/pull/67), open, mergeable, not merged.
 - Branch: `codex/nq13-learning-certificate`; base: `master` at `a7f0aa2eb713e0cb619924fb0e43da1740de3459`.
-- PR head when audited: `c8d5791121a5bb9a46c15595ec78495d02e60d2b`.
-- GitHub Actions run `37657003253`: `build`, `member-api-test`, and `test-db` passed. Vercel and Vercel Preview Comments checks also passed for that head.
-- Exact-head Vercel deployment: `https://so-tay-doan-vien-viatbcf48-vi-phuong-158s-projects.vercel.app` (deployment `6915970061`, source SHA `c8d5791`).
+- Browser-tested UI head: `c8d5791121a5bb9a46c15595ec78495d02e60d2b`.
+- Runtime-assertion and evidence commit: `02722602e35bcc86aaa2a12a4a2769602c81fa19`. GitHub Actions run `37662296932` passed `build`, `member-api-test`, and `test-db`; Vercel and Vercel Preview Comments passed for this exact head.
+- Exact-head Vercel deployment: `https://so-tay-doan-vien-aqy21kfgp-vi-phuong-158s-projects.vercel.app` (deployment `dpl_HmEQ2ahCqcwdSisM3CYYAoYPqqEy`, state `READY`, source SHA `0272260`).
+- The new commit changes only the runtime SQL check and documentation. Its Preview was deployed successfully, but the browser flow was not retried on that deployment because the earlier browser control bridge timed out at submit.
 - Local root checks: `npm test` 241/241; `npm run lint` 0 errors and 3 existing Fast Refresh warnings; `npm run build` succeeded with the existing >500 kB bundle warning.
 
 ### Database
@@ -125,7 +126,7 @@ The database runtime and a real rehearsal certificate passed. End-to-end browser
 
 ### Browser acceptance
 
-- Mobile viewport: `390 × 844`. The hosted home page showed the required campaign text and both CTAs. The participant form opened; empty submission was blocked. Synthetic participant data was accepted, and the quiz displayed 30 questions with a 20-minute timer.
+- Mobile viewport: `390 × 844` on the hosted `c8d5791` Preview. The home page showed the required campaign text and both CTAs. The participant form opened; empty submission was blocked. Synthetic participant data was accepted, and the quiz displayed 30 questions with a 20-minute timer. The frontend files are unchanged on `0272260`, but that exact-head Preview did not receive an interactive browser pass.
 - All 30 answer controls were selected in the browser. The database snapshot confirmed 24 correct and 6 wrong. Clicking `Nộp bài` opened the application’s confirmation dialog, then the browser bridge timed out. A later read confirmed the attempt was still unsubmitted; the database RPC submission above was used to finish backend runtime verification.
 - Because the browser bridge stopped, no browser PASS result screen, certificate viewer, direct verification route, invalid-code route, PNG download, print/PDF, desktop viewport, lookup regression, authenticated regression, or mobile certificate/verification layout was verified.
 - QR unit tests passed, but no rendered certificate QR or independent scan was tested. Do not claim `QR SCAN PASS` or `QR_RENDER_AND_PAYLOAD_PASS` from this session.
