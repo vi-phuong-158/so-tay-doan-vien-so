@@ -20,6 +20,7 @@ declare s jsonb; r jsonb; q jsonb; option_id uuid; correct_id uuid; attempt_id u
   v_count integer; safe_questions jsonb; deadline text; bank uuid; guest_b_attempt uuid; action text;
 begin
   select id into bank from public.quizzes where bank_code='NQ_300';
+  assert (select pass_score from public.quizzes where id=bank)=80, 'Pass score is 80';
   assert (select count(*) from public.quiz_questions where quiz_id=bank)=300, '300 questions';
   assert (select count(distinct question_number) from public.quiz_questions where quiz_id=bank)=300, '300 distinct numbers';
   assert not exists(select 1 from public.quiz_questions qq left join public.quiz_options o on o.question_id=qq.id
@@ -76,9 +77,12 @@ begin
     if sqlerrm<>'ATTEMPT_SCOPE_DENIED' then raise; end if;
   end;
   perform set_config('request.jwt.claims','{"sub":"6f937301-3b91-4c21-bde5-804359703001","role":"authenticated"}',true);
+  perform public.nq_save_participant(attempt_id, 'NQ acceptance A', 'Tổ an ninh số');
   r := public.nq_attempt('submit',attempt_id);
   assert (r->>'correct')::integer=1 and (r->>'wrong')::integer=1 and (r->>'unanswered')::integer=28, 'Correct grading and unanswered counts';
   assert (r->>'percentage')::numeric=3.33, 'Percentage uses 30 sampled questions';
+  assert (r->>'passed')::boolean=false, '3.33% is FAIL';
+  assert r->>'certificate' is null, 'No certificate on FAIL';
   assert r->'questions'->0 ? 'correct_option_id', 'Review exposes grading key only after submit';
   assert (r->>'elapsed_seconds')::integer between 0 and 1200, 'Actual elapsed time';
   assert public.nq_attempt('submit',attempt_id)=r or
@@ -169,6 +173,20 @@ begin
     if sqlerrm<>'ATTEMPT_SCOPE_DENIED' then raise; end if;
   end;
   perform set_config('request.jwt.claims','{"sub":"6f937301-3b91-4c21-bde5-804359703003","role":"authenticated","is_anonymous":true}',true);
+  s := public.nq_attempt('start');
+  attempt_id := (s->>'attempt_id')::uuid;
+  perform public.nq_save_participant(attempt_id, 'Guest Nguyễn Văn Đạt', 'Chi đoàn Cơ sở 1');
+  for i in 0..23 loop
+    q := s->'questions'->i;
+    select (value->>'correct_option_id')::uuid into correct_id
+      from quiz_private.attempt_snapshots, jsonb_array_elements(questions)
+      where attempt_snapshots.attempt_id = attempt_id and value->>'id' = q->>'id';
+    perform public.nq_attempt('answer', attempt_id, (q->>'id')::uuid, correct_id);
+  end loop;
+  r := public.nq_attempt('submit', attempt_id);
+  assert (r->>'passed')::boolean = true and (r->>'percentage')::numeric >= 80.00, '24/30 is PASS';
+  assert r->'certificate' is not null, 'Certificate issued on PASS';
+  assert (public.verify_nq_certificate(r->'certificate'->>'code')->>'valid')::boolean = true, 'Verification succeeds';
   assert public.lookup_nq_questions('1')->0->>'correct_answer'='B', 'Guest can use public source lookup';
   perform set_config('role','postgres',true);
   assert exists(select 1 from quiz_private.nq_guest_accounts where user_id='6f937301-3b91-4c21-bde5-804359703003'), 'NQ guest is added to the private retention registry';

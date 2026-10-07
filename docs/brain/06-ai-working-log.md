@@ -1,5 +1,12 @@
 # 06 — AI Working Log
 
+## [2026-10-07] NQ13 learning assessment and digital certificate implementation
+- **Agent:** Codex
+- **Thay đổi:** Nâng cấp NQ_300 thành hoạt động chính thức "Kiểm tra học tập Nghị quyết Đại hội Đoàn toàn quốc lần thứ XIII". Thêm campaign banner nổi bật trên Trang chủ cho cả guest và hội viên đăng nhập; form đăng ký thông tin người dự thi (Họ tên + Đơn vị) và snapshot bất biến vào lượt thi; cập nhật server-side pass boundary chuẩn 80% (>= 24 câu ĐẠT, <= 23 câu CHƯA ĐẠT); tạo bảng nq_attempt_participants và nq_certificates với mã NQ13 định danh duy nhất (64-bit entropy); engine sinh QR code Model 2 zero-dependency thuần JS (Reed-Solomon GF(256)); xuất ảnh chứng nhận PNG canvas chất lượng cao và print A4 landscape; trang xác minh công khai `/xac-minh-chung-nhan/:code` bảo mật không lộ ID/email người dùng; bổ sung 22 assertions pgTAP và 12 unit/integration tests mới.
+- **File đã sửa:** `src/App.jsx`, `src/pages/Home.jsx`, `src/pages/NqQuiz.jsx`, `src/pages/CertificateVerification.jsx`, `src/components/NqCertificate.jsx`, `src/components/Icon.jsx`, `src/services/nqQuizService.js`, `src/lib/qrCode.js`, `src/lib/certificateCanvas.js`, `src/index.css`, `supabase/migrations/20261007230000_nq13_learning_certificate.sql`, `supabase/seeds/nq300.sql`, `supabase/tests/nq13_certificate_assessment.sql`, `scripts/nq-runtime-check.sql`, `tests/qr_code.test.mjs`, `tests/nq13_certificate.test.mjs`, `tests/home_campaign.test.mjs`, `docs/quiz-300/NQ13_CERTIFICATE_ACCEPTANCE.md`, `docs/brain/{01-architecture,03-decisions,04-current-tasks,06-ai-working-log}.md`.
+- **Lý do:** Đáp ứng trọn vẹn yêu cầu sản phẩm end-to-end cho hoạt động kiểm tra học tập Nghị quyết ĐH Đoàn XIII, cấp chứng nhận điện tử tự động, chính thống, an toàn, không phụ thuộc dịch vụ ngoài, và bảo đảm tính toàn vẹn dữ liệu ngay cả khi tài khoản guest hết hạn 30 ngày.
+- **Kiểm tra:** `npm test` 241/241 tests PASS (tăng 12 tests mới); `npm run lint` 0 errors (3 warnings pre-existing Fast Refresh); `npm run build` thành công xuất bundle; pgTAP test suite 22 assertions sẵn sàng; các luồng xác minh QR, tải PNG, tra cứu công khai và bảo vệ không lộ thông tin nhạy cảm đều được verify.
+
 ## [2026-10-03] NQ_300 public guest runtime and security acceptance
 - **Agent:** Codex
 - **Thay đổi:** Audit PR #61 exact starting head `c2fda47295a5c3aff228a1319020611e58890c16`;

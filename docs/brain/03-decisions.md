@@ -1,5 +1,13 @@
 # 03 — Technical Decisions
 
+## [2026-10-07] NQ13 Assessment & Digital Certificate Architecture
+- **Server Pass Score:** Đặt `pass_score = 80` (>= 24/30 câu đúng) làm ngưỡng chuẩn duy nhất của hệ thống, xử lý tại server RPC `nq_attempt`.
+- **Participant Snapshot (`nq_attempt_participants`):** Họ tên và Đơn vị được snapshot theo `attempt_id` và bị khóa bất biến sau khi nộp bài. Không lưu vào `profiles` để tránh làm nhiễu dữ liệu người dùng chính thức.
+- **Certificate Data Model (`nq_certificates`):** Mã `NQ13-[A-Z0-9]{8,32}` sinh bằng 64-bit cryptographic random. Khóa ngoại `attempt_id ON DELETE SET NULL` bảo toàn tính vĩnh viễn của chứng nhận ngay cả khi tài khoản guest anonymous bị xóa sau 30 ngày. Cấp phát mang tính idempotent (1 chứng nhận duy nhất cho mỗi attempt đạt).
+- **Client QR Code & Canvas PNG:** Triển khai QR Code Model 2 (Reed-Solomon $GF(256)$) thuần JS trong `src/lib/qrCode.js` và render JSX `<svg>` an toàn tuyệt đối (không `dangerouslySetInnerHTML`). Canvas 1754×1240 A4 landscape trong `src/lib/certificateCanvas.js` sinh ảnh PNG tải trực tiếp.
+- **Public Verification Endpoint:** Route `/xac-minh-chung-nhan/:code` gọi RPC `public.verify_nq_certificate` định danh SECURITY DEFINER, chỉ trả về metadata xác nhận và điểm số, tuyệt đối không trả về ID người dùng, email hay dữ liệu câu trả lời.
+- **Asset & Visual Governance:** Tuân thủ chặt chẽ design tokens và asset chính thống `public/brand/logo-doan-badge.png`. Footer chứng nhận trang trọng "BAN THANH NIÊN / CÔNG AN TỈNH PHÚ THỌ", không tạo chữ ký hay con dấu giả.
+
 ## [2026-10-03] NQ guest ownership policy boundary and schema reconciliation
 
 - Legacy owner-only policies do not require ACTIVE accounts, so an INVITED profile is insufficient

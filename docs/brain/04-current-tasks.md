@@ -7,6 +7,17 @@
 
 ## Đang làm
 
+### NQ13 Learning Assessment + Digital Certificate (2026-10-07) — nhánh `codex/nq13-learning-certificate`
+- Chuyển đổi NQ_300 thành hoạt động chính thức "Kiểm tra học tập Nghị quyết Đại hội Đoàn toàn quốc lần thứ XIII".
+- Trang chủ: Campaign hero card nổi bật, copy chuẩn, CTA Bắt đầu thi + Tra cứu 300 câu, huy hiệu Đoàn chính thống.
+- Thu thập người thi: Họ tên (2–120 ký tự), Đơn vị (2–180 ký tự), xác nhận cam kết; snapshot bất biến vào `nq_attempt_participants`.
+- Chấm điểm: Chuẩn hóa server pass score 80% (>= 24 câu ĐẠT, <= 23 câu CHƯA ĐẠT).
+- Kết quả: Phân tách rõ ĐẠT (xem chứng nhận) và CHƯA ĐẠT (thi lại, tính số câu thiếu, tuyệt đối không cấp chứng nhận).
+- Chứng nhận điện tử: Chuẩn A4 landscape, tiêu đề "CHỨNG NHẬN HOÀN THÀNH", footer "BAN THANH NIÊN / CÔNG AN TỈNH PHÚ THỌ" (không chữ ký/con dấu giả), mã `NQ13-[A-Z0-9]{8,32}` unique, QR code nội bộ zero-dependency thuần JS, tải PNG chất lượng cao, in PDF.
+- Khóa ngoại `attempt_id ON DELETE SET NULL` bảo toàn chứng nhận ngay cả khi tài khoản guest 30 ngày bị cron xóa.
+- Route xác minh: `/xac-minh-chung-nhan/:code` qua RPC `verify_nq_certificate` bảo mật không rò rỉ dữ liệu nhạy cảm.
+- Kiểm thử: 241/241 npm tests PASS, pgTAP 22 assertions, lint pass, build pass. Tài liệu nghiệm thu tại `docs/quiz-300/NQ13_CERTIFICATE_ACCEPTANCE.md`.
+
 ### Document mobile reader (2026-10-07)
 - Owner yêu cầu sửa chi tiết văn bản mobile, có chỗ mở/đọc bản gốc và điền metadata từ tài liệu.
 - Nhánh `codex/document-mobile-reader` từ production `c03f2d5`; source fix/test đã có, owner cho phép PR/deploy.
