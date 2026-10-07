@@ -16,8 +16,9 @@ values ('6f937301-3b91-4c21-bde5-804359703001','NQ acceptance A','ACTIVE'),
 
 do $$
 <<checks>>
-declare s jsonb; r jsonb; q jsonb; option_id uuid; correct_id uuid; attempt_id uuid; old_id uuid;
+declare s jsonb; r jsonb; q jsonb; option_id uuid; correct_id uuid; selected_option_id uuid; attempt_id uuid; old_id uuid;
   v_count integer; safe_questions jsonb; deadline text; bank uuid; guest_b_attempt uuid; action text;
+  cert_attempt_id uuid; cert_code text;
 begin
   select id into bank from public.quizzes where bank_code='NQ_300';
   assert (select pass_score from public.quizzes where id=bank)=80, 'Pass score is 80';
@@ -30,6 +31,8 @@ begin
   assert not has_function_privilege('anon','public.lookup_nq_questions(text,integer)','EXECUTE'), 'Anonymous lookup denied';
   assert not has_schema_privilege('authenticated','quiz_private','USAGE'), 'Private snapshot schema denied';
   assert not has_table_privilege('authenticated','public.quiz_attempts','UPDATE'), 'Direct attempt mutation denied';
+  assert not has_table_privilege('authenticated','public.nq_certificates','INSERT'), 'Client cannot issue certificates directly';
+  assert not has_table_privilege('authenticated','public.nq_certificates','UPDATE'), 'Client cannot alter certificates directly';
   perform set_config('request.jwt.claims','{"sub":"6f937301-3b91-4c21-bde5-804359703001","role":"authenticated"}',true);
   perform set_config('role','authenticated',true);
   s := public.nq_attempt('start');
@@ -187,9 +190,69 @@ begin
     perform public.nq_attempt('answer', attempt_id, (q->>'id')::uuid, correct_id);
   end loop;
   r := public.nq_attempt('submit', attempt_id);
-  assert (r->>'passed')::boolean = true and (r->>'percentage')::numeric >= 80.00, '24/30 is PASS';
+  assert (r->>'correct')::integer = 24 and (r->>'percentage')::numeric = 80.00
+    and (r->>'passed')::boolean = true, '24/30 is exactly 80% and PASS';
   assert r->'certificate' is not null, 'Certificate issued on PASS';
-  assert (public.verify_nq_certificate(r->'certificate'->>'code')->>'valid')::boolean = true, 'Verification succeeds';
+  assert (r->'certificate'->>'code') ~ '^NQ13-[A-Z0-9]{8,32}$', 'Certificate code has the required format';
+  assert r->'certificate'->>'full_name' = 'Guest Nguyễn Văn Đạt'
+    and r->'certificate'->>'organization_name' = 'Chi đoàn Cơ sở 1', 'Certificate preserves participant snapshot';
+  cert_attempt_id := attempt_id;
+  cert_code := r->'certificate'->>'code';
+  perform set_config('request.jwt.claims','{"role":"anon"}',true);
+  perform set_config('role','anon',true);
+  q := public.verify_nq_certificate(cert_code);
+  assert (q->>'valid')::boolean and q->>'status' = 'VALID'
+    and q->>'full_name' = 'Guest Nguyễn Văn Đạt'
+    and q->>'organization_name' = 'Chi đoàn Cơ sở 1'
+    and (q->>'score')::numeric = 80.00 and q ? 'issued_at', 'Anonymous verification returns certificate facts';
+  assert not (q ?| array['id','attempt_id','user_id','auth_uid','email','answers','raw_user_meta_data']),
+    'Public verification omits internal identifiers and attempt data';
+  perform set_config('request.jwt.claims','{"sub":"6f937301-3b91-4c21-bde5-804359703003","role":"authenticated","is_anonymous":true,"user_metadata":{"purpose":"nq_quiz_guest"}}',true);
+  perform set_config('role','authenticated',true);
+  s := public.nq_attempt('submit', cert_attempt_id);
+  assert s->'certificate'->>'code' = cert_code, 'Repeated submit returns the same certificate';
+  begin
+    perform public.nq_save_participant(cert_attempt_id, 'Tampered Participant', 'Tampered Unit');
+    raise exception 'Submitted participant was mutable';
+  exception when raise_exception then
+    if sqlerrm <> 'ATTEMPT_ALREADY_SUBMITTED' then raise; end if;
+  end;
+  perform set_config('role','postgres',true);
+  assert (select count(*) from public.nq_certificates c where c.attempt_id = checks.cert_attempt_id) = 1,
+    'A passing attempt has exactly one certificate row';
+  perform set_config('role','authenticated',true);
+
+  -- Start a fresh guest attempt and test the precise 23/30 fail boundary.
+  s := public.nq_attempt('start');
+  attempt_id := (s->>'attempt_id')::uuid;
+  perform public.nq_save_participant(attempt_id, 'Guest Nguyễn Văn Đạt', 'Chi đoàn Cơ sở 1');
+  for i in 0..29 loop
+    q := s->'questions'->i;
+    -- Read the fixture key only as postgres; all answer calls remain guest-authenticated.
+    perform set_config('role','postgres',true);
+    select (value->>'correct_option_id')::uuid into correct_id
+      from quiz_private.attempt_snapshots, jsonb_array_elements(questions)
+      where attempt_snapshots.attempt_id = checks.attempt_id and value->>'id' = checks.q->>'id';
+    perform set_config('role','authenticated',true);
+    if i < 23 then
+      selected_option_id := correct_id;
+    else
+      option_id := (q->'options'->0->>'id')::uuid;
+      if option_id = correct_id then option_id := (q->'options'->1->>'id')::uuid; end if;
+      selected_option_id := option_id;
+    end if;
+    perform public.nq_attempt('answer', attempt_id, (q->>'id')::uuid, selected_option_id);
+  end loop;
+  r := public.nq_attempt('submit', attempt_id);
+  assert (r->>'correct')::integer = 23 and (r->>'wrong')::integer = 7
+    and (r->>'unanswered')::integer = 0, '23/30 records exactly 23 correct and 7 wrong';
+  assert (r->>'percentage')::numeric = 76.67 and (r->>'passed')::boolean = false,
+    '23/30 is exactly 76.67% and FAIL';
+  assert r->>'certificate' is null, 'No certificate is returned on the 23/30 FAIL boundary';
+  perform set_config('role','postgres',true);
+  assert not exists(select 1 from public.nq_certificates c where c.attempt_id = checks.attempt_id),
+    'No certificate row is issued on the 23/30 FAIL boundary';
+  perform set_config('role','authenticated',true);
   assert public.lookup_nq_questions('1')->0->>'correct_answer'='B', 'Guest can use public source lookup';
   perform set_config('role','postgres',true);
   assert exists(select 1 from quiz_private.nq_guest_accounts where user_id='6f937301-3b91-4c21-bde5-804359703003'), 'NQ guest is added to the private retention registry';
@@ -208,6 +271,13 @@ begin
   assert exists(select 1 from auth.users where id='6f937301-3b91-4c21-bde5-804359703004'), 'Unregistered anonymous accounts are untouched';
   assert exists(select 1 from auth.users where id='6f937301-3b91-4c21-bde5-804359703001'), 'Registered permanent accounts are never removed';
   assert exists(select 1 from auth.users where id='6f937301-3b91-4c21-bde5-804359703005'), 'Recent registered guests retain their identity';
+  assert exists(select 1 from public.nq_certificates c where c.certificate_code = checks.cert_code and c.attempt_id is null),
+    'Certificate survives guest cleanup after its attempt is deleted';
+  perform set_config('request.jwt.claims','{"role":"anon"}',true);
+  perform set_config('role','anon',true);
+  q := public.verify_nq_certificate(cert_code);
+  assert (q->>'valid')::boolean and q->>'full_name' = 'Guest Nguyễn Văn Đạt',
+    'Retained certificate remains publicly verifiable after guest cleanup';
 end $$;
 select 'NQ_RUNTIME_ASSERTIONS_PASS' as verdict;
 rollback;

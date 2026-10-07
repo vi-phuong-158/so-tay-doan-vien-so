@@ -92,19 +92,46 @@ dành cho toàn thể đoàn viên, thanh niên và quần chúng nhân dân thu
    - Cập nhật RPC `public.nq_attempt` với logic chấm 80% và tự động cấp chứng nhận.
    - Tạo RPC `public.verify_nq_certificate`.
 2. `supabase/seeds/nq300.sql`: Đồng bộ `pass_score = 80`.
-3. `supabase/tests/nq13_certificate_assessment.sql`: Bộ 22 test assertions pgTAP kiểm thử toàn diện các điều kiện biên của database.
+3. `supabase/tests/nq13_certificate_assessment.sql`: Bộ 16 test assertions pgTAP về schema, quyền, xác minh công khai và retention.
 4. `scripts/nq-runtime-check.sql`: Kịch bản SQL kiểm tra runtime parity.
 
 ---
 
-## 4. Kết quả Kiểm thử (Verification Matrix)
+## 4. Final Acceptance Evidence (2026-10-08)
 
-| Hạng mục kiểm tra | Công cụ / Môi trường | Kết quả | Ghi chú |
-|---|---|---|---|
-| Unit & Integration Tests | Node.js Test Runner (`npm test`) | **241 / 241 PASS** | Tăng 12 tests mới kiểm thử NQ13, QR, Campaign, Certificate |
-| Frontend Code Style & Lint | ESLint (`npm run lint`) | **0 Errors, 3 Warnings** | 3 warnings cũ (Fast Refresh Guards/AuthContext) |
-| Production Build | Vite Production Build (`npm run build`) | **SUCCESS** | Bundle tối ưu, không có compile errors |
-| QR Code Engine | `tests/qr_code.test.mjs` | **PASS (2/2)** | Reed-Solomon GF(256), Matrix & SVG valid |
-| Certificate & Validation | `tests/nq13_certificate.test.mjs` | **PASS (8/8)** | Bounded validation, 80% boundary, name sanitization |
-| Home Campaign & Routes | `tests/home_campaign.test.mjs` | **PASS (4/4)** | Copy exact, CTAs, routes, anti-tamper assertions |
-| Database Assertions | `supabase/tests/nq13_certificate_assessment.sql` | **22 Assertions Ready** | Coverage: 23 fail, 24 pass, idempotency, isolation, survival |
+### Verdict
+
+`NQ13_CERTIFICATE_ACCEPTANCE_BLOCKED`
+
+The database runtime and a real rehearsal certificate passed. End-to-end browser acceptance is incomplete because the browser control bridge timed out after the submit confirmation dialog opened. The browser result screen, certificate viewer, QR, PNG download, print/PDF, and desktop flow were not verified.
+
+### PR and CI
+
+- PR: [#67](https://github.com/vi-phuong-158/so-tay-doan-vien-so/pull/67), open, mergeable, not merged.
+- Branch: `codex/nq13-learning-certificate`; base: `master` at `a7f0aa2eb713e0cb619924fb0e43da1740de3459`.
+- PR head when audited: `c8d5791121a5bb9a46c15595ec78495d02e60d2b`.
+- GitHub Actions run `37657003253`: `build`, `member-api-test`, and `test-db` passed. Vercel and Vercel Preview Comments checks also passed for that head.
+- Exact-head Vercel deployment: `https://so-tay-doan-vien-viatbcf48-vi-phuong-158s-projects.vercel.app` (deployment `6915970061`, source SHA `c8d5791`).
+- Local root checks: `npm test` 241/241; `npm run lint` 0 errors and 3 existing Fast Refresh warnings; `npm run build` succeeded with the existing >500 kB bundle warning.
+
+### Database
+
+- The Preview bundle and workspace `.env` both target Supabase project `znexculhbdjiflkczpyu`, verified as `so-tay-doan-vien-rehearsal` (`ACTIVE_HEALTHY`). Production was not accessed.
+- Applied the PR migration only to that rehearsal project. Supabase recorded it as `20261007172523 / nq13_learning_certificate`.
+- Ran `scripts/nq-runtime-check.sql` on rehearsal; result: `NQ_RUNTIME_ASSERTIONS_PASS`. The runtime script now exercises the exact `23/30 → 76.67% FAIL` and `24/30 → 80% PASS` boundaries, no certificate on FAIL, one idempotent certificate on PASS, participant immutability, public verification privacy, guest isolation, client write restrictions, and certificate survival after guest cleanup. The script transaction rolled back its fixtures.
+- A separate browser-created synthetic guest attempt persisted all 30 selections. Internal rehearsal fixture inspection showed 24 correct and 6 wrong. The attempt was submitted through `public.nq_attempt` under the guest’s `authenticated` role after the browser bridge failed. The RPC returned 24/30, 80%, PASS, and issued `NQ13-4E6FBD0421A64629` for `Nguyễn Văn Kiểm Thử` / `Đơn vị kiểm thử NQ13`.
+- Anonymous `verify_nq_certificate` returned VALID, the correct participant, score, issue time, and quiz title without auth IDs, email, or answer data. The synthetic attempt and certificate remain in rehearsal for inspection.
+- The existing pgTAP file declares `plan(16)`; the earlier claim of 22 assertions was incorrect. Exact boundary and runtime coverage are in `scripts/nq-runtime-check.sql`.
+
+### Browser acceptance
+
+- Mobile viewport: `390 × 844`. The hosted home page showed the required campaign text and both CTAs. The participant form opened; empty submission was blocked. Synthetic participant data was accepted, and the quiz displayed 30 questions with a 20-minute timer.
+- All 30 answer controls were selected in the browser. The database snapshot confirmed 24 correct and 6 wrong. Clicking `Nộp bài` opened the application’s confirmation dialog, then the browser bridge timed out. A later read confirmed the attempt was still unsubmitted; the database RPC submission above was used to finish backend runtime verification.
+- Because the browser bridge stopped, no browser PASS result screen, certificate viewer, direct verification route, invalid-code route, PNG download, print/PDF, desktop viewport, lookup regression, authenticated regression, or mobile certificate/verification layout was verified.
+- QR unit tests passed, but no rendered certificate QR or independent scan was tested. Do not claim `QR SCAN PASS` or `QR_RENDER_AND_PAYLOAD_PASS` from this session.
+
+### Session changes and limitations
+
+- Changed `scripts/nq-runtime-check.sql` to cover the missing exact 23/30 boundary and strengthen runtime assertions.
+- No feature implementation changes, production migration, merge, or master push were made.
+- Final verdict remains `NQ13_CERTIFICATE_ACCEPTANCE_BLOCKED` until the browser gates above can be run on the exact final Preview head.

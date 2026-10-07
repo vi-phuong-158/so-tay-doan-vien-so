@@ -1,5 +1,12 @@
 # 06 — AI Working Log
 
+## [2026-10-08] NQ13 certificate final acceptance
+- **Agent:** Codex
+- **Thay đổi:** Hoàn tất runtime SQL assertions cho hai biên chính xác 23/30 FAIL và 24/30 PASS, idempotency, quyền ghi certificate, snapshot participant, public verification privacy và retention sau guest cleanup. Ghi nhận kết quả rehearsal và giới hạn browser acceptance; verdict `NQ13_CERTIFICATE_ACCEPTANCE_BLOCKED`.
+- **File đã sửa:** `scripts/nq-runtime-check.sql`, `docs/quiz-300/NQ13_CERTIFICATE_ACCEPTANCE.md`, `docs/brain/04-current-tasks.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Runtime script trước đó chưa chứng minh chính xác biên 23/30 và certificate idempotency/retention đủ theo acceptance brief; browser control bridge timeout tại confirm submit nên cần ghi đúng evidence và blocker.
+- **Kiểm tra:** `npm test` 241/241 PASS; `npm run lint` 0 errors (3 warnings Fast Refresh có sẵn); `npm run build` PASS (warning bundle >500 kB có sẵn); `git diff --check` PASS; rehearsal migration và `scripts/nq-runtime-check.sql` PASS; certificate rehearsal `NQ13-4E6FBD0421A64629` được anonymous verification. Browser submit/result/certificate/QR/PNG/print và các regression còn lại chưa được xác minh. CI ban đầu PASS trên SHA `c8d5791121a5bb9a46c15595ec78495d02e60d2b`; sẽ xác minh lại sau khi cập nhật PR.
+
 ## [2026-10-07] NQ13 learning assessment and digital certificate implementation
 - **Agent:** Codex
 - **Thay đổi:** Nâng cấp NQ_300 thành hoạt động chính thức "Kiểm tra học tập Nghị quyết Đại hội Đoàn toàn quốc lần thứ XIII". Thêm campaign banner nổi bật trên Trang chủ cho cả guest và hội viên đăng nhập; form đăng ký thông tin người dự thi (Họ tên + Đơn vị) và snapshot bất biến vào lượt thi; cập nhật server-side pass boundary chuẩn 80% (>= 24 câu ĐẠT, <= 23 câu CHƯA ĐẠT); tạo bảng nq_attempt_participants và nq_certificates với mã NQ13 định danh duy nhất (64-bit entropy); engine sinh QR code Model 2 zero-dependency thuần JS (Reed-Solomon GF(256)); xuất ảnh chứng nhận PNG canvas chất lượng cao và print A4 landscape; trang xác minh công khai `/xac-minh-chung-nhan/:code` bảo mật không lộ ID/email người dùng; bổ sung 22 assertions pgTAP và 12 unit/integration tests mới.

@@ -16,7 +16,7 @@
 - Chứng nhận điện tử: Chuẩn A4 landscape, tiêu đề "CHỨNG NHẬN HOÀN THÀNH", footer "BAN THANH NIÊN / CÔNG AN TỈNH PHÚ THỌ" (không chữ ký/con dấu giả), mã `NQ13-[A-Z0-9]{8,32}` unique, QR code nội bộ zero-dependency thuần JS, tải PNG chất lượng cao, in PDF.
 - Khóa ngoại `attempt_id ON DELETE SET NULL` bảo toàn chứng nhận ngay cả khi tài khoản guest 30 ngày bị cron xóa.
 - Route xác minh: `/xac-minh-chung-nhan/:code` qua RPC `verify_nq_certificate` bảo mật không rò rỉ dữ liệu nhạy cảm.
-- Kiểm thử: 241/241 npm tests PASS, pgTAP 22 assertions, lint pass, build pass. Tài liệu nghiệm thu tại `docs/quiz-300/NQ13_CERTIFICATE_ACCEPTANCE.md`.
+- Kiểm thử implementation: 241/241 npm tests PASS; pgTAP khai báo `plan(16)` (không phải 22); lint 0 errors với 3 Fast Refresh warnings có sẵn; build PASS. PR #67 đang chờ nghiệm thu browser end-to-end: runtime rehearsal và hai biên 23/30, 24/30 đã PASS, nhưng browser bridge timeout sau hộp thoại xác nhận nộp bài nên chưa xác minh màn kết quả/chứng nhận, QR, PNG, print, desktop, lookup và regression user đăng nhập. Verdict hiện tại: `NQ13_CERTIFICATE_ACCEPTANCE_BLOCKED`. Evidence: `docs/quiz-300/NQ13_CERTIFICATE_ACCEPTANCE.md`.
 
 ### Document mobile reader (2026-10-07)
 - Owner yêu cầu sửa chi tiết văn bản mobile, có chỗ mở/đọc bản gốc và điền metadata từ tài liệu.
