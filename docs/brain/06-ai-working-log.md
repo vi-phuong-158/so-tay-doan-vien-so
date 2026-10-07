@@ -1,5 +1,12 @@
 # 06 — AI Working Log
 
+## [2026-10-08] NQ13 certificate sample render
+- **Agent:** Codex
+- **Thay đổi:** Xuất ảnh mẫu chứng nhận 1754 × 1240 từ canvas exporter hiện có bằng dữ liệu chứng nhận synthetic trong rehearsal; QR dùng URL xác minh của Preview được kiểm tra lúc render (head `a513767`). Ghi rõ ảnh là bản render để duyệt, không thay thế kiểm thử tải PNG hoặc quét QR độc lập.
+- **File đã sửa:** `docs/quiz-300/evidence/nq13-certificate-sample.png`, `docs/quiz-300/NQ13_CERTIFICATE_ACCEPTANCE.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Owner yêu cầu xem hình chứng nhận sau khi runtime issuance và anonymous verification đã PASS.
+- **Kiểm tra:** Đối chiếu dữ liệu render với bản ghi rehearsal `NQ13-4E6FBD0421A64629`: 24/30, 80.00%, ngày cấp 2026-10-07 17:41:58 UTC (08/10/2026 giờ Việt Nam); ảnh PNG 1754 × 1240. QR scan độc lập và tải trực tiếp trong browser chưa chạy.
+
 ## [2026-10-08] NQ13 certificate final acceptance
 - **Agent:** Codex
 - **Thay đổi:** Hoàn tất runtime SQL assertions cho hai biên chính xác 23/30 FAIL và 24/30 PASS, idempotency, quyền ghi certificate, snapshot participant, public verification privacy và retention sau guest cleanup. Ghi nhận kết quả rehearsal và giới hạn browser acceptance; verdict `NQ13_CERTIFICATE_ACCEPTANCE_BLOCKED`.

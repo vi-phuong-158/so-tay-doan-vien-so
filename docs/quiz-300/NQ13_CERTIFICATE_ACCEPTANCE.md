@@ -134,5 +134,6 @@ The database runtime and a real rehearsal certificate passed. End-to-end browser
 ### Session changes and limitations
 
 - Changed `scripts/nq-runtime-check.sql` to cover the missing exact 23/30 boundary and strengthen runtime assertions.
+- Added `docs/quiz-300/evidence/nq13-certificate-sample.png`, a 1754 × 1240 PNG render from the existing certificate canvas exporter using rehearsal certificate `NQ13-4E6FBD0421A64629`. Its QR points to the PR Preview verification URL used for this render. This render is a review sample; an actual browser download and independent QR scan remain unverified.
 - No feature implementation changes, production migration, merge, or master push were made.
 - Final verdict remains `NQ13_CERTIFICATE_ACCEPTANCE_BLOCKED` until the browser gates above can be run on the exact final Preview head.
