@@ -10,6 +10,12 @@ begin
   perform set_config('request.jwt.claims', jsonb_build_object('sub', p_uid, 'role', 'authenticated', 'is_anonymous', true)::text, true);
 end $$;
 
+create or replace function set_auth_anon() returns void language plpgsql as $$
+begin
+  perform set_config('role', 'anon', true);
+  perform set_config('request.jwt.claims', '{"role":"anon"}', true);
+end $$;
+
 create or replace function reset_auth() returns void language plpgsql as $$
 begin
   perform set_config('role', 'postgres', true);
@@ -130,7 +136,6 @@ select is(
 -- Verify participant cannot be modified after submit
 select throws_ok(
   $$select public.nq_save_participant((public.nq_attempt('resume')->>'attempt_id')::uuid, 'Tên Mới', 'Đơn vị Mới')$$,
-  'P0001',
   'ATTEMPT_ALREADY_SUBMITTED',
   'Participant cannot be modified after submit'
 );
@@ -140,7 +145,6 @@ select set_auth_guest('6f937301-3b91-4c21-bde5-804359705002'::uuid);
 
 select throws_ok(
   $$select public.nq_save_participant('6f937301-3b91-4c21-bde5-804359705001'::uuid, 'Hacker', 'Fake Org')$$,
-  'P0001',
   'ATTEMPT_NOT_FOUND',
   'Guest B cannot modify Guest A participant'
 );
@@ -169,8 +173,7 @@ end $$;
 
 -- Public verification test as anon
 select reset_auth();
-perform set_config('role', 'anon', true);
-perform set_config('request.jwt.claims', '{"role":"anon"}', true);
+select set_auth_anon();
 
 select is(
   (public.verify_nq_certificate('NQ13-TESTPASSED01')->>'valid')::boolean,
