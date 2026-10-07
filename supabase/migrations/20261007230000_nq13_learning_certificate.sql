@@ -255,7 +255,7 @@ begin
       if v_participant.attempt_id is not null then
         select * into v_cert from public.nq_certificates where attempt_id = attempt.id;
         if v_cert.id is null then
-          v_cert_code := 'NQ13-' || upper(encode(gen_random_bytes(8), 'hex'));
+          v_cert_code := 'NQ13-' || upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 16));
           insert into public.nq_certificates(
             certificate_code, attempt_id, quiz_id, full_name, organization_name,
             score, correct_count, total_questions, issued_at
