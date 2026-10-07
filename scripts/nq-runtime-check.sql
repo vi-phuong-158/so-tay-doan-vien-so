@@ -178,9 +178,12 @@ begin
   perform public.nq_save_participant(attempt_id, 'Guest Nguyễn Văn Đạt', 'Chi đoàn Cơ sở 1');
   for i in 0..23 loop
     q := s->'questions'->i;
+    -- The answer key lives in quiz_private, which clients can never read: inspect it as postgres.
+    perform set_config('role','postgres',true);
     select (value->>'correct_option_id')::uuid into correct_id
       from quiz_private.attempt_snapshots, jsonb_array_elements(questions)
-      where attempt_snapshots.attempt_id = attempt_id and value->>'id' = q->>'id';
+      where attempt_snapshots.attempt_id = checks.attempt_id and value->>'id' = checks.q->>'id';
+    perform set_config('role','authenticated',true);
     perform public.nq_attempt('answer', attempt_id, (q->>'id')::uuid, correct_id);
   end loop;
   r := public.nq_attempt('submit', attempt_id);
