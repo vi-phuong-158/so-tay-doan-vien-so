@@ -2545,3 +2545,12 @@
   Dùng dependency hiện có qua junction, không cài package. Test trên baseline mới 227/227,
   lint 0 lỗi/3 cảnh báo cũ. Thêm `public/sw.js` cache v5 và cập nhật kiểm tra phiên bản cache ở
   `tests/public_first_auth.test.mjs`. Thay đổi chưa triển khai ở thời điểm ghi entry; metadata vẫn pending.
+
+## [2026-10-07] Bổ sung tài liệu danh mục Google Drive và bằng chứng công khai
+- **Agent:** Antigravity
+- **Thay đổi:** Thêm hồ sơ đối chiếu và công khai 5 văn bản Drive vào nhánh `codex/document-mobile-reader`
+  gồm catalog JSON, báo cáo đối chiếu Markdown và ảnh chụp kiểm chứng giao diện công khai.
+- **File đã sửa:** `docs/google-drive-document-catalog.json`, `docs/google-drive-document-catalog.md`,
+  `docs/google-drive-public-catalog-2026-10-07.png`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Lưu trữ đồng bộ hồ sơ đối chiếu và bằng chứng mở công khai 5 tài liệu nguồn Drive trên nhánh PR #66.
+- **Kiểm tra:** `npm test` 227/227 test đạt, `npm run lint` 0 lỗi / 3 cảnh báo cũ.
