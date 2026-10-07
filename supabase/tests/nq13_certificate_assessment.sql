@@ -106,8 +106,8 @@ select is(
 reset role;
 
 -- 7. Retention test: deleting attempt sets attempt_id to NULL, certificate survives
-insert into public.quiz_attempts (id, quiz_id, user_id, score, passed, attempt_number)
-values ('5a000001-0000-4000-8000-000000000001', '5f000001-0000-4000-8000-000000000001', 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 80.00, true, 99)
+insert into public.quiz_attempts (id, quiz_id, user_id, score, passed, attempt_number, submitted_at)
+values ('5a000001-0000-4000-8000-000000000001', '5f000001-0000-4000-8000-000000000001', 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 80.00, true, 99, now())
 on conflict (id) do nothing;
 
 insert into public.nq_certificates(attempt_id, quiz_id, full_name, organization_name, certificate_code, score, correct_count, total_questions)

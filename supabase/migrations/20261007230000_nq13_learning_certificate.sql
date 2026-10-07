@@ -23,6 +23,7 @@ create table if not exists public.nq_attempt_participants (
 
 alter table public.nq_attempt_participants enable row level security;
 revoke all on table public.nq_attempt_participants from public, anon, authenticated;
+grant select on table public.nq_attempt_participants to authenticated;
 
 create policy "Owners read own attempt participant"
 on public.nq_attempt_participants for select to authenticated
@@ -56,6 +57,7 @@ create index if not exists idx_nq_certificates_attempt on public.nq_certificates
 
 alter table public.nq_certificates enable row level security;
 revoke all on table public.nq_certificates from public, anon, authenticated;
+grant select on table public.nq_certificates to authenticated;
 
 create policy "Owners read own certificates"
 on public.nq_certificates for select to authenticated
