@@ -1064,3 +1064,21 @@ không nới, không skip bất kỳ assertion nào**; test 14/15/16/26 vẫn đ
 - **Quyết định:** Mục ẩn khi tải xong mà không có nội dung (hoặc lỗi) để không hiện hộp rỗng; chỉ tải khi chưa đăng nhập.
 - **Lưu ý phụ thuộc:** `Home.jsx` giờ import `DocumentCard`/`TopicCard` từ trang Văn bản/Chuyên đề — đổi markup hai card
   này sẽ ảnh hưởng Trang chủ.
+
+## [2026-10-07] Readable document originals and source-based metadata
+
+- **Quyết định:** Giữ cover cố định trên điện thoại, cho tiêu đề dài xuống dòng; đặt nút
+  “Mở đọc tài liệu” trước metadata và thêm khung Drive xem bản gốc có sandbox/fallback.
+- **Giới hạn nguồn:** Chỉ exact HTTPS Drive/Docs file routes được nhúng; host khác chỉ mở liên kết.
+  CSP `frame-src` giới hạn Drive; private Storage vẫn dùng signed URL khi người dùng bấm.
+- **Metadata:** Đọc tệp gốc và đối chiếu bản hiển thị trước khi chuẩn hóa; thiếu ngày hiệu lực thì
+  giữ NULL, không lấy mốc hoạt động hoặc số/ngày văn bản viện dẫn để điền thay.
+- **Trạng thái:** Đã chuẩn bị 5 bộ metadata trong catalog JSON. Chưa áp dụng vào database, chưa
+  deploy UI. Automatic approval review từ chối SQL trực tiếp bỏ qua RPC/actor; cần session quản trị
+  để dùng `update_document_metadata`, không giả danh hoặc vượt kiểm tra quyền.
+- **Bàn giao:** `docs/document-mobile-reader-fix-2026-10-07.md`; không thêm dependency, migration,
+  RLS hoặc AI ingestion.
+
+- **Phát hành:** Owner cho phép commit/push/PR/deploy. PR #56 đã đóng và nhánh cũ thiếu tính năng
+  production mới; tạo `codex/document-mobile-reader` từ `c03f2d5`. Cache PWA v4 → v5 để người dùng
+  hiện hữu nhận shell mới, không đổi policy cache API/nguồn bên ngoài.

@@ -1,0 +1,164 @@
+{
+  "folder_id": "1IXL5laJIQUPoVduKaF-BxjCEOPjfGRcP",
+  "folder_name": "Tài liệu Đoàn",
+  "folder_url": "https://drive.google.com/drive/folders/1IXL5laJIQUPoVduKaF-BxjCEOPjfGRcP",
+  "checked_on": "2026-10-07",
+  "folder_link_access": "anyone_reader",
+  "mode": "catalog_with_verified_metadata",
+  "metadata_apply_status": "PENDING_AUTHORIZED_ADMIN_SESSION",
+  "metadata_apply_note": "verified_metadata là dữ liệu đã đọc và đối chiếu từ tệp gốc; chưa ghi vào Supabase. Automatic approval review từ chối privileged SQL bỏ qua RPC quản trị.",
+  "files": [
+    {
+      "file_id": "15pYljdPlA-nHsnha6jUZN7gHti4YecLz",
+      "name": "KH_tinhnguyen_dongxuan.pdf",
+      "mime_type": "application/pdf",
+      "size_bytes": 411370,
+      "source_url": "https://drive.google.com/file/d/15pYljdPlA-nHsnha6jUZN7gHti4YecLz/view",
+      "document_id": "a082432f-4dc9-4eed-97bf-7841d49cc8b4",
+      "verified_metadata": {
+        "id": "a082432f-4dc9-4eed-97bf-7841d49cc8b4",
+        "title": "Phát động và tổ chức các hoạt động tình nguyện mùa đông năm 2026 - Xuân tình nguyện năm 2027 gắn với phong trào “Toàn dân bảo vệ an ninh Tổ quốc” trong tuổi trẻ Công an tỉnh Phú Thọ",
+        "document_number": "8849/KH-CAT-PX03",
+        "document_type": "Kế hoạch",
+        "issuing_authority": "Công an tỉnh Phú Thọ",
+        "issued_date": "2026-10-01",
+        "effective_date": null,
+        "expiry_date": null,
+        "effect_status": "Không nêu ngày hiệu lực",
+        "scope": "Tuổi trẻ Công an tỉnh Phú Thọ; các phòng và Công an cấp xã",
+        "summary": "Tổ chức tình nguyện mùa đông 2026 - Xuân tình nguyện 2027 từ 01/12/2026 đến 28/02/2027, gắn với phong trào Toàn dân bảo vệ an ninh Tổ quốc. Trọng tâm: tuyên truyền pháp luật; tình nguyện, an sinh xã hội; đồng hành cùng chiến sĩ nghĩa vụ và các đối tượng đặc thù. Các đơn vị gửi kế hoạch trước 31/10/2026, báo cáo tổng kết trước 01/03/2027. Tài liệu không quy định riêng ngày hiệu lực; thời gian tổ chức hoạt động không thay thế ngày hiệu lực văn bản.",
+        "keywords": [
+          "Tình nguyện mùa đông",
+          "Xuân tình nguyện 2027",
+          "Toàn dân bảo vệ an ninh Tổ quốc",
+          "An sinh xã hội"
+        ],
+        "evidence": "Trang 1 bản hiển thị Drive: số 8849/KH-CAT-PX03, ngày 01/10/2026; mục II thời gian, mục III nội dung, mục IV báo cáo."
+      }
+    },
+    {
+      "file_id": "1wK4RRLgtgn6h581cs-_hb1Wcf2HrqVCC",
+      "name": "Ch__ng tr_nh_donghanhnguoiyeuthe - PhuTho_signed.pdf",
+      "mime_type": "application/pdf",
+      "size_bytes": 451564,
+      "source_url": "https://drive.google.com/file/d/1wK4RRLgtgn6h581cs-_hb1Wcf2HrqVCC/view",
+      "document_id": "ccb15380-540f-4668-bbe5-a871a0406f46",
+      "verified_metadata": {
+        "id": "ccb15380-540f-4668-bbe5-a871a0406f46",
+        "title": "Đoàn viên, hội viên Công an tỉnh Phú Thọ đồng hành, hỗ trợ người yếu thế, giai đoạn 2026 - 2030",
+        "document_number": "8848/CTr-CAT-PX03",
+        "document_type": "Chương trình",
+        "issuing_authority": "Công an tỉnh Phú Thọ",
+        "issued_date": "2026-10-01",
+        "effective_date": null,
+        "expiry_date": null,
+        "effect_status": "Không nêu ngày hiệu lực",
+        "scope": "Đoàn viên, hội viên Công an tỉnh Phú Thọ; các đơn vị trực thuộc và Công an cấp xã",
+        "summary": "Chương trình giai đoạn 2026 - 2030 phát huy vai trò đoàn viên, hội viên trong bảo đảm an ninh, an toàn và an sinh xã hội cho người yếu thế. Đề ra các chỉ tiêu hỗ trợ trẻ em đến trường, nhà ở, năng lực số và sinh kế; đồng hành với học sinh, sinh viên có nguy cơ bị bạo hành, xâm hại. Các đoàn thể, đơn vị trực thuộc và Công an cấp xã phối hợp huy động nguồn lực, tổ chức mô hình, theo dõi và báo cáo kết quả. Tài liệu không nêu ngày hiệu lực cụ thể.",
+        "keywords": [
+          "Người yếu thế",
+          "Đồng hành hỗ trợ",
+          "Giai đoạn 2026 - 2030",
+          "Ba nhất",
+          "An sinh xã hội"
+        ],
+        "evidence": "Trang 1 bản hiển thị Drive: số 8848/CTr-CAT-PX03, ngày 01/10/2026; nội dung về mục đích, chỉ tiêu và thực hiện."
+      }
+    },
+    {
+      "file_id": "1DPZayoSNEQqeezkgBNR8zKQ9Hha8IXok",
+      "name": "Thể thức văn bản Đoàn.docx",
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "size_bytes": 57232,
+      "source_url": "https://docs.google.com/document/d/1DPZayoSNEQqeezkgBNR8zKQ9Hha8IXok/edit",
+      "document_id": "a024851e-e2b7-4e42-ac36-0d992028f7dc",
+      "verified_metadata": {
+        "id": "a024851e-e2b7-4e42-ac36-0d992028f7dc",
+        "title": "Thể thức văn bản của Đoàn TNCS Hồ Chí Minh trong Công an tỉnh",
+        "document_number": "186-HD/BTN",
+        "document_type": "Hướng dẫn",
+        "issuing_authority": "Ban Thanh niên Công an tỉnh Phú Thọ",
+        "issued_date": "2026-04-14",
+        "effective_date": null,
+        "expiry_date": null,
+        "effect_status": "Không nêu ngày hiệu lực",
+        "scope": "Các tổ chức Đoàn trong Công an tỉnh Phú Thọ",
+        "summary": "Hướng dẫn thể thức văn bản của Đoàn trong Công an tỉnh: các thành phần bắt buộc, khổ giấy A4/A5, định lề, đánh số trang, cách trình bày tiêu đề, tên cơ quan, số ký hiệu, ngày tháng, nội dung, chữ ký và nơi nhận. Kèm sơ đồ, mẫu và bảng quy cách phông chữ, cỡ chữ. Căn cứ Quyết định 367-QĐ/TWĐTN-VP, Hướng dẫn 29-HD/TWĐTN-VP và Hướng dẫn 67-HD/BTNCA. Tài liệu không nêu ngày hiệu lực cụ thể.",
+        "keywords": [
+          "Thể thức văn bản",
+          "Văn bản Đoàn",
+          "Mẫu văn bản",
+          "Kỹ thuật trình bày"
+        ],
+        "evidence": "Trang 1 bản hiển thị Drive: số 186-HD/BTN, ngày 14/04/2026; nội dung và phụ lục thể thức. Không lấy số/ngày văn bản viện dẫn hay ví dụ làm metadata."
+      }
+    },
+    {
+      "file_id": "1_kdEciVqzvJ4M8X0JNrEGXkid8UIvVDG",
+      "name": "Kế hoạch triển khai phong trào 3 nhất trong đoàn viên thanh niên CAT Phú Thọ.doc",
+      "mime_type": "application/msword",
+      "size_bytes": 67584,
+      "source_url": "https://docs.google.com/document/d/1_kdEciVqzvJ4M8X0JNrEGXkid8UIvVDG/edit",
+      "document_id": "ce875364-18a0-4f27-9243-16460c990fbc",
+      "verified_metadata": {
+        "id": "ce875364-18a0-4f27-9243-16460c990fbc",
+        "title": "Hưởng ứng phong trào thi đua “Ba nhất: Kỷ luật nhất - Trung thành nhất - Gần dân nhất” trong tuổi trẻ Công an tỉnh",
+        "document_number": "133-KH/ĐTN",
+        "document_type": "Kế hoạch",
+        "issuing_authority": "Ban Thanh niên Công an tỉnh Phú Thọ",
+        "issued_date": "2025-11-28",
+        "effective_date": null,
+        "expiry_date": null,
+        "effect_status": "Không nêu ngày hiệu lực",
+        "scope": "Các cơ sở Đoàn khối phòng và Đoàn Thanh niên Công an cấp xã tỉnh Phú Thọ",
+        "summary": "Triển khai phong trào thi đua Ba nhất trong tuổi trẻ Công an tỉnh: Kỷ luật nhất, Trung thành nhất, Gần dân nhất. Đề ra nhiệm vụ tuyên truyền, giáo dục; rèn luyện kỷ luật và bản lĩnh chính trị; tình nguyện, phục vụ Nhân dân; sơ kết, tổng kết, khen thưởng. Yêu cầu 100% cơ sở Đoàn hưởng ứng, cán bộ và đoàn viên ký cam kết; mỗi cơ sở đăng ký một cách làm hay hoặc mô hình sáng tạo mỗi năm. Kế hoạch hưởng ứng của các đơn vị gửi về Ban Thanh niên trước 15/12/2025. Tài liệu không nêu ngày hiệu lực riêng.",
+        "keywords": [
+          "Ba nhất",
+          "Kỷ luật nhất",
+          "Trung thành nhất",
+          "Gần dân nhất",
+          "Thi đua"
+        ],
+        "evidence": "Trang 1 bản hiển thị Drive và bytes DOC: số 133-KH/ĐTN, ngày 28/11/2025; các mục II-IV nhiệm vụ, chỉ tiêu, thực hiện."
+      }
+    },
+    {
+      "file_id": "1AZMnkYIOVGSUdZ9QdFGNBmpmrDYlJcbB",
+      "name": "QĐ 1518.pdf",
+      "mime_type": "application/pdf",
+      "size_bytes": 579114,
+      "source_url": "https://drive.google.com/file/d/1AZMnkYIOVGSUdZ9QdFGNBmpmrDYlJcbB/view",
+      "document_id": "5a426629-f6ca-4946-9c1b-3c8632d2bd5e",
+      "verified_metadata": {
+        "id": "5a426629-f6ca-4946-9c1b-3c8632d2bd5e",
+        "title": "Ban hành Quy định tổ chức và hoạt động của Đoàn TNCS Hồ Chí Minh trong Công an nhân dân",
+        "document_number": "1518-QĐ/TWĐTN-CTĐ",
+        "document_type": "Quyết định",
+        "issuing_authority": "Ban Thường vụ Trung ương Đoàn TNCS Hồ Chí Minh",
+        "issued_date": "2025-08-08",
+        "effective_date": "2025-08-08",
+        "expiry_date": null,
+        "effect_status": "Hiệu lực từ 08/08/2025",
+        "scope": "Đoàn TNCS Hồ Chí Minh các cấp trong Công an nhân dân",
+        "summary": "Ban hành kèm theo Quyết định 1518-QĐ/TWĐTN-CTĐ Quy định tổ chức và hoạt động của Đoàn TNCS Hồ Chí Minh trong Công an nhân dân. Quy định gồm nguyên tắc tổ chức, đoàn viên và cán bộ Đoàn; hệ thống tổ chức; chức năng, nhiệm vụ và quyền hạn cơ quan lãnh đạo; kiểm tra, giám sát, khen thưởng, kỷ luật; tài chính và điều khoản thi hành. Điều 2 của Quyết định xác định hiệu lực kể từ ngày ký ban hành 08/08/2025. Danh mục ghi nhận hiệu lực theo bản gốc, chưa xác minh văn bản thay thế phát sinh sau đó.",
+        "keywords": [
+          "1518-QĐ/TWĐTN-CTĐ",
+          "Tổ chức Đoàn",
+          "Công an nhân dân",
+          "Cán bộ Đoàn",
+          "Quy định"
+        ],
+        "evidence": "Trang 1 PDF, số 1518-QĐ/TWĐTN-CTĐ, ngày 08/08/2025; Điều 2: hiệu lực kể từ ngày ký ban hành; Quy định kèm theo 6 chương, 23 điều."
+      }
+    }
+  ],
+  "target_project": "so-tay-doan-vien-rehearsal",
+  "target_project_id": "znexculhbdjiflkczpyu",
+  "publication_status": "PUBLISHED",
+  "published_on": "2026-10-07",
+  "production_site": "https://so-tay-doan-vien-so.vercel.app",
+  "visibility_level": "PUBLIC",
+  "public_on": "2026-10-07",
+  "owner_organization_id": "11111111-1111-1111-1111-111111111111",
+  "metadata_verified_on": "2026-10-07"
+}

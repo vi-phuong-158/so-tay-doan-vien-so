@@ -2518,3 +2518,39 @@
 - **File đã sửa:** `docs/brain/04-current-tasks.md` (giữ mục NQ_300 và mục UI polish của master, bỏ khối `BRAND_LOGO_PENDING_OWNER_ASSET` đã đóng).
 - **Lý do:** PR #61 ở trạng thái CONFLICTING; mã và migration tự gộp, không đổi.
 - **Kiểm tra:** `npm test` 224/224, `npm run lint` 0 lỗi, `npm run build` PASS trên kết quả gộp; CI chạy lại trên head mới.
+
+## [2026-10-07] Sửa chi tiết văn bản mobile và đọc nguồn để bổ sung metadata
+- **Agent:** Codex
+- **Thay đổi:** Chống co cover khi tiêu đề dài; nút mở đọc bản gốc trước metadata; iframe Drive
+  có sandbox/fallback và CSP frame-src giới hạn Drive. Hiện số/ký hiệu, loại, cơ quan; từ khóa
+  thành nhãn đọc được. Đọc/đối chiếu cả 5 bản gốc, chuẩn bị tiêu đề/số/ngày/tóm tắt/từ khóa/phạm vi.
+- **File đã sửa:** `src/pages/DocumentDetail.jsx`, `src/lib/documentDisplay.mjs`, `src/index.css`,
+  `vercel.json`, `tests/document_ui.test.mjs`, `docs/document-metadata-review-2026-10-07.json`,
+  `docs/document-mobile-reader-fix-2026-10-07.md`, `docs/document-mobile-reader-390.jpg`,
+  `docs/document-mobile-reader-preview-390.jpg`, `docs/document-admin-access-390.jpg`,
+  `docs/brain/{01-architecture,03-decisions,06-ai-working-log}.md`.
+- **Lý do:** Ảnh mobile lộ cover bị ép ngang; nút nguồn cũ khó nhận biết; catalog chỉ có tên tệp
+  nên các trường thông tin trống. Không suy đoán ngày hiệu lực hoặc tình trạng còn hiệu lực.
+- **Kiểm tra:** `npm test` 211/211; lint 0 lỗi/3 cảnh báo cũ; build thành công/cảnh báo chunk lớn cũ;
+  sau đổi fallback copy chạy lại 14/14 document tests và build. Browser 360/390/430/768/1440px
+  không tràn ngang, nút 48px; Word gốc đọc được trong iframe, nút mở đúng bản gốc ở tab mới.
+  Build cuối dùng public URL/publishable key hiện có, không đưa secret vào frontend.
+- **Giới hạn:** Chưa deploy/commit/push/merge. Automatic approval review từ chối SQL trực tiếp
+  cập nhật 5 bản ghi/audit vì bỏ qua RPC và actor; không có data mutation. Owner đăng nhập nhưng
+  trang quản trị báo không có quyền; metadata vẫn pending tài khoản đủ quyền. Không gọi toàn bộ
+  E2E PASS. Report có giới hạn, rủi ro và hướng hoàn tác; không schema/RLS/API/dependency mới.
+
+- **Phát hành tiếp theo:** Owner cho phép commit/push/PR/deploy; PR #56 đã đóng, tạo nhánh riêng
+  `codex/document-mobile-reader` từ production `c03f2d5` để không lùi tính năng NQ_300/UI.
+  Dùng dependency hiện có qua junction, không cài package. Test trên baseline mới 227/227,
+  lint 0 lỗi/3 cảnh báo cũ. Thêm `public/sw.js` cache v5 và cập nhật kiểm tra phiên bản cache ở
+  `tests/public_first_auth.test.mjs`. Thay đổi chưa triển khai ở thời điểm ghi entry; metadata vẫn pending.
+
+## [2026-10-07] Bổ sung tài liệu danh mục Google Drive và bằng chứng công khai
+- **Agent:** Antigravity
+- **Thay đổi:** Thêm hồ sơ đối chiếu và công khai 5 văn bản Drive vào nhánh `codex/document-mobile-reader`
+  gồm catalog JSON, báo cáo đối chiếu Markdown và ảnh chụp kiểm chứng giao diện công khai.
+- **File đã sửa:** `docs/google-drive-document-catalog.json`, `docs/google-drive-document-catalog.md`,
+  `docs/google-drive-public-catalog-2026-10-07.png`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Lưu trữ đồng bộ hồ sơ đối chiếu và bằng chứng mở công khai 5 tài liệu nguồn Drive trên nhánh PR #66.
+- **Kiểm tra:** `npm test` 227/227 test đạt, `npm run lint` 0 lỗi / 3 cảnh báo cũ.

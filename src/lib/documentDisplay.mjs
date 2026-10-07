@@ -64,3 +64,25 @@ export function documentErrorMessage(error) {
 export function canDownloadSource(document) {
   return Boolean(document?.hasSourceFile && document?.storagePath);
 }
+
+/** Only known Drive file routes can be embedded; other HTTPS sources remain ordinary links. */
+export function documentSourceLinks(sourceUrl) {
+  if (typeof sourceUrl !== 'string' || !sourceUrl.trim()) return null;
+  try {
+    const url = new URL(sourceUrl);
+    if (url.protocol !== 'https:' || url.username || url.password || url.port) return null;
+    const drivePath = url.hostname === 'drive.google.com'
+      ? /^\/file\/d\/([\w-]{10,})(?:\/(?:view|preview))?\/?$/
+      : url.hostname === 'docs.google.com'
+        ? /^\/document\/d\/([\w-]{10,})(?:\/(?:edit|view|preview))?\/?$/
+        : null;
+    const fileId = drivePath?.exec(url.pathname)?.[1];
+    if (fileId) {
+      const fileUrl = `https://drive.google.com/file/d/${fileId}`;
+      return { openUrl: `${fileUrl}/view`, previewUrl: `${fileUrl}/preview` };
+    }
+    return { openUrl: url.href, previewUrl: null };
+  } catch {
+    return null;
+  }
+}

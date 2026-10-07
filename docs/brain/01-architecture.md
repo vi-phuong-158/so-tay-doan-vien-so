@@ -822,3 +822,27 @@ Because current browser clients use `sb_publishable_*` keys, `ask-ai` and `publi
 with platform `verify_jwt=false`. Their shared Public-First boundary accepts the configured
 application key as guest traffic, validates every other bearer through Supabase Auth, and returns
 401 for malformed, expired, or forged bearer tokens; it never downgrades a failed bearer to guest.
+
+## [2026-10-07] Document detail mobile layout and original-file reader
+
+Document detail now offers an explicit original-source read link before metadata, and a sandboxed
+Drive preview for recognized HTTPS file routes. Other HTTPS sources remain external links.
+The existing authenticated/public private-Storage signed-URL paths still require an explicit click.
+No database schema, RPC, RLS, route or Edge Function contract changes. No production deployment yet.
+
+Code Graph additions/superseding the earlier source-link row:
+
+| Module / file | Role | Caller | Dependency |
+| --- | --- | --- | --- |
+| `src/lib/documentDisplay.mjs` | Validate HTTPS source URLs; normalize known Drive/Docs file routes to open/preview URLs | `DocumentDetail.jsx`, unit tests | URL parser; exact host/path allowlist |
+| `src/pages/DocumentDetail.jsx` | Source read CTA, optional sandboxed Drive iframe, metadata and mobile cover | existing document-detail route | document RLS/service, presentation helper, existing signed-URL handlers |
+| `src/index.css` | Non-shrinking document cover, wrapping heading, 48px actions, responsive reader | detail component | existing design tokens |
+| `vercel.json` | CSP allows frames only from `https://drive.google.com` | deployment response headers | sandboxed external viewer; existing frame-ancestors remains none |
+| `docs/document-metadata-review-2026-10-07.json` | Source-verified metadata proposal with explicit pending-apply status | authorized admin follow-up, not frontend runtime | original text and rendered page evidence |
+
+Metadata application is pending an authorized admin session through `update_document_metadata`.
+Automatic approval review rejected direct privileged updates/audit insertion; no data mutation ran.
+
+Release uses `codex/document-mobile-reader` based on production `c03f2d5`, preserving newer
+NQ_300/UI changes missing from the original closed PR #56 branch. `public/sw.js` cache v4 → v5
+refreshes the cached shell; API and cross-origin requests still bypass it.

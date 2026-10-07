@@ -4,6 +4,7 @@ import test from 'node:test';
 import {
   canDownloadSource,
   documentErrorMessage,
+  documentSourceLinks,
   effectStatusTone,
   formatDocumentDate,
   relationLabel
@@ -42,6 +43,44 @@ test('download affordance requires an actual stored file', () => {
   assert.equal(canDownloadSource({ hasSourceFile: true, storagePath: 'a/source/b.pdf' }), true);
   assert.equal(canDownloadSource({ hasSourceFile: false, storagePath: null }), false);
   assert.equal(canDownloadSource(null), false);
+});
+
+test('Drive PDF, DOC and DOCX sources open a viewer instead of the editing surface', () => {
+  const id = '1_kdEciVqzvJ4M8X0JNrEGXkid8UIvVDG';
+  for (const url of [
+    `https://drive.google.com/file/d/${id}/view?usp=drivesdk`,
+    `https://docs.google.com/document/d/${id}/edit?rtpof=true&sd=true`
+  ]) {
+    assert.deepEqual(documentSourceLinks(url), {
+      openUrl: `https://drive.google.com/file/d/${id}/view`,
+      previewUrl: `https://drive.google.com/file/d/${id}/preview`
+    });
+  }
+});
+
+test('source links reject unsafe schemes and credentials; arbitrary hosts cannot be embedded', () => {
+  for (const value of [null, '', 'invalid', 'javascript:alert(1)', 'data:text/html,test',
+    'http://example.com/file.pdf', '//drive.google.com/file/d/1234567890/view',
+    'https://name:password@drive.google.com/file/d/1234567890/view']) {
+    assert.equal(documentSourceLinks(value), null);
+  }
+  for (const url of ['https://example.com/file.pdf',
+    'https://drive.google.com.evil.example/file/d/1234567890/view',
+    'https://drive.google.com/drive/folders/1234567890',
+    'https://drive.google.com/file/d/1234567890%2F..%2F/view']) {
+    assert.equal(documentSourceLinks(url).previewUrl, null);
+    assert.equal(documentSourceLinks(url).openUrl, url);
+  }
+});
+
+test('detail has a direct read link and a sandboxed Drive preview with a fallback', () => {
+  assert.match(detailSource, /href=\{sourceLinks.openUrl\}[\s\S]*?Mở đọc tài liệu/);
+  assert.match(detailSource, /sourceLinks\?\.previewUrl &&/);
+  assert.match(detailSource, /<iframe[\s\S]*?src=\{sourceLinks.previewUrl\}[\s\S]*?title=\{[\s\S]*?sandbox=/);
+  const config = JSON.parse(fs.readFileSync(new URL('../vercel.json', import.meta.url), 'utf8'));
+  const csp = config.headers[0].headers.find(({ key }) => key === 'Content-Security-Policy').value;
+  assert.match(csp, /(?:^|;) frame-src https:\/\/drive\.google\.com;/);
+  assert.match(csp, /frame-ancestors 'none'/);
 });
 
 test('error copy distinguishes not-found/forbidden from a generic failure', () => {
