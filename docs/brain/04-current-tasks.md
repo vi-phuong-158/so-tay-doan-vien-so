@@ -7,6 +7,12 @@
 
 ## Đang làm
 
+### Document mobile reader (2026-10-07)
+- Owner yêu cầu sửa chi tiết văn bản mobile, có chỗ mở/đọc bản gốc và điền metadata từ tài liệu.
+- Nhánh `codex/document-mobile-reader` từ production `c03f2d5`; source fix/test đã có, owner cho phép PR/deploy.
+- Metadata 5 bản gốc đã đối chiếu, đề xuất trong `docs/document-metadata-review-2026-10-07.json`.
+  Chưa lưu: phiên đăng nhập hiện báo không có quyền tại trang quản trị; không bypass RPC/actor.
+
 ### NQ_300 public guest access (2026-10-02)
 - User wants the published NQ_300 quiz free to everyone with no interactive login.
 - Branch `codex/quiz-300-public-access`, based on merged Quiz #60 commit `bafc23e`.

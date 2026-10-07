@@ -9,6 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 import {
   canDownloadSource,
   documentErrorMessage,
+  documentSourceLinks,
   effectStatusTone,
   formatDocumentDate,
   relationLabel
@@ -126,6 +127,8 @@ export function DocumentDetail() {
 
   if (!document) return null;
 
+  const sourceLinks = documentSourceLinks(document.sourceUrl);
+
   return (
     <div className="page">
       <PageHeader title="Chi tiết văn bản" back={LIST_PATH} navigate={navigate} />
@@ -135,7 +138,7 @@ export function DocumentDetail() {
           <Icon name="file" size={26} />
           <span>{document.documentType || 'Văn bản'}</span>
         </div>
-        <div>
+        <div className="document-heading">
           <div className="doc-tags">
             {document.documentNumber && <span>{document.documentNumber}</span>}
             <span className={`status status-${effectStatusTone(document.effectStatus)}`}>
@@ -148,9 +151,38 @@ export function DocumentDetail() {
       </div>
 
       <div className="content-card">
+        <div className="document-actions">
+          {sourceLinks && (
+            <a
+              className="button button-primary"
+              href={sourceLinks.openUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Icon name="book" size={18} />
+              Mở đọc tài liệu
+            </a>
+          )}
+          {canDownloadSource(document) && (
+            <Button icon="file" onClick={handleDownload} disabled={downloading}>
+              {downloading ? 'Đang tạo liên kết…' : 'Mở văn bản gốc'}
+            </Button>
+          )}
+          {!sourceLinks && !canDownloadSource(document) && (
+            <p>Chưa có tệp gốc hoặc liên kết để mở đọc.</p>
+          )}
+        </div>
+
+        {downloadError && (
+          <p className="form-error" role="alert">{documentErrorMessage(downloadError)}</p>
+        )}
+
         <div className="info-grid">
-          <MetaRow label="Ngày ban hành" value={formatDocumentDate(document.issuedDate)} />
-          <MetaRow label="Ngày hiệu lực" value={formatDocumentDate(document.effectiveDate)} />
+          <MetaRow label="Số, ký hiệu" value={document.documentNumber || 'Chưa cập nhật'} />
+          <MetaRow label="Loại văn bản" value={document.documentType || 'Chưa cập nhật'} />
+          <MetaRow label="Cơ quan ban hành" value={document.issuingAuthority || 'Chưa cập nhật'} />
+          <MetaRow label="Ngày ban hành" value={document.issuedDate ? formatDocumentDate(document.issuedDate) : 'Chưa cập nhật'} />
+          <MetaRow label="Ngày hiệu lực" value={document.effectiveDate ? formatDocumentDate(document.effectiveDate) : 'Chưa xác định'} />
           {document.expiryDate && (
             <MetaRow label="Hết hiệu lực" value={formatDocumentDate(document.expiryDate)} />
           )}
@@ -165,35 +197,28 @@ export function DocumentDetail() {
         )}
 
         {document.keywords.length > 0 && (
-          <div className="chip-row" aria-label="Từ khóa">
+          <div className="document-keywords" aria-label="Từ khóa">
             {document.keywords.map((keyword) => (
-              <button key={keyword} type="button" disabled>{keyword}</button>
+              <span key={keyword}>{keyword}</span>
             ))}
           </div>
         )}
-
-        <div className="campaign-form-actions">
-          {canDownloadSource(document) && (
-            <Button icon="file" onClick={handleDownload} disabled={downloading}>
-              {downloading ? 'Đang tạo liên kết…' : 'Tải văn bản gốc'}
-            </Button>
-          )}
-          {document.sourceUrl && (
-            <a
-              className="button button-secondary"
-              href={document.sourceUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Nguồn công bố
-            </a>
-          )}
-        </div>
-
-        {downloadError && (
-          <p className="form-error" role="alert">{documentErrorMessage(downloadError)}</p>
-        )}
       </div>
+
+      {sourceLinks?.previewUrl && (
+        <section className="content-card document-reader" aria-labelledby="document-reader-title">
+          <h3 id="document-reader-title">Xem tài liệu</h3>
+          <p>Nếu khung xem chưa hiển thị, chọn “Mở đọc tài liệu” để xem bản gốc trên Google Drive.</p>
+          <iframe
+            key={sourceLinks.previewUrl}
+            src={sourceLinks.previewUrl}
+            title={`Bản gốc: ${document.title}`}
+            loading="lazy"
+            referrerPolicy="no-referrer"
+            sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-downloads"
+          />
+        </section>
+      )}
 
       {relations.length > 0 && (
         <>
