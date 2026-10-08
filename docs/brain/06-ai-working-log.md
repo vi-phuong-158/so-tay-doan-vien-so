@@ -1,5 +1,23 @@
 # 06 — AI Working Log
 
+## [2026-10-08] NQ13 final closure — pilot public privacy after #67 merge
+- **Agent:** Codex
+- **Thay đổi:** Merge #67 after exact12bb681 acceptance; rebase #68 onto b3c5393, preserve both
+  document histories and PDF fix. Owner pilot decision removes public official ranking, implements
+  server threshold3/null suppression, province subtraction protection, active-only current stats,
+  roster column privileges and separate authorized full admin RPC; public learning table/cachev7.
+- **File đã sửa:** migration20261008130000, nq_unit_competition.sql, nqCompetitionService,
+  NqCompetition/Home/NqQuiz/Admin, sw.js, frontend tests, browser harness, brain01/03/04/06 and both reports.
+- **Lý do:** Owner has no verified member list; learning aggregates must not imply official competition
+  integrity or disclose individual results through0/1/2 cells, summaries, ordering or raw roster.
+- **Kiểm tra:** Rehearsal82pgTAP PASS;frontend258 PASS;lint0errors/3existingwarnings;build/diff clean.
+  3000attempts/1500people/148units EXPLAIN39.465ms vs39.178 baseline, rollback;seed twice148/133/15/0dup.
+  Implementationf34ee56 exact CI37743665706 GREEN (956DB/258frontend/273Member/119Edge),
+  protected Preview Home->30PASS->certificate->stats, public1/2suppressed+3visible, network privacy,
+  filters/refresh/5widths/admingate PASS. Exactactor6attempts1cert cleaned0, roster+updated_at restored,
+  9unmapped/7certificates/148units preserved. #67 actual master read-only smoke/CI PASS.
+  Receipt-head retest/guarded merge receipt pinned in PR #68; no Production DB mutation.
+
 ## [2026-10-08] NQ13 certificate closure evidence
 - **Agent:** Codex
 - **Thay đổi:** Báo cáo current closure, lưu PDF/PNG/browserFAIL/render thực; helper verify PDF
@@ -23,6 +41,38 @@
 - **Kiểm tra:** Current head browser23/30FAIL đúng76.67/no certificate;24/30PASS80%,PNG download/
   jsQR independent decode/public verify PASS. PDF blocker đang sửa, phải retest trên new exact Preview
   và CI trước conditional merge; chỉ rehearsal, fixture IDs ghi riêng để cleanup.
+## [2026-10-08] NQ13 competition hosted acceptance receipt
+- **Agent:** Codex
+- **Thay đổi:** Ghi evidence hosted PR #68 implementation head `81f793cffb48b4c29aabafea1dfdd03ebe09efa8`,
+  CI934DB/257frontend/273Member API, Preview READY exact SHA; thêm ảnh Preview và vị trí chụp leaderboard.
+- **File đã sửa:** `docs/quiz-300/NQ13_UNIT_COMPETITION.md`, `docs/quiz-300/unit-competition-evidence/preview-*`,
+  `docs/brain/{04-current-tasks,06-ai-working-log}.md`, `scripts/nq-unit-browser-check.mjs`.
+- **Lý do:** Bàn giao bằng chứng thực Home->unit snapshot->result->certificate->stats, rank/top3/refresh,
+  mobile/desktop/network privacy; ghi nhận cleanup đúng lifecycle. Không claim browser admin credentials.
+- **Kiểm tra:** Hosted ui/participant/finish/rank assertions PASS;5widths/no horizontal overflow;
+  certificate unit Phường Việt Trì30/30; temp eligible1/completion100/score100/rank1 rồi restoredNULL.
+  Exact actor/attempt/cert leftovers0,active148,historical unmapped9. CI37721276959 success.
+  Final receipt commit được retest exact head và ghi trong body PR #68; không merge/Production DB.
+
+## [2026-10-08] NQ13 unit competition dashboard
+- **Agent:** Codex
+- **Thay đổi:** Danh mục authoritative148 (133 xã/15 phường), migration/RLS/UUID participant snapshots,
+  PostgreSQL best-score aggregates/ranking/config, cached searchable select, public/admin dashboards,
+  roster/drill-down/CSV, service-worker cache update và acceptance harness/documentation.
+- **File đã sửa:** `src/{App.jsx,index.css}`, `src/components/{Icon.jsx,NqUnitSelect.jsx}`,
+  `src/pages/{Home.jsx,NqQuiz.jsx,Admin.jsx,NqCompetition.jsx}`,
+  `src/services/{nqQuizService.js,nqCompetitionService.js}`, `public/sw.js`,
+  `supabase/{migrations/20261008021004_nq13_unit_competition.sql,seeds/nq_competition_units.sql,tests/nq_unit_competition.sql}`,
+  `scripts/{build-nq-unit-seed.py,data/nq-competition-units.json,nq-unit-performance.sql,nq-unit-browser-check.mjs}`,
+  `tests/{home_campaign.test.mjs,public_first_auth.test.mjs,nq_competition.test.mjs}`, `.github/workflows/ci.yml`, `docs/quiz-300/NQ13_UNIT_COMPETITION.md`,
+  `docs/brain/{01-architecture,03-decisions,04-current-tasks,06-ai-working-log}.md` và ảnh evidence.
+- **Lý do:** Triển khai học tập/thi đua tới148 đơn vị, một best result/người, phân biệt lượt/người,
+  không public cá nhân và không giả denominator. Giữ9 historical unmapped/certificate/guest policy.
+- **Kiểm tra:** 257 npm tests; lint0errors/3existing warnings; build thành công/chunk warning hiện hữu;
+  rehearsal60pgTAP+NQ_RUNTIME_ASSERTIONS_PASS;3000attempts/1500people/148units EXPLAIN39.178ms rollback.
+  Local browser390 certificate Phường Việt Trì30/30 và stats cập nhật;5widths/publicJSON privacy pass.
+  Hosted exact-head Preview/CI receipt được cập nhật trên PR sau commit; không claim browser admin
+  khi chưa có credentials. Không Production DB/merge; stacked #67 requires rebase/retest after merge.
 
 ## [2026-10-08] NQ13 browser evidence, print follow-up, and blocked acceptance
 - **Agent:** Codex

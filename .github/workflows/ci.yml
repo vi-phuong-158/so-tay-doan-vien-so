@@ -52,6 +52,9 @@ jobs:
         supabase start
         supabase db reset
         supabase test db
+        # Competition catalogue seed must be repeatable without changing roster/history.
+        psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -v ON_ERROR_STOP=1 -f supabase/seeds/nq_competition_units.sql
+        psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -v ON_ERROR_STOP=1 -f supabase/seeds/nq_competition_units.sql
         # Fixed NQ bank integration and security assertions against the real local database.
         psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -v ON_ERROR_STOP=1 -f supabase/seeds/nq300.sql
         psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -v ON_ERROR_STOP=1 -f supabase/seeds/nq300.sql

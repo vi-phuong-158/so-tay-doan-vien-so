@@ -77,7 +77,7 @@ test('NqQuiz.jsx: enforces pass/fail screens, participant gate, and certificate 
   // Participant gate
   assert.ok(content.includes('Thông tin người dự thi'), 'Participant registration modal exists');
   assert.ok(content.includes('đồng ý hiển thị các nội dung trên khi tra cứu chứng nhận bằng mã hoặc QR'), 'Confirmation explains public verification disclosure');
-  assert.ok(content.includes('saveParticipant'), 'Calls saveParticipant service method');
+  assert.ok(content.includes('saveUnitParticipant'), 'Saves participant through the UUID unit registration contract');
   assert.ok(content.includes('canViewNqCertificate'), 'Certificate view requires PASS and a complete certificate record');
   assert.ok(content.includes('chứng nhận chưa được cấp'), 'Missing certificate shows a safe pending status');
   assert.ok(content.includes('TẢI LẠI KẾT QUẢ'), 'Missing certificate can be reloaded from the server');

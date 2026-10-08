@@ -1,0 +1,1193 @@
+{
+  "source": "https://xaydungchinhsach.chinhphu.vn/sap-xep-dvhc-danh-sach-148-xa-phuong-cua-tinh-phu-tho-119250623074347981.htm",
+  "resolution": "1676/NQ-UBTVQH15",
+  "verified_at": "2026-10-08",
+  "source_sha256": "eea869bde1c5dba4fafce7139b57b8d965d1e7d82969a9e531fdd419defcb162",
+  "code_convention": "Internal stable PT-NQ ordinal, not an official administrative code",
+  "units": [
+    {
+      "id": "57d0e3f3-f5df-5188-9706-150961c804b7",
+      "code": "PT-NQ-001",
+      "name": "Xã Hy Cương",
+      "short_name": "Hy Cương",
+      "unit_type": "xa",
+      "display_order": 1
+    },
+    {
+      "id": "15b48b38-f81a-572b-b28d-0595b087eb22",
+      "code": "PT-NQ-002",
+      "name": "Xã Lâm Thao",
+      "short_name": "Lâm Thao",
+      "unit_type": "xa",
+      "display_order": 2
+    },
+    {
+      "id": "de6f2885-ad65-5f5a-b695-4755a2ab7474",
+      "code": "PT-NQ-003",
+      "name": "Xã Xuân Lũng",
+      "short_name": "Xuân Lũng",
+      "unit_type": "xa",
+      "display_order": 3
+    },
+    {
+      "id": "e56ffb08-38db-51e5-8671-aea93d58a33a",
+      "code": "PT-NQ-004",
+      "name": "Xã Phùng Nguyên",
+      "short_name": "Phùng Nguyên",
+      "unit_type": "xa",
+      "display_order": 4
+    },
+    {
+      "id": "9e4fea8d-f302-5acd-b094-aad9a64e6160",
+      "code": "PT-NQ-005",
+      "name": "Xã Bản Nguyên",
+      "short_name": "Bản Nguyên",
+      "unit_type": "xa",
+      "display_order": 5
+    },
+    {
+      "id": "3b713565-1154-51ca-b236-0851a83ba203",
+      "code": "PT-NQ-006",
+      "name": "Xã Phù Ninh",
+      "short_name": "Phù Ninh",
+      "unit_type": "xa",
+      "display_order": 6
+    },
+    {
+      "id": "9dc0c568-2e9c-523e-8b51-3b6a00bab296",
+      "code": "PT-NQ-007",
+      "name": "Xã Dân Chủ",
+      "short_name": "Dân Chủ",
+      "unit_type": "xa",
+      "display_order": 7
+    },
+    {
+      "id": "4c7a591d-7493-52e9-8916-5d6a67f75122",
+      "code": "PT-NQ-008",
+      "name": "Xã Phú Mỹ",
+      "short_name": "Phú Mỹ",
+      "unit_type": "xa",
+      "display_order": 8
+    },
+    {
+      "id": "509c293f-508b-56e9-bb3f-971b3e17fac5",
+      "code": "PT-NQ-009",
+      "name": "Xã Trạm Thản",
+      "short_name": "Trạm Thản",
+      "unit_type": "xa",
+      "display_order": 9
+    },
+    {
+      "id": "886ae7c6-8327-51b9-b648-375b9b2e588b",
+      "code": "PT-NQ-010",
+      "name": "Xã Bình Phú",
+      "short_name": "Bình Phú",
+      "unit_type": "xa",
+      "display_order": 10
+    },
+    {
+      "id": "ae1d50de-3735-5299-9e8f-63acb0f8c540",
+      "code": "PT-NQ-011",
+      "name": "Xã Thanh Ba",
+      "short_name": "Thanh Ba",
+      "unit_type": "xa",
+      "display_order": 11
+    },
+    {
+      "id": "3e547770-e4a4-54ab-ba4c-a32aaa165863",
+      "code": "PT-NQ-012",
+      "name": "Xã Quảng Yên",
+      "short_name": "Quảng Yên",
+      "unit_type": "xa",
+      "display_order": 12
+    },
+    {
+      "id": "b20add54-b0b5-5295-8f6c-2fb125b16eef",
+      "code": "PT-NQ-013",
+      "name": "Xã Hoàng Cương",
+      "short_name": "Hoàng Cương",
+      "unit_type": "xa",
+      "display_order": 13
+    },
+    {
+      "id": "a1d58c01-744c-592f-b895-d2cc483ac595",
+      "code": "PT-NQ-014",
+      "name": "Xã Đông Thành",
+      "short_name": "Đông Thành",
+      "unit_type": "xa",
+      "display_order": 14
+    },
+    {
+      "id": "dc8f52e6-f790-5910-adef-5e943e03f566",
+      "code": "PT-NQ-015",
+      "name": "Xã Chí Tiên",
+      "short_name": "Chí Tiên",
+      "unit_type": "xa",
+      "display_order": 15
+    },
+    {
+      "id": "808519c5-1a6d-50d6-b55e-dc74085485eb",
+      "code": "PT-NQ-016",
+      "name": "Xã Liên Minh",
+      "short_name": "Liên Minh",
+      "unit_type": "xa",
+      "display_order": 16
+    },
+    {
+      "id": "ef196319-0d3f-5151-b896-127594f20e70",
+      "code": "PT-NQ-017",
+      "name": "Xã Đoan Hùng",
+      "short_name": "Đoan Hùng",
+      "unit_type": "xa",
+      "display_order": 17
+    },
+    {
+      "id": "e4e2b357-8b1d-552b-9056-78b9bed4bd1a",
+      "code": "PT-NQ-018",
+      "name": "Xã Tây Cốc",
+      "short_name": "Tây Cốc",
+      "unit_type": "xa",
+      "display_order": 18
+    },
+    {
+      "id": "14fd6f13-0335-5d9a-9e86-8df221dfde56",
+      "code": "PT-NQ-019",
+      "name": "Xã Chân Mộng",
+      "short_name": "Chân Mộng",
+      "unit_type": "xa",
+      "display_order": 19
+    },
+    {
+      "id": "471fdee4-ac6a-58f0-8120-1cc40d71a290",
+      "code": "PT-NQ-020",
+      "name": "Xã Chí Đám",
+      "short_name": "Chí Đám",
+      "unit_type": "xa",
+      "display_order": 20
+    },
+    {
+      "id": "15b553fc-4e5a-5e6c-bccc-a9986c8f97bc",
+      "code": "PT-NQ-021",
+      "name": "Xã Bằng Luân",
+      "short_name": "Bằng Luân",
+      "unit_type": "xa",
+      "display_order": 21
+    },
+    {
+      "id": "e957ddfc-867e-5317-bf33-98ae3216fae4",
+      "code": "PT-NQ-022",
+      "name": "Xã Hạ Hòa",
+      "short_name": "Hạ Hòa",
+      "unit_type": "xa",
+      "display_order": 22
+    },
+    {
+      "id": "77598b40-fa11-5119-ba1a-8c994d67199f",
+      "code": "PT-NQ-023",
+      "name": "Xã Đan Thượng",
+      "short_name": "Đan Thượng",
+      "unit_type": "xa",
+      "display_order": 23
+    },
+    {
+      "id": "e8d5ac88-ab4a-54f7-bc83-1296f639f751",
+      "code": "PT-NQ-024",
+      "name": "Xã Yên Kỳ",
+      "short_name": "Yên Kỳ",
+      "unit_type": "xa",
+      "display_order": 24
+    },
+    {
+      "id": "560ff555-5fb8-59a4-8a95-dbd6b989f56a",
+      "code": "PT-NQ-025",
+      "name": "Xã Vĩnh Chân",
+      "short_name": "Vĩnh Chân",
+      "unit_type": "xa",
+      "display_order": 25
+    },
+    {
+      "id": "a21dc8a4-4f55-5ab2-88bc-71167b0f2ccf",
+      "code": "PT-NQ-026",
+      "name": "Xã Văn Lang",
+      "short_name": "Văn Lang",
+      "unit_type": "xa",
+      "display_order": 26
+    },
+    {
+      "id": "caf2e87e-c63b-5d73-ad46-75cdeb582cbe",
+      "code": "PT-NQ-027",
+      "name": "Xã Hiền Lương",
+      "short_name": "Hiền Lương",
+      "unit_type": "xa",
+      "display_order": 27
+    },
+    {
+      "id": "5ed925b9-c1db-537d-a044-67fbfcb11fd8",
+      "code": "PT-NQ-028",
+      "name": "Xã Cẩm Khê",
+      "short_name": "Cẩm Khê",
+      "unit_type": "xa",
+      "display_order": 28
+    },
+    {
+      "id": "5fec5eb1-45c2-5245-8026-970163beb8e0",
+      "code": "PT-NQ-029",
+      "name": "Xã Phú Khê",
+      "short_name": "Phú Khê",
+      "unit_type": "xa",
+      "display_order": 29
+    },
+    {
+      "id": "ef35161b-f123-505e-9e8d-24fd1d1d4b75",
+      "code": "PT-NQ-030",
+      "name": "Xã Hùng Việt",
+      "short_name": "Hùng Việt",
+      "unit_type": "xa",
+      "display_order": 30
+    },
+    {
+      "id": "1b68550a-c93a-5348-82f8-19614e3045a4",
+      "code": "PT-NQ-031",
+      "name": "Xã Đồng Lương",
+      "short_name": "Đồng Lương",
+      "unit_type": "xa",
+      "display_order": 31
+    },
+    {
+      "id": "a267ab03-73ec-5980-9456-8e129bd6cc57",
+      "code": "PT-NQ-032",
+      "name": "Xã Tiên Lương",
+      "short_name": "Tiên Lương",
+      "unit_type": "xa",
+      "display_order": 32
+    },
+    {
+      "id": "4c7a7dcc-b5e6-50ba-89f6-1d19d54b3572",
+      "code": "PT-NQ-033",
+      "name": "Xã Vân Bán",
+      "short_name": "Vân Bán",
+      "unit_type": "xa",
+      "display_order": 33
+    },
+    {
+      "id": "15ccf664-bf55-5496-9e05-157b6d9912ea",
+      "code": "PT-NQ-034",
+      "name": "Xã Tam Nông",
+      "short_name": "Tam Nông",
+      "unit_type": "xa",
+      "display_order": 34
+    },
+    {
+      "id": "c15bfa6f-5a65-5452-b3c9-febbea1a2642",
+      "code": "PT-NQ-035",
+      "name": "Xã Thọ Văn",
+      "short_name": "Thọ Văn",
+      "unit_type": "xa",
+      "display_order": 35
+    },
+    {
+      "id": "667c073a-1927-5eaf-b222-a2480a3cde89",
+      "code": "PT-NQ-036",
+      "name": "Xã Vạn Xuân",
+      "short_name": "Vạn Xuân",
+      "unit_type": "xa",
+      "display_order": 36
+    },
+    {
+      "id": "c2148360-09da-5da7-b8f9-0c353fe110ee",
+      "code": "PT-NQ-037",
+      "name": "Xã Hiền Quan",
+      "short_name": "Hiền Quan",
+      "unit_type": "xa",
+      "display_order": 37
+    },
+    {
+      "id": "4855dbb6-ec4e-585c-8fa5-04008bcffb33",
+      "code": "PT-NQ-038",
+      "name": "Xã Thanh Thủy",
+      "short_name": "Thanh Thủy",
+      "unit_type": "xa",
+      "display_order": 38
+    },
+    {
+      "id": "711d5c41-cb10-553a-aab4-58ac61d98d23",
+      "code": "PT-NQ-039",
+      "name": "Xã Đào Xá",
+      "short_name": "Đào Xá",
+      "unit_type": "xa",
+      "display_order": 39
+    },
+    {
+      "id": "178bae91-4774-5d34-97bf-acedd6771783",
+      "code": "PT-NQ-040",
+      "name": "Xã Tu Vũ",
+      "short_name": "Tu Vũ",
+      "unit_type": "xa",
+      "display_order": 40
+    },
+    {
+      "id": "0757bf49-118c-56e3-8b4c-f7d24bff4c36",
+      "code": "PT-NQ-041",
+      "name": "Xã Thanh Sơn",
+      "short_name": "Thanh Sơn",
+      "unit_type": "xa",
+      "display_order": 41
+    },
+    {
+      "id": "8f0d3cb7-d259-5f4e-a789-386d500215c5",
+      "code": "PT-NQ-042",
+      "name": "Xã Võ Miếu",
+      "short_name": "Võ Miếu",
+      "unit_type": "xa",
+      "display_order": 42
+    },
+    {
+      "id": "e246c9e9-3cb1-553c-b802-f4dfdceb0f03",
+      "code": "PT-NQ-043",
+      "name": "Xã Văn Miếu",
+      "short_name": "Văn Miếu",
+      "unit_type": "xa",
+      "display_order": 43
+    },
+    {
+      "id": "6bf4ad32-846e-5f68-b248-a70582358a41",
+      "code": "PT-NQ-044",
+      "name": "Xã Cự Đồng",
+      "short_name": "Cự Đồng",
+      "unit_type": "xa",
+      "display_order": 44
+    },
+    {
+      "id": "6c4738a8-cb8b-5596-9ade-70f76703f01d",
+      "code": "PT-NQ-045",
+      "name": "Xã Hương Cần",
+      "short_name": "Hương Cần",
+      "unit_type": "xa",
+      "display_order": 45
+    },
+    {
+      "id": "3ad726b5-a32f-5d3d-9378-a3b8d981ac49",
+      "code": "PT-NQ-046",
+      "name": "Xã Yên Sơn",
+      "short_name": "Yên Sơn",
+      "unit_type": "xa",
+      "display_order": 46
+    },
+    {
+      "id": "f6676686-eb78-5e55-9cce-7c4126bc5f4f",
+      "code": "PT-NQ-047",
+      "name": "Xã Khả Cửu",
+      "short_name": "Khả Cửu",
+      "unit_type": "xa",
+      "display_order": 47
+    },
+    {
+      "id": "7f842db7-f4c9-5329-9e9e-e4d7fa5bbc36",
+      "code": "PT-NQ-048",
+      "name": "Xã Tân Sơn",
+      "short_name": "Tân Sơn",
+      "unit_type": "xa",
+      "display_order": 48
+    },
+    {
+      "id": "048275af-5bf1-5be8-8991-ba615272e5f0",
+      "code": "PT-NQ-049",
+      "name": "Xã Minh Đài",
+      "short_name": "Minh Đài",
+      "unit_type": "xa",
+      "display_order": 49
+    },
+    {
+      "id": "7a6f2c7a-fec5-5021-b548-b99928b66e01",
+      "code": "PT-NQ-050",
+      "name": "Xã Lai Đồng",
+      "short_name": "Lai Đồng",
+      "unit_type": "xa",
+      "display_order": 50
+    },
+    {
+      "id": "b1740186-b3cb-55fc-ac70-491bbd08fef7",
+      "code": "PT-NQ-051",
+      "name": "Xã Xuân Đài",
+      "short_name": "Xuân Đài",
+      "unit_type": "xa",
+      "display_order": 51
+    },
+    {
+      "id": "2e4e1a5f-50f9-50eb-b71f-aac507bfb68e",
+      "code": "PT-NQ-052",
+      "name": "Xã Long Cốc",
+      "short_name": "Long Cốc",
+      "unit_type": "xa",
+      "display_order": 52
+    },
+    {
+      "id": "751576f8-4e04-5202-b39d-54e59124d388",
+      "code": "PT-NQ-053",
+      "name": "Xã Yên Lập",
+      "short_name": "Yên Lập",
+      "unit_type": "xa",
+      "display_order": 53
+    },
+    {
+      "id": "7af2ca79-7d88-5750-b652-2de26b9a2f57",
+      "code": "PT-NQ-054",
+      "name": "Xã Thượng Long",
+      "short_name": "Thượng Long",
+      "unit_type": "xa",
+      "display_order": 54
+    },
+    {
+      "id": "536a1b89-cf83-545c-8b6c-0cfa7bb1d8de",
+      "code": "PT-NQ-055",
+      "name": "Xã Sơn Lương",
+      "short_name": "Sơn Lương",
+      "unit_type": "xa",
+      "display_order": 55
+    },
+    {
+      "id": "e2f3f279-8280-53ae-b1b4-2c0fedf680f2",
+      "code": "PT-NQ-056",
+      "name": "Xã Xuân Viên",
+      "short_name": "Xuân Viên",
+      "unit_type": "xa",
+      "display_order": 56
+    },
+    {
+      "id": "e4e25478-1435-5166-9df0-af85d2b68f84",
+      "code": "PT-NQ-057",
+      "name": "Xã Minh Hòa",
+      "short_name": "Minh Hòa",
+      "unit_type": "xa",
+      "display_order": 57
+    },
+    {
+      "id": "006d95a8-7569-5acf-b81d-7ac0d84b432e",
+      "code": "PT-NQ-058",
+      "name": "Xã Tam Sơn",
+      "short_name": "Tam Sơn",
+      "unit_type": "xa",
+      "display_order": 58
+    },
+    {
+      "id": "e72b30b5-8eaf-5ae1-83cb-c0dbe4542051",
+      "code": "PT-NQ-059",
+      "name": "Xã Sông Lô",
+      "short_name": "Sông Lô",
+      "unit_type": "xa",
+      "display_order": 59
+    },
+    {
+      "id": "12721ce8-7505-54b9-8650-7a44e9ce18d5",
+      "code": "PT-NQ-060",
+      "name": "Xã Hải Lựu",
+      "short_name": "Hải Lựu",
+      "unit_type": "xa",
+      "display_order": 60
+    },
+    {
+      "id": "f973a982-2ec7-57f6-9060-7034022f0ea8",
+      "code": "PT-NQ-061",
+      "name": "Xã Yên Lãng",
+      "short_name": "Yên Lãng",
+      "unit_type": "xa",
+      "display_order": 61
+    },
+    {
+      "id": "f5a170df-b5f1-5cb4-a50d-2bb64a7064dc",
+      "code": "PT-NQ-062",
+      "name": "Xã Lập Thạch",
+      "short_name": "Lập Thạch",
+      "unit_type": "xa",
+      "display_order": 62
+    },
+    {
+      "id": "ce54e5b4-62be-5f54-a506-8f513ec85f7b",
+      "code": "PT-NQ-063",
+      "name": "Xã Tiên Lữ",
+      "short_name": "Tiên Lữ",
+      "unit_type": "xa",
+      "display_order": 63
+    },
+    {
+      "id": "42b9c1b6-a8eb-596e-8d90-ca843508cbeb",
+      "code": "PT-NQ-064",
+      "name": "Xã Thái Hòa",
+      "short_name": "Thái Hòa",
+      "unit_type": "xa",
+      "display_order": 64
+    },
+    {
+      "id": "2d949fb8-8b3a-50b5-b6b6-e7138116957e",
+      "code": "PT-NQ-065",
+      "name": "Xã Liên Hòa",
+      "short_name": "Liên Hòa",
+      "unit_type": "xa",
+      "display_order": 65
+    },
+    {
+      "id": "a2bdb1c2-c48b-59fa-ac06-390713714cf9",
+      "code": "PT-NQ-066",
+      "name": "Xã Hợp Lý",
+      "short_name": "Hợp Lý",
+      "unit_type": "xa",
+      "display_order": 66
+    },
+    {
+      "id": "6856e864-7c86-5ba9-9365-444c2b9e2a96",
+      "code": "PT-NQ-067",
+      "name": "Xã Sơn Đông",
+      "short_name": "Sơn Đông",
+      "unit_type": "xa",
+      "display_order": 67
+    },
+    {
+      "id": "f03fea24-7006-595a-b13d-3c60d7b3b1c7",
+      "code": "PT-NQ-068",
+      "name": "Xã Tam Đảo",
+      "short_name": "Tam Đảo",
+      "unit_type": "xa",
+      "display_order": 68
+    },
+    {
+      "id": "ed6a5d9a-fe7e-54cc-b6d1-b9d2d85e4b43",
+      "code": "PT-NQ-069",
+      "name": "Xã Đại Đình",
+      "short_name": "Đại Đình",
+      "unit_type": "xa",
+      "display_order": 69
+    },
+    {
+      "id": "c90e6db0-e7a5-51f8-b5b9-805df0fe9fe3",
+      "code": "PT-NQ-070",
+      "name": "Xã Đạo Trù",
+      "short_name": "Đạo Trù",
+      "unit_type": "xa",
+      "display_order": 70
+    },
+    {
+      "id": "0307b6ef-d2a0-5a36-8cf5-0e5fb28a6622",
+      "code": "PT-NQ-071",
+      "name": "Xã Tam Dương",
+      "short_name": "Tam Dương",
+      "unit_type": "xa",
+      "display_order": 71
+    },
+    {
+      "id": "66d60e86-fa18-579a-b323-63b1b392969d",
+      "code": "PT-NQ-072",
+      "name": "Xã Hội Thịnh",
+      "short_name": "Hội Thịnh",
+      "unit_type": "xa",
+      "display_order": 72
+    },
+    {
+      "id": "37743444-636a-5fe5-a3c0-00b6c6e99373",
+      "code": "PT-NQ-073",
+      "name": "Xã Hoàng An",
+      "short_name": "Hoàng An",
+      "unit_type": "xa",
+      "display_order": 73
+    },
+    {
+      "id": "642665ab-6dfc-59a4-ad7a-6d6934a819c1",
+      "code": "PT-NQ-074",
+      "name": "Xã Tam Dương Bắc",
+      "short_name": "Tam Dương Bắc",
+      "unit_type": "xa",
+      "display_order": 74
+    },
+    {
+      "id": "5990c30d-861d-56da-ae0a-03d3b566e766",
+      "code": "PT-NQ-075",
+      "name": "Xã Vĩnh Tường",
+      "short_name": "Vĩnh Tường",
+      "unit_type": "xa",
+      "display_order": 75
+    },
+    {
+      "id": "6eaaeae8-8744-5853-8cd1-351d8362bfb8",
+      "code": "PT-NQ-076",
+      "name": "Xã Thổ Tang",
+      "short_name": "Thổ Tang",
+      "unit_type": "xa",
+      "display_order": 76
+    },
+    {
+      "id": "8c9eebd4-f96d-5e24-8eed-9a83be844066",
+      "code": "PT-NQ-077",
+      "name": "Xã Vĩnh Hưng",
+      "short_name": "Vĩnh Hưng",
+      "unit_type": "xa",
+      "display_order": 77
+    },
+    {
+      "id": "58f29f09-05f8-5f64-91cf-0e34af9dc198",
+      "code": "PT-NQ-078",
+      "name": "Xã Vĩnh An",
+      "short_name": "Vĩnh An",
+      "unit_type": "xa",
+      "display_order": 78
+    },
+    {
+      "id": "5be87a78-7ab0-5875-9bd5-73b460d20692",
+      "code": "PT-NQ-079",
+      "name": "Xã Vĩnh Phú",
+      "short_name": "Vĩnh Phú",
+      "unit_type": "xa",
+      "display_order": 79
+    },
+    {
+      "id": "5c9346d1-49fa-52b7-b73d-3a3417d7b5d1",
+      "code": "PT-NQ-080",
+      "name": "Xã Vĩnh Thành",
+      "short_name": "Vĩnh Thành",
+      "unit_type": "xa",
+      "display_order": 80
+    },
+    {
+      "id": "63b8f91d-2dd8-5133-88a8-7644bde6c3b1",
+      "code": "PT-NQ-081",
+      "name": "Xã Yên Lạc",
+      "short_name": "Yên Lạc",
+      "unit_type": "xa",
+      "display_order": 81
+    },
+    {
+      "id": "1b92a235-4ce9-53c2-bfec-232043d853c2",
+      "code": "PT-NQ-082",
+      "name": "Xã Tề Lỗ",
+      "short_name": "Tề Lỗ",
+      "unit_type": "xa",
+      "display_order": 82
+    },
+    {
+      "id": "ffcbbc17-1087-548b-8ac8-b937152836b8",
+      "code": "PT-NQ-083",
+      "name": "Xã Liên Châu",
+      "short_name": "Liên Châu",
+      "unit_type": "xa",
+      "display_order": 83
+    },
+    {
+      "id": "5257f1dd-5114-5dfa-a993-ba22abd35c19",
+      "code": "PT-NQ-084",
+      "name": "Xã Tam Hồng",
+      "short_name": "Tam Hồng",
+      "unit_type": "xa",
+      "display_order": 84
+    },
+    {
+      "id": "fbd79e15-4f81-5158-96cc-a23acb692fab",
+      "code": "PT-NQ-085",
+      "name": "Xã Nguyệt Đức",
+      "short_name": "Nguyệt Đức",
+      "unit_type": "xa",
+      "display_order": 85
+    },
+    {
+      "id": "a24aa7db-e747-544f-b62d-57b4bf02f319",
+      "code": "PT-NQ-086",
+      "name": "Xã Bình Nguyên",
+      "short_name": "Bình Nguyên",
+      "unit_type": "xa",
+      "display_order": 86
+    },
+    {
+      "id": "7714c58b-c424-5826-849c-b3dce1cd86d7",
+      "code": "PT-NQ-087",
+      "name": "Xã Xuân Lãng",
+      "short_name": "Xuân Lãng",
+      "unit_type": "xa",
+      "display_order": 87
+    },
+    {
+      "id": "c4a7614e-758e-51fe-bcad-266ea3d76aa3",
+      "code": "PT-NQ-088",
+      "name": "Xã Bình Xuyên",
+      "short_name": "Bình Xuyên",
+      "unit_type": "xa",
+      "display_order": 88
+    },
+    {
+      "id": "0ac70db4-ffdb-5769-8336-6f97cf18a02b",
+      "code": "PT-NQ-089",
+      "name": "Xã Bình Tuyền",
+      "short_name": "Bình Tuyền",
+      "unit_type": "xa",
+      "display_order": 89
+    },
+    {
+      "id": "716da7f9-6ed6-5e97-9f85-3d5a2902d8d1",
+      "code": "PT-NQ-090",
+      "name": "Xã Thịnh Minh",
+      "short_name": "Thịnh Minh",
+      "unit_type": "xa",
+      "display_order": 90
+    },
+    {
+      "id": "58b53139-10f1-5052-b751-4cc7edea1385",
+      "code": "PT-NQ-091",
+      "name": "Xã Cao Phong",
+      "short_name": "Cao Phong",
+      "unit_type": "xa",
+      "display_order": 91
+    },
+    {
+      "id": "366cbb79-f39d-5575-949a-e25d1a981ab0",
+      "code": "PT-NQ-092",
+      "name": "Xã Mường Thàng",
+      "short_name": "Mường Thàng",
+      "unit_type": "xa",
+      "display_order": 92
+    },
+    {
+      "id": "2a027bbb-0b2e-5f4f-95f9-4489cb7b2a79",
+      "code": "PT-NQ-093",
+      "name": "Xã Thung Nai",
+      "short_name": "Thung Nai",
+      "unit_type": "xa",
+      "display_order": 93
+    },
+    {
+      "id": "ae12b4e8-b236-5eee-9f40-2fc0688fe0f9",
+      "code": "PT-NQ-094",
+      "name": "Xã Đà Bắc",
+      "short_name": "Đà Bắc",
+      "unit_type": "xa",
+      "display_order": 94
+    },
+    {
+      "id": "d65446f9-38ac-59db-83b9-af5c2f78e323",
+      "code": "PT-NQ-095",
+      "name": "Xã Cao Sơn",
+      "short_name": "Cao Sơn",
+      "unit_type": "xa",
+      "display_order": 95
+    },
+    {
+      "id": "11a66424-3bea-5aed-9b3f-38d0d878ed69",
+      "code": "PT-NQ-096",
+      "name": "Xã Đức Nhàn",
+      "short_name": "Đức Nhàn",
+      "unit_type": "xa",
+      "display_order": 96
+    },
+    {
+      "id": "4819e030-621c-5f6e-afab-07a739310478",
+      "code": "PT-NQ-097",
+      "name": "Xã Quy Đức",
+      "short_name": "Quy Đức",
+      "unit_type": "xa",
+      "display_order": 97
+    },
+    {
+      "id": "e1536e9f-aaec-59bf-9355-97531ce81c18",
+      "code": "PT-NQ-098",
+      "name": "Xã Tân Pheo",
+      "short_name": "Tân Pheo",
+      "unit_type": "xa",
+      "display_order": 98
+    },
+    {
+      "id": "34a915b8-4c87-54d4-8e88-7d9911886e89",
+      "code": "PT-NQ-099",
+      "name": "Xã Tiền Phong",
+      "short_name": "Tiền Phong",
+      "unit_type": "xa",
+      "display_order": 99
+    },
+    {
+      "id": "8cc89b85-6e22-5392-948f-a7db1efaa754",
+      "code": "PT-NQ-100",
+      "name": "Xã Kim Bôi",
+      "short_name": "Kim Bôi",
+      "unit_type": "xa",
+      "display_order": 100
+    },
+    {
+      "id": "6a87f421-c4e7-5026-86a5-f1e93775232e",
+      "code": "PT-NQ-101",
+      "name": "Xã Mường Động",
+      "short_name": "Mường Động",
+      "unit_type": "xa",
+      "display_order": 101
+    },
+    {
+      "id": "f3fa35d1-eda6-5838-9110-24b61bd3909d",
+      "code": "PT-NQ-102",
+      "name": "Xã Dũng Tiến",
+      "short_name": "Dũng Tiến",
+      "unit_type": "xa",
+      "display_order": 102
+    },
+    {
+      "id": "d86514d8-2e19-54f0-ad93-05526cbfcc3c",
+      "code": "PT-NQ-103",
+      "name": "Xã Hợp Kim",
+      "short_name": "Hợp Kim",
+      "unit_type": "xa",
+      "display_order": 103
+    },
+    {
+      "id": "81c0be45-88fa-5b46-9cd9-3c894d1700b7",
+      "code": "PT-NQ-104",
+      "name": "Xã Nật Sơn",
+      "short_name": "Nật Sơn",
+      "unit_type": "xa",
+      "display_order": 104
+    },
+    {
+      "id": "842e773a-2bee-54da-abc9-85a5879772dc",
+      "code": "PT-NQ-105",
+      "name": "Xã Lạc Sơn",
+      "short_name": "Lạc Sơn",
+      "unit_type": "xa",
+      "display_order": 105
+    },
+    {
+      "id": "eafa282c-9db9-5810-9d25-a675eb36cc37",
+      "code": "PT-NQ-106",
+      "name": "Xã Mường Vang",
+      "short_name": "Mường Vang",
+      "unit_type": "xa",
+      "display_order": 106
+    },
+    {
+      "id": "4141185b-94cc-56e9-96ad-947631934969",
+      "code": "PT-NQ-107",
+      "name": "Xã Đại Đồng",
+      "short_name": "Đại Đồng",
+      "unit_type": "xa",
+      "display_order": 107
+    },
+    {
+      "id": "e0822675-2b91-5f82-b989-d1c1ce35dc74",
+      "code": "PT-NQ-108",
+      "name": "Xã Ngọc Sơn",
+      "short_name": "Ngọc Sơn",
+      "unit_type": "xa",
+      "display_order": 108
+    },
+    {
+      "id": "4feae47c-8078-59b7-ade4-ce9bbf3df4c5",
+      "code": "PT-NQ-109",
+      "name": "Xã Nhân Nghĩa",
+      "short_name": "Nhân Nghĩa",
+      "unit_type": "xa",
+      "display_order": 109
+    },
+    {
+      "id": "45844221-215b-5f54-b229-4191cfd6aeda",
+      "code": "PT-NQ-110",
+      "name": "Xã Quyết Thắng",
+      "short_name": "Quyết Thắng",
+      "unit_type": "xa",
+      "display_order": 110
+    },
+    {
+      "id": "df1987cc-f848-5ff4-9813-3a14ecd20121",
+      "code": "PT-NQ-111",
+      "name": "Xã Thượng Cốc",
+      "short_name": "Thượng Cốc",
+      "unit_type": "xa",
+      "display_order": 111
+    },
+    {
+      "id": "42ea151b-6bc8-5dd8-bc0b-6809b720686b",
+      "code": "PT-NQ-112",
+      "name": "Xã Yên Phú",
+      "short_name": "Yên Phú",
+      "unit_type": "xa",
+      "display_order": 112
+    },
+    {
+      "id": "0336d680-5ad9-53d6-95d0-4f02de2b54ee",
+      "code": "PT-NQ-113",
+      "name": "Xã Lạc Thủy",
+      "short_name": "Lạc Thủy",
+      "unit_type": "xa",
+      "display_order": 113
+    },
+    {
+      "id": "cb7cd4d0-bc73-5d35-b2db-58c778b00399",
+      "code": "PT-NQ-114",
+      "name": "Xã An Bình",
+      "short_name": "An Bình",
+      "unit_type": "xa",
+      "display_order": 114
+    },
+    {
+      "id": "84de46ef-be48-5d49-af6e-0dc48cd1faf7",
+      "code": "PT-NQ-115",
+      "name": "Xã An Nghĩa",
+      "short_name": "An Nghĩa",
+      "unit_type": "xa",
+      "display_order": 115
+    },
+    {
+      "id": "2d2dae1b-bc41-5f31-b268-1e0916393eb3",
+      "code": "PT-NQ-116",
+      "name": "Xã Lương Sơn",
+      "short_name": "Lương Sơn",
+      "unit_type": "xa",
+      "display_order": 116
+    },
+    {
+      "id": "e24d6bb7-1126-5d44-8387-9fb77fdabbc9",
+      "code": "PT-NQ-117",
+      "name": "Xã Cao Dương",
+      "short_name": "Cao Dương",
+      "unit_type": "xa",
+      "display_order": 117
+    },
+    {
+      "id": "1c0ddbb2-6287-5766-96e9-0e138e9dc7cc",
+      "code": "PT-NQ-118",
+      "name": "Xã Liên Sơn",
+      "short_name": "Liên Sơn",
+      "unit_type": "xa",
+      "display_order": 118
+    },
+    {
+      "id": "82711d2e-5f6c-5391-80fb-1e921b6e5e19",
+      "code": "PT-NQ-119",
+      "name": "Xã Mai Châu",
+      "short_name": "Mai Châu",
+      "unit_type": "xa",
+      "display_order": 119
+    },
+    {
+      "id": "0309b2aa-b78e-5f5f-a904-00bac97c7cd7",
+      "code": "PT-NQ-120",
+      "name": "Xã Bao La",
+      "short_name": "Bao La",
+      "unit_type": "xa",
+      "display_order": 120
+    },
+    {
+      "id": "51944683-152c-51b5-b791-579553bbdd63",
+      "code": "PT-NQ-121",
+      "name": "Xã Mai Hạ",
+      "short_name": "Mai Hạ",
+      "unit_type": "xa",
+      "display_order": 121
+    },
+    {
+      "id": "278850ee-2f87-5ea0-9b24-754584f3c5e7",
+      "code": "PT-NQ-122",
+      "name": "Xã Pà Cò",
+      "short_name": "Pà Cò",
+      "unit_type": "xa",
+      "display_order": 122
+    },
+    {
+      "id": "fc6c7a8c-bc7a-5f4f-a5e8-595d03561f6e",
+      "code": "PT-NQ-123",
+      "name": "Xã Tân Mai",
+      "short_name": "Tân Mai",
+      "unit_type": "xa",
+      "display_order": 123
+    },
+    {
+      "id": "8dd6218a-2964-5fb6-b872-3ad0e503c538",
+      "code": "PT-NQ-124",
+      "name": "Xã Tân Lạc",
+      "short_name": "Tân Lạc",
+      "unit_type": "xa",
+      "display_order": 124
+    },
+    {
+      "id": "463548b9-d220-58c0-a221-d2eebf0c9e94",
+      "code": "PT-NQ-125",
+      "name": "Xã Mường Bi",
+      "short_name": "Mường Bi",
+      "unit_type": "xa",
+      "display_order": 125
+    },
+    {
+      "id": "7223ee2f-5f8a-5eba-80fd-f12becd754fb",
+      "code": "PT-NQ-126",
+      "name": "Xã Mường Hoa",
+      "short_name": "Mường Hoa",
+      "unit_type": "xa",
+      "display_order": 126
+    },
+    {
+      "id": "361265ad-9f30-5836-91ff-7c20aa763b46",
+      "code": "PT-NQ-127",
+      "name": "Xã Toàn Thắng",
+      "short_name": "Toàn Thắng",
+      "unit_type": "xa",
+      "display_order": 127
+    },
+    {
+      "id": "deeac5eb-66e6-56d7-ab1e-c42afe7ff354",
+      "code": "PT-NQ-128",
+      "name": "Xã Vân Sơn",
+      "short_name": "Vân Sơn",
+      "unit_type": "xa",
+      "display_order": 128
+    },
+    {
+      "id": "eebf9f6d-ad55-50b8-8694-e208b2cce03c",
+      "code": "PT-NQ-129",
+      "name": "Xã Yên Thủy",
+      "short_name": "Yên Thủy",
+      "unit_type": "xa",
+      "display_order": 129
+    },
+    {
+      "id": "a6e33625-478b-5f1d-b2c8-97101d99743a",
+      "code": "PT-NQ-130",
+      "name": "Xã Lạc Lương",
+      "short_name": "Lạc Lương",
+      "unit_type": "xa",
+      "display_order": 130
+    },
+    {
+      "id": "48060bf3-4ba4-53e8-80aa-26930eadca0b",
+      "code": "PT-NQ-131",
+      "name": "Xã Yên Trị",
+      "short_name": "Yên Trị",
+      "unit_type": "xa",
+      "display_order": 131
+    },
+    {
+      "id": "543cd416-f00f-53f3-a078-c54f08f95205",
+      "code": "PT-NQ-132",
+      "name": "Phường Việt Trì",
+      "short_name": "Việt Trì",
+      "unit_type": "phuong",
+      "display_order": 132
+    },
+    {
+      "id": "02c8c2c6-5689-585e-b929-afa0fb8652f8",
+      "code": "PT-NQ-133",
+      "name": "Phường Nông Trang",
+      "short_name": "Nông Trang",
+      "unit_type": "phuong",
+      "display_order": 133
+    },
+    {
+      "id": "9d43b685-104d-57d8-9d20-fc7b174e6ae6",
+      "code": "PT-NQ-134",
+      "name": "Phường Thanh Miếu",
+      "short_name": "Thanh Miếu",
+      "unit_type": "phuong",
+      "display_order": 134
+    },
+    {
+      "id": "3f217f41-e8c6-5bce-922a-bb9622d04e74",
+      "code": "PT-NQ-135",
+      "name": "Phường Vân Phú",
+      "short_name": "Vân Phú",
+      "unit_type": "phuong",
+      "display_order": 135
+    },
+    {
+      "id": "ef822739-cdb3-542a-b853-ce33c15b6548",
+      "code": "PT-NQ-136",
+      "name": "Phường Phú Thọ",
+      "short_name": "Phú Thọ",
+      "unit_type": "phuong",
+      "display_order": 136
+    },
+    {
+      "id": "366939d1-a67b-5b29-881d-d21066415363",
+      "code": "PT-NQ-137",
+      "name": "Phường Phong Châu",
+      "short_name": "Phong Châu",
+      "unit_type": "phuong",
+      "display_order": 137
+    },
+    {
+      "id": "93e38542-5888-5db7-a39c-9410d329194d",
+      "code": "PT-NQ-138",
+      "name": "Phường Âu Cơ",
+      "short_name": "Âu Cơ",
+      "unit_type": "phuong",
+      "display_order": 138
+    },
+    {
+      "id": "7d83a863-7e8d-51fc-9af6-b75568bd90d6",
+      "code": "PT-NQ-139",
+      "name": "Phường Vĩnh Phúc",
+      "short_name": "Vĩnh Phúc",
+      "unit_type": "phuong",
+      "display_order": 139
+    },
+    {
+      "id": "ec349a74-bac4-5cbb-bcaf-bf9ceb36806d",
+      "code": "PT-NQ-140",
+      "name": "Phường Vĩnh Yên",
+      "short_name": "Vĩnh Yên",
+      "unit_type": "phuong",
+      "display_order": 140
+    },
+    {
+      "id": "f9dbced8-cdca-5503-92d1-fb577fe9e06d",
+      "code": "PT-NQ-141",
+      "name": "Phường Phúc Yên",
+      "short_name": "Phúc Yên",
+      "unit_type": "phuong",
+      "display_order": 141
+    },
+    {
+      "id": "9e722731-2603-563a-ba2a-d1fa4ac43469",
+      "code": "PT-NQ-142",
+      "name": "Phường Xuân Hòa",
+      "short_name": "Xuân Hòa",
+      "unit_type": "phuong",
+      "display_order": 142
+    },
+    {
+      "id": "fdff410d-1cab-5469-8fc6-6638b8ad20de",
+      "code": "PT-NQ-143",
+      "name": "Phường Hòa Bình",
+      "short_name": "Hòa Bình",
+      "unit_type": "phuong",
+      "display_order": 143
+    },
+    {
+      "id": "d2e55300-5363-5136-a81f-314c4a270a4f",
+      "code": "PT-NQ-144",
+      "name": "Phường Kỳ Sơn",
+      "short_name": "Kỳ Sơn",
+      "unit_type": "phuong",
+      "display_order": 144
+    },
+    {
+      "id": "4242f4f2-05e7-5605-a6c4-a169c2572ef7",
+      "code": "PT-NQ-145",
+      "name": "Phường Tân Hòa",
+      "short_name": "Tân Hòa",
+      "unit_type": "phuong",
+      "display_order": 145
+    },
+    {
+      "id": "b996dab5-f2d3-5eec-b727-4ec991a785f8",
+      "code": "PT-NQ-146",
+      "name": "Phường Thống Nhất",
+      "short_name": "Thống Nhất",
+      "unit_type": "phuong",
+      "display_order": 146
+    },
+    {
+      "id": "03102d86-3096-50ca-b5a2-6372b98cbbf3",
+      "code": "PT-NQ-147",
+      "name": "Xã Thu Cúc",
+      "short_name": "Thu Cúc",
+      "unit_type": "xa",
+      "display_order": 147
+    },
+    {
+      "id": "e0e7a4da-5fda-54fa-81da-d7d2bf17529b",
+      "code": "PT-NQ-148",
+      "name": "Xã Trung Sơn",
+      "short_name": "Trung Sơn",
+      "unit_type": "xa",
+      "display_order": 148
+    }
+  ]
+}

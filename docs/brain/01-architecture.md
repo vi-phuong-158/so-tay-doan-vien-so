@@ -1,5 +1,32 @@
 # 01 — Architecture
 
+## NQ13 pilot learning statistics (2026-10-08)
+
+- Rebased after #67 merge onto master `b3c5393fbdcb30980f458d784a0c00c41509f8b6`; additive migration
+  `20261008021004_nq13_unit_competition`. Catalogue148 (133 xã,15 phường), source Chính phủ/
+  resolution1676, frozen internal PT-NQ codes/UUIDs. No organization force-map,9 historical unmapped.
+- Participant gate now uses UUID `nq_save_unit_participant`, cached active units and searchable
+  `NqUnitSelect`; DB stores organization/unit historical snapshots and authenticated identity.
+  Legacy text RPC retained for old clients; certificate issuance/verification stay with #67.
+- Public routes `/tri-thuc/nq13/thanh-tich[/:unitCode]`; admin routes
+  `/admin/nq13-thanh-tich[/:unitCode]` AuthGuard/RoleGuard plus server global-role check.
+- **Code Graph:** `Home`/`NqQuiz` CTA -> `NqCompetition` -> `nqCompetitionService` ->
+  `nq_competition_dashboard` -> private attempts -> people(max score by unit+identity) -> unit stats.
+  `NqQuiz` -> `NqUnitSelect` -> units cache -> `nqQuizService.saveUnitParticipant` ->
+  `nq_save_unit_participant` -> participant snapshot -> existing `nq_attempt` -> certificate snapshot.
+  `Admin` -> `NqCompetition admin` -> role-checked `nq_admin_competition_dashboard` (full internal aggregates)
+  / `nq_update_eligible_members` / `nq_admin_unit_participants`.
+- Migration `20261008130000_nq13_public_statistics_privacy` adds server threshold3, explicit
+  public JSON projection and column privileges. Public rows0/1/2 have null sensitive metrics;
+  rank/competition_score/eligible_members/completion_rate always null for this pilot, alphabetic
+  ordering. Province sensitive totals suppressed if any active small positive cell remains;
+  current summary/units active-only. Admin keeps full private metrics and labelled inactive history.
+- Private views/config deny client access. Public RPC returns aggregates only; admin drill-down
+  pages50. Weights50/30/20 configurable server-side sum1; denominator NULL/0 or exceeded denies
+  internal simulated rank. Guests dedupe normalized NFC name+unit; permanent users use server Auth ID.
+- Existing guest30-day cleanup removes attempts: metrics are retention-limited; certificates
+  independently survive. Cache shell v7. Full contracts/tests/rollout: `docs/quiz-300/NQ13_UNIT_COMPETITION.md`.
+
 ## NQ13 Learning Assessment & Digital Certificate (2026-10-07)
 
 - **Campaign entry:** `Home` hero card (`.home-campaign-nq13`) trực tiếp dẫn vào bài thi `/tri-thuc/trac-nghiem/7c620b81-6dc6-4a57-9908-3a1f68652a00` hoặc tra cứu 300 câu (`?view=lookup`).

@@ -1,5 +1,38 @@
 # 03 — Technical Decisions
 
+## [2026-10-08] Owner scope: pilot participation statistics and server privacy
+
+- Owner confirms no verified member roster: aggregate Chi đoàn participation, attempts and average
+  best score only; no public official rank/Top3/competition score. Keep existing private calculation
+  unchanged for internal admin simulation, clearly labelled; no identity-binding expansion.
+- Public threshold3 enforced at RPC. For0/1/2 suppress score/pass/cert/activity; all public rows
+  hide raw roster, completion and simulated rank/score. Alphabetic ordering avoids rank side channels.
+- Suppress province sensitive totals if a positive small cell exists, preventing subtraction inference.
+  Public current stats active-only. Admin separate role-checked RPC retains full metrics/CSV/drill-down;
+  SYSTEM_ADMIN passes via existing has_role_in_scope semantics, ordinary/guest denied.
+- Guest30day retention remains: this is rolling learning participation, not an immutable campaign
+  ranking or verified headcount. Names/units self-declared; one person may use multiple names/units.
+- #67 merged b3c5393, #68 rebased. New privacy migration only applied to rehearsal; CLI unavailable,
+  no installation, hand-authored migration follows existing ordered chain and full-reset CI gate.
+
+## [2026-10-08] NQ13 catalogue and competition aggregation
+
+- Use authoritative 148-unit resolution1676 government list,133 communes/15 wards, NFC; stable
+  internal PT-NQ codes and UUIDs, not fabricated official administrative codes. Idempotent seed
+  preserves metadata/eligible values. Historical text records stay unmapped unless owner maps them.
+- Reuse quiz_attempts and certificate snapshots; additive participant UUID/snapshot/auth identity.
+  Server UUID registration prevents client-provided organization names from entering competition.
+- PostgreSQL private views compute max per person+unit. Permanent Auth IDs preferred; guest name
+  normalization suitable for pilot only. No artificial retake limits or sensitive identity fields.
+- Weights50/30/20 server config sum1; positive eligible denominator required; underreported roster
+  does not receive official rank. Deterministic numeric ranking, name C collation and code fallback.
+- Aggregate-only public RPC; scoped role insufficient for global private admin drill-down/roster.
+  All direct unit modifications denied clients; global-role RPC is mutation boundary.
+- Keep legacy registration for #67/old clients and preserve certificates. Do not silently extend
+  30-day guest retention; long-term competition requires a separately approved retention decision.
+- Stacked dependency #67 must merge then feature rebase/retest; no Production DB rollout here.
+  Details/limitations/tests: `docs/quiz-300/NQ13_UNIT_COMPETITION.md`.
+
 ## [2026-10-07] NQ13 Assessment & Digital Certificate Architecture
 - **Server Pass Score:** Đặt `pass_score = 80` (>= 24/30 câu đúng) làm ngưỡng chuẩn duy nhất của hệ thống, xử lý tại server RPC `nq_attempt`.
 - **Participant Snapshot (`nq_attempt_participants`):** Họ tên và Đơn vị được snapshot theo `attempt_id` và bị khóa bất biến sau khi nộp bài. Không lưu vào `profiles` để tránh làm nhiễu dữ liệu người dùng chính thức.
