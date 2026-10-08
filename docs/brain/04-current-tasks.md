@@ -17,8 +17,10 @@
 - Server threshold3 suppression + province subtraction protection + active-only current stats;
   public roster column grants restricted, separate role-checked admin full dashboard/CSV/drill-down.
 - Rehearsal82pgTAP/frontend258/lint/build/diff PASS; seed twice148/133/15/0duplicate;
-  performance3000attempts39.465ms rollback. Exact final-head CI/Preview/browser1+2+3/cleanup pending.
-- Conditional merge #68 only after all gates; no Production DB mutation. Both current reports:
+  performance3000attempts39.465ms rollback. Implementationf34ee56 exact CI37743665706 GREEN
+  (956pgTAP/258frontend/273Member/119Edge), protected Preview Home->30PASS->certificate->stats,
+  public1/2suppressed+3visible/network/5widths/filter/refresh/admingate and exactcleanup PASS.
+- Receipt-head retest and guarded merge receipt pinned in PR #68; no Production DB mutation. Both current reports:
   docs/quiz-300/NQ13_CERTIFICATE_ACCEPTANCE.md and NQ13_UNIT_COMPETITION.md.
 ### Document mobile reader (2026-10-07)
 - Owner yêu cầu sửa chi tiết văn bản mobile, có chỗ mở/đọc bản gốc và điền metadata từ tài liệu.

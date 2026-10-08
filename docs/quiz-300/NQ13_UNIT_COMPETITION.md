@@ -2,6 +2,8 @@
 
 ## Current final closure — 2026-10-08
 
+`NQ13_UNIT_COMPETITION_END_TO_END_ACCEPTANCE_PASS` — pilot learning statistics.
+
 - #67 MERGED final12bb681, merge/master `b3c5393fbdcb30980f458d784a0c00c41509f8b6`;
   post-merge CI37741972809 GREEN. Old stacked #68 head `aa15f85c4fa4d5e4f161216d718ecee17ca3ff9c`
   rebased cleanly onto that master: merge-base=b3c5393, exactly two feature commits1a7a6e4/180d356.
@@ -20,9 +22,34 @@
   ordinary/guest deny, YOUTH_ADMIN/SYSTEM_ADMIN full data, public/admin separation, inactive summary.
   Frontend258/lint0errors3existingwarnings/build/diff PASS. Catalogue seed twice148active=133xa+15phuong,
   duplicate0; 3000attempts/1500people EXPLAIN39.465ms (baseline39.178), full rollback.
-- Final exact-head CI/full-reset/hosted Preview/1+2+3 fixtures/network/responsive/cleanup gates
-  remain pending. No final PASS or merge until these gates complete; final SHA receipt will be pinned
-  in PR #68. Only rehearsal database touched; Production DB NO.
+- Implementation **`f34ee566901ae00acb3985551cff28a0300981da`**:
+  [CI37743665706](https://github.com/vi-phuong-158/so-tay-doan-vien-so/actions/runs/37743665706) GREEN:
+  full DB reset/migrations,35pgTAP files/**956 assertions**, seed twice/NQ_RUNTIME_ASSERTIONS_PASS,
+  frontend258,Member API273,Deno check+119tests. Lint0errors3existingwarnings/build main611.72kB warning.
+- Exact [protected Preview](https://so-tay-doan-vien-a7az2q7xf-vi-phuong-158s-projects.vercel.app)
+  `dpl_mFadMH6oRTL43jyXfmnUvzdVhyYv` READY metadata=f34ee56. Actual Home->quiz->accented/unaccented
+  select/Arrow/Enter/Escape/touch44px->UUID registration->30answers->server100%PASS->real certificate
+  Phường Việt Trì->statistics update PASS, no intercept/mock/frontend grading.
+- Hosted public fixtureA1/1attempt/private100/score100/rank1 is suppressed including publicTop3;
+  B2/2attempts/privateavg80 is suppressed; C3/3attempts publicavg80/highest100/pass2/cert0 visible.
+  A is a full real browser exam; B/C are controlled submitted SQL aggregation fixtures using the
+  same synthetic guest actor and five distinct synthetic names, not claims about five real people.
+  Real network JSON inspected with allowlist/no name/email/Auth/attempt/answer/certificate IDs;
+  sensitive A/B values null, all public rank/score/roster null and province scores null.
+- UI/detail/search/type/joined/missing/threshold filters, refresh/reload, noNaN/noTop3/nofake rank,
+  360/390/430/768/1440 no horizontal overflow and anonymous admin gate PASS. Global admin full
+  metrics/role checks/drill-down use actual database role/RLS fallback; no admin browser credentials
+  and no claim of admin browser PASS. Admin CSV unit tests and full RPC source retained.
+- Rehearsal NQ_RUNTIME_ASSERTIONS_PASS rerun. Exact actor/sixattempts/onecertificate cleaned:
+  fixture actors0/attempts0/certificates0,3temporary roster values+updated_at restored exactly,
+  original9unmapped/7certificates/148active preserved. No broad DELETE or business denominator changes.
+- Final receipt-head exact SHA/CI/Preview/browser retest and conditional merge receipt are pinned
+  in [PR #68](https://github.com/vi-phuong-158/so-tay-doan-vien-so/pull/68), avoiding self-referential SHA.
+  Only rehearsal database touched; Production DB NO. Evidence prefix `final-*` below is f34ee56.
+- Original independent review findings closed: dependency/rebase, owner pilot scope, rolling30day
+  retention disclosure, hidden public roster with REST enforcement, active-only public summary.
+  No unresolved inline review threads. #67 master deployment `dpl_2dmLeZ6wPeW9anJMFGFF9xStJwX2`
+  READY exact b3c5393 and read-only Home/invalid verification/admin-gate browser smoke PASS.
 - Advisors: private config RLS/no policies is intentional deny-all; explicit public aggregate
   definer and authenticated admin definer are intentional tested boundaries, not blanket project
   clean bill. [Supabase advisor explanation](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable).

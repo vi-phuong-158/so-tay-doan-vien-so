@@ -10,6 +10,9 @@
   [final Preview](https://so-tay-doan-vien-7lkwvwbzb-vi-phuong-158s-projects.vercel.app) READY.
   Fresh23FAIL/24PASS/PNG/jsQR/verify/A4PDF all PASS; final PDF135010bytes/515chars/108496dark pixels.
   Final synthetic actors/attempts/certificates0;9unmapped/7historicalcertificates/148units preserved.
+- Actual master deployment `dpl_2dmLeZ6wPeW9anJMFGFF9xStJwX2` READY metadata=b3c5393;
+  read-only browser Home/invalid-code verification/admin guest gate smoke PASS. #68 rebase retains
+  print fix and both certificate migrations exactly once; further real30PASS certificate regression PASS.
 
 - Starting #67 head7195fc33099f4d3446f4d17f6ec460a838115e63. Blank PDF reproduced on its
   exact Preview:1160bytes; print DOM certificate y857px outside pageheight794px because backdrop

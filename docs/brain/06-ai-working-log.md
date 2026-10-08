@@ -12,7 +12,11 @@
   integrity or disclose individual results through0/1/2 cells, summaries, ordering or raw roster.
 - **Kiểm tra:** Rehearsal82pgTAP PASS;frontend258 PASS;lint0errors/3existingwarnings;build/diff clean.
   3000attempts/1500people/148units EXPLAIN39.465ms vs39.178 baseline, rollback;seed twice148/133/15/0dup.
-  Final exact-head CI/Preview/browser/privacy/cleanup gates pending; no Production DB mutation.
+  Implementationf34ee56 exact CI37743665706 GREEN (956DB/258frontend/273Member/119Edge),
+  protected Preview Home->30PASS->certificate->stats, public1/2suppressed+3visible, network privacy,
+  filters/refresh/5widths/admingate PASS. Exactactor6attempts1cert cleaned0, roster+updated_at restored,
+  9unmapped/7certificates/148units preserved. #67 actual master read-only smoke/CI PASS.
+  Receipt-head retest/guarded merge receipt pinned in PR #68; no Production DB mutation.
 
 ## [2026-10-08] NQ13 certificate closure evidence
 - **Agent:** Codex
