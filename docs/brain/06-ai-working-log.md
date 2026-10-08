@@ -1,5 +1,18 @@
 # 06 — AI Working Log
 
+## [2026-10-08] NQ13 certificate closure evidence
+- **Agent:** Codex
+- **Thay đổi:** Báo cáo current closure, lưu PDF/PNG/browserFAIL/render thực; helper verify PDF
+  text/A4/bounds/no chrome, chuyển session synthetic giữa Preview cùng rehearsal để kiểm lại.
+- **File đã sửa:** `docs/quiz-300/NQ13_CERTIFICATE_ACCEPTANCE.md`, `docs/quiz-300/evidence/final-*`,
+  `scripts/{nq-final-browser.mjs,nq-verify-pdf.py}`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Đóng blocker bằng runtime thực, giữ lịch sử blocked đúng provenance; pin final head
+  ở PR receipt rồi conditional merge sau retest, không tự coi CI xanh là browser acceptance.
+- **Kiểm tra:** Fix8d950b8 CI37739168454green; browser23FAIL/24PASS,PNG/jsQR/verify PASS;
+  PDF1page841.92x594.96pt135039bytes/text515/render review, no clipping/chrome. Rehearsal SQL
+  regressionPASS; fixturecleanup0/historical9unmapped+7cert+148units preserved. Final head retest
+  và merge receipt được ghi chính xác trong PR #67; không Production DB.
+
 ## [2026-10-08] NQ13 final closure — fix Preview blank PDF
 - **Agent:** Codex
 - **Thay đổi:** Print backdrop fixed tại gốc trang A4 và bỏ backdrop-filter tạo containing block;

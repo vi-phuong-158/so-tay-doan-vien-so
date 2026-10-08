@@ -1,5 +1,38 @@
 # NQ13 Learning Assessment & Digital Certificate Acceptance
 
+## Final closure receipt — 2026-10-08
+
+`NQ13_CERTIFICATE_END_TO_END_ACCEPTANCE_PASS`
+
+- Starting #67 head7195fc33099f4d3446f4d17f6ec460a838115e63. Blank PDF reproduced on its
+  exact Preview:1160bytes; print DOM certificate y857px outside pageheight794px because backdrop
+  blur establishes containing block. Fix anchors print backdrop to page origin and disables blur.
+- Fix head **8d950b8d9af9541e860612738265025f4b86292b**:
+  [CI37739168454](https://github.com/vi-phuong-158/so-tay-doan-vien-so/actions/runs/37739168454)
+  build/test-db/Member API GREEN;251frontend tests,lint0errors/3existingwarnings,build/diff clean.
+- [Exact fix Preview](https://so-tay-doan-vien-8qe87iowt-vi-phuong-158s-projects.vercel.app)
+  `dpl_94x7QyN4rUPcU9RoPxuJBSDxKmej` READY. Browser submit23/30=76.67%,passed=false,
+  UI CHƯA ĐẠT/cần thêm1câu,certificate=null/noCTA; real24/30=80%,passed=true,1certificate.
+  SQL quiz_answers/attempts/certificate counts match; no client grading/mocked responses.
+- Actual PNG download1754x1240; independent jsQR decode exactly matches Preview verification URL;
+  public verify valid/name matches/no Auth/attempt/email/answers. Auth cookie uses legitimate
+  temporary protected-Preview access; never disables protection or commits credentials.
+- Chromium print after actual In/Lưu PDF button: **one A4 landscape page841.92x594.96pt,
+ 135039bytes,515text chars,107502dark pixels**. pdfplumber text bounds inside page,
+  pypdfium2 rendered page visually reviewed: full borders/name/unit/code/QR, no app chrome, not blank.
+- Rehearsal NQ_RUNTIME_ASSERTIONS_PASS; exact3fixture actors/attempts/certificates cleaned,
+  original9unmapped/7historicalcertificates/148catalogue preserved. No broad DELETE/Production DB.
+- `scripts/nq-final-browser.mjs` start/finish/replay and `scripts/nq-verify-pdf.py` are repeatable
+  acceptance helpers using existing runtime only. Keys/session tokens remain gitignored tmp.
+- Receipt commit adds docs/evidence/helpers only; final exact latest head/CI/Preview and merge
+  receipt are pinned in [PR #67](https://github.com/vi-phuong-158/so-tay-doan-vien-so/pull/67)
+  after fresh exact-head23/24/PDF retest and cleanup. Conditional merge requires every gate green.
+
+### Historical evidence below
+
+Section4 preserves the previous blocked run; its verdict and remaining-risk list are historical,
+superseded by this closure and the latest exact-head PR receipt.
+
 ## 1. Tổng quan & Mục tiêu
 
 Nâng cấp chuyên đề trắc nghiệm NQ_300 thành hoạt động chính thức:
@@ -101,7 +134,7 @@ dành cho toàn thể đoàn viên, thanh niên và quần chúng nhân dân thu
 
 ---
 
-## 4. Final Acceptance Evidence (2026-10-08)
+## 4. Historical Acceptance Evidence (2026-10-08, before closure)
 
 ### Verdict
 

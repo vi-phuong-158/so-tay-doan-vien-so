@@ -17,8 +17,10 @@ const dir = resolve(process.env.NQ_FINAL_DIR || 'tmp/nq-final');
 await mkdir(dir, { recursive: true });
 const fixturePath = resolve(dir, `fixture-${correct}.json`);
 const browser = await chromium.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true });
+const storage = mode !== 'start' ? JSON.parse(await readFile(resolve(dir, `session-${correct}.json`), 'utf8')) : null;
+if (storage) storage.origins = storage.origins.map((o) => ({ ...o, origin: base }));
 const context = await browser.newContext({ viewport: { width: 390, height: 844 },
-  ...(mode !== 'start' ? { storageState: resolve(dir, `session-${correct}.json`) } : {}) });
+  ...(storage ? { storageState: storage } : {}) });
 const page = await context.newPage();
 page.on('dialog', (dialog) => dialog.accept());
 const errors = []; page.on('pageerror', (err) => errors.push(err.message));
