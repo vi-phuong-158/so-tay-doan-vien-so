@@ -1,5 +1,12 @@
 # 06 — AI Working Log
 
+## [2026-10-08] NQ13 browser evidence, print follow-up, and blocked acceptance
+- **Agent:** Codex
+- **Thay đổi:** Thay certificate sample bằng PNG thật tải từ browser, thêm screenshot mobile/desktop/public verification synthetic; mở rộng print visibility selectors cho modal/certificate chain; cập nhật acceptance report và trạng thái current task.
+- **File đã sửa:** `src/index.css`, `docs/quiz-300/NQ13_CERTIFICATE_ACCEPTANCE.md`, `docs/quiz-300/evidence/nq13-*`, `docs/brain/04-current-tasks.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Ghi đúng bằng chứng sau redesign và xử lý hiện tượng PDF Preview trắng, không tuyên bố PASS khi còn thiếu browser FAIL và print acceptance.
+- **Kiểm tra:** `npm test` 251/251 PASS (0 skipped), lint 0 lỗi/3 warning Fast Refresh có sẵn, build PASS (warning chunk lớn có sẵn), `git diff --check` PASS. Trên Preview code head `bddb3c6`: guest PASS 24/30 (80%), mã `NQ13-40D2529DCFBD430D`, PNG download 1754 × 1240, QR independent decode exact match, public verification VALID, invalid code rõ ràng; mobile 390 × 844 và desktop 1440 × 900 đã xem. QR expected/decoded: `https://so-tay-doan-vien-so-git-codex-nq-500c6d-vi-phuong-158s-projects.vercel.app/xac-minh-chung-nhan/NQ13-40D2529DCFBD430D`. Browser 23/30 chưa submit vì bridge tự đóng `window.confirm`; Preview PDF trắng. Local print fixture hiện render được trên A4, chưa thay thế retest Preview. Verdict `NQ13_CERTIFICATE_ACCEPTANCE_BLOCKED`.
+
 ## [2026-10-08] NQ13 certificate sample render
 - **Agent:** Codex
 - **Thay đổi:** Xuất ảnh mẫu chứng nhận 1754 × 1240 từ canvas exporter hiện có bằng dữ liệu chứng nhận synthetic trong rehearsal; QR dùng URL xác minh của Preview được kiểm tra lúc render (head `a513767`). Ghi rõ ảnh là bản render để duyệt, không thay thế kiểm thử tải PNG hoặc quét QR độc lập.

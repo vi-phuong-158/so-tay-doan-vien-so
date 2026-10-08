@@ -107,37 +107,75 @@ dành cho toàn thể đoàn viên, thanh niên và quần chúng nhân dân thu
 
 `NQ13_CERTIFICATE_ACCEPTANCE_BLOCKED`
 
-The database runtime and a real rehearsal certificate passed. End-to-end browser acceptance is incomplete because the browser control bridge timed out after the submit confirmation dialog opened. The browser result screen, certificate viewer, QR, PNG download, print/PDF, and desktop flow were not verified.
+Browser acceptance on `bddb3c607fe98db34f2cc7412450cf3c579f1d9f` verified the mobile guest PASS flow, certificate viewer, real PNG download, independent QR decode, public VALID verification, desktop layout, and invalid-code handling. The required 23/30 browser FAIL result was not reached because the current browser bridge dismissed the native submit confirmation. The Preview print-to-PDF output was a blank A4 landscape page. A local print-CSS fixture now renders content, but it does not replace a retest on the exact final Preview.
 
-### PR and CI
+### PR and source heads
 
-- PR: [#67](https://github.com/vi-phuong-158/so-tay-doan-vien-so/pull/67), open, mergeable, not merged.
-- Branch: `codex/nq13-learning-certificate`; base: `master` at `a7f0aa2eb713e0cb619924fb0e43da1740de3459`.
-- Browser-tested UI head: `c8d5791121a5bb9a46c15595ec78495d02e60d2b`.
-- Runtime-assertion and evidence commit: `02722602e35bcc86aaa2a12a4a2769602c81fa19`. GitHub Actions run `37662296932` passed `build`, `member-api-test`, and `test-db`; Vercel and Vercel Preview Comments passed for this exact head.
-- Exact-head Vercel deployment: `https://so-tay-doan-vien-aqy21kfgp-vi-phuong-158s-projects.vercel.app` (deployment `dpl_HmEQ2ahCqcwdSisM3CYYAoYPqqEy`, state `READY`, source SHA `0272260`).
-- The new commit changes only the runtime SQL check and documentation. Its Preview was deployed successfully, but the browser flow was not retried on that deployment because the earlier browser control bridge timed out at submit.
-- Local root checks: `npm test` 241/241; `npm run lint` 0 errors and 3 existing Fast Refresh warnings; `npm run build` succeeded with the existing >500 kB bundle warning.
+- Existing PR: [#67](https://github.com/vi-phuong-158/so-tay-doan-vien-so/pull/67), open and not merged. No duplicate PR created.
+- Branch: `codex/nq13-learning-certificate`; starting head: `4cd7cac8ee67a8cce0a23ca36ae996fe3f7f02f4`.
+- Browser-tested code head: `bddb3c607fe98db34f2cc7412450cf3c579f1d9f`.
+- The evidence/documentation update and print-visibility CSS adjustment are recorded by the commit that updates this file; their exact head is shown by PR #67 and the final handoff report.
+- Last fully verified CI before this evidence update: GitHub Actions run `37711174407` passed build, database, and member API jobs on `bddb3c6`.
+- Last fully verified Vercel Preview before this evidence update: deployment `dpl_3rR3BeSXPBN9BFB6YVkjxidEnm8R`, state `READY`, source SHA `bddb3c607fe98db34f2cc7412450cf3c579f1d9f`. Branch alias: `https://so-tay-doan-vien-so-git-codex-nq-500c6d-vi-phuong-158s-projects.vercel.app`.
+- The new evidence commit must have CI and Vercel status checked again; the browser results below are from `bddb3c6`, so exact-final-head acceptance remains blocked until retested.
 
-### Database
+### Local validation
 
-- The Preview bundle and workspace `.env` both target Supabase project `znexculhbdjiflkczpyu`, verified as `so-tay-doan-vien-rehearsal` (`ACTIVE_HEALTHY`). Production was not accessed.
-- Applied the PR migration only to that rehearsal project. Supabase recorded it as `20261007172523 / nq13_learning_certificate`.
-- Ran `scripts/nq-runtime-check.sql` on rehearsal; result: `NQ_RUNTIME_ASSERTIONS_PASS`. The runtime script now exercises the exact `23/30 → 76.67% FAIL` and `24/30 → 80% PASS` boundaries, no certificate on FAIL, one idempotent certificate on PASS, participant immutability, public verification privacy, guest isolation, client write restrictions, and certificate survival after guest cleanup. The script transaction rolled back its fixtures.
-- A separate browser-created synthetic guest attempt persisted all 30 selections. Internal rehearsal fixture inspection showed 24 correct and 6 wrong. The attempt was submitted through `public.nq_attempt` under the guest’s `authenticated` role after the browser bridge failed. The RPC returned 24/30, 80%, PASS, and issued `NQ13-4E6FBD0421A64629` for `Nguyễn Văn Kiểm Thử` / `Đơn vị kiểm thử NQ13`.
-- Anonymous `verify_nq_certificate` returned VALID, the correct participant, score, issue time, and quiz title without auth IDs, email, or answer data. The synthetic attempt and certificate remain in rehearsal for inspection.
-- The existing pgTAP file declares `plan(16)`; the earlier claim of 22 assertions was incorrect. Exact boundary and runtime coverage are in `scripts/nq-runtime-check.sql`.
+- `npm test`: 251/251 PASS, 0 skipped.
+- `npm run lint`: 0 errors; 3 pre-existing Fast Refresh warnings.
+- `npm run build`: PASS; existing warning for the 593.33 kB main JavaScript chunk.
+- `git diff --check`: PASS.
+- A local Playwright print fixture using the repository CSS rendered certificate content at A4 landscape dimensions. This is CSS-level evidence only; the exact Preview print test remains blocked by the blank PDF output recorded below.
 
-### Browser acceptance
+### Database runtime
 
-- Mobile viewport: `390 × 844` on the hosted `c8d5791` Preview. The home page showed the required campaign text and both CTAs. The participant form opened; empty submission was blocked. Synthetic participant data was accepted, and the quiz displayed 30 questions with a 20-minute timer. The frontend files are unchanged on `0272260`, but that exact-head Preview did not receive an interactive browser pass.
-- All 30 answer controls were selected in the browser. The database snapshot confirmed 24 correct and 6 wrong. Clicking `Nộp bài` opened the application’s confirmation dialog, then the browser bridge timed out. A later read confirmed the attempt was still unsubmitted; the database RPC submission above was used to finish backend runtime verification.
-- Because the browser bridge stopped, no browser PASS result screen, certificate viewer, direct verification route, invalid-code route, PNG download, print/PDF, desktop viewport, lookup regression, authenticated regression, or mobile certificate/verification layout was verified.
-- QR unit tests passed, but no rendered certificate QR or independent scan was tested. Do not claim `QR SCAN PASS` or `QR_RENDER_AND_PAYLOAD_PASS` from this session.
+- Rehearsal only: Supabase project `znexculhbdjiflkczpyu` (`so-tay-doan-vien-rehearsal`, `ACTIVE_HEALTHY`). Production was not used.
+- Applied the participant-required migration to rehearsal; recorded migration version `20261008003637 / nq13_certificate_submit_requires_participant`.
+- pgTAP: `supabase/tests/nq13_certificate_assessment.sql`, 18/18 assertions PASS.
+- Runtime SQL: `scripts/nq-runtime-check.sql` returned `NQ_RUNTIME_ASSERTIONS_PASS`. It covers participant-required submission, 23/30 FAIL, 24/30 PASS, no certificate on FAIL or without participant, unique/idempotent issuance, public verification privacy, guest isolation, and retention after guest cleanup.
+- Browser-created synthetic PASS certificate and a synthetic 23/30 attempt remain in rehearsal. The latter was not submitted from the browser because the confirmation dialog was dismissed by the current bridge.
 
-### Session changes and limitations
+### Browser acceptance on the branch Preview
 
-- Changed `scripts/nq-runtime-check.sql` to cover the missing exact 23/30 boundary and strengthen runtime assertions.
-- Added `docs/quiz-300/evidence/nq13-certificate-sample.png`, a 1754 × 1240 PNG render from the existing certificate canvas exporter using rehearsal certificate `NQ13-4E6FBD0421A64629`. Its QR points to the PR Preview verification URL used for this render. This render is a review sample; an actual browser download and independent QR scan remain unverified.
-- No feature implementation changes, production migration, merge, or master push were made.
-- Final verdict remains `NQ13_CERTIFICATE_ACCEPTANCE_BLOCKED` until the browser gates above can be run on the exact final Preview head.
+- Viewports exercised: mobile `390 × 844`; desktop `1440 × 900`.
+- Home showed the NQ13 campaign banner and both quiz/lookup CTAs.
+- Participant gate: empty submission was blocked; privacy notice and consent copy named public display of name, organization, and completion result. Synthetic long name and long organization were accepted.
+- PASS flow: browser submitted exactly 24/30 and displayed `80%`, PASS, participant snapshot, issue date, and real certificate code `NQ13-40D2529DCFBD430D`.
+- Certificate viewer: mobile reflow and desktop layout were inspected; long name/organization stayed within the certificate bounds, QR remained visible, and footer did not overlap.
+- Invalid code route showed `CHỨNG NHẬN KHÔNG HỢP LỆ HOẶC KHÔNG TỒN TẠI`.
+- FAIL flow: 30 answers for a synthetic 23/30 attempt were selected, but `window.confirm('Nộp bài và xem kết quả?')` was auto-dismissed by the browser bridge. No browser result screen was observed. SQL runtime proves the backend 23/30 boundary, but the browser FAIL gate remains open.
+- Quick lookup regression, authenticated-user flow, and browser 20-minute auto-submit were not completed. Legacy expiry and no-certificate behavior are covered by rehearsal SQL assertions.
+
+### QR independent decode
+
+- Browser PNG verification URL expected:
+  `https://so-tay-doan-vien-so-git-codex-nq-500c6d-vi-phuong-158s-projects.vercel.app/xac-minh-chung-nhan/NQ13-40D2529DCFBD430D`
+- Decoded from the actual downloaded PNG using OpenCV `QRCodeDetector`:
+  `https://so-tay-doan-vien-so-git-codex-nq-500c6d-vi-phuong-158s-projects.vercel.app/xac-minh-chung-nhan/NQ13-40D2529DCFBD430D`
+- Exact payload comparison: PASS. The public page showed `CHỨNG NHẬN HỢP LỆ`, the matching synthetic participant, 24/30 and 80%, and no email or phone number.
+
+### PNG and print acceptance
+
+- Actual browser download event: PASS. File: `Chung-nhan-NQ13-NGUYEN-THI-PHUONG-THAO.png`, 195,984 bytes, PNG 1754 × 1240.
+- The downloaded file is now `docs/quiz-300/evidence/nq13-certificate-sample.png`; it was not manually edited. QR decode is independently verified above.
+- Preview print attempt produced one A4 landscape PDF page with no text and a white page: FAIL. A local print fixture with the current visibility selectors rendered certificate content at A4 dimensions, but Preview PDF/print still needs browser verification on the final head.
+
+### Visual evidence
+
+All samples use synthetic test data and come from the browser or the real Canvas PNG exporter:
+
+- `docs/quiz-300/evidence/nq13-certificate-sample.png`
+- `docs/quiz-300/evidence/nq13-home-mobile-390.png`
+- `docs/quiz-300/evidence/nq13-participant-gate-mobile-390.png`
+- `docs/quiz-300/evidence/nq13-pass-result-mobile-390.png`
+- `docs/quiz-300/evidence/nq13-certificate-viewer-mobile-390.png`
+- `docs/quiz-300/evidence/nq13-certificate-viewer-desktop-1440.png`
+- `docs/quiz-300/evidence/nq13-public-verification-valid-mobile-390.png`
+
+### Remaining risks
+
+- The 23/30 browser result screen still needs to be observed.
+- Preview print/PDF must be retested because the observed PDF was blank.
+- Final evidence/docs commit needs exact-head CI and Vercel READY checks; browser evidence currently references the previous code head `bddb3c6`.
+- Authenticated member, quick lookup, and 20-minute browser auto-submit regressions are not covered by this run.
+- Existing `npm audit` advisories were not introduced by the certificate dependency update: brace-expansion, dompurify 3.4.13, js-yaml 4.3.1, and source-map-js 1.2.1.

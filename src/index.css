@@ -1675,6 +1675,10 @@
     background: #FFFEFB !important;
   }
   body * { visibility: hidden !important; }
+  .nq-cert-modal-backdrop,
+  .nq-cert-modal-content,
+  .nq-certificate-wrapper,
+  .nq-certificate-scrollable,
   .nq-certificate,
   .nq-certificate * { visibility: visible !important; }
   .nq-certificate {
