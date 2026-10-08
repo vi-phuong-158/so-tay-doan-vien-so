@@ -1,4 +1,39 @@
-# NQ13 — Thành tích học tập của 148 xã/phường
+# NQ13 — Tổng hợp học tập của các Chi đoàn tại 148 xã/phường
+
+## Current final closure — 2026-10-08
+
+- #67 MERGED final12bb681, merge/master `b3c5393fbdcb30980f458d784a0c00c41509f8b6`;
+  post-merge CI37741972809 GREEN. Old stacked #68 head `aa15f85c4fa4d5e4f161216d718ecee17ca3ff9c`
+  rebased cleanly onto that master: merge-base=b3c5393, exactly two feature commits1a7a6e4/180d356.
+  No duplicate certificate implementation/migration; print PDF fix retained.
+- Owner confirms no verified roster: **pilot participation statistics**, attempts and average best
+  score, not official competition ranking. Public UI removes rank/Top3/competition score and shows
+  rolling30day guest policy/name collision limitation. Private50/30/20 calculation unchanged;
+  admin labels it internal simulation, preserves full roster/drill-down/CSV.
+- Migration `20261008130000_nq13_public_statistics_privacy`: server config threshold3; unit0/1/2
+  average/pass/highest/cert/activity null. At3+ learning metrics available. All public units raw
+  roster/completion/rank/score null, alphabetic order; no hidden rank ordering. Active-only current
+  summary/units. Province sensitive totals null if a positive small cell exists, blocking subtraction
+  inference. Admin separate `nq_admin_competition_dashboard`, global role server check incl SYSTEM_ADMIN;
+  public endpoint stays suppressed even for admin. Direct REST roster/wildcard denied by column grants.
+- Actual rehearsal82pgTAP PASS includes0/1/2/3/4 public cells, unchanged private rank/weights,
+  ordinary/guest deny, YOUTH_ADMIN/SYSTEM_ADMIN full data, public/admin separation, inactive summary.
+  Frontend258/lint0errors3existingwarnings/build/diff PASS. Catalogue seed twice148active=133xa+15phuong,
+  duplicate0; 3000attempts/1500people EXPLAIN39.465ms (baseline39.178), full rollback.
+- Final exact-head CI/full-reset/hosted Preview/1+2+3 fixtures/network/responsive/cleanup gates
+  remain pending. No final PASS or merge until these gates complete; final SHA receipt will be pinned
+  in PR #68. Only rehearsal database touched; Production DB NO.
+- Advisors: private config RLS/no policies is intentional deny-all; explicit public aggregate
+  definer and authenticated admin definer are intentional tested boundaries, not blanket project
+  clean bill. [Supabase advisor explanation](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable).
+- Forward-fix: retain the additive schema and privacy default, repair RPC/UI with another migration.
+  Frontend rollback to #67 preserves certificates. Never restore unrestricted public dashboard or
+  public roster grants. Synthetic fixtures cleaned only by exact IDs; no production migration.
+
+## Historical implementation and receipts below
+
+The sections below preserve old stacked-head evidence. Their official-ranking/Top3/public-roster
+and pre-merge status are superseded by the current pilot/privacy contract above.
 
 ## Baseline và phạm vi
 

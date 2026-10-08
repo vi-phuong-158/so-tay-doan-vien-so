@@ -224,7 +224,7 @@ export function Home() {
                 <span>TRA CỨU 300 CÂU HỎI</span>
               </Link>
                 <Link to={NQ_COMPETITION_PATH} className="button button-secondary home-campaign-secondary-btn">
-                  <Icon name="award" size={17} /><span>XEM BẢNG THÀNH TÍCH</span>
+                  <Icon name="award" size={17} /><span>XEM BẢNG TỔNG HỢP</span>
                 </Link>
             </div>
           </div>

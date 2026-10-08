@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
-import { competitionCsv, createNqCompetitionService, filterCompetitionUnits, normalizeUnitSearch } from '../src/services/nqCompetitionService.js';
+import { competitionCsv, createNqCompetitionService, filterCompetitionUnits, formatCompetitionNumber, PUBLIC_STATISTICS_MESSAGE, normalizeUnitSearch } from '../src/services/nqCompetitionService.js';
 import { createNqQuizService } from '../src/services/nqQuizService.js';
 
 const source = JSON.parse(readFileSync(new URL('../scripts/data/nq-competition-units.json', import.meta.url), 'utf8'));
@@ -55,6 +55,24 @@ test('UUID registration sends no trusted organization text; admin requests are s
   assert.equal(calls[1][0], 'nq_competition_dashboard');
   assert.deepEqual(calls[2], ['nq_update_eligible_members', { p_unit_code: 'PT-NQ-001', p_eligible_members: null }]);
   assert.deepEqual(calls[3], ['nq_admin_unit_participants', { p_unit_code: 'PT-NQ-001', p_offset: 50 }]);
+  await service.adminDashboard();
+  assert.deepEqual(calls[4], ['nq_admin_competition_dashboard', undefined]);
+});
+test('public suppressed 0/1/2 cells display a clear message and no fabricated numbers; threshold filters preserve search', () => {
+  const units = [0,1,2,3,4].map((participants) => ({ unit_name: `Phường Việt Trì ${participants}`,
+    unit_type: 'phuong', participants, statistics_suppressed: participants < 3,
+    average_best_score: participants < 3 ? null : 80, rank: null, competition_score: null }));
+  assert.equal(PUBLIC_STATISTICS_MESSAGE, 'Chưa đủ số người để công khai thống kê chi tiết');
+  for (const unit of units.slice(0,3)) {
+    assert.equal(formatCompetitionNumber(unit.average_best_score), '—');
+    assert.equal(formatCompetitionNumber(unit.rank), '—');
+    assert.equal(formatCompetitionNumber(unit.competition_score), '—');
+  }
+  assert.equal(formatCompetitionNumber(NaN), '—');
+  assert.equal(formatCompetitionNumber(0), '0');
+  assert.equal(filterCompetitionUnits(units, 'viet tri', 'phuong', 'ready').length, 2);
+  assert.equal(filterCompetitionUnits(units, '', '', 'incomplete').length, 3);
+  assert.equal(filterCompetitionUnits(units, '', '', 'joined').length, 4);
 });
 test('aggregate CSV preserves Unicode and unknown denominators, excludes private fields and neutralizes formula injection', () => {
   const csv = competitionCsv([{ unit_name: '=HYPERLINK("evil")', participants: 1, eligible_members: null,

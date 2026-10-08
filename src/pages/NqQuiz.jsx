@@ -354,7 +354,7 @@ export function NqQuiz() {
 
       <div className="nq-competition-actions">
         <Button variant="secondary" onClick={() => navigate(NQ_COMPETITION_PATH)}>
-          <Icon name="award" size={18} />XEM BẢNG THÀNH TÍCH
+          <Icon name="award" size={18} />XEM BẢNG TỔNG HỢP
         </Button>
       </div>
 

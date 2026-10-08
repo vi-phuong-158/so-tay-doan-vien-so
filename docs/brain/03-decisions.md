@@ -1,5 +1,20 @@
 # 03 — Technical Decisions
 
+## [2026-10-08] Owner scope: pilot participation statistics and server privacy
+
+- Owner confirms no verified member roster: aggregate Chi đoàn participation, attempts and average
+  best score only; no public official rank/Top3/competition score. Keep existing private calculation
+  unchanged for internal admin simulation, clearly labelled; no identity-binding expansion.
+- Public threshold3 enforced at RPC. For0/1/2 suppress score/pass/cert/activity; all public rows
+  hide raw roster, completion and simulated rank/score. Alphabetic ordering avoids rank side channels.
+- Suppress province sensitive totals if a positive small cell exists, preventing subtraction inference.
+  Public current stats active-only. Admin separate role-checked RPC retains full metrics/CSV/drill-down;
+  SYSTEM_ADMIN passes via existing has_role_in_scope semantics, ordinary/guest denied.
+- Guest30day retention remains: this is rolling learning participation, not an immutable campaign
+  ranking or verified headcount. Names/units self-declared; one person may use multiple names/units.
+- #67 merged b3c5393, #68 rebased. New privacy migration only applied to rehearsal; CLI unavailable,
+  no installation, hand-authored migration follows existing ordered chain and full-reset CI gate.
+
 ## [2026-10-08] NQ13 catalogue and competition aggregation
 
 - Use authoritative 148-unit resolution1676 government list,133 communes/15 wards, NFC; stable

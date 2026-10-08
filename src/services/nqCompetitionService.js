@@ -14,8 +14,15 @@ export function filterCompetitionUnits(units, search, type = '', participation =
     && (!participation
       || (participation === 'joined' && unit.participants > 0)
       || (participation === 'missing' && unit.participants === 0)
-      || (participation === 'ready' && unit.ranking_status === 'READY')
-      || (participation === 'incomplete' && unit.ranking_status !== 'READY')));
+      || (participation === 'ready' && (unit.statistics_suppressed === false || unit.ranking_status === 'READY'))
+      || (participation === 'incomplete' && (unit.statistics_suppressed === true || (unit.statistics_suppressed == null && unit.ranking_status !== 'READY')))));
+}
+
+export const PUBLIC_STATISTICS_MESSAGE = 'Chưa đủ số người để công khai thống kê chi tiết';
+
+export function formatCompetitionNumber(value) {
+  return value == null || !Number.isFinite(Number(value)) ? '—'
+    : Number(value).toLocaleString('vi-VN', { maximumFractionDigits: 2 });
 }
 
 export function competitionCsv(units) {
@@ -25,7 +32,7 @@ export function competitionCsv(units) {
     return `"${text.replace(/"/g, '""')}"`;
   };
   const header = ['STT', 'Đơn vị', 'Số thuộc diện', 'Người tham gia', 'Tỷ lệ tham gia', 'Lượt thi',
-    'Điểm trung bình', 'Số đạt', 'Tỷ lệ đạt', 'Điểm thi đua', 'Xếp hạng'];
+    'Điểm trung bình', 'Số đạt', 'Tỷ lệ đạt', 'Điểm mô phỏng nội bộ', 'Thứ tự mô phỏng nội bộ'];
   return '\uFEFF' + [header, ...units.map((u, i) => [i + 1, u.unit_name, u.eligible_members,
     u.participants, u.completion_rate, u.attempts, u.average_best_score, u.pass_count,
     u.pass_rate, u.competition_score, u.rank])].map((row) => row.map(escape).join(',')).join('\r\n');
@@ -53,6 +60,7 @@ export function createNqCompetitionService(client) {
       return cachedUnits;
     },
     dashboard: () => rpc('nq_competition_dashboard'),
+    adminDashboard: () => rpc('nq_admin_competition_dashboard'),
     updateEligibleMembers: (code, count) => rpc('nq_update_eligible_members', {
       p_unit_code: code, p_eligible_members: count
     }),

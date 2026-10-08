@@ -4,25 +4,27 @@ import { Button, EmptyState, PageHeader, Progress } from '../components/common';
 import { Icon } from '../components/Icon';
 import Skeleton from '../components/Skeleton';
 import { supabase } from '../services/supabaseClient';
-import { createNqCompetitionService, competitionCsv, filterCompetitionUnits, NQ_COMPETITION_PATH } from '../services/nqCompetitionService';
+import { createNqCompetitionService, competitionCsv, filterCompetitionUnits, formatCompetitionNumber, PUBLIC_STATISTICS_MESSAGE, NQ_COMPETITION_PATH } from '../services/nqCompetitionService';
 
 const service = createNqCompetitionService(supabase);
-const number = (value) => value == null ? '—' : Number(value).toLocaleString('vi-VN', { maximumFractionDigits: 2 });
+const number = formatCompetitionNumber;
 const percent = (value) => value == null ? '—' : `${number(value)}%`;
 const date = (value) => value ? new Intl.DateTimeFormat('vi-VN', {
   dateStyle: 'short', timeStyle: 'short', timeZone: 'Asia/Ho_Chi_Minh'
 }).format(new Date(value)) : 'Chưa có hoạt động';
 const status = (unit) => unit.ranking_status === 'INCOMPLETE_ROSTER' ? 'Chưa đủ dữ liệu quân số'
-  : unit.ranking_status === 'ROSTER_EXCEEDED' ? 'Cần kiểm tra lại quân số' : 'Đủ dữ liệu thi đua';
+  : unit.ranking_status === 'ROSTER_EXCEEDED' ? 'Cần kiểm tra lại quân số' : 'Đủ dữ liệu mô phỏng nội bộ';
 
-function UnitMetrics({ unit }) {
+function UnitMetrics({ unit, admin }) {
   return <dl className="nq-unit-metrics">
-    <div><dt>Tham gia</dt><dd>{number(unit.participants)} / {number(unit.eligible_members)}</dd></div>
+    <div><dt>Người tham gia</dt><dd>{number(unit.participants)}{admin && ` / ${number(unit.eligible_members)}`}</dd></div>
     <div><dt>Lượt thi</dt><dd>{number(unit.attempts)}</dd></div>
-    <div><dt>Điểm TB cao nhất</dt><dd>{number(unit.average_best_score)}</dd></div>
-    <div><dt>Tỷ lệ đạt</dt><dd>{percent(unit.pass_rate)}</dd></div>
-    <div><dt>Tỷ lệ tham gia</dt><dd>{percent(unit.completion_rate)}</dd></div>
-    <div><dt>Điểm thi đua</dt><dd>{number(unit.competition_score)}</dd></div>
+    <div><dt>Điểm trung bình</dt><dd>{number(unit.average_best_score)}</dd></div>
+    {admin && <>
+      <div><dt>Tỷ lệ đạt</dt><dd>{percent(unit.pass_rate)}</dd></div>
+      <div><dt>Tỷ lệ tham gia</dt><dd>{percent(unit.completion_rate)}</dd></div>
+      <div><dt>Điểm mô phỏng nội bộ</dt><dd>{number(unit.competition_score)}</dd></div>
+    </>}
   </dl>;
 }
 
@@ -89,10 +91,10 @@ export function NqCompetition({ admin = false }) {
   const base = admin ? '/admin/nq13-thanh-tich' : NQ_COMPETITION_PATH;
   const load = useCallback(async () => {
     setError('');
-    try { setData(await service.dashboard()); }
-    catch { setError('Không thể tải bảng thành tích. Vui lòng thử lại.'); }
+    try { setData(await (admin ? service.adminDashboard() : service.dashboard())); }
+    catch { setError('Không thể tải bảng tổng hợp. Vui lòng thử lại.'); }
     finally { setLoading(false); }
-  }, []);
+  }, [admin]);
   useEffect(() => {
     const timer = setTimeout(load, 0);
     return () => clearTimeout(timer);
@@ -108,13 +110,13 @@ export function NqCompetition({ admin = false }) {
   const metrics = summary ? [
     ['Đơn vị', number(summary.unit_count)], ['Đơn vị đã triển khai', number(summary.participating_units)],
     ['Đơn vị chưa tham gia', number(summary.missing_units)], ['Người tham gia', number(summary.participants)],
-    ['Lượt thi', number(summary.attempts)], ['Người đạt', number(summary.pass_count)],
-    ['Tỷ lệ đạt', percent(summary.pass_rate)], ['Điểm trung bình', number(summary.average_best_score)],
-    ['Chứng nhận đã cấp', number(summary.certificate_count)]
+    ['Lượt thi', number(summary.attempts)], ['Điểm trung bình', number(summary.average_best_score)],
+    ...(admin ? [['Người đạt', number(summary.pass_count)], ['Tỷ lệ đạt', percent(summary.pass_rate)],
+      ['Chứng nhận đã cấp', number(summary.certificate_count)]] : [])
   ] : [];
   return <div className="page page--appbar nq-competition-screen">
-    <PageHeader title={unitCode ? unit?.unit_name || 'Thành tích đơn vị' : 'KẾT QUẢ HỌC TẬP NGHỊ QUYẾT XIII'}
-      subtitle={admin ? 'Ban Thanh niên · Theo dõi triển khai' : 'Thành tích học tập của các xã, phường tỉnh Phú Thọ'} />
+    <PageHeader title={unitCode ? unit?.unit_name || 'Thống kê đơn vị' : 'KẾT QUẢ HỌC TẬP NGHỊ QUYẾT XIII'}
+      subtitle={admin ? 'Ban Thanh niên · Theo dõi triển khai' : 'Tổng hợp các Chi đoàn tham gia theo xã, phường tỉnh Phú Thọ'} />
     <div className="nq-competition-actions">
       {unitCode && <Link className="button button-secondary" to={base}>Toàn tỉnh</Link>}
       <Button variant="secondary" onClick={load} disabled={loading}><Icon name="refresh" size={18} />Cập nhật</Button>
@@ -123,15 +125,21 @@ export function NqCompetition({ admin = false }) {
     {loading && <Skeleton lines={6} />}
     {error && <div className="form-error" role="alert">{error}</div>}
     {data && <>
-      <p className="nq-competition-note">Thành tích được tổng hợp từ kết quả cao nhất của mỗi người tham gia tại từng đơn vị.
-        Xếp hạng chính thức chỉ áp dụng với đơn vị đã cập nhật đầy đủ số người thuộc diện tham gia.</p>
+      <p className="nq-competition-note">Bảng tổng hợp phục vụ theo dõi học tập, chưa dùng làm căn cứ thi đua chính thức.
+        Điểm trung bình tính từ kết quả cao nhất của mỗi người tại từng đơn vị. Chưa có danh sách đoàn viên đã xác thực.
+        Thống kê chi tiết chỉ công khai khi có ít nhất {data.config.public_min_participants} người tham gia.</p>
+      {!admin && summary.statistics_suppressed && <p className="nq-competition-note">Điểm trung bình toàn tỉnh tạm ẩn vì có đơn vị chưa đủ ngưỡng công khai.</p>}
       {unitCode ? unit ? <>
         <section className="content-card nq-competition-panel">
-          <h2>{unit.unit_name}</h2><p>Hạng {unit.rank ?? '—'} · {status(unit)}{!unit.active && ' · Đơn vị ngừng hoạt động'}</p>
-          <UnitMetrics unit={unit} />
-          <p>Số đạt: {number(unit.pass_count)} · Chứng nhận: {number(unit.certificate_count)} · Điểm cao nhất: {number(unit.highest_score)}</p>
-          <p>Hoạt động gần nhất: {date(unit.latest_activity_at)}</p>
-          {unit.eligible_members == null && <p>Chưa cập nhật số người thuộc diện.</p>}
+          <h2>{unit.unit_name}</h2>
+          {admin && <p>Thứ tự mô phỏng nội bộ {unit.rank ?? '—'} · {status(unit)}{!unit.active && ' · Đơn vị ngừng hoạt động (lịch sử)'}</p>}
+          {!admin && unit.statistics_suppressed && <p>{PUBLIC_STATISTICS_MESSAGE}</p>}
+          <UnitMetrics unit={unit} admin={admin} />
+          {admin && <>
+            <p>Số đạt: {number(unit.pass_count)} · Chứng nhận: {number(unit.certificate_count)} · Điểm cao nhất: {number(unit.highest_score)}</p>
+            <p>Hoạt động gần nhất: {date(unit.latest_activity_at)}</p>
+            {unit.eligible_members == null && <p>Chưa cập nhật số người thuộc diện.</p>}
+          </>}
           {unit.participants === 0 && <p>Chưa có dữ liệu tham gia.</p>}
         </section>
         {admin && <AdminUnit key={unit.unit_code} unit={unit} onUpdated={load} />}
@@ -144,14 +152,7 @@ export function NqCompetition({ admin = false }) {
           <Progress value={summary.unit_count ? summary.participating_units / summary.unit_count * 100 : 0} />
         </section>
         <section aria-labelledby="nq-leaderboard-title">
-          <h2 id="nq-leaderboard-title">BẢNG THÀNH TÍCH HỌC TẬP NGHỊ QUYẾT XIII</h2>
-          <div className="nq-competition-top" aria-label="Ba đơn vị dẫn đầu">
-            {data.units.filter((u) => u.rank && u.rank <= 3 && u.participants > 0).map((u) => <Link key={u.unit_code}
-              to={`${base}/${u.unit_code}`} className="content-card nq-top-unit">
-              <span>Hạng {u.rank}</span><h3>{u.unit_name}</h3><strong>{number(u.competition_score)}</strong><p>Điểm thi đua</p>
-            </Link>)}
-          </div>
-          {!data.units.some((u) => u.rank && u.participants > 0) && <p className="nq-competition-note">Chưa đủ dữ liệu để hiển thị các đơn vị dẫn đầu.</p>}
+          <h2 id="nq-leaderboard-title">BẢNG TỔNG HỢP HỌC TẬP NGHỊ QUYẾT XIII</h2>
           <div className="nq-competition-filters">
             <div><label htmlFor="nq-unit-search">Tìm xã/phường</label><input id="nq-unit-search" className="form-input"
               placeholder="Tên xã/phường…" value={search} onChange={(event) => setSearch(event.target.value)} /></div>
@@ -159,17 +160,19 @@ export function NqCompetition({ admin = false }) {
               onChange={(event) => setType(event.target.value)}><option value="">Tất cả</option><option value="xa">Xã</option><option value="phuong">Phường</option></select></div>
             <div><label htmlFor="nq-participation">Triển khai</label><select id="nq-participation" className="form-input" value={participation}
               onChange={(event) => setParticipation(event.target.value)}><option value="">Tất cả</option><option value="joined">Đã tham gia</option>
-              <option value="missing">Chưa tham gia</option><option value="ready">Đủ dữ liệu thi đua</option><option value="incomplete">Chưa đủ quân số</option></select></div>
+              <option value="missing">Chưa tham gia</option><option value="ready">{admin ? 'Đủ dữ liệu mô phỏng' : 'Đủ ngưỡng công khai'}</option>
+              <option value="incomplete">{admin ? 'Chưa đủ dữ liệu mô phỏng' : 'Chưa đủ ngưỡng công khai'}</option></select></div>
           </div>
           <p role="status">{units.length} đơn vị phù hợp</p>
           <div className="nq-competition-table"><table><thead><tr>
-            <th scope="col">Hạng</th><th scope="col">Xã/phường</th><th scope="col">Tham gia</th><th scope="col">Lượt thi</th>
-            <th scope="col">Điểm TB</th><th scope="col">Tỷ lệ đạt</th><th scope="col">Điểm thi đua</th>
+            {admin && <th scope="col">Thứ tự nội bộ</th>}<th scope="col">Xã/phường</th><th scope="col">Người tham gia</th><th scope="col">Lượt thi</th>
+            <th scope="col">Điểm TB</th>{admin && <><th scope="col">Tỷ lệ đạt</th><th scope="col">Điểm mô phỏng</th></>}
           </tr></thead><tbody>{units.map((u) => <tr key={u.unit_code}>
-            <td data-label="Hạng">{u.rank ?? '—'}</td><th scope="row"><Link to={`${base}/${u.unit_code}`}>{u.unit_name}</Link><small>{status(u)}</small></th>
-            <td data-label="Tham gia">{number(u.participants)} / {number(u.eligible_members)}<small>{percent(u.completion_rate)}</small></td>
+            {admin && <td data-label="Thứ tự nội bộ">{u.rank ?? '—'}</td>}<th scope="row"><Link to={`${base}/${u.unit_code}`}>{u.unit_name}</Link>
+              <small>{admin ? status(u) : u.statistics_suppressed ? PUBLIC_STATISTICS_MESSAGE : 'Đủ ngưỡng công khai'}</small></th>
+            <td data-label="Người tham gia">{number(u.participants)}{admin && <> / {number(u.eligible_members)}<small>{percent(u.completion_rate)}</small></>}</td>
             <td data-label="Lượt thi">{number(u.attempts)}</td><td data-label="Điểm TB">{number(u.average_best_score)}</td>
-            <td data-label="Tỷ lệ đạt">{percent(u.pass_rate)}</td><td data-label="Điểm thi đua">{number(u.competition_score)}</td>
+            {admin && <><td data-label="Tỷ lệ đạt">{percent(u.pass_rate)}</td><td data-label="Điểm mô phỏng">{number(u.competition_score)}</td></>}
           </tr>)}</tbody></table></div>
           {units.length === 0 && <EmptyState title="Không tìm thấy xã/phường phù hợp." />}
         </section>

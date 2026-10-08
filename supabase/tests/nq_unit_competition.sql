@@ -162,7 +162,7 @@ select pg_temp.tap(throws_ok($$update public.nq_competition_units set eligible_m
 select pg_temp.tap(throws_ok($$delete from public.nq_competition_units where code='NQTEST-A'$$,'42501',null,'anon delete denied'));
 select pg_temp.tap(throws_ok($$select full_name from public.nq_attempt_participants$$,'42501',null,'anon participant query denied'));
 select pg_temp.tap(ok(not exists(select 1 from jsonb_array_elements(public.nq_competition_dashboard()->'units') u,jsonb_object_keys(u) k
-  where k not in ('unit_code','unit_name','unit_type','active','eligible_members','participants','attempts','average_best_score','pass_count','certificate_count','highest_score','latest_activity_at','completion_rate','pass_rate','ranking_status','competition_score','rank')),'public rows contain only explicit aggregate fields'));
+  where k not in ('unit_code','unit_name','unit_type','active','eligible_members','participants','attempts','average_best_score','pass_count','certificate_count','highest_score','latest_activity_at','completion_rate','pass_rate','ranking_status','competition_score','rank','statistics_suppressed')),'public rows contain only explicit aggregate fields'));
 select pg_temp.tap(ok(public.nq_competition_dashboard()::text !~ '(identity_key|full_name|auth_user|authenticated_user_id|attempt_id|certificate_code|email|answers)','complete public response has no individual fields'));
 reset role;
 
@@ -172,6 +172,73 @@ select pg_temp.tap(lives_ok($$select public.nq_update_eligible_members('NQTEST-A
 select pg_temp.tap(throws_ok($$select public.nq_update_eligible_members('NQTEST-A',-1)$$,'P0001','INVALID_ROSTER','negative roster rejected'));
 select pg_temp.tap(ok(jsonb_array_length(public.nq_admin_unit_participants('NQTEST-A',0)->'participants')=8,'authorized admin drill-down returns grouped participants'));
 select pg_temp.tap(ok((public.nq_admin_unit_participants('NQTEST-A',0)->>'historical_unmapped')::integer>=1,'historical unmapped count reported only to admin'));
+reset role;
+
+-- Public privacy boundary: zero, one, two, three, and four distinct synthetic guests.
+insert into nq_fixture_ids(key) values('P0'),('P1'),('P2'),('P3'),('P4');
+insert into public.nq_competition_units(id,code,name,short_name,unit_type,display_order,eligible_members)
+select id,'NQTEST-'||key,'NQTEST Unit '||key,key,'xa',1000,10
+from nq_fixture_ids where key like 'P%';
+select pg_temp.nq_fixture('P'||people,'NQTEST privacy '||person,case when person=1 then 60 else 100 end)
+from generate_series(1,4) people cross join lateral generate_series(1,people) person;
+select pg_temp.nq_fixture('inactive','NQTEST inactive private',99);
+select pg_temp.tap(is((select public_min_participants from quiz_private.nq_competition_config),3,'server default threshold three'));
+select pg_temp.tap(throws_ok($$update quiz_private.nq_competition_config set public_min_participants=2$$,'23514',null,'threshold cannot be lowered below three'));
+create temp table nq_public_payload as select public.nq_competition_dashboard() as data;
+grant select on nq_public_payload to anon,authenticated;
+set local role anon;
+select pg_temp.tap(throws_ok($$select eligible_members from public.nq_competition_units$$,'42501',null,'direct REST roster column denied'));
+select pg_temp.tap(throws_ok($$select * from public.nq_competition_units$$,'42501',null,'wildcard cannot leak roster'));
+select pg_temp.tap(throws_ok($$select public.nq_admin_competition_dashboard()$$,'42501',null,'unauthenticated full dashboard denied'));
+select pg_temp.tap(ok((select bool_and((u->>'statistics_suppressed')::boolean
+  and u->'average_best_score'='null'::jsonb and u->'pass_count'='null'::jsonb
+  and u->'pass_rate'='null'::jsonb and u->'highest_score'='null'::jsonb
+  and u->'certificate_count'='null'::jsonb and u->'competition_score'='null'::jsonb
+  and u->'rank'='null'::jsonb and u->'latest_activity_at'='null'::jsonb)
+  from jsonb_array_elements(public.nq_competition_dashboard()->'units') u
+  where u->>'unit_code'='NQTEST-P'||n), 'public cell '||n||' hides all sensitive metrics')) from generate_series(0,2) n;
+select pg_temp.tap(ok((select (u->>'participants')::integer=n and (u->>'attempts')::integer=n
+  and not (u->>'statistics_suppressed')::boolean and (u->>'highest_score')::numeric=100
+  and (u->>'pass_count')::integer=n-1 and (u->>'average_best_score')::numeric=(60+(n-1)*100)::numeric/n
+  and u->'latest_activity_at'<>'null'::jsonb and u->'certificate_count'='0'::jsonb
+  from jsonb_array_elements(public.nq_competition_dashboard()->'units') u where u->>'unit_code'='NQTEST-P'||n),
+  'public cell '||n||' publishes learning aggregates')) from generate_series(3,4) n;
+select pg_temp.tap(ok((select bool_and(u->'rank'='null'::jsonb and u->'competition_score'='null'::jsonb
+  and u->'eligible_members'='null'::jsonb and u->'completion_rate'='null'::jsonb)
+  from jsonb_array_elements(public.nq_competition_dashboard()->'units') u),'public pilot never publishes private rank or roster'));
+select pg_temp.tap(ok(not exists(select 1 from jsonb_array_elements(public.nq_competition_dashboard()->'units') u
+  where u->>'unit_code'='NQTEST-inactive'),'inactive unit absent from public contract'));
+select pg_temp.tap(ok((public.nq_competition_dashboard()->'summary'->>'statistics_suppressed')::boolean
+  and public.nq_competition_dashboard()->'summary'->'average_best_score'='null'::jsonb
+  and public.nq_competition_dashboard()->'summary'->'pass_count'='null'::jsonb
+  and public.nq_competition_dashboard()->'summary'->'pass_rate'='null'::jsonb
+  and public.nq_competition_dashboard()->'summary'->'certificate_count'='null'::jsonb,
+  'province summary cannot be subtracted to reveal a small cell'));
+select pg_temp.tap(ok(public.nq_competition_dashboard()::text !~ '(identity_key|full_name|authenticated_user_id|attempt_id|certificate_code|email|answers)',
+  'new complete public JSON excludes private fields'));
+reset role;
+select pg_temp.tap(is((public.nq_competition_dashboard()->'summary'->>'attempts')::bigint,
+  (select sum(attempts)::bigint from quiz_private.nq_unit_competition_stats where active),'summary uses only active units'));
+select set_config('request.jwt.claims',jsonb_build_object('sub',(select id from nq_fixture_ids where key='member'),'role','authenticated')::text,true);
+set local role authenticated;
+select pg_temp.tap(throws_ok($$select public.nq_admin_competition_dashboard()$$,'P0001','ADMIN_REQUIRED','ordinary member denied full dashboard'));
+select pg_temp.tap(throws_ok($$select eligible_members from public.nq_competition_units$$,'42501',null,'member cannot read roster directly'));
+select set_config('request.jwt.claims',jsonb_build_object('sub',(select id from nq_fixture_ids where key='guest'),'role','authenticated','is_anonymous',true)::text,true);
+select pg_temp.tap(throws_ok($$select public.nq_admin_competition_dashboard()$$,'P0001','ADMIN_REQUIRED','anonymous Auth guest denied full dashboard'));
+reset role;
+select set_config('request.jwt.claims',jsonb_build_object('sub',(select id from nq_fixture_ids where key='admin'),'role','authenticated')::text,true);
+set local role authenticated;
+select pg_temp.tap(ok((select (u->>'highest_score')::numeric=60 and (u->>'pass_count')::integer=0
+  and (u->>'eligible_members')::integer=10 and u->'rank'<>'null'::jsonb
+  and u->'competition_score'<>'null'::jsonb
+  from jsonb_array_elements(public.nq_admin_competition_dashboard()->'units') u where u->>'unit_code'='NQTEST-P1'),
+  'global YOUTH_ADMIN sees full small-cell metrics and unchanged private rank'));
+select pg_temp.tap(is(jsonb_array_length(public.nq_admin_unit_participants('NQTEST-P1',0)->'participants'),1,'admin participant drill-down retained'));
+select pg_temp.tap(ok(public.nq_competition_dashboard()=(select data from nq_public_payload),'admin cannot bypass public suppression'));
+reset role;
+update public.user_roles set role_code='SYSTEM_ADMIN' where user_id=(select id from nq_fixture_ids where key='admin');
+set local role authenticated;
+select pg_temp.tap(lives_ok($$select public.nq_admin_competition_dashboard()$$,'global SYSTEM_ADMIN keeps existing authorization semantics'));
 reset role;
 
 select * from finish();

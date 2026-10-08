@@ -7,8 +7,9 @@ import { pathToFileURL } from 'node:url';
 const { chromium } = await import(pathToFileURL(resolve(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES, 'playwright/index.mjs')).href);
 const origin = process.env.NQ_BASE_URL || 'http://127.0.0.1:5180';
 const mode = process.argv[2] || 'ui';
-const sessionPath = resolve('tmp/nq-unit-source/browser-session.json');
-const fixturePath = resolve('tmp/nq-unit-source/browser-fixture.json');
+const fixtureDir = process.env.NQ_UNIT_DIR || 'tmp/nq-unit-source';
+const sessionPath = resolve(fixtureDir, 'browser-session.json');
+const fixturePath = resolve(fixtureDir, 'browser-fixture.json');
 const evidence = resolve(process.env.NQ_UNIT_EVIDENCE_DIR || 'tmp/nq-unit-source/browser-evidence');
 await mkdir(evidence, { recursive: true });
 const browser = await chromium.launch({ executablePath: process.env.NQ_CHROMIUM_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true });
@@ -30,9 +31,16 @@ async function assertPublicDashboard(response) {
   assert.equal(data.summary.unit_count, 148);
   assert.equal(data.units.length, 148);
   const allowed = new Set(['unit_code','unit_name','unit_type','active','eligible_members','participants','attempts',
-    'average_best_score','pass_count','certificate_count','highest_score','latest_activity_at','completion_rate','pass_rate','ranking_status','competition_score','rank']);
+    'average_best_score','pass_count','certificate_count','highest_score','latest_activity_at','completion_rate','pass_rate','ranking_status','competition_score','rank','statistics_suppressed']);
   for (const unit of data.units) for (const key of Object.keys(unit)) assert.ok(allowed.has(key), `public field ${key}`);
   assert.ok(!/(identity_key|full_name|auth_user|authenticated_user_id|attempt_id|certificate_code|email|answers)/.test(JSON.stringify(data)));
+  assert.equal(data.config.public_min_participants, 3);
+  for (const unit of data.units) {
+    for (const key of ['eligible_members','completion_rate','rank','competition_score']) assert.equal(unit[key], null);
+    assert.equal(unit.statistics_suppressed, unit.participants < 3);
+    if (unit.statistics_suppressed) for (const key of ['average_best_score','pass_count','pass_rate','highest_score','certificate_count','latest_activity_at']) assert.equal(unit[key], null);
+  }
+  await writeFile(resolve(evidence, `public-dashboard-${mode}.json`), JSON.stringify(data, null, 2));
   return data;
 }
 try {
@@ -50,9 +58,17 @@ try {
     await page.getByLabel('Họ và tên', { exact: false }).fill(name);
     await page.locator('#nq-unit-button').click();
     const search = page.getByRole('combobox', { name: 'Tìm tên xã/phường' });
+    await search.fill('Việt Trì');
+    await page.getByRole('option', { name: 'Phường Việt Trì', exact: true }).waitFor();
+    await search.press('Escape');
+    assert.equal(await search.count(), 0);
+    await page.locator('#nq-unit-button').press('ArrowDown');
     await search.fill('viet tri');
     await page.getByRole('option', { name: 'Phường Việt Trì', exact: true }).waitFor();
     assert.equal(await page.getByRole('option').count(), 1);
+    assert.ok((await page.getByRole('option').first().boundingBox()).height >= 44);
+    assert.ok((await page.locator('#nq-unit-button').boundingBox()).height >= 44);
+    await search.press('ArrowDown'); await search.press('ArrowUp');
     await overflow(); await screenshot('dropdown-390.png');
     await search.press('Enter');
     console.log('BROWSER_STAGE_UNIT_SELECTED');
@@ -75,7 +91,7 @@ try {
     console.log('NQ_UNIT_PARTICIPANT_BROWSER_PASS');
   } else if (mode === 'finish') {
     const fixture = JSON.parse(await readFile(fixturePath, 'utf8'));
-    const keys = JSON.parse(await readFile(resolve('tmp/nq-unit-source/browser-answer-key.json'), 'utf8'));
+    const keys = JSON.parse(await readFile(resolve(fixtureDir, 'browser-answer-key.json'), 'utf8'));
     await page.goto(`${origin}${quizPath}`);
     await page.getByText('Câu 1 / 30', { exact: true }).waitFor();
     for (let i = 0; i < keys.length; i++) {
@@ -92,29 +108,42 @@ try {
     await page.goto(`${origin}${dashboardPath}`);
     const data = await assertPublicDashboard(await responsePromise);
     const unit = data.units.find((u) => u.unit_name === fixture.unit_name);
-    assert.ok(unit.participants >= 1); assert.ok(unit.attempts >= 1); assert.equal(unit.highest_score, 100);
-    assert.ok(unit.certificate_count >= 1); assert.ok(unit.pass_count >= 1);
+    assert.equal(unit.participants, 1); assert.equal(unit.attempts, 1);
+    assert.equal(unit.highest_score, null); assert.equal(unit.certificate_count, null); assert.equal(unit.pass_count, null);
     await screenshot('leaderboard-updated-390.png');
     console.log('NQ_UNIT_RESULT_CERTIFICATE_LEADERBOARD_BROWSER_PASS');
-  } else if (mode === 'rank') {
+  } else if (mode === 'privacy') {
     const dataResponse = page.waitForResponse((response) => response.url().endsWith('/rpc/nq_competition_dashboard') && response.ok());
     await page.goto(`${origin}${dashboardPath}`);
     const data = await assertPublicDashboard(await dataResponse);
-    const unit = data.units.find((u) => u.unit_name === 'Phường Việt Trì');
-    assert.equal(unit.rank, 1); assert.equal(unit.competition_score, 100); assert.equal(unit.completion_rate, 100);
-    assert.equal(await page.locator('.nq-competition-top').getByRole('link', { name: /Phường Việt Trì/ }).count(), 1);
+    for (const [code,count] of [['PT-NQ-132',1],['PT-NQ-133',2],['PT-NQ-134',3]]) {
+      const unit = data.units.find((u) => u.unit_code === code);
+      assert.equal(unit.participants, count); assert.equal(unit.attempts, count);
+      assert.equal(unit.average_best_score, count === 3 ? 80 : null);
+      await page.getByLabel('Tìm xã/phường', { exact: true }).fill(unit.unit_name);
+      await page.getByRole('link', { name: unit.unit_name, exact: true }).last().click();
+      if (count < 3) await page.getByText('Chưa đủ số người để công khai thống kê chi tiết', { exact: true }).waitFor();
+      else assert.equal(await page.getByText('Chưa đủ số người để công khai thống kê chi tiết', { exact: true }).count(),0);
+      await screenshot(`privacy-${count}-detail.png`);
+      await page.getByRole('link', { name: 'Toàn tỉnh', exact: true }).click();
+      await page.getByLabel('Tìm xã/phường', { exact: true }).fill('');
+    }
+    assert.equal(await page.locator('.nq-competition-top').count(), 0);
+    assert.equal(await page.getByRole('columnheader', { name: /Hạng|Điểm thi đua/ }).count(), 0);
     await page.getByLabel('Triển khai', { exact: true }).selectOption('ready');
     await page.getByText('1 đơn vị phù hợp', { exact: true }).waitFor();
     for (const width of [390,1440]) {
       await page.setViewportSize({ width, height: 844 }); await overflow();
-      await page.getByRole('heading', { name: 'BẢNG THÀNH TÍCH HỌC TẬP NGHỊ QUYẾT XIII', exact: true }).scrollIntoViewIfNeeded();
-      await screenshot(`leaderboard-ranked-${width}.png`);
+      await page.getByRole('heading', { name: 'BẢNG TỔNG HỢP HỌC TẬP NGHỊ QUYẾT XIII', exact: true }).scrollIntoViewIfNeeded();
+      await screenshot(`statistics-ready-${width}.png`);
     }
     const refreshed = page.waitForResponse((response) => response.url().endsWith('/rpc/nq_competition_dashboard') && response.ok());
     await page.getByRole('button', { name: 'Cập nhật', exact: true }).click();
     const again = await assertPublicDashboard(await refreshed);
-    assert.deepEqual(again.units.map((u) => [u.unit_code,u.rank]), data.units.map((u) => [u.unit_code,u.rank]));
-    console.log('NQ_UNIT_TOP_THREE_RANK_REFRESH_BROWSER_PASS');
+    assert.deepEqual(again.units, data.units);
+    await page.reload(); await page.getByText('BẢNG TỔNG HỢP HỌC TẬP NGHỊ QUYẾT XIII', { exact: true }).waitFor();
+    assert.ok(!(await page.locator('body').innerText()).includes('NaN'));
+    console.log('NQ_UNIT_SMALL_CELL_PRIVACY_REFRESH_BROWSER_PASS');
   } else {
     const responsePromise = page.waitForResponse((response) => response.url().endsWith('/rpc/nq_competition_dashboard') && response.ok());
     await page.goto(`${origin}${dashboardPath}`);
@@ -137,7 +166,7 @@ try {
     await page.getByText('133 đơn vị phù hợp', { exact: true }).waitFor();
     await page.getByLabel('Loại đơn vị', { exact: true }).selectOption('');
     await page.getByLabel('Triển khai', { exact: true }).selectOption('incomplete');
-    assert.ok(data.units.some((u) => u.ranking_status === 'INCOMPLETE_ROSTER'));
+    assert.ok(data.units.some((u) => u.statistics_suppressed));
     await page.getByLabel('Triển khai', { exact: true }).selectOption('missing');
     await page.getByText(`${data.summary.missing_units} đơn vị phù hợp`, { exact: true }).waitFor();
     await page.goto(`${origin}/admin/nq13-thanh-tich`);

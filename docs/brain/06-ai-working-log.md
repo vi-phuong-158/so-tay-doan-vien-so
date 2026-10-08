@@ -1,5 +1,19 @@
 # 06 — AI Working Log
 
+## [2026-10-08] NQ13 final closure — pilot public privacy after #67 merge
+- **Agent:** Codex
+- **Thay đổi:** Merge #67 after exact12bb681 acceptance; rebase #68 onto b3c5393, preserve both
+  document histories and PDF fix. Owner pilot decision removes public official ranking, implements
+  server threshold3/null suppression, province subtraction protection, active-only current stats,
+  roster column privileges and separate authorized full admin RPC; public learning table/cachev7.
+- **File đã sửa:** migration20261008130000, nq_unit_competition.sql, nqCompetitionService,
+  NqCompetition/Home/NqQuiz/Admin, sw.js, frontend tests, browser harness, brain01/03/04/06 and both reports.
+- **Lý do:** Owner has no verified member list; learning aggregates must not imply official competition
+  integrity or disclose individual results through0/1/2 cells, summaries, ordering or raw roster.
+- **Kiểm tra:** Rehearsal82pgTAP PASS;frontend258 PASS;lint0errors/3existingwarnings;build/diff clean.
+  3000attempts/1500people/148units EXPLAIN39.465ms vs39.178 baseline, rollback;seed twice148/133/15/0dup.
+  Final exact-head CI/Preview/browser/privacy/cleanup gates pending; no Production DB mutation.
+
 ## [2026-10-08] NQ13 certificate closure evidence
 - **Agent:** Codex
 - **Thay đổi:** Báo cáo current closure, lưu PDF/PNG/browserFAIL/render thực; helper verify PDF

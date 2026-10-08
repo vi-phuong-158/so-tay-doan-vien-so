@@ -49,7 +49,7 @@ test('public shell keeps the primary navigation stable for guests and signed-in 
 
 test('service worker upgrades the login-first shell without a manual browser-data reset', () => {
   const serviceWorker = fs.readFileSync(new URL('../public/sw.js', import.meta.url), 'utf8');
-  assert.match(serviceWorker, /so-tay-doan-vien-v6/);
+  assert.match(serviceWorker, /so-tay-doan-vien-v7/);
   assert.match(serviceWorker, /self\.skipWaiting\(\)/);
   assert.match(serviceWorker, /self\.clients\.claim\(\)/);
 });

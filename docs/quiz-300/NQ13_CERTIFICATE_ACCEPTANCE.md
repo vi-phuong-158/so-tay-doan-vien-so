@@ -4,6 +4,13 @@
 
 `NQ13_CERTIFICATE_END_TO_END_ACCEPTANCE_PASS`
 
+- PR #67 MERGED 2026-10-08T07:11:55Z, final head `12bb681fb5f93c0e7649a7b745c3b2a67b90b79c`,
+  merge/master `b3c5393fbdcb30980f458d784a0c00c41509f8b6`. Exact final CI37741131973 and
+  post-merge CI37741972809 GREEN. Exact final Preview `dpl_UeVzasYhFjoNMxH9xbHbvck9dybe`
+  [final Preview](https://so-tay-doan-vien-7lkwvwbzb-vi-phuong-158s-projects.vercel.app) READY.
+  Fresh23FAIL/24PASS/PNG/jsQR/verify/A4PDF all PASS; final PDF135010bytes/515chars/108496dark pixels.
+  Final synthetic actors/attempts/certificates0;9unmapped/7historicalcertificates/148units preserved.
+
 - Starting #67 head7195fc33099f4d3446f4d17f6ec460a838115e63. Blank PDF reproduced on its
   exact Preview:1160bytes; print DOM certificate y857px outside pageheight794px because backdrop
   blur establishes containing block. Fix anchors print backdrop to page origin and disables blur.
