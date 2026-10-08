@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { NQ_COMPETITION_PATH } from '../services/nqCompetitionService';
 import { Icon } from '../components/Icon';
 import { Brand, Progress, StatusBadge } from '../components/common';
 import { NotificationBell } from '../components/NotificationBell';
@@ -222,6 +223,9 @@ export function Home() {
                 <Icon name="search" size={17} />
                 <span>TRA CỨU 300 CÂU HỎI</span>
               </Link>
+                <Link to={NQ_COMPETITION_PATH} className="button button-secondary home-campaign-secondary-btn">
+                  <Icon name="award" size={17} /><span>XEM BẢNG THÀNH TÍCH</span>
+                </Link>
             </div>
           </div>
           <div className="home-campaign-visual" aria-hidden="true">

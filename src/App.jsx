@@ -20,6 +20,7 @@ import { LearningTopics } from './pages/LearningTopics';
 import { LearningTopicDetail } from './pages/LearningTopicDetail';
 import { Quiz } from './pages/Quiz';
 import { NqQuiz } from './pages/NqQuiz';
+import { NqCompetition } from './pages/NqCompetition';
 import { CertificateVerification } from './pages/CertificateVerification';
 import { Innovation } from './pages/Innovation';
 import { Profile } from './pages/Profile';
@@ -68,6 +69,8 @@ export default function App() {
             <Route path="tri-thuc/chuyen-de" element={<LearningTopics />} />
             <Route path="tri-thuc/chuyen-de/:topicId" element={<LearningTopicDetail />} />
             <Route path={`tri-thuc/trac-nghiem/${NQ_QUIZ_ID}`} element={<NqQuiz />} />
+            <Route path="tri-thuc/nq13/thanh-tich" element={<NqCompetition />} />
+            <Route path="tri-thuc/nq13/thanh-tich/:unitCode" element={<NqCompetition />} />
             <Route path="xac-minh-chung-nhan" element={<CertificateVerification />} />
             <Route path="xac-minh-chung-nhan/:code" element={<CertificateVerification />} />
             <Route path="doi-moi-sang-tao" element={<Innovation />} />
@@ -88,6 +91,8 @@ export default function App() {
               <Route path="ca-nhan/doi-mat-khau" element={<ChangePassword />} />
 
               {/* Admin Routes */}
+              <Route path="admin/nq13-thanh-tich" element={<RoleGuard allowedRoles={['YOUTH_ADMIN']}><NqCompetition admin /></RoleGuard>} />
+              <Route path="admin/nq13-thanh-tich/:unitCode" element={<RoleGuard allowedRoles={['YOUTH_ADMIN']}><NqCompetition admin /></RoleGuard>} />
               <Route path="admin" element={
                 <RoleGuard allowedRoles={['YOUTH_ADMIN']}>
                   <AdminDashboard />

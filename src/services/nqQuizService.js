@@ -145,6 +145,13 @@ export function createNqQuizService(client) {
         p_organization_name: organizationName
       });
     },
+    saveUnitParticipant(attemptId, fullName, unitId) {
+      return request('nq_save_unit_participant', {
+        p_attempt_id: attemptId,
+        p_full_name: fullName,
+        p_unit_id: unitId
+      });
+    },
     verifyCertificate(code) {
       return client.rpc('verify_nq_certificate', { p_code: code }).then(({ data, error }) => {
         if (error) throw normalizeQuizError(error);

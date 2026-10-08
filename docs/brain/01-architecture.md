@@ -1,5 +1,26 @@
 # 01 — Architecture
 
+## NQ13 unit competition (2026-10-08)
+
+- Stacked from PR #67 exact head `7195fc33099f4d3446f4d17f6ec460a838115e63`; additive migration
+  `20261008021004_nq13_unit_competition`. Catalogue148 (133 xã,15 phường), source Chính phủ/
+  resolution1676, frozen internal PT-NQ codes/UUIDs. No organization force-map,9 historical unmapped.
+- Participant gate now uses UUID `nq_save_unit_participant`, cached active units and searchable
+  `NqUnitSelect`; DB stores organization/unit historical snapshots and authenticated identity.
+  Legacy text RPC retained for old clients; certificate issuance/verification stay with #67.
+- Public routes `/tri-thuc/nq13/thanh-tich[/:unitCode]`; admin routes
+  `/admin/nq13-thanh-tich[/:unitCode]` AuthGuard/RoleGuard plus server global-role check.
+- **Code Graph:** `Home`/`NqQuiz` CTA -> `NqCompetition` -> `nqCompetitionService` ->
+  `nq_competition_dashboard` -> private attempts -> people(max score by unit+identity) -> unit stats.
+  `NqQuiz` -> `NqUnitSelect` -> units cache -> `nqQuizService.saveUnitParticipant` ->
+  `nq_save_unit_participant` -> participant snapshot -> existing `nq_attempt` -> certificate snapshot.
+  `Admin` -> `NqCompetition admin` -> `nq_update_eligible_members` / `nq_admin_unit_participants`.
+- Private views/config deny client access. Public RPC returns aggregates only; admin drill-down
+  pages50. Weights50/30/20 configurable server-side sum1; denominator NULL/0 or exceeded denies
+  official rank. Guests dedupe normalized NFC name+unit; permanent users use server Auth ID.
+- Existing guest30-day cleanup removes attempts: metrics are retention-limited; certificates
+  independently survive. Cache shell v6. Full contracts/tests/rollout: `docs/quiz-300/NQ13_UNIT_COMPETITION.md`.
+
 ## NQ13 Learning Assessment & Digital Certificate (2026-10-07)
 
 - **Campaign entry:** `Home` hero card (`.home-campaign-nq13`) trực tiếp dẫn vào bài thi `/tri-thuc/trac-nghiem/7c620b81-6dc6-4a57-9908-3a1f68652a00` hoặc tra cứu 300 câu (`?view=lookup`).

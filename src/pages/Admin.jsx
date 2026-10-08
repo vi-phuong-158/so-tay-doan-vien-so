@@ -96,6 +96,7 @@ export function AdminDashboard() {
       <div style={{ padding: '16px' }}>
         <p style={{ marginBottom: '24px' }}>Chào mừng <strong>{profile?.full_name}</strong>. Đây là khu vực quản trị.</p>
         <div className="campaign-form-actions" style={{ marginBottom: '16px' }}>
+            <Link className="button button-secondary" to="/admin/nq13-thanh-tich">Thành tích Nghị quyết XIII</Link>
           <Link className="button button-primary" to="/admin/bao-cao">Quản lý đợt báo cáo</Link>
           <Link className="button button-secondary" to="/admin/van-ban">Quản trị văn bản</Link>
           <Link className="button button-secondary" to="/admin/chuyen-de">Quản trị chuyên đề & trắc nghiệm</Link>

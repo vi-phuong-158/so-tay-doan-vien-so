@@ -7,6 +7,18 @@
 
 ## Đang làm
 
+### NQ13 UNIT COMPETITION — 2026-10-08
+
+- Branch `codex/nq13-unit-competition-dashboard`, stacked from #67 head `7195fc3` (#67 OPEN).
+- Implemented catalogue148/UUID searchable select, snapshots, server best-result aggregates,
+  score50/30/20, denominator status, public dashboard/detail and protected admin roster/drill-down/CSV.
+- Rehearsal migration applied,60 new pgTAP assertions + NQ runtime regression PASS; workload3000
+  attempts/148units RPC39.178ms. Frontend257 tests, lint/build pass with existing warnings.
+- Local real-browser participant->result->certificate->unit stats and five widths/privacy PASS.
+- Final exact-head Preview/CI and cleanup receipt belong to feature PR; no Production DB/merge.
+- Owner follow-up: merge dependency first, rebase/retest feature, real eligible counts, pilot name
+  collisions and guest30-day retention decision. Report: `docs/quiz-300/NQ13_UNIT_COMPETITION.md`.
+
 ### NQ13 Learning Assessment + Digital Certificate (2026-10-07) — nhánh `codex/nq13-learning-certificate`
 - Chuyển đổi NQ_300 thành hoạt động chính thức "Kiểm tra học tập Nghị quyết Đại hội Đoàn toàn quốc lần thứ XIII".
 - Trang chủ: Campaign hero card nổi bật, copy chuẩn, CTA Bắt đầu thi + Tra cứu 300 câu, huy hiệu Đoàn chính thống.

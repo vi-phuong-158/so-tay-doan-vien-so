@@ -14,8 +14,11 @@ import {
   canViewNqCertificate
 } from '../services/nqQuizService';
 import { NqCertificate } from '../components/NqCertificate';
+import { NqUnitSelect } from '../components/NqUnitSelect';
+import { createNqCompetitionService, NQ_COMPETITION_PATH } from '../services/nqCompetitionService';
 
 const service = createNqQuizService(supabase);
+const competition = createNqCompetitionService(supabase);
 
 export function NqQuiz() {
   const navigate = useNavigate();
@@ -39,7 +42,10 @@ export function NqQuiz() {
   // Participant Registration Modal
   const [showParticipantModal, setShowParticipantModal] = useState(false);
   const [participantName, setParticipantName] = useState(() => profile?.full_name || '');
-  const [participantOrg, setParticipantOrg] = useState(() => profile?.organization_name || profile?.branch_name || '');
+  const [participantUnit, setParticipantUnit] = useState('');
+  const [units, setUnits] = useState([]);
+  const [unitsLoading, setUnitsLoading] = useState(false);
+  const [unitsError, setUnitsError] = useState('');
   const [participantConfirmed, setParticipantConfirmed] = useState(false);
   const [participantError, setParticipantError] = useState('');
   const [isResumingWithoutParticipant, setIsResumingWithoutParticipant] = useState(false);
@@ -57,6 +63,20 @@ export function NqQuiz() {
   const mounted = useRef(true);
   const actorId = useRef(null);
   const cacheKey = useCallback((id) => `nq-draft:${actorId.current}:${id}`, []);
+
+  const loadUnits = useCallback(async () => {
+    setUnitsLoading(true);
+    setUnitsError('');
+    try { setUnits(await competition.listUnits()); }
+    catch { setUnitsError('Không thể tải danh sách xã/phường. Vui lòng thử lại.'); }
+    finally { setUnitsLoading(false); }
+  }, []);
+
+  useEffect(() => {
+    if (!showParticipantModal) return undefined;
+    const timer = setTimeout(loadUnits, 0);
+    return () => clearTimeout(timer);
+  }, [showParticipantModal, loadUnits]);
 
   const apply = useCallback((next) => {
     if (!mounted.current) return;
@@ -188,15 +208,17 @@ export function NqQuiz() {
     if (profile?.full_name && !participantName) {
       setParticipantName(profile.full_name);
     }
-    if ((profile?.organization_name || profile?.branch_name) && !participantOrg) {
-      setParticipantOrg(profile.organization_name || profile.branch_name || '');
-    }
     setShowParticipantModal(true);
   }
 
   async function handleConfirmParticipant(e) {
     if (e) e.preventDefault();
-    const validation = validateParticipantInfo(participantName, participantOrg);
+    const selectedUnit = units.find((unit) => unit.id === participantUnit);
+    if (!selectedUnit) {
+      setParticipantError('Vui lòng chọn xã/phường từ danh sách.');
+      return;
+    }
+    const validation = validateParticipantInfo(participantName, selectedUnit.name);
     if (!validation.valid) {
       setParticipantError(validation.errors.fullName || validation.errors.organizationName || 'Thông tin không hợp lệ.');
       return;
@@ -211,25 +233,23 @@ export function NqQuiz() {
 
     try {
       if (isResumingWithoutParticipant && state?.attempt_id) {
-        await service.saveParticipant(state.attempt_id, validation.data.fullName, validation.data.organizationName);
+        const participant = await service.saveUnitParticipant(state.attempt_id, validation.data.fullName, selectedUnit.id);
         const resumed = {
           ...active.current,
-          participant: {
-            full_name: validation.data.fullName,
-            organization_name: validation.data.organizationName
-          }
+          participant
         };
         apply(resumed);
         setShowParticipantModal(false);
         setIsResumingWithoutParticipant(false);
+        setView('attempt');
       } else {
         const next = await service.attempt('start');
-        await service.saveParticipant(next.attempt_id, validation.data.fullName, validation.data.organizationName);
-        next.participant = {
-          full_name: validation.data.fullName,
-          organization_name: validation.data.organizationName
-        };
+        // Preserve the resumable attempt if registration fails after start.
         apply(next);
+        setIsResumingWithoutParticipant(true);
+        next.participant = await service.saveUnitParticipant(next.attempt_id, validation.data.fullName, selectedUnit.id);
+        apply(next);
+        setIsResumingWithoutParticipant(false);
         setIndex(0);
         setShowParticipantModal(false);
         setView('attempt');
@@ -331,6 +351,12 @@ export function NqQuiz() {
         navigate={navigate}
         variant="brand"
       />
+
+      <div className="nq-competition-actions">
+        <Button variant="secondary" onClick={() => navigate(NQ_COMPETITION_PATH)}>
+          <Icon name="award" size={18} />XEM BẢNG THÀNH TÍCH
+        </Button>
+      </div>
 
       {error && (
         <div className="form-error" role="alert">
@@ -665,21 +691,11 @@ export function NqQuiz() {
                 />
               </div>
 
-              <div className="form-group">
-                <label htmlFor="nq-org-name">
-                  Đơn vị <span className="text-danger">*</span>
-                </label>
-                <input
-                  id="nq-org-name"
-                  type="text"
-                  value={participantOrg}
-                  onChange={(e) => setParticipantOrg(e.target.value)}
-                  placeholder="Ví dụ: Chi đoàn Phòng An ninh mạng"
-                  maxLength={180}
-                  required
-                  className="form-input"
-                />
-              </div>
+              <NqUnitSelect units={units} value={participantUnit} onChange={setParticipantUnit} disabled={busy || unitsLoading} />
+              {unitsLoading && <p role="status">Đang tải danh sách xã/phường…</p>}
+              {unitsError && <div className="form-error" role="alert">{unitsError}
+                <Button variant="secondary" onClick={loadUnits}>Thử lại</Button>
+              </div>}
 
               <div className="form-checkbox-row">
                 <input
@@ -701,7 +717,7 @@ export function NqQuiz() {
               )}
 
               <div className="nq-modal-actions">
-                <Button type="submit" variant="primary" disabled={busy}>
+                <Button type="submit" variant="primary" disabled={busy || unitsLoading || !participantUnit}>
                   {busy ? 'Đang xử lý…' : isResumingWithoutParticipant ? 'Xác nhận thông tin' : 'Xác nhận và Bắt đầu'}
                 </Button>
                 {!isResumingWithoutParticipant && (

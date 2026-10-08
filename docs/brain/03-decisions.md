@@ -1,5 +1,23 @@
 # 03 — Technical Decisions
 
+## [2026-10-08] NQ13 catalogue and competition aggregation
+
+- Use authoritative 148-unit resolution1676 government list,133 communes/15 wards, NFC; stable
+  internal PT-NQ codes and UUIDs, not fabricated official administrative codes. Idempotent seed
+  preserves metadata/eligible values. Historical text records stay unmapped unless owner maps them.
+- Reuse quiz_attempts and certificate snapshots; additive participant UUID/snapshot/auth identity.
+  Server UUID registration prevents client-provided organization names from entering competition.
+- PostgreSQL private views compute max per person+unit. Permanent Auth IDs preferred; guest name
+  normalization suitable for pilot only. No artificial retake limits or sensitive identity fields.
+- Weights50/30/20 server config sum1; positive eligible denominator required; underreported roster
+  does not receive official rank. Deterministic numeric ranking, name C collation and code fallback.
+- Aggregate-only public RPC; scoped role insufficient for global private admin drill-down/roster.
+  All direct unit modifications denied clients; global-role RPC is mutation boundary.
+- Keep legacy registration for #67/old clients and preserve certificates. Do not silently extend
+  30-day guest retention; long-term competition requires a separately approved retention decision.
+- Stacked dependency #67 must merge then feature rebase/retest; no Production DB rollout here.
+  Details/limitations/tests: `docs/quiz-300/NQ13_UNIT_COMPETITION.md`.
+
 ## [2026-10-07] NQ13 Assessment & Digital Certificate Architecture
 - **Server Pass Score:** Đặt `pass_score = 80` (>= 24/30 câu đúng) làm ngưỡng chuẩn duy nhất của hệ thống, xử lý tại server RPC `nq_attempt`.
 - **Participant Snapshot (`nq_attempt_participants`):** Họ tên và Đơn vị được snapshot theo `attempt_id` và bị khóa bất biến sau khi nộp bài. Không lưu vào `profiles` để tránh làm nhiễu dữ liệu người dùng chính thức.
