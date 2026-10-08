@@ -7,8 +7,9 @@
   Example20participants/15passed=75%; each person counted once despite retakes.
 - Public0/1/2 still show unknown (`—`) with the privacy notice; province suppression unchanged.
   Admin retains average score as an additional internal metric and CSV; no migration/API change.
-- This local follow-up is on `codex/nq13-pass-rate-summary`, not yet committed/pushed/deployed.
-  The merged closure and evidence below describe the previous released average-score UI.
+- Released in PR #69 (`d54d9b8`), merge commit `1844b615922f657229c34c7dd06b58b9d3e65357`;
+  CI `37752244217` passed and Production deployment `dpl_EZtXcG74bf4pPuNXJgyB2eAG3wWa` is READY.
+  The closure and evidence below retain their original historical provenance.
 
 ## Current final closure — 2026-10-08
 

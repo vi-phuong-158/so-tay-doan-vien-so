@@ -1,5 +1,16 @@
 # 06 — AI Working Log
 
+## [2026-10-08] Bàn giao phát hành tỷ lệ đạt NQ13
+- **Agent:** Codex
+- **Thay đổi:** Chuyển follow-up tỷ lệ đạt từ đang làm sang hoàn thành; ghi chính xác PR, CI và
+  Production deployment trong trạng thái task và báo cáo NQ13.
+- **File đã sửa:** `docs/brain/04-current-tasks.md`, `docs/brain/06-ai-working-log.md`,
+  `docs/quiz-300/NQ13_UNIT_COMPETITION.md`.
+- **Lý do:** PR #69 đã merge và deployment production từ merge SHA đã READY.
+- **Kiểm tra:** GitHub xác nhận #69 merged tại `1844b615922f657229c34c7dd06b58b9d3e65357`,
+  CI `37752244217` PASS; Vercel `dpl_EZtXcG74bf4pPuNXJgyB2eAG3wWa` READY cùng SHA.
+  Chỉ sửa tài liệu trạng thái; không thay đổi code hoặc dữ liệu.
+
 ## [2026-10-08] Bỏ ghi chú đầu bảng tổng hợp NQ13 theo ảnh owner
 - **Agent:** Codex
 - **Thay đổi:** Gỡ hai đoạn ghi chú phía trên summary mà owner chụp: mô tả pilot/công thức/
