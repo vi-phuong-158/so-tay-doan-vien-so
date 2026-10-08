@@ -1,20 +1,54 @@
-import { useState, useId } from 'react';
+import { useState, useId, useLayoutEffect, useRef, useCallback } from 'react';
 import { Icon } from './Icon';
 import { Button } from './common';
 import { generateQrMatrix } from '../lib/qrCode';
-import { downloadCertificatePng } from '../lib/certificateCanvas';
+import {
+  CERTIFICATE_SIGNATURE_SIZE,
+  CERTIFICATE_SIGNATURE_SRC,
+  downloadCertificatePng
+} from '../lib/certificateCanvas';
 import {
   formatCertificateDate,
   isValidNqCertificateRecord,
   mapNqCertificateRecord
 } from '../services/nqQuizService';
 
+// Design size of the HTML certificate (A4 landscape ratio). It is scaled as one block to the available
+// width, so every viewport shows the same layout as the PNG/PDF instead of scrolling sideways.
+const CERTIFICATE_DESIGN_WIDTH = 860;
+
 export function NqCertificate({ certificate, onClose }) {
   const [downloading, setDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState('');
   const [assetError, setAssetError] = useState('');
   const [loadedAssets, setLoadedAssets] = useState({ watermark: false, logo: false, signature: false });
+  const [scale, setScale] = useState(1);
+  const fitRef = useRef(null);
   const qrContainerId = useId();
+
+  useLayoutEffect(() => {
+    const node = fitRef.current;
+    if (!node) return undefined;
+    const update = () => {
+      const available = node.clientWidth;
+      if (available > 0) setScale(Math.min(1, available / CERTIFICATE_DESIGN_WIDTH));
+    };
+    update();
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', update);
+      return () => window.removeEventListener('resize', update);
+    }
+    const observer = new ResizeObserver(update);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [certificate]);
+
+  // Cached images can finish before React sees the load event, so check `complete` as well.
+  const trackAsset = useCallback((asset) => (node) => {
+    if (!node || !node.complete) return;
+    if (node.naturalWidth > 0) setLoadedAssets((current) => (current[asset] ? current : { ...current, [asset]: true }));
+    else setAssetError('failed');
+  }, []);
 
   if (!isValidNqCertificateRecord(certificate)) return null;
 
@@ -25,14 +59,13 @@ export function NqCertificate({ certificate, onClose }) {
   const qrMatrix = generateQrMatrix(verifyUrl);
   const formattedDate = formatCertificateDate(issuedAt);
   const assetsReady = Object.values(loadedAssets).every(Boolean) && !assetError;
+  const assetsLoading = !assetsReady && !assetError;
 
   const markAssetLoaded = (asset) => {
     setLoadedAssets((current) => ({ ...current, [asset]: true }));
   };
 
-  const markAssetFailed = () => {
-    setAssetError('Không thể tải logo hoặc chữ ký chính thức. Vui lòng tải lại trang trước khi tải ảnh hoặc in chứng nhận.');
-  };
+  const markAssetFailed = () => setAssetError('failed');
 
   const handleDownload = async () => {
     try {
@@ -51,7 +84,10 @@ export function NqCertificate({ certificate, onClose }) {
   };
 
   return (
-    <div className="nq-certificate-wrapper" role="dialog" aria-modal="true" aria-label="Chứng nhận hoàn thành">
+    <div
+      className="nq-certificate-wrapper"
+      data-assets-ready={assetsReady ? 'true' : 'false'}
+      role="dialog" aria-modal="true" aria-label="Chứng nhận hoàn thành">
       <div className="nq-certificate-toolbar no-print">
         <div className="nq-certificate-toolbar-actions">
           <Button
@@ -83,14 +119,22 @@ export function NqCertificate({ certificate, onClose }) {
             </Button>
           )}
         </div>
+        {assetsLoading && (
+          <p className="nq-certificate-asset-note" role="status">
+            Đang tải logo và chữ ký chính thức… Nút tải ảnh và in sẽ sáng lên khi chứng nhận đầy đủ.
+          </p>
+        )}
         {(assetError || downloadError) && (
           <div className="form-error" role="alert">
-            {assetError || downloadError}
+            {assetError
+              ? 'Không thể tải logo hoặc chữ ký chính thức. Vui lòng kiểm tra kết nối, tải lại trang rồi mới tải ảnh hoặc in chứng nhận.'
+              : downloadError}
           </div>
         )}
       </div>
 
-      <div className="nq-certificate-scrollable">
+      <div className="nq-certificate-viewport" ref={fitRef}>
+        <div className="nq-certificate-fit" style={{ '--cert-scale': scale }}>
         <article className="nq-certificate" id="nq-certificate-document">
           <div className="nq-certificate-border-outer">
             <div className="nq-certificate-border-inner">
@@ -105,6 +149,7 @@ export function NqCertificate({ certificate, onClose }) {
                 alt=""
                 aria-hidden="true"
                 className="nq-certificate-watermark"
+                ref={trackAsset('watermark')}
                 onLoad={() => markAssetLoaded('watermark')}
                 onError={markAssetFailed}
               />
@@ -116,6 +161,7 @@ export function NqCertificate({ certificate, onClose }) {
                   className="nq-certificate-logo"
                   width="120"
                   height="64"
+                  ref={trackAsset('logo')}
                   onLoad={() => markAssetLoaded('logo')}
                   onError={markAssetFailed}
                 />
@@ -187,9 +233,12 @@ export function NqCertificate({ certificate, onClose }) {
                   <strong className="nq-certificate-signer-role">TM. BAN THANH NIÊN</strong>
                   <strong className="nq-certificate-signer-title">TRƯỞNG BAN</strong>
                   <img
-                    src="/brand/chu-ky.png"
+                    src={CERTIFICATE_SIGNATURE_SRC}
                     alt="Con dấu và chữ ký chính thức"
                     className="nq-certificate-signature"
+                    width={CERTIFICATE_SIGNATURE_SIZE.width}
+                    height={CERTIFICATE_SIGNATURE_SIZE.height}
+                    ref={trackAsset('signature')}
                     onLoad={() => markAssetLoaded('signature')}
                     onError={markAssetFailed}
                   />
@@ -203,6 +252,7 @@ export function NqCertificate({ certificate, onClose }) {
             </div>
           </div>
         </article>
+        </div>
       </div>
     </div>
   );

@@ -1,26 +1,65 @@
 # NQ13 Learning Assessment & Digital Certificate Acceptance
 
-## Certificate V2 — Youth Union blue + owner-supplied signature (2026-10-08)
+## Certificate V2 hardening — asset security, one visual source, responsive (2026-10-08)
 
-### Implementation status
+Status: **source gates PASS · local browser checks PASS · hosted runtime acceptance NOT RUN (BLOCKED)**.
+Do not merge until the hosted section below is completed for the exact final head.
 
-- Starting master: `427524bd94c718bc2faf71ba8dc5a6d66fb21ffc`; branch:
-  `feat/nq13-certificate-blue-signature-v2`.
-- Presentation-only change across HTML, PNG canvas and A4 landscape print. Uses the existing
-  Youth Union blue tokens, the official badge as a centered 4.5% watermark, and the owner asset
-  `public/brand/chu-ky.png` (SHA-256
-  `BFB2B8445D7B1FC22372880331ED013D08427212B0DDD1E9C1569F0E91881F28`, 1,756,022 bytes).
-  The source image is unchanged; transparent padding is cropped only while rendering, with the
-  seal and signature kept together and the aspect ratio preserved.
-- Sign-off hierarchy is `TM. BAN THANH NIÊN` → `TRƯỞNG BAN` → official signature/seal image →
-  `Hoàng Tuấn Việt`. The QR, dynamic participant/result/date/code, certificate guard, score
-  threshold, issuance RPC and public verification response are unchanged.
-- Automated source checks: `npm test` 261/261 pass, 0 fail/skip; `npm run lint` 0 errors and
-  3 existing Fast Refresh warnings; `npm run build` passed with the existing >500 kB bundle
-  warning; `git diff --check` clean.
-- **Hosted runtime acceptance is pending** the exact final Vercel Preview head. Do not merge until
-  the real rehearsal 23/30 and 24/30 flows, PNG/QR, A4 PDF, public verification, privacy and
-  responsive checks are recorded for that head. Production database mutation: none.
+### Findings fixed (independent review of PR #72 head `b33ce249`)
+
+| # | Finding | Fix |
+|---|---------|-----|
+| 1 | Raw 3250×3250 owner PNG was served at `/brand/chu-ky.png` | Moved out of `public/`; only a derivative is bundled |
+| 2 | HTML used `object-fit: cover` in a 270×106 frame → real crop into seal/signature | `object-fit: contain`, `width:auto`; derivative is already tight-cropped |
+| 3 | HTML, canvas and print each cropped differently (alpha scan only in canvas) | One derivative for all three; canvas alpha scan removed; print reuses the screen rule |
+| 4 | Fixed 860×608 + horizontal scroll on phones | Whole certificate scales by width (`--cert-scale`), no sideways scroll |
+| 5 | Print layout used mm overrides, different from screen/PNG | Print = same 860×608 design scaled ×1.3053 to 297×210 mm |
+| 6 | Ctrl+P could print a certificate whose assets failed to load | `@media print` hides the certificate unless `data-assets-ready="true"` |
+
+### Asset security decision
+
+- **Owner source (never served):** `design-source/nq13-certificate/chu-ky-owner-source.png`,
+  3250×3250 RGBA, 1,756,022 bytes, SHA-256
+  `BFB2B8445D7B1FC22372880331ED013D08427212B0DDD1E9C1569F0E91881F28`. It lives outside `public/`
+  and is not imported by any browser code, so Vite never publishes it (`dist/` contains no copy;
+  verified after `npm run build`). A test pins this hash so the owner file cannot be altered silently.
+- **Browser derivative:** `src/assets/certificate/chu-ky-certificate.png`, 1000×452 RGBA, 248,904 bytes,
+  SHA-256 `BA5978FE0813A01A4912A221DEC05FC3916027C966C83942BB221C6EE6949249`. Built into
+  `/assets/chu-ky-certificate-<hash>.png`. A test pins this hash too.
+- **How it is made:** `python3 scripts/build-certificate-signature.py` verifies the source hash, crops only
+  fully transparent padding (12 px margin), downsizes uniformly with a premultiplied Lanczos resize.
+  No re-drawing, recolouring, splitting or re-positioning; seal and signature remain one image
+  (visible-ink aspect 2565×1147 → derivative aspect 2.212). The script is deterministic (re-run gives the same hash).
+- **Old URL:** `/brand/chu-ky.png` is no longer part of the build. Post-deploy check on the Preview is part
+  of the hosted section (NOT RUN). Residual risk: the raw file still exists in git history of this PR branch
+  (commit `b33ce249`) and in the repository's non-public `design-source/`; it is not served by the deployment.
+
+### Source gates (local, this change)
+
+- `npm ci`: OK. `npm test`: previous 261 → **267** tests; 267 passed, 0 failed, 0 skipped.
+- `npm run lint`: 0 errors, 3 existing Fast Refresh warnings. `npm run build`: PASS (existing >500 kB chunk warning).
+  `git diff --check`: clean.
+
+### Local browser checks (headless Chromium + Vite dev harness with a synthetic certificate record)
+
+These are NOT hosted/Preview acceptance — no Vercel Preview or Supabase was reachable from this session.
+
+- Widths 360/390/430/768/1280/1440: whole certificate visible, document `scrollWidth == clientWidth`, no
+  horizontal scroller, aspect 1.4145 at every width (scale 0.381/0.416/0.463/0.828/1/1), toolbar buttons inside the viewport.
+- Downloaded PNG: 1754×1240; seal + signature complete and undistorted; QR decoded with `jsQR` (independent of the
+  generator) from the PNG, from the rasterised PDF and from the 360 px screenshot → `/xac-minh-chung-nhan/<code>`.
+- `page.pdf()` with print media: exactly 1 page, A4 (841.92×594.96 pt), no toolbar, certificate not cropped.
+- Fail-closed: signature 404 → buttons disabled + clear message, print hides the certificate; corrupt PNG → same;
+  canvas export rejects (`Không thể tải chữ ký và con dấu…`); slow load → "Đang tải…" then enabled; reload with cache → enabled.
+- Caveat: Be Vietnam Pro webfont was unavailable offline, so glyph metrics used the fallback sans-serif.
+
+### Hosted runtime acceptance — BLOCKED
+
+Egress policy of this session returned 403 for `*.vercel.app` and `*.supabase.co`, and no rehearsal credential is
+available here. Therefore **not run**: Preview READY check for the final SHA, `/brand/chu-ky.png` post-deploy probe,
+real 23/30 (expected FAIL, no certificate), real 24/30 (PASS, one certificate, idempotent after reload), PNG download from
+the Preview, QR decode from that PNG, Preview PDF, public verification + privacy, responsive check on the Preview,
+fixture cleanup. No fixture was created and Production was not touched. Record results here when run.
 
 ## Final closure receipt — 2026-10-08
 
@@ -130,12 +169,12 @@ dành cho toàn thể đoàn viên, thanh niên và quần chúng nhân dân thu
 - **Tiêu đề**: `CHỨNG NHẬN HOÀN THÀNH` (không dùng "bằng" hoặc "văn bằng").
 - **Đơn vị xác nhận**: `BAN THANH NIÊN / CÔNG AN TỈNH PHÚ THỌ`; không tạo con dấu hoặc chữ ký giả. Certificate V2 hiển thị đúng hierarchy ký `TM. BAN THANH NIÊN` → `TRƯỞNG BAN` → asset thật owner cung cấp → `Hoàng Tuấn Việt`.
 - **Huy hiệu Đoàn**: Sử dụng trực tiếp `public/brand/logo-doan-badge.png`.
-- **Asset ký V2**: `public/brand/chu-ky.png` là ảnh gốc owner cung cấp gồm con dấu đỏ và chữ ký xanh đang chồng lên nhau. Giữ nguyên file và tương quan; chỉ crop alpha padding tại render layer, không tách, đổi màu hoặc vẽ lại.
+- **Asset ký V2**: ảnh gốc owner cung cấp (con dấu đỏ + chữ ký xanh chồng nhau) nằm ở `design-source/nq13-certificate/` và KHÔNG được publish. Trình duyệt chỉ dùng bản derivative `src/assets/certificate/chu-ky-certificate.png` (crop padding trong suốt, thu nhỏ đồng đều, giữ aspect; không tách, đổi màu hoặc vẽ lại). HTML (`object-fit: contain`), canvas và print dùng chung đúng một derivative.
 - **Mã chứng nhận**: Định dạng `NQ13-[A-Z0-9]{8,32}`, entropy cao, tính idempotent (mỗi lượt thi đạt chỉ cấp đúng 1 chứng nhận).
 - **Tồn tại vĩnh viễn (Retention resilience)**: Khóa ngoại `nq_certificates.attempt_id REFERENCES quiz_attempts(id) ON DELETE SET NULL` giúp chứng nhận tồn tại ngay cả khi tài khoản guest anonymous bị xóa sau 30 ngày.
 - **Thiết kế V2**: dùng token xanh Đoàn `brand-900/800/700/100/050`, nền trắng/xanh rất nhạt; huy hiệu chính thức làm watermark giữa trang ở opacity 4.5%. Không dùng viền hoặc palette đỏ-vàng cho certificate.
 - **Tải ảnh PNG**: Render trực tiếp canvas A4 ngang 1754×1240 (`src/lib/certificateCanvas.js`), fit chữ tên và wrap đơn vị; watermark, QR, dữ liệu và signature block đồng bộ HTML; tên file chuẩn hóa: `Chung-nhan-NQ13-[TEN-NGUOI-DUNG].png`. Thiếu asset chữ ký/con dấu thì export từ chối.
-- **In / Lưu PDF**: `@media print` ẩn app chrome/layout, đặt trang A4 landscape, giữ watermark nhạt và asset chữ ký, ẩn nội dung ngoài chứng nhận.
+- **In / Lưu PDF**: `@media print` ẩn app chrome/layout, đặt trang A4 landscape, in đúng layout 860×608 phóng ×1.3053 lên 297×210 mm, giữ watermark nhạt và chữ ký, ẩn nội dung ngoài chứng nhận; không in nếu asset chưa tải xong.
 
 ### 2.6. QR generation và decoder test độc lập
 - `src/lib/qrCode.js` dùng thư viện `qrcode` cho QR Model 2 / Error Correction Level M, bao gồm Version Information và mask selection do thư viện xử lý.

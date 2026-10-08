@@ -1,10 +1,14 @@
 import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
+import zlib from 'node:zlib';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 import {
   CERTIFICATE_PALETTE,
+  CERTIFICATE_SIGNATURE_SIZE,
+  CERTIFICATE_SIGNATURE_SRC,
   fitCanvasFontSize,
   renderCertificateToCanvas,
   wrapCanvasText
@@ -56,9 +60,9 @@ function installBrowserImageMocks({ failSignature = false } = {}) {
 
     set src(value) {
       this._src = value;
-      const isSignature = value === '/brand/chu-ky.png';
-      this.width = this.naturalWidth = isSignature ? 12 : 452;
-      this.height = this.naturalHeight = isSignature ? 8 : 240;
+      const isSignature = value.endsWith('chu-ky-certificate.png');
+      this.width = this.naturalWidth = isSignature ? CERTIFICATE_SIGNATURE_SIZE.width : 452;
+      this.height = this.naturalHeight = isSignature ? CERTIFICATE_SIGNATURE_SIZE.height : 240;
       queueMicrotask(() => {
         if (isSignature && failSignature) this.onerror?.(new Error('image unavailable'));
         else this.onload?.();
@@ -71,23 +75,7 @@ function installBrowserImageMocks({ failSignature = false } = {}) {
   }
 
   globalThis.Image = FakeImage;
-  globalThis.document = {
-    fonts: { ready: Promise.resolve() },
-    createElement: () => ({
-      width: 0,
-      height: 0,
-      getContext: () => ({
-        drawImage() {},
-        getImageData(_x, _y, width, height) {
-          const data = new Uint8ClampedArray(width * height * 4);
-          for (let y = 1; y < height - 1; y += 1) {
-            for (let x = 2; x < width - 2; x += 1) data[(y * width + x) * 4 + 3] = 255;
-          }
-          return { data };
-        }
-      })
-    })
-  };
+  globalThis.document = { fonts: { ready: Promise.resolve() } };
 
   return () => {
     if (previousDocument === undefined) delete globalThis.document;
@@ -120,10 +108,114 @@ test('certificate palette uses the Youth Union blue tokens and neutral paper', (
   assert.equal('gold' in CERTIFICATE_PALETTE, false);
 });
 
-test('owner-supplied signature asset exists and remains a PNG source file', () => {
-  const assetPath = path.join(root, 'public', 'brand', 'chu-ky.png');
-  assert.equal(fs.existsSync(assetPath), true);
-  assert.equal(fs.readFileSync(assetPath).subarray(0, 8).toString('hex'), '89504e470d0a1a0a');
+const OWNER_SOURCE = path.join(root, 'design-source', 'nq13-certificate', 'chu-ky-owner-source.png');
+const DERIVATIVE = path.join(root, 'src', 'assets', 'certificate', 'chu-ky-certificate.png');
+const OWNER_SOURCE_SHA256 = 'BFB2B8445D7B1FC22372880331ED013D08427212B0DDD1E9C1569F0E91881F28';
+const DERIVATIVE_SHA256 = 'BA5978FE0813A01A4912A221DEC05FC3916027C966C83942BB221C6EE6949249';
+const sha256 = (file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex').toUpperCase();
+
+// Minimal 8-bit RGBA non-interlaced PNG decoder, enough to inspect the alpha channel.
+function readPngAlphaBounds(file) {
+  const buffer = fs.readFileSync(file);
+  let offset = 8;
+  let width = 0;
+  let height = 0;
+  const idat = [];
+  while (offset < buffer.length) {
+    const length = buffer.readUInt32BE(offset);
+    const type = buffer.toString('ascii', offset + 4, offset + 8);
+    const data = buffer.subarray(offset + 8, offset + 8 + length);
+    if (type === 'IHDR') {
+      width = data.readUInt32BE(0);
+      height = data.readUInt32BE(4);
+      assert.equal(data[8], 8);
+      assert.equal(data[9], 6, 'derivative must be RGBA');
+      assert.equal(data[12], 0, 'derivative must not be interlaced');
+    }
+    if (type === 'IDAT') idat.push(data);
+    offset += 12 + length;
+  }
+  const raw = zlib.inflateSync(Buffer.concat(idat));
+  const stride = width * 4;
+  const rows = [];
+  for (let y = 0; y < height; y += 1) {
+    const filter = raw[y * (stride + 1)];
+    const line = Buffer.from(raw.subarray(y * (stride + 1) + 1, (y + 1) * (stride + 1)));
+    const prev = y ? rows[y - 1] : Buffer.alloc(stride);
+    for (let x = 0; x < stride; x += 1) {
+      const a = x >= 4 ? line[x - 4] : 0;
+      const b = prev[x];
+      const c = x >= 4 ? prev[x - 4] : 0;
+      let add = 0;
+      if (filter === 1) add = a;
+      else if (filter === 2) add = b;
+      else if (filter === 3) add = (a + b) >> 1;
+      else if (filter === 4) {
+        const p = a + b - c;
+        const pa = Math.abs(p - a);
+        const pb = Math.abs(p - b);
+        const pc = Math.abs(p - c);
+        add = pa <= pb && pa <= pc ? a : pb <= pc ? b : c;
+      }
+      line[x] = (line[x] + add) & 255;
+    }
+    rows.push(line);
+  }
+  let minX = width;
+  let minY = height;
+  let maxX = -1;
+  let maxY = -1;
+  rows.forEach((line, y) => {
+    for (let x = 0; x < width; x += 1) {
+      if (line[x * 4 + 3] === 0) continue;
+      minX = Math.min(minX, x);
+      maxX = Math.max(maxX, x);
+      minY = Math.min(minY, y);
+      maxY = Math.max(maxY, y);
+    }
+  });
+  return { width, height, minX, minY, maxX, maxY };
+}
+
+test('owner source asset is kept outside public/ and is byte-for-byte the owner file', () => {
+  assert.equal(fs.existsSync(path.join(root, 'public', 'brand', 'chu-ky.png')), false);
+  assert.equal(fs.existsSync(OWNER_SOURCE), true);
+  assert.equal(sha256(OWNER_SOURCE), OWNER_SOURCE_SHA256);
+});
+
+test('certificate signature derivative exists, is pinned, cropped and keeps the source aspect ratio', () => {
+  assert.equal(fs.existsSync(DERIVATIVE), true);
+  assert.equal(sha256(DERIVATIVE), DERIVATIVE_SHA256);
+  assert.ok(fs.statSync(DERIVATIVE).size < 400 * 1024, 'derivative must stay small');
+
+  const bounds = readPngAlphaBounds(DERIVATIVE);
+  assert.equal(bounds.width, CERTIFICATE_SIGNATURE_SIZE.width);
+  assert.equal(bounds.height, CERTIFICATE_SIGNATURE_SIZE.height);
+  // Tight crop: ink starts within a few pixels of every edge, so no transparent padding is left.
+  assert.ok(bounds.minX <= 12 && bounds.minY <= 12);
+  assert.ok(bounds.width - 1 - bounds.maxX <= 12 && bounds.height - 1 - bounds.maxY <= 12);
+
+  // Same aspect as the visible ink of the owner source (2565 x 1147) plus the uniform crop padding.
+  const sourceInkAspect = 2565 / 1147;
+  const derivativeAspect = bounds.width / bounds.height;
+  assert.ok(Math.abs(derivativeAspect - sourceInkAspect) / sourceInkAspect < 0.03);
+});
+
+test('browser-facing code never references the raw owner asset path', () => {
+  const files = [];
+  const walk = (dir) => fs.readdirSync(dir, { withFileTypes: true }).forEach((entry) => {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) walk(full);
+    else if (/\.(jsx?|css|html|webmanifest)$/.test(entry.name) || entry.name === 'sw.js') files.push(full);
+  });
+  ['src', 'public'].forEach((dir) => walk(path.join(root, dir)));
+  files.push(path.join(root, 'index.html'));
+  for (const file of files) {
+    const text = fs.readFileSync(file, 'utf8');
+    assert.equal(/chu-ky(?!-certificate)/.test(text), false, `${path.relative(root, file)} references the raw signature asset`);
+  }
+  assert.match(CERTIFICATE_SIGNATURE_SRC, /chu-ky-certificate\.png$/);
+  assert.equal(CERTIFICATE_SIGNATURE_SRC.includes('/public/'), false);
 });
 
 test('canvas text fitting reduces long names and wrapping keeps organization lines within bounds', () => {
@@ -172,12 +264,16 @@ for (const [name, organization] of [
       assert.ok(context.draws.every((draw) => Number.isFinite(draw.width)));
 
       const watermark = context.images.find((image) => image.src === '/brand/logo-doan-badge.png');
-      const signature = context.images.find((image) => image.src === '/brand/chu-ky.png');
+      const signature = context.images.find((image) => image.src === CERTIFICATE_SIGNATURE_SRC);
       assert.ok(watermark);
       assert.equal(watermark.alpha, 0.045);
       assert.ok(signature);
-      assert.equal(signature.args.length, 8);
-      assert.ok(Math.abs(signature.args[2] / signature.args[3] - signature.args[6] / signature.args[7]) < 0.02);
+      // Whole derivative, uniformly scaled: 4 args (dx, dy, dw, dh), never a source-crop rectangle.
+      assert.equal(signature.args.length, 4);
+      const [, , drawWidth, drawHeight] = signature.args;
+      const sourceAspect = CERTIFICATE_SIGNATURE_SIZE.width / CERTIFICATE_SIGNATURE_SIZE.height;
+      assert.ok(Math.abs(drawWidth / drawHeight - sourceAspect) < 0.001);
+      assert.ok(drawWidth <= 420 && drawHeight <= 184);
     } finally {
       restore();
     }
@@ -195,6 +291,32 @@ test('canvas export fails closed when the official signature asset cannot load',
       /không thể tải chữ ký và con dấu/i
     );
   } finally {
+    restore();
+  }
+});
+
+test('canvas export rejects when the signature image decodes to zero size', async () => {
+  const restore = installBrowserImageMocks();
+  const OriginalImage = globalThis.Image;
+  globalThis.Image = class extends OriginalImage {
+    set src(value) {
+      super.src = value;
+      if (value.endsWith('chu-ky-certificate.png')) this.width = this.naturalWidth = 0;
+    }
+
+    get src() {
+      return super.src;
+    }
+  };
+  try {
+    await assert.rejects(
+      renderCertificateToCanvas({ getContext: () => createContext() }, completeCertificate('NGUYỄN VĂN A', 'CÔNG AN TỈNH PHÚ THỌ'), {
+        origin: 'https://preview.example.vercel.app'
+      }),
+      /không hợp lệ/i
+    );
+  } finally {
+    globalThis.Image = OriginalImage;
     restore();
   }
 });

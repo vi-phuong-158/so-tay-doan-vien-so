@@ -1,5 +1,20 @@
 # 06 — AI Working Log
 
+## [2026-10-08] NQ13 Certificate V2 hardening (PR #72 review fixes)
+- **Agent:** Claude Code
+- **Thay đổi:** Chuyển ảnh gốc con dấu/chữ ký ra khỏi `public/` (không còn URL công khai), tạo derivative
+  crop+thu nhỏ dùng chung cho HTML/canvas/print; sửa `object-fit: cover` cắt mất dấu/chữ ký sang `contain`;
+  certificate HTML scale theo bề rộng thay vì cuộn ngang; print dùng cùng layout 860×608 phóng lên A4;
+  khóa in khi asset lỗi; thêm 6 test. Không đổi scoring/RPC/QR/verification.
+- **File đã sửa:** `src/components/NqCertificate.jsx`, `src/lib/certificateCanvas.js`, `src/index.css`,
+  `design-source/nq13-certificate/chu-ky-owner-source.png` (moved), `src/assets/certificate/chu-ky-certificate.png`,
+  `scripts/build-certificate-signature.py`, `tests/certificate_canvas.test.mjs`, `tests/nq13_certificate.test.mjs`,
+  `docs/quiz-300/NQ13_CERTIFICATE_ACCEPTANCE.md`, `docs/brain/{01-architecture,03-decisions,04-current-tasks,06-ai-working-log}.md`.
+- **Lý do:** Review độc lập PR #72 phát hiện lộ ảnh gốc, crop sai, fixed-width không responsive.
+- **Kiểm tra:** `npm test` 261→267 PASS (0 fail/skip); lint 0 lỗi/3 cảnh báo cũ; build PASS, `dist/` không chứa
+  ảnh gốc; local Chromium: 360–1440 px không cuộn ngang, PNG 1754×1240, QR decode jsQR, PDF 1 trang A4, các tình huống
+  asset 404/lỗi/chậm/cache. Hosted Preview + Supabase rehearsal chưa chạy (mạng phiên bị chặn) — xem acceptance doc.
+
 ## [2026-10-08] NQ13 Certificate V2 — Youth Union blue and owner signature
 - **Agent:** Codex
 - **Thay đổi:** Đổi đồng bộ chứng nhận HTML, PNG canvas và A4 print sang palette xanh Đoàn; thêm

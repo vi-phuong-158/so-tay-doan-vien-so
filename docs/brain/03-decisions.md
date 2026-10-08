@@ -53,7 +53,8 @@
 ## [2026-10-08] NQ13 Certificate V2 — Youth Union blue and owner signature
 - Keep the existing NQ13 score threshold, issuance RPC, immutable certificate records, QR payload and public verification response unchanged; this phase changes presentation only.
 - Use existing Youth Union blue tokens (`brand-900`, `brand-800`, `brand-700`, `brand-100`, `brand-050`) across HTML, PNG and print. Render the official badge as a centered 4.5% opacity watermark.
-- Use the owner-supplied `public/brand/chu-ky.png` exactly as supplied. Keep stamp and signature together; crop only transparent padding in the rendering layer and preserve the source and aspect ratio. PNG/print must fail closed when the signature asset is unavailable.
+- Hardening: the raw owner image is NOT served. It stays at `design-source/nq13-certificate/chu-ky-owner-source.png` (SHA-256 pinned by test); the browser bundle only contains the deterministic derivative `src/assets/certificate/chu-ky-certificate.png` (cropped transparent padding, uniform downscale, seal+signature kept as one image, SHA-256 pinned). HTML/canvas/print share it with contain-fit; no `object-fit: cover`. PNG/print fail closed when logo or signature is unavailable (button lock, canvas rejection, print hidden).
+- Responsive: the HTML certificate keeps its 860×608 design and is scaled as one block to the available width (no horizontal scroll); print uses the same layout scaled to A4 landscape.
 
 ## [2026-10-03] NQ guest ownership policy boundary and schema reconciliation
 

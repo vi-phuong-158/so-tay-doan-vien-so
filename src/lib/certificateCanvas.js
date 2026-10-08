@@ -20,7 +20,10 @@ export const CERTIFICATE_PALETTE = Object.freeze({
 
 const FONT_FAMILY = '"Be Vietnam Pro", sans-serif';
 const BRAND_BADGE_SRC = '/brand/logo-doan-badge.png';
-const SIGNATURE_SRC = '/brand/chu-ky.png';
+// Browser-facing seal + signature derivative (cropped, downscaled, aspect preserved). The raw
+// owner source lives in design-source/ and is never published; see docs/quiz-300/NQ13_CERTIFICATE_ACCEPTANCE.md.
+export const CERTIFICATE_SIGNATURE_SRC = new URL('../assets/certificate/chu-ky-certificate.png', import.meta.url).href;
+export const CERTIFICATE_SIGNATURE_SIZE = Object.freeze({ width: 1000, height: 452 });
 
 export function fitCanvasFontSize(ctx, text, {
   baseSize,
@@ -159,75 +162,17 @@ function drawWatermark(ctx, logo, width, height) {
   ctx.globalAlpha = previousAlpha;
 }
 
-function findVisibleImageBounds(image) {
-  if (typeof document === 'undefined') {
-    throw new Error('Không thể kiểm tra vùng hiển thị của chữ ký.');
-  }
-
-  const sourceWidth = image.naturalWidth || image.width;
-  const sourceHeight = image.naturalHeight || image.height;
-  const sampleScale = Math.min(1, 512 / Math.max(sourceWidth, sourceHeight));
-  const sampleWidth = Math.max(1, Math.ceil(sourceWidth * sampleScale));
-  const sampleHeight = Math.max(1, Math.ceil(sourceHeight * sampleScale));
-  const sampleCanvas = document.createElement('canvas');
-  sampleCanvas.width = sampleWidth;
-  sampleCanvas.height = sampleHeight;
-  const sampleContext = sampleCanvas.getContext('2d', { willReadFrequently: true });
-  if (!sampleContext) throw new Error('Không thể đọc vùng trong suốt của chữ ký.');
-
-  try {
-    sampleContext.drawImage(image, 0, 0, sampleWidth, sampleHeight);
-    const { data } = sampleContext.getImageData(0, 0, sampleWidth, sampleHeight);
-    let minX = sampleWidth;
-    let minY = sampleHeight;
-    let maxX = -1;
-    let maxY = -1;
-
-    for (let y = 0; y < sampleHeight; y += 1) {
-      for (let x = 0; x < sampleWidth; x += 1) {
-        if (data[(y * sampleWidth + x) * 4 + 3] === 0) continue;
-        minX = Math.min(minX, x);
-        minY = Math.min(minY, y);
-        maxX = Math.max(maxX, x);
-        maxY = Math.max(maxY, y);
-      }
-    }
-
-    if (maxX < minX || maxY < minY) throw new Error('Ảnh chữ ký không có nội dung hiển thị.');
-
-    const paddingX = Math.max(1, Math.round((maxX - minX + 1) * 0.015));
-    const paddingY = Math.max(1, Math.round((maxY - minY + 1) * 0.025));
-    const left = Math.max(0, minX - paddingX);
-    const top = Math.max(0, minY - paddingY);
-    const right = Math.min(sampleWidth, maxX + 1 + paddingX);
-    const bottom = Math.min(sampleHeight, maxY + 1 + paddingY);
-    return {
-      x: Math.floor((left / sampleWidth) * sourceWidth),
-      y: Math.floor((top / sampleHeight) * sourceHeight),
-      width: Math.ceil(((right - left) / sampleWidth) * sourceWidth),
-      height: Math.ceil(((bottom - top) / sampleHeight) * sourceHeight)
-    };
-  } catch {
-    throw new Error('Không thể đọc vùng trong suốt của chữ ký; không tạo ảnh chứng nhận thiếu chữ ký.');
-  }
-}
-
+// The derivative is already tight-cropped, so it is only scaled uniformly ("contain"): the seal and
+// signature are never cropped, stretched or separated, matching the HTML viewer's object-fit: contain.
 function drawSignature(ctx, signature, centerX, centerY, maxWidth, maxHeight) {
-  const bounds = findVisibleImageBounds(signature);
-  const scale = Math.min(maxWidth / bounds.width, maxHeight / bounds.height);
-  const width = bounds.width * scale;
-  const height = bounds.height * scale;
-  ctx.drawImage(
-    signature,
-    bounds.x,
-    bounds.y,
-    bounds.width,
-    bounds.height,
-    centerX - width / 2,
-    centerY - height / 2,
-    width,
-    height
-  );
+  const sourceWidth = signature.naturalWidth || signature.width;
+  const sourceHeight = signature.naturalHeight || signature.height;
+  const scale = Math.min(maxWidth / sourceWidth, maxHeight / sourceHeight);
+  const width = sourceWidth * scale;
+  const height = sourceHeight * scale;
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(signature, centerX - width / 2, centerY - height / 2, width, height);
 }
 
 function drawCertificateBorder(ctx, width, height) {
@@ -296,7 +241,7 @@ export async function renderCertificateToCanvas(canvas, certificate, options = {
   drawCertificateBorder(ctx, width, height);
 
   const logo = await loadImage(options.logoSrc ?? BRAND_BADGE_SRC, 'huy hiệu Đoàn');
-  const signature = await loadImage(options.signatureSrc ?? SIGNATURE_SRC, 'chữ ký và con dấu');
+  const signature = await loadImage(options.signatureSrc ?? CERTIFICATE_SIGNATURE_SRC, 'chữ ký và con dấu');
   drawWatermark(ctx, logo, width, height);
   drawLogo(ctx, logo, width);
 
@@ -362,7 +307,7 @@ export async function renderCertificateToCanvas(canvas, certificate, options = {
   drawCenteredText(ctx, 'TRƯỞNG BAN', 885, {
     width, centerX: signoffCenter, maxWidth: 640, size: 22, minSize: 19, weight: '700', color: navy
   });
-  drawSignature(ctx, signature, signoffCenter, 988, 420, 168);
+  drawSignature(ctx, signature, signoffCenter, 990, 420, 184);
   drawCenteredText(ctx, 'Hoàng Tuấn Việt', 1101, {
     width, centerX: signoffCenter, maxWidth: 520, size: 26, minSize: 22, weight: '700', color: navy
   });
