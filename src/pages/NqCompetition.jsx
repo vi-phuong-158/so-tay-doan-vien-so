@@ -19,9 +19,9 @@ function UnitMetrics({ unit, admin }) {
   return <dl className="nq-unit-metrics">
     <div><dt>Người tham gia</dt><dd>{number(unit.participants)}{admin && ` / ${number(unit.eligible_members)}`}</dd></div>
     <div><dt>Lượt thi</dt><dd>{number(unit.attempts)}</dd></div>
-    <div><dt>Điểm trung bình</dt><dd>{number(unit.average_best_score)}</dd></div>
+    <div><dt>Tỷ lệ đạt</dt><dd>{percent(unit.pass_rate)}</dd></div>
     {admin && <>
-      <div><dt>Tỷ lệ đạt</dt><dd>{percent(unit.pass_rate)}</dd></div>
+      <div><dt>Điểm trung bình</dt><dd>{number(unit.average_best_score)}</dd></div>
       <div><dt>Tỷ lệ tham gia</dt><dd>{percent(unit.completion_rate)}</dd></div>
       <div><dt>Điểm mô phỏng nội bộ</dt><dd>{number(unit.competition_score)}</dd></div>
     </>}
@@ -110,8 +110,8 @@ export function NqCompetition({ admin = false }) {
   const metrics = summary ? [
     ['Đơn vị', number(summary.unit_count)], ['Đơn vị đã triển khai', number(summary.participating_units)],
     ['Đơn vị chưa tham gia', number(summary.missing_units)], ['Người tham gia', number(summary.participants)],
-    ['Lượt thi', number(summary.attempts)], ['Điểm trung bình', number(summary.average_best_score)],
-    ...(admin ? [['Người đạt', number(summary.pass_count)], ['Tỷ lệ đạt', percent(summary.pass_rate)],
+    ['Lượt thi', number(summary.attempts)], ['Tỷ lệ đạt', percent(summary.pass_rate)],
+    ...(admin ? [['Người đạt', number(summary.pass_count)], ['Điểm trung bình', number(summary.average_best_score)],
       ['Chứng nhận đã cấp', number(summary.certificate_count)]] : [])
   ] : [];
   return <div className="page page--appbar nq-competition-screen">
@@ -125,10 +125,6 @@ export function NqCompetition({ admin = false }) {
     {loading && <Skeleton lines={6} />}
     {error && <div className="form-error" role="alert">{error}</div>}
     {data && <>
-      <p className="nq-competition-note">Bảng tổng hợp phục vụ theo dõi học tập, chưa dùng làm căn cứ thi đua chính thức.
-        Điểm trung bình tính từ kết quả cao nhất của mỗi người tại từng đơn vị. Chưa có danh sách đoàn viên đã xác thực.
-        Thống kê chi tiết chỉ công khai khi có ít nhất {data.config.public_min_participants} người tham gia.</p>
-      {!admin && summary.statistics_suppressed && <p className="nq-competition-note">Điểm trung bình toàn tỉnh tạm ẩn vì có đơn vị chưa đủ ngưỡng công khai.</p>}
       {unitCode ? unit ? <>
         <section className="content-card nq-competition-panel">
           <h2>{unit.unit_name}</h2>
@@ -166,13 +162,13 @@ export function NqCompetition({ admin = false }) {
           <p role="status">{units.length} đơn vị phù hợp</p>
           <div className="nq-competition-table"><table><thead><tr>
             {admin && <th scope="col">Thứ tự nội bộ</th>}<th scope="col">Xã/phường</th><th scope="col">Người tham gia</th><th scope="col">Lượt thi</th>
-            <th scope="col">Điểm TB</th>{admin && <><th scope="col">Tỷ lệ đạt</th><th scope="col">Điểm mô phỏng</th></>}
+            <th scope="col">Tỷ lệ đạt</th>{admin && <><th scope="col">Điểm TB</th><th scope="col">Điểm mô phỏng</th></>}
           </tr></thead><tbody>{units.map((u) => <tr key={u.unit_code}>
             {admin && <td data-label="Thứ tự nội bộ">{u.rank ?? '—'}</td>}<th scope="row"><Link to={`${base}/${u.unit_code}`}>{u.unit_name}</Link>
               <small>{admin ? status(u) : u.statistics_suppressed ? PUBLIC_STATISTICS_MESSAGE : 'Đủ ngưỡng công khai'}</small></th>
             <td data-label="Người tham gia">{number(u.participants)}{admin && <> / {number(u.eligible_members)}<small>{percent(u.completion_rate)}</small></>}</td>
-            <td data-label="Lượt thi">{number(u.attempts)}</td><td data-label="Điểm TB">{number(u.average_best_score)}</td>
-            {admin && <><td data-label="Tỷ lệ đạt">{percent(u.pass_rate)}</td><td data-label="Điểm mô phỏng">{number(u.competition_score)}</td></>}
+            <td data-label="Lượt thi">{number(u.attempts)}</td><td data-label="Tỷ lệ đạt">{percent(u.pass_rate)}</td>
+            {admin && <><td data-label="Điểm TB">{number(u.average_best_score)}</td><td data-label="Điểm mô phỏng">{number(u.competition_score)}</td></>}
           </tr>)}</tbody></table></div>
           {units.length === 0 && <EmptyState title="Không tìm thấy xã/phường phù hợp." />}
         </section>

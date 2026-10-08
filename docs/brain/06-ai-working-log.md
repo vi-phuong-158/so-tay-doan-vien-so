@@ -1,5 +1,30 @@
 # 06 — AI Working Log
 
+## [2026-10-08] Bỏ ghi chú đầu bảng tổng hợp NQ13 theo ảnh owner
+- **Agent:** Codex
+- **Thay đổi:** Gỡ hai đoạn ghi chú phía trên summary mà owner chụp: mô tả pilot/công thức/
+  danh sách xác thực/ngưỡng công khai và thông báo chỉ số toàn tỉnh đang ẩn.
+- **File đã sửa:** `src/pages/NqCompetition.jsx`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Owner yêu cầu bỏ phần chữ trong ảnh; nối tiếp thay đổi tỷ lệ đạt đang có trên nhánh.
+- **Kiểm tra:** 258/258 tests, lint 0 errors/3 warnings cũ, build thành công/cảnh báo chunk lớn cũ;
+  diff check sạch, đối chiếu JSX đã bỏ đúng hai đoạn. Không đổi cách tính hoặc suppression server.
+  Thay đổi local trên `codex/nq13-pass-rate-summary`, chưa commit/push/deploy.
+
+## [2026-10-08] NQ13 tỷ lệ đạt thay điểm trung bình công khai
+- **Agent:** Codex
+- **Thay đổi:** Dùng `pass_rate` hiện có cho summary toàn tỉnh, bảng/cards và chi tiết đơn vị;
+  giải thích ngưỡng đạt 80% (24/30 câu đúng), mỗi người tính kết quả cao nhất. Quản trị giữ điểm
+  trung bình như chỉ số bổ sung; giữ nguyên CSV và suppression nhóm dưới 3 người/toàn tỉnh.
+- **File đã sửa:** `src/pages/NqCompetition.jsx`, `docs/brain/{03-decisions,04-current-tasks,06-ai-working-log}.md`,
+  `docs/quiz-300/NQ13_UNIT_COMPETITION.md`.
+- **Lý do:** Owner muốn bảng tổng hợp dễ hiểu với lượt thi và tỷ lệ đạt thay điểm trung bình.
+- **Kiểm tra:** Frontend 258/258 tests, 0 skipped; lint 0 errors/3 existing Fast Refresh warnings;
+  build thành công (cảnh báo chunk lớn hiện có); diff check sạch. Browser bản build local với RPC
+  fixture: null/0/66.67/100%, summary75%, detail, 360/390/430/768/1440px, không tràn ngang,
+  không lỗi runtime, không có điểm trung bình công khai; ảnh mobile được kiểm tra trực quan.
+  Đây là kiểm tra presentation với dữ liệu giả lập, không phải live DB/E2E. Không sửa API/schema,
+  không ghi database; chưa commit/push/PR/deploy. Nhánh `codex/nq13-pass-rate-summary` từ master beec96e.
+
 ## [2026-10-08] NQ13 final closure — pilot public privacy after #67 merge
 - **Agent:** Codex
 - **Thay đổi:** Merge #67 after exact12bb681 acceptance; rebase #68 onto b3c5393, preserve both
