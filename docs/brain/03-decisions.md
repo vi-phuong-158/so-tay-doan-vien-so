@@ -251,6 +251,19 @@ qua `reset_auth()` — đúng convention mà chính file đó đang dùng cho fi
 không nới, không skip bất kỳ assertion nào**; test 14/15/16/26 vẫn đọc đúng các dòng đó qua đúng
 đường RLS cũ.
 
+## [2026-10-08] Văn bản PUBLIC không phụ thuộc trạng thái tài khoản
+
+**Quyết định.** `can_access_document(uuid)` kiểm tra văn bản tồn tại và `status = 'PUBLISHED'` trước;
+`visibility_level = 'PUBLIC'` được phép trước `is_active_user()`. Điều này giữ hành vi public cho
+role `anon` và khôi phục đọc văn bản cho anonymous Supabase Auth session NQ_300 có profile
+`INVITED`. Các mức `INTERNAL_YOUTH`, `ORGANIZATION_ONLY` và `RESTRICTED` vẫn qua gate ACTIVE cùng
+quy tắc visibility/đơn vị/vai trò hiện hành; trạng thái chưa phát hành vẫn bị từ chối. Policy
+Storage private vẫn có gate `is_active_user()` và không được mở bởi thay đổi này.
+
+**Lý do.** RLS áp dụng policy theo role Postgres: sau `signInAnonymously`, NQ guest dùng role
+`authenticated`, nên policy dành cho role `anon` không còn áp dụng. Helper trước đó yêu cầu ACTIVE
+trước khi xét PUBLIC, trong khi provisioning cố ý tạo profile `INVITED`.
+
 ## [2026-07-30] Tách khỏi runtime Apps Script cũ, chuyển sang Supabase
 
 - **Quyết định:** Dựng dự án mới trên React/Vite + Supabase (Auth/Postgres/RLS/Storage/Edge
