@@ -1,5 +1,13 @@
 # 03 — Technical Decisions
 
+## [2026-10-08] NQ13 public primary metric: tỷ lệ đạt
+
+- Owner replaces public average score with pass rate in provincial summary, unit table/mobile cards
+  and detail. Use the existing server `pass_rate`: people with best result>=80 / participants *100;
+  retakes do not add another person. Public<3 and province subtraction suppression remain unchanged.
+- Admin retains average score as an additional internal metric and detailed CSV; no API/schema,
+  private score/rank calculation, pass boundary or certificate behavior changes.
+
 ## [2026-10-08] Owner scope: pilot participation statistics and server privacy
 
 - Owner confirms no verified member roster: aggregate Chi đoàn participation, attempts and average

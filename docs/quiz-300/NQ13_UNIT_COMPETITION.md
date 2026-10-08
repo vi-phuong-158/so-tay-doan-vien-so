@@ -1,5 +1,15 @@
 # NQ13 — Tổng hợp học tập của các Chi đoàn tại 148 xã/phường
 
+## Follow-up owner metric choice — 2026-10-08
+
+- Public summary/table/mobile cards/unit detail now show **Tỷ lệ đạt** instead of average score:
+  `pass_rate = people whose best result>=80 / participants *100`, using the existing server field.
+  Example20participants/15passed=75%; each person counted once despite retakes.
+- Public0/1/2 still show unknown (`—`) with the privacy notice; province suppression unchanged.
+  Admin retains average score as an additional internal metric and CSV; no migration/API change.
+- This local follow-up is on `codex/nq13-pass-rate-summary`, not yet committed/pushed/deployed.
+  The merged closure and evidence below describe the previous released average-score UI.
+
 ## Current final closure — 2026-10-08
 
 `NQ13_UNIT_COMPETITION_END_TO_END_ACCEPTANCE_PASS` — pilot learning statistics.

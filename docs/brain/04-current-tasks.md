@@ -7,6 +7,13 @@
 
 ## Đang làm
 
+### NQ13 tỷ lệ đạt thay điểm trung bình (2026-10-08)
+
+- Owner yêu cầu đổi chỉ số công khai sang tỷ lệ đạt. Nhánh `codex/nq13-pass-rate-summary` từ
+  master `beec96e`; sửa summary, bảng/cards và detail bằng `pass_rate` đã có từ server.
+- Quản trị vẫn có điểm trung bình bổ sung/CSV; giữ suppression<3, không schema/RPC/data mutation.
+- Chưa commit/push/PR/deploy cho thay đổi này; kiểm tra local và trạng thái bàn giao ở working log.
+
 ### NQ13 final closure — pilot statistics (2026-10-08)
 
 - #67 MERGED after final12bb681 exact-head CI/Preview23FAIL24PASS/PNG/QR/verify/A4PDF/cleanup gates.
