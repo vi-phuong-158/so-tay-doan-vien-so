@@ -1,5 +1,16 @@
 # 06 — AI Working Log
 
+## [2026-10-08] NQ13 final closure — fix Preview blank PDF
+- **Agent:** Codex
+- **Thay đổi:** Print backdrop fixed tại gốc trang A4 và bỏ backdrop-filter tạo containing block;
+  thêm harness real Preview 23/24 boundary, PNG/independent QR decode, verification và Chromium PDF.
+- **File đã sửa:** `src/index.css`, `scripts/nq-final-browser.mjs`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Exact #67 head7195fc3 print PDF1160bytes trắng; print DOM cho thấy certificate y857px
+  nằm ngoài A4height794px. Visibility-only fix không xử lý backdrop blur/static layout offset.
+- **Kiểm tra:** Current head browser23/30FAIL đúng76.67/no certificate;24/30PASS80%,PNG download/
+  jsQR independent decode/public verify PASS. PDF blocker đang sửa, phải retest trên new exact Preview
+  và CI trước conditional merge; chỉ rehearsal, fixture IDs ghi riêng để cleanup.
+
 ## [2026-10-08] NQ13 browser evidence, print follow-up, and blocked acceptance
 - **Agent:** Codex
 - **Thay đổi:** Thay certificate sample bằng PNG thật tải từ browser, thêm screenshot mobile/desktop/public verification synthetic; mở rộng print visibility selectors cho modal/certificate chain; cập nhật acceptance report và trạng thái current task.

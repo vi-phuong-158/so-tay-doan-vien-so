@@ -1721,6 +1721,14 @@
     box-shadow: none !important;
   }
   .nq-certificate-toolbar { display: none !important; }
+  /* The screen backdrop's blur establishes a containing block below the result card. */
+  .nq-cert-modal-backdrop {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 297mm !important;
+    height: 210mm !important;
+    backdrop-filter: none !important;
+  }
   .nq-certificate-logo { height: 24mm !important; }
   .nq-certificate-qr svg { width: 31mm !important; height: 31mm !important; }
   .nq-certificate-footer { min-height: 34mm !important; }
