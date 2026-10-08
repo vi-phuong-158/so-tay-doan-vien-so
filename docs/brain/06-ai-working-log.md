@@ -23,6 +23,19 @@
 - **Kiểm tra:** Current head browser23/30FAIL đúng76.67/no certificate;24/30PASS80%,PNG download/
   jsQR independent decode/public verify PASS. PDF blocker đang sửa, phải retest trên new exact Preview
   và CI trước conditional merge; chỉ rehearsal, fixture IDs ghi riêng để cleanup.
+## [2026-10-08] NQ13 competition hosted acceptance receipt
+- **Agent:** Codex
+- **Thay đổi:** Ghi evidence hosted PR #68 implementation head `81f793cffb48b4c29aabafea1dfdd03ebe09efa8`,
+  CI934DB/257frontend/273Member API, Preview READY exact SHA; thêm ảnh Preview và vị trí chụp leaderboard.
+- **File đã sửa:** `docs/quiz-300/NQ13_UNIT_COMPETITION.md`, `docs/quiz-300/unit-competition-evidence/preview-*`,
+  `docs/brain/{04-current-tasks,06-ai-working-log}.md`, `scripts/nq-unit-browser-check.mjs`.
+- **Lý do:** Bàn giao bằng chứng thực Home->unit snapshot->result->certificate->stats, rank/top3/refresh,
+  mobile/desktop/network privacy; ghi nhận cleanup đúng lifecycle. Không claim browser admin credentials.
+- **Kiểm tra:** Hosted ui/participant/finish/rank assertions PASS;5widths/no horizontal overflow;
+  certificate unit Phường Việt Trì30/30; temp eligible1/completion100/score100/rank1 rồi restoredNULL.
+  Exact actor/attempt/cert leftovers0,active148,historical unmapped9. CI37721276959 success.
+  Final receipt commit được retest exact head và ghi trong body PR #68; không merge/Production DB.
+
 ## [2026-10-08] NQ13 unit competition dashboard
 - **Agent:** Codex
 - **Thay đổi:** Danh mục authoritative148 (133 xã/15 phường), migration/RLS/UUID participant snapshots,

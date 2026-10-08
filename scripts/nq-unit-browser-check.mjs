@@ -106,7 +106,9 @@ try {
     await page.getByLabel('Triển khai', { exact: true }).selectOption('ready');
     await page.getByText('1 đơn vị phù hợp', { exact: true }).waitFor();
     for (const width of [390,1440]) {
-      await page.setViewportSize({ width, height: 844 }); await overflow(); await screenshot(`leaderboard-ranked-${width}.png`);
+      await page.setViewportSize({ width, height: 844 }); await overflow();
+      await page.getByRole('heading', { name: 'BẢNG THÀNH TÍCH HỌC TẬP NGHỊ QUYẾT XIII', exact: true }).scrollIntoViewIfNeeded();
+      await screenshot(`leaderboard-ranked-${width}.png`);
     }
     const refreshed = page.waitForResponse((response) => response.url().endsWith('/rpc/nq_competition_dashboard') && response.ok());
     await page.getByRole('button', { name: 'Cập nhật', exact: true }).click();

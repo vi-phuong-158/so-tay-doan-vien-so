@@ -15,7 +15,9 @@
 - Rehearsal migration applied,60 new pgTAP assertions + NQ runtime regression PASS; workload3000
   attempts/148units RPC39.178ms. Frontend257 tests, lint/build pass with existing warnings.
 - Local real-browser participant->result->certificate->unit stats and five widths/privacy PASS.
-- Final exact-head Preview/CI and cleanup receipt belong to feature PR; no Production DB/merge.
+- PR #68 implementation head `81f793c`: hosted Preview ui/participant/finish/rank PASS; CI
+  run37721276959 success (934DB/257frontend/273Member API). Exact fixture cleanup0remaining,
+  eligible restoredNULL/catalogue148/unmapped9. Final receipt head verified in PR; no Production DB/merge.
 - Owner follow-up: merge dependency first, rebase/retest feature, real eligible counts, pilot name
   collisions and guest30-day retention decision. Report: `docs/quiz-300/NQ13_UNIT_COMPETITION.md`.
 

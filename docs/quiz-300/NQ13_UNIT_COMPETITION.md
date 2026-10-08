@@ -133,7 +133,30 @@ Asia/Ho_Chi_Minh, loading/error/retry/empty states. Admin roster, drill-down 50/
 | Local browser | Real Auth/RPC, no intercepted data; Home->select Việt Trì by unaccented search/Enter->submit30/30->certificate unit snapshot->leaderboard attempts/people/cert updated |
 | Responsive/privacy | 360/390/430/768/1440, no horizontal overflow; public network JSON allowlist/no individual fields; search/types/missing/incomplete/details/auth admin redirect |
 
-Hosted Preview, top-three/rank refresh and exact-head CI are final gates recorded in PR receipt.
+## Hosted receipt — implementation head
+
+- [PR #68](https://github.com/vi-phuong-158/so-tay-doan-vien-so/pull/68), implementation head
+  **`81f793cffb48b4c29aabafea1dfdd03ebe09efa8`**.
+- [CI run37721276959](https://github.com/vi-phuong-158/so-tay-doan-vien-so/actions/runs/37721276959):
+  success build, test-db và member-api-test. Migration reset,35pgTAP files/**934 assertions**,
+  catalogue seed twice, NQ_RUNTIME_ASSERTIONS_PASS, Deno checks/tests,257frontend/273Member API tests.
+- [Immutable Preview](https://so-tay-doan-vien-aqop30837-vi-phuong-158s-projects.vercel.app),
+  deployment `dpl_HKHuZ8QkkSvydqqjHqdwMHWuAKta`, READY, metadata exact implementation SHA,
+  Preview target (không Production). Protection giữ nguyên, access cookie từ quyền chia sẻ tạm,
+  không ghi token/link có secret vào source/receipt.
+- Hosted **ui/participant/finish/rank** browser assertions PASS, không intercept data: dropdown
+  search/Enter; own30/30 result, certificate Phường Việt Trì; people/attempts/pass/certificate counts
+  cập nhật; public aggregate allowlist/privacy;5viewport widths; search/type/missing/incomplete/detail;
+  anonymous admin gate. Temporary eligible=1 chỉ phục vụ own rehearsal fixture: completion100%,
+  score100,rank1,top-three card; refresh không đổi ranking. Đây không phải quân số nghiệp vụ.
+- Cleanup checked: exact actor/attempt/certificate remaining0; eligible và updated_at khôi phục
+  đúng giá trị cũ; catalogue active148; historical unmapped9. Không broad deletion.
+- Ảnh hosted prefix `preview-*` trong `unit-competition-evidence/`; ảnh không prefix là local.
+  Screenshot tên NQTEST là dữ liệu synthetic đã cleanup, không phải người tham gia thật.
+- Receipt commit này bổ sung hồ sơ/ảnh và cải thiện vị trí chụp rank trong harness; source app/
+  migration không đổi so với implementation head. Final latest head, CI và immutable Preview
+  được retest và ghi chính xác trong body PR #68 sau push (tránh tự tham chiếu SHA của commit).
+
 `scripts/nq-unit-browser-check.mjs` supports ui/participant/finish/rank against NQ_BASE_URL;
 uses existing bundled Playwright and Chrome, no install. Correct choices for the own synthetic
 attempt are read through trusted rehearsal SQL into gitignored tmp only; no key appears in client
