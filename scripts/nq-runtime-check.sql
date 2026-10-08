@@ -166,6 +166,7 @@ begin
     if sqlerrm<>'ATTEMPT_SCOPE_DENIED' then raise; end if;
   end;
   perform set_config('request.jwt.claims','{"sub":"6f937301-3b91-4c21-bde5-804359703003","role":"authenticated","is_anonymous":true,"user_metadata":{"purpose":"nq_quiz_guest"}}',true);
+  perform public.nq_save_participant(attempt_id, 'Guest NQ isolation', 'Chi đoàn kiểm thử');
   r := public.nq_attempt('submit',attempt_id);
   assert (r->>'unanswered')::integer=30 and r->'questions'->0 ? 'correct_option_id', 'Guest grading key appears only after submitting';
   perform set_config('request.jwt.claims','{"sub":"6f937301-3b91-4c21-bde5-804359703005","role":"authenticated","is_anonymous":true}',true);
@@ -178,7 +179,6 @@ begin
   perform set_config('request.jwt.claims','{"sub":"6f937301-3b91-4c21-bde5-804359703003","role":"authenticated","is_anonymous":true}',true);
   s := public.nq_attempt('start');
   attempt_id := (s->>'attempt_id')::uuid;
-  perform public.nq_save_participant(attempt_id, 'Guest Nguyễn Văn Đạt', 'Chi đoàn Cơ sở 1');
   for i in 0..23 loop
     q := s->'questions'->i;
     -- The answer key lives in quiz_private, which clients can never read: inspect it as postgres.
@@ -189,6 +189,17 @@ begin
     perform set_config('role','authenticated',true);
     perform public.nq_attempt('answer', attempt_id, (q->>'id')::uuid, correct_id);
   end loop;
+  begin
+    perform public.nq_attempt('submit', attempt_id);
+    raise exception 'Submit without a participant snapshot unexpectedly succeeded';
+  exception when raise_exception then
+    if sqlerrm <> 'PARTICIPANT_REQUIRED' then raise; end if;
+  end;
+  assert not exists(select 1 from public.quiz_attempts where id=checks.attempt_id and submitted_at is not null),
+    'Submit without a participant snapshot does not finalize the attempt';
+  assert not exists(select 1 from public.nq_certificates c where c.attempt_id=checks.attempt_id),
+    'Submit without a participant snapshot does not issue a certificate';
+  perform public.nq_save_participant(attempt_id, 'Guest Nguyễn Văn Đạt', 'Chi đoàn Cơ sở 1');
   r := public.nq_attempt('submit', attempt_id);
   assert (r->>'correct')::integer = 24 and (r->>'percentage')::numeric = 80.00
     and (r->>'passed')::boolean = true, '24/30 is exactly 80% and PASS';
@@ -196,6 +207,10 @@ begin
   assert (r->'certificate'->>'code') ~ '^NQ13-[A-Z0-9]{8,32}$', 'Certificate code has the required format';
   assert r->'certificate'->>'full_name' = 'Guest Nguyễn Văn Đạt'
     and r->'certificate'->>'organization_name' = 'Chi đoàn Cơ sở 1', 'Certificate preserves participant snapshot';
+  assert (r->'certificate'->>'score')::numeric = 80.00
+    and (r->'certificate'->>'correct_count')::integer = 24
+    and (r->'certificate'->>'total_questions')::integer = 30,
+    'Certificate response includes its persisted score and boundaries';
   cert_attempt_id := attempt_id;
   cert_code := r->'certificate'->>'code';
   perform set_config('request.jwt.claims','{"role":"anon"}',true);
@@ -253,6 +268,33 @@ begin
   assert not exists(select 1 from public.nq_certificates c where c.attempt_id = checks.attempt_id),
     'No certificate row is issued on the 23/30 FAIL boundary';
   perform set_config('role','authenticated',true);
+
+  -- A legacy attempt with no participant may expire and preserve its score, but never gets a certificate.
+  s := public.nq_attempt('start');
+  attempt_id := (s->>'attempt_id')::uuid;
+  for i in 0..23 loop
+    q := s->'questions'->i;
+    perform set_config('role','postgres',true);
+    select (value->>'correct_option_id')::uuid into correct_id
+      from quiz_private.attempt_snapshots, jsonb_array_elements(questions)
+      where attempt_snapshots.attempt_id = checks.attempt_id and value->>'id' = checks.q->>'id';
+    perform set_config('role','authenticated',true);
+    perform public.nq_attempt('answer', attempt_id, (q->>'id')::uuid, correct_id);
+  end loop;
+  perform set_config('role','postgres',true);
+  update public.quiz_attempts set started_at=clock_timestamp()-interval '21 minutes' where id=attempt_id;
+  update quiz_private.attempt_snapshots snapshot set expires_at=clock_timestamp()-interval '1 minute' where snapshot.attempt_id=checks.attempt_id;
+  perform set_config('role','authenticated',true);
+  r := public.nq_attempt('resume');
+  assert r->>'status'='EXPIRED' and (r->>'passed')::boolean and (r->>'correct')::integer=24,
+    'Legacy expiry finalizes accepted answers and preserves the passing result';
+  assert r->>'certificate' is null,
+    'Legacy expiry without participant snapshot returns no certificate';
+  perform set_config('role','postgres',true);
+  assert not exists(select 1 from public.nq_certificates c where c.attempt_id=checks.attempt_id),
+    'Legacy expiry without participant snapshot writes no certificate';
+  perform set_config('role','authenticated',true);
+
   assert public.lookup_nq_questions('1')->0->>'correct_answer'='B', 'Guest can use public source lookup';
   perform set_config('role','postgres',true);
   assert exists(select 1 from quiz_private.nq_guest_accounts where user_id='6f937301-3b91-4c21-bde5-804359703003'), 'NQ guest is added to the private retention registry';

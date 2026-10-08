@@ -3,11 +3,13 @@
 ## NQ13 Learning Assessment & Digital Certificate (2026-10-07)
 
 - **Campaign entry:** `Home` hero card (`.home-campaign-nq13`) trực tiếp dẫn vào bài thi `/tri-thuc/trac-nghiem/7c620b81-6dc6-4a57-9908-3a1f68652a00` hoặc tra cứu 300 câu (`?view=lookup`).
-- **Participant Gate:** Trước khi start lượt thi hoặc khi resume lượt thi chưa có snapshot, người dùng nhập Họ tên + Đơn vị và tích xác nhận cam kết. Dữ liệu lưu qua RPC `nq_save_participant` vào bảng `public.nq_attempt_participants` và bị khóa bất biến sau khi SUBMITTED.
+- **Participant Gate:** Trước khi start lượt thi hoặc khi resume lượt thi chưa có snapshot, người dùng nhập Họ tên + Đơn vị và xác nhận rằng các thông tin này cùng kết quả có thể hiển thị khi xác minh công khai bằng mã/QR. Dữ liệu lưu qua RPC `nq_save_participant` vào bảng `public.nq_attempt_participants` và bị khóa bất biến sau khi SUBMITTED. Migration `20261008120000_nq13_certificate_submit_requires_participant` buộc RPC `nq_attempt` từ chối submit trước hạn nếu thiếu snapshot hợp lệ (`PARTICIPANT_REQUIRED`); legacy tự hết hạn vẫn lưu điểm nhưng không phát hành certificate nếu thiếu snapshot.
 - **Pass Boundary 80%:** Cập nhật `quizzes.pass_score = 80`. RPC `public.nq_attempt` tính `score = round(correct::numeric / 30 * 100, 2)` và `passed = (correct >= 24)`. 24/30 = 80% (PASS), 23/30 = 76.67% (FAIL).
-- **Certificate Issuance & Retention:** Khi attempt đạt yêu cầu (`passed = true`), RPC `nq_attempt` tự động cấp chứng nhận idempotent vào bảng `public.nq_certificates`. Mã chứng nhận `NQ13-[A-Z0-9]{8,32}` có 64-bit cryptographic entropy. Khóa ngoại `attempt_id ON DELETE SET NULL` giúp chứng nhận tồn tại vĩnh viễn ngay cả khi tài khoản guest anonymous bị xóa sau 30 ngày.
-- **QR Code & PNG/PDF Export:** Engine thuần JS `src/lib/qrCode.js` sinh ma trận QR Model 2 và SVG. Canvas `src/lib/certificateCanvas.js` sinh ảnh PNG 1754×1240 A4 landscape. Quy tắc `@media print` hỗ trợ in và lưu PDF trực tiếp từ trình duyệt.
-- **Public Verification Route:** `/xac-minh-chung-nhan/:code` gọi RPC `public.verify_nq_certificate` định danh SECURITY DEFINER, bảo mật tuyệt đối không trả về ID người dùng, email hay dữ liệu bài làm.
+- **Certificate Issuance & Retention:** RPC `nq_attempt` chỉ cấp certificate idempotent cho attempt PASS có participant snapshot; response trả lại mã, họ tên, đơn vị, ngày cấp, điểm và số câu từ chính record đã lưu. Mã `NQ13-[A-Z0-9]{8,32}` có 64-bit cryptographic entropy. Khóa ngoại `attempt_id ON DELETE SET NULL` giúp certificate tồn tại khi tài khoản guest bị xóa theo retention.
+- **QR Code & PNG/PDF Export:** `qrcode` sinh ma trận QR và SVG/canvas với quiet zone tối thiểu 4 modules; `jsqr` là decoder dev-only để kiểm tra payload độc lập, bao gồm Version 7+. Canvas `src/lib/certificateCanvas.js` sinh PNG 1754×1240 A4 landscape, fit/wrap tên và đơn vị. Quy tắc `@media print` ẩn app chrome và đặt trang A4 landscape.
+- **Public Verification Route:** `/xac-minh-chung-nhan/:code` gọi RPC `public.verify_nq_certificate`. Trang công khai chủ ý hiển thị họ tên, đơn vị, điểm và ngày hoàn thành; không trả về ID người dùng, email hay dữ liệu bài làm.
+
+**Code Graph:** `Home` → `NqQuiz` → `nqQuizService` / `nq_attempt` → participant snapshot + certificate record → `NqCertificate` → `qrcode` / `certificateCanvas`; public QR → `/xac-minh-chung-nhan/:code` → `verify_nq_certificate`.
 
 ## Fixed Nghị quyết bank (2026-10-02)
 

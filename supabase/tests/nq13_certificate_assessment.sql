@@ -3,7 +3,7 @@
 -- for the NQ13 Assessment & Certificate features.
 begin;
 
-select plan(16);
+select plan(18);
 
 -- 1. Table structure
 select has_table('public', 'nq_certificates', 'public.nq_certificates table exists');
@@ -60,6 +60,17 @@ select is(
 select ok(
   has_function_privilege('authenticated', 'public.nq_save_participant(uuid,text,text)', 'EXECUTE'),
   'authenticated can EXECUTE nq_save_participant'
+);
+
+select ok(
+  position('PARTICIPANT_REQUIRED' in pg_get_functiondef('public.nq_attempt(text,uuid,uuid,uuid)'::regprocedure)) > 0,
+  'nq_attempt enforces participant snapshot before normal submit'
+);
+
+select ok(
+  position('correct_count' in pg_get_functiondef('public.nq_attempt(text,uuid,uuid,uuid)'::regprocedure)) > 0
+    and position('total_questions' in pg_get_functiondef('public.nq_attempt(text,uuid,uuid,uuid)'::regprocedure)) > 0,
+  'nq_attempt returns persisted score fields from the certificate record'
 );
 
 -- 5. Fixtures for verification and retention testing

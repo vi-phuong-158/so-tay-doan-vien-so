@@ -2575,3 +2575,10 @@
   `docs/google-drive-public-catalog-2026-10-07.png`, `docs/brain/06-ai-working-log.md`.
 - **Lý do:** Lưu trữ đồng bộ hồ sơ đối chiếu và bằng chứng mở công khai 5 tài liệu nguồn Drive trên nhánh PR #66.
 - **Kiểm tra:** `npm test` 227/227 test đạt, `npm run lint` 0 lỗi / 3 cảnh báo cũ.
+
+## [2026-10-08] Hardening và thiết kế lại chứng nhận NQ13
+- **Agent:** Codex
+- **Thay đổi:** Thay QR tự viết bằng thư viện đã trưởng thành và test giải mã độc lập; chặn cấp/xem chứng nhận nếu thiếu participant snapshot hoặc certificate record hợp lệ; công khai trước thông tin sẽ hiển thị khi xác minh; thiết kế lại HTML/PNG chứng nhận đồng nhất, thêm kiểm thử dữ liệu dài và cập nhật migration/runtime assertions.
+- **File đã sửa:** `src/lib/qrCode.js`, `src/lib/certificateCanvas.js`, `src/components/NqCertificate.jsx`, `src/pages/NqQuiz.jsx`, `src/services/nqQuizService.js`, `src/services/quizService.js`, `src/index.css`, `supabase/migrations/20261008120000_nq13_certificate_submit_requires_participant.sql`, `supabase/tests/nq13_certificate_assessment.sql`, `scripts/nq-runtime-check.sql`, `tests/`, `package.json`, `package-lock.json`, `docs/brain/01-architecture.md`, `docs/brain/03-decisions.md`, `docs/brain/04-current-tasks.md`, `docs/quiz-300/NQ13_CERTIFICATE_ACCEPTANCE.md`.
+- **Lý do:** Khắc phục review findings về QR scan chưa được chứng minh, chứng nhận không có record, participant enforcement chỉ ở frontend, privacy notice chưa rõ và thiết kế chưa đủ trang trọng.
+- **Kiểm tra:** `npm test` 251/251; `npm run lint` 0 lỗi / 3 cảnh báo Fast Refresh hiện có; `npm run build` thành công; `git diff --check` sạch; rehearsal pgTAP 18/18 và `scripts/nq-runtime-check.sql` báo `NQ_RUNTIME_ASSERTIONS_PASS`. Browser acceptance/PNG download/print trên Preview exact-head đang chờ deploy.

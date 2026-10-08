@@ -3,24 +3,21 @@ import { Icon } from './Icon';
 import { Button } from './common';
 import { generateQrMatrix } from '../lib/qrCode';
 import { downloadCertificatePng } from '../lib/certificateCanvas';
-import { formatCertificateDate } from '../services/nqQuizService';
+import {
+  formatCertificateDate,
+  isValidNqCertificateRecord,
+  mapNqCertificateRecord
+} from '../services/nqQuizService';
 
-export function NqCertificate({ certData, onClose }) {
+export function NqCertificate({ certificate, onClose }) {
   const [downloading, setDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState('');
   const qrContainerId = useId();
 
-  if (!certData) return null;
+  if (!isValidNqCertificateRecord(certificate)) return null;
 
-  const {
-    fullName = '',
-    organizationName = '',
-    score = 80,
-    correctCount = 24,
-    totalQuestions = 30,
-    certificateCode = '',
-    issuedAt = new Date()
-  } = certData;
+  const { fullName, organizationName, score, correctCount, totalQuestions, certificateCode, issuedAt } =
+    mapNqCertificateRecord(certificate);
 
   const verifyUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/xac-minh-chung-nhan/${certificateCode}`;
   const qrMatrix = generateQrMatrix(verifyUrl);
@@ -30,7 +27,7 @@ export function NqCertificate({ certData, onClose }) {
     try {
       setDownloading(true);
       setDownloadError('');
-      await downloadCertificatePng(certData);
+      await downloadCertificatePng(certificate);
     } catch {
       setDownloadError('Không thể tạo file ảnh. Vui lòng thử chức năng In / Lưu PDF.');
     } finally {
@@ -99,15 +96,17 @@ export function NqCertificate({ certData, onClose }) {
                   width="120"
                   height="64"
                 />
-                <h1 className="nq-certificate-title">CHỨNG NHẬN HOÀN THÀNH</h1>
+                <p className="nq-certificate-eyebrow">CHỨNG NHẬN</p>
+                <h1 className="nq-certificate-title">HOÀN THÀNH</h1>
                 <div className="nq-certificate-divider" aria-hidden="true" />
-                <p className="nq-certificate-subtitle">Ban Thanh niên Công an tỉnh Phú Thọ xác nhận</p>
+                <p className="nq-certificate-subtitle">BAN THANH NIÊN · CÔNG AN TỈNH PHÚ THỌ</p>
               </header>
 
               <main className="nq-certificate-body">
                 <div className="nq-certificate-recipient">
-                  <strong className="nq-certificate-name">{fullName || 'ĐỒNG CHÍ DỰ THI'}</strong>
-                  <p className="nq-certificate-org">Đơn vị: {organizationName || 'Công an tỉnh Phú Thọ'}</p>
+                  <p className="nq-certificate-recipient-label">Đồng chí</p>
+                  <strong className="nq-certificate-name">{fullName}</strong>
+                  <p className="nq-certificate-org">{organizationName}</p>
                 </div>
 
                 <p className="nq-certificate-verdict-intro">đã hoàn thành đạt yêu cầu</p>
@@ -120,15 +119,12 @@ export function NqCertificate({ certData, onClose }) {
                 </div>
 
                 <div className="nq-certificate-badge">
-                  <span>
-                    Kết quả: <strong>{correctCount}/{totalQuestions} câu đúng</strong> —{' '}
-                    <strong>{score}%</strong> — <strong>ĐẠT YÊU CẦU</strong>
-                  </span>
+                  <span>Kết quả: <strong>{correctCount}/{totalQuestions} câu đúng · {score}% · ĐẠT YÊU CẦU</strong></span>
                 </div>
 
                 <div className="nq-certificate-meta">
-                  <p>Ngày hoàn thành: <strong>{formattedDate}</strong></p>
-                  <p>Mã chứng nhận: <strong>{certificateCode}</strong></p>
+                  <p><span>Ngày hoàn thành</span><strong>{formattedDate}</strong></p>
+                  <p><span>Mã chứng nhận</span><strong>{certificateCode}</strong></p>
                 </div>
               </main>
 
@@ -142,19 +138,19 @@ export function NqCertificate({ certData, onClose }) {
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      viewBox={`0 0 ${qrMatrix.length + 2} ${qrMatrix.length + 2}`}
-                      width="100"
-                      height="100"
+                      viewBox={`0 0 ${qrMatrix.length + 8} ${qrMatrix.length + 8}`}
+                      width="124"
+                      height="124"
                       shapeRendering="crispEdges"
                     >
-                      <rect width={qrMatrix.length + 2} height={qrMatrix.length + 2} fill="#ffffff" />
+                      <rect width={qrMatrix.length + 8} height={qrMatrix.length + 8} fill="#ffffff" />
                       {qrMatrix.map((row, r) =>
                         row.map((cell, c) =>
                           cell ? (
                             <rect
                               key={`${r}-${c}`}
-                              x={c + 1}
-                              y={r + 1}
+                              x={c + 4}
+                              y={r + 4}
                               width="1"
                               height="1"
                               fill="#000000"

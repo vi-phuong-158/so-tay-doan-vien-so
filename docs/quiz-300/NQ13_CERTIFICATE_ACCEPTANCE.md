@@ -35,8 +35,8 @@ dành cho toàn thể đoàn viên, thanh niên và quần chúng nhân dân thu
 - Modal nhập thông tin xuất hiện khi bấm `BẮT ĐẦU THI` hoặc khi tiếp tục (resume) lượt thi cũ chưa có snapshot:
   - **Họ và tên**: 2–120 ký tự, bắt buộc, tự động trim và escape.
   - **Đơn vị**: 2–180 ký tự, bắt buộc, tự động trim và escape.
-  - Checkbox bắt buộc: `Tôi xác nhận thông tin trên là chính xác.`
-  - Thông báo minh bạch: `Thông tin này được sử dụng để ghi nhận kết quả và cấp chứng nhận hoàn thành bài kiểm tra.`
+  - Checkbox bắt buộc xác nhận thông tin chính xác và đồng ý hiển thị Họ tên, Đơn vị, kết quả khi tra cứu bằng mã/QR.
+  - Thông báo trước khi nhập: Họ tên, Đơn vị và kết quả hoàn thành có thể hiển thị trên trang xác minh công khai nếu người khác có mã chứng nhận hoặc QR.
   - Không thu thập CCCD, SĐT, địa chỉ, email.
 - Dữ liệu được lưu trữ server-side tại bảng `public.nq_attempt_participants`, bất biến (immutable) sau khi nộp bài.
 
@@ -49,9 +49,10 @@ dành cho toàn thể đoàn viên, thanh niên và quần chúng nhân dân thu
 
 ### 2.4. Màn hình kết quả
 - **ĐẠT (>= 24 câu)**:
-  - Banner: `HOÀN THÀNH ĐẠT YÊU CẦU`, huy hiệu xanh `ĐẠT YÊU CẦU`.
+  - Banner: `HOÀN THÀNH ĐẠT YÊU CẦU`.
   - Hiển thị điểm số, tỷ lệ %, số câu đúng/sai/chưa làm, thời gian làm bài, Họ tên, Đơn vị, Ngày hoàn thành, Mã chứng nhận.
-  - CTA chính: `XEM CHỨNG NHẬN` (mở viewer chứng nhận).
+  - Chỉ hiển thị CTA `XEM CHỨNG NHẬN` khi RPC trả về certificate record hoàn chỉnh gồm code, Họ tên, Đơn vị, ngày cấp và kết quả.
+  - PASS chưa có certificate hiển thị trạng thái chờ cấp và nút `TẢI LẠI KẾT QUẢ`; không render/tải/in chứng nhận.
   - CTA phụ: `Xem lại đáp án`, `Làm đề khác`, `Tra cứu 300 câu hỏi`.
 - **CHƯA ĐẠT (<= 23 câu)**:
   - Banner: `CHƯA ĐẠT YÊU CẦU`, huy hiệu `CHƯA ĐẠT`.
@@ -66,13 +67,15 @@ dành cho toàn thể đoàn viên, thanh niên và quần chúng nhân dân thu
 - **Huy hiệu Đoàn**: Sử dụng trực tiếp `public/brand/logo-doan-badge.png`.
 - **Mã chứng nhận**: Định dạng `NQ13-[A-Z0-9]{8,32}`, entropy cao, tính idempotent (mỗi lượt thi đạt chỉ cấp đúng 1 chứng nhận).
 - **Tồn tại vĩnh viễn (Retention resilience)**: Khóa ngoại `nq_certificates.attempt_id REFERENCES quiz_attempts(id) ON DELETE SET NULL` giúp chứng nhận tồn tại ngay cả khi tài khoản guest anonymous bị xóa sau 30 ngày.
-- **Tải ảnh PNG**: Render trực tiếp canvas A4 ngang độ phân giải cao 1754×1240 (`src/lib/certificateCanvas.js`), tên file chuẩn hóa: `Chung-nhan-NQ13-[TEN-NGUOI-DUNG].png`.
-- **In / Lưu PDF**: `@media print` ẩn toàn bộ chrome/layout, định dạng chuẩn A4 landscape.
+- **Thiết kế**: Navy `#123B66`, charcoal `#1F2937`, muted gray `#667085`, gold `#B9974F` chỉ làm viền/divider; nền ivory nhẹ; giữ logo Đoàn màu gốc. Không dùng màu xanh lá cho kết quả, chữ ký giả hoặc con dấu giả.
+- **Tải ảnh PNG**: Render trực tiếp canvas A4 ngang 1754×1240 (`src/lib/certificateCanvas.js`), fit chữ tên và wrap đơn vị; tên file chuẩn hóa: `Chung-nhan-NQ13-[TEN-NGUOI-DUNG].png`.
+- **In / Lưu PDF**: `@media print` ẩn app chrome/layout, đặt trang A4 landscape và ẩn nội dung ngoài chứng nhận.
 
-### 2.6. Công nghệ QR Code không phụ thuộc thư viện ngoài (Zero-dependency)
-- Module thuần ESM (`src/lib/qrCode.js`) triển khai thuật toán QR Code Model 2, Reed-Solomon Error Correction Level M trên trường hữu hạn $GF(256)$, mask evaluation tự động.
-- Render SVG an toàn qua React JSX `<svg>` và `<rect>`, không dùng `dangerouslySetInnerHTML`.
-- URL mã hóa: `{origin}/xac-minh-chung-nhan/{code}`.
+### 2.6. QR generation và decoder test độc lập
+- `src/lib/qrCode.js` dùng thư viện `qrcode` cho QR Model 2 / Error Correction Level M, bao gồm Version Information và mask selection do thư viện xử lý.
+- Quiet zone tối thiểu 4 modules được áp dụng cho SVG và Canvas; SVG được dựng qua React `<svg>`/`<rect>`.
+- `jsqr` là dev-only decoder độc lập. `tests/qr_code.test.mjs` decode payload short, URL xác minh và URL Preview dài lên Version 7+, sau đó so sánh exact text. Đây là decoder test trên pixel buffer của QR matrix; browser PNG download/decode vẫn phải được xác minh riêng trước verdict PASS.
+- URL mã hóa trong runtime: `{window.location.origin}/xac-minh-chung-nhan/{certificateCode}`; không hardcode hostname production/Preview.
 
 ### 2.7. Xác minh chứng nhận công khai (`/xac-minh-chung-nhan/:code`)
 - Route công khai qua `src/pages/CertificateVerification.jsx` và RPC `public.verify_nq_certificate(p_code text)`.
@@ -92,8 +95,9 @@ dành cho toàn thể đoàn viên, thanh niên và quần chúng nhân dân thu
    - Cập nhật RPC `public.nq_attempt` với logic chấm 80% và tự động cấp chứng nhận.
    - Tạo RPC `public.verify_nq_certificate`.
 2. `supabase/seeds/nq300.sql`: Đồng bộ `pass_score = 80`.
-3. `supabase/tests/nq13_certificate_assessment.sql`: Bộ 16 test assertions pgTAP về schema, quyền, xác minh công khai và retention.
-4. `scripts/nq-runtime-check.sql`: Kịch bản SQL kiểm tra runtime parity.
+3. `supabase/tests/nq13_certificate_assessment.sql`: Bộ 18 test assertions pgTAP về schema, quyền, submit participant và retention.
+4. `scripts/nq-runtime-check.sql`: Kịch bản SQL runtime về submit thiếu participant, deadline legacy, ranh giới 23/24 câu, idempotency, privacy, guest isolation và retention.
+5. `supabase/migrations/20261008120000_nq13_certificate_submit_requires_participant.sql`: chặn submit trước hạn thiếu participant snapshot; certificate response kèm score/count từ record đã lưu.
 
 ---
 

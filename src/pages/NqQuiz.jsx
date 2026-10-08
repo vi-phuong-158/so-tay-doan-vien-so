@@ -10,7 +10,8 @@ import {
   secondsRemaining,
   formatQuizTime,
   validateParticipantInfo,
-  formatCertificateDate
+  formatCertificateDate,
+  canViewNqCertificate
 } from '../services/nqQuizService';
 import { NqCertificate } from '../components/NqCertificate';
 
@@ -42,6 +43,7 @@ export function NqQuiz() {
   const [participantConfirmed, setParticipantConfirmed] = useState(false);
   const [participantError, setParticipantError] = useState('');
   const [isResumingWithoutParticipant, setIsResumingWithoutParticipant] = useState(false);
+  const [refreshingCertificate, setRefreshingCertificate] = useState(false);
 
   // Certificate Modal
   const [showCertModal, setShowCertModal] = useState(false);
@@ -63,6 +65,8 @@ export function NqQuiz() {
     setState(next?.status === 'IN_PROGRESS' ? { ...next, answers: { ...next.answers, ...pending.current } } : next);
     setRemaining(secondsRemaining(next, 0));
     if (next?.status !== 'IN_PROGRESS') {
+      setShowParticipantModal(false);
+      setIsResumingWithoutParticipant(false);
       if (next) localStorage.removeItem(cacheKey(next.attempt_id));
       pending.current = {};
       if (next) setView('result');
@@ -88,13 +92,16 @@ export function NqQuiz() {
         if (searchParams.get('view') === 'lookup') {
           setView('lookup');
         } else if (next.status === 'IN_PROGRESS') {
-          if (!next.participant?.full_name) {
+          const missingParticipant = !next.participant?.full_name || !next.participant?.organization_name;
+          if (missingParticipant) {
             setIsResumingWithoutParticipant(true);
             setShowParticipantModal(true);
+          } else {
+            setIsResumingWithoutParticipant(false);
           }
           setView('attempt');
           try { pending.current = JSON.parse(localStorage.getItem(cacheKey(next.attempt_id)) || '{}'); } catch { pending.current = {}; }
-          await flush();
+          if (!missingParticipant) await flush();
         } else {
           setView('result');
         }
@@ -138,8 +145,10 @@ export function NqQuiz() {
       const next = await service.attempt('submit', active.current.attempt_id);
       apply(next);
       setView('result');
-    } catch {
-      setError('Chưa nộp được bài. Hệ thống sẽ thử lại khi có mạng; thời gian vẫn tính theo máy chủ.');
+    } catch (err) {
+      setError(err?.code === 'PARTICIPANT_REQUIRED'
+        ? 'Vui lòng xác nhận thông tin người dự thi trước khi nộp bài.'
+        : 'Chưa nộp được bài. Hệ thống sẽ thử lại khi có mạng; thời gian vẫn tính theo máy chủ.');
     } finally {
       submitting.current = false;
       setBusy(false);
@@ -174,6 +183,7 @@ export function NqQuiz() {
   function openStartModal() {
     setError('');
     setParticipantError('');
+    setParticipantConfirmed(false);
     setIsResumingWithoutParticipant(false);
     if (profile?.full_name && !participantName) {
       setParticipantName(profile.full_name);
@@ -202,13 +212,14 @@ export function NqQuiz() {
     try {
       if (isResumingWithoutParticipant && state?.attempt_id) {
         await service.saveParticipant(state.attempt_id, validation.data.fullName, validation.data.organizationName);
-        setState((prev) => ({
-          ...prev,
+        const resumed = {
+          ...active.current,
           participant: {
             full_name: validation.data.fullName,
             organization_name: validation.data.organizationName
           }
-        }));
+        };
+        apply(resumed);
         setShowParticipantModal(false);
         setIsResumingWithoutParticipant(false);
       } else {
@@ -258,7 +269,23 @@ export function NqQuiz() {
     }
   }
 
+  async function reloadResult() {
+    if (!state?.attempt_id || refreshingCertificate) return;
+    setRefreshingCertificate(true);
+    setError('');
+    try {
+      const latest = await service.attempt('read', state.attempt_id);
+      apply(latest);
+      setView('result');
+    } catch {
+      setError('Không thể tải lại kết quả. Vui lòng thử lại.');
+    } finally {
+      setRefreshingCertificate(false);
+    }
+  }
+
   const question = state?.questions?.[index];
+  const certificateAvailable = canViewNqCertificate(state?.passed, state?.certificate);
   const answered = Object.values(state?.answers || {}).filter(Boolean).length;
   const showOptions = (q, isReview = false) => (
     <div className="quiz-options">
@@ -452,7 +479,7 @@ export function NqQuiz() {
                   <span>Ngày hoàn thành:</span>
                   <strong>{formatCertificateDate(state.certificate?.issued_at || state.submitted_at)}</strong>
                 </div>
-                {state.certificate?.code && (
+                {certificateAvailable && (
                   <div className="nq-result-info-row">
                     <span>Mã chứng nhận:</span>
                     <code className="nq-cert-code-tag">{state.certificate.code}</code>
@@ -460,15 +487,26 @@ export function NqQuiz() {
                 )}
               </div>
 
+              {!certificateAvailable && (
+                <div className="nq-certificate-pending" role="status">
+                  <p>Kết quả đã đạt yêu cầu nhưng chứng nhận chưa được cấp. Vui lòng tải lại hoặc liên hệ quản trị hệ thống.</p>
+                  <Button variant="secondary" onClick={reloadResult} disabled={refreshingCertificate}>
+                    {refreshingCertificate ? 'Đang tải lại…' : 'TẢI LẠI KẾT QUẢ'}
+                  </Button>
+                </div>
+              )}
+
               {state.status === 'EXPIRED' && (
                 <p className="nq-result-expired-notice">Bài thi đã được hệ thống tự động nộp khi hết 20 phút.</p>
               )}
 
               <div className="nq-result-actions">
-                <Button onClick={() => setShowCertModal(true)} variant="primary" className="nq-cert-btn">
-                  <Icon name="school" size={18} />
-                  <span>XEM CHỨNG NHẬN</span>
-                </Button>
+                {certificateAvailable && (
+                  <Button onClick={() => setShowCertModal(true)} variant="primary" className="nq-cert-btn">
+                    <Icon name="school" size={18} />
+                    <span>XEM CHỨNG NHẬN</span>
+                  </Button>
+                )}
                 <Button variant="secondary" onClick={() => setReview(!review)}>
                   <Icon name="file" size={16} />
                   <span>{review ? 'Ẩn đáp án' : 'Xem lại đáp án'}</span>
@@ -606,7 +644,7 @@ export function NqQuiz() {
             </div>
 
             <p className="nq-modal-notice">
-              Thông tin này được sử dụng để ghi nhận kết quả và cấp chứng nhận hoàn thành bài kiểm tra.
+              Họ tên, đơn vị và kết quả hoàn thành có thể hiển thị trên trang xác minh công khai khi người khác có mã chứng nhận hoặc QR.
             </p>
 
             <form onSubmit={handleConfirmParticipant} className="nq-participant-form">
@@ -652,7 +690,7 @@ export function NqQuiz() {
                   required
                 />
                 <label htmlFor="nq-confirm-checkbox">
-                  Tôi xác nhận thông tin trên là chính xác.
+                  Tôi xác nhận thông tin chính xác và đồng ý hiển thị các nội dung trên khi tra cứu chứng nhận bằng mã hoặc QR.
                 </label>
               </div>
 
@@ -683,7 +721,7 @@ export function NqQuiz() {
       )}
 
       {/* Certificate Viewer Modal */}
-      {showCertModal && (
+      {showCertModal && certificateAvailable && (
         <div
           className="nq-cert-modal-backdrop"
           role="dialog"
@@ -693,15 +731,7 @@ export function NqQuiz() {
         >
           <div className="nq-cert-modal-content" onClick={(e) => e.stopPropagation()}>
             <NqCertificate
-              certData={{
-                fullName: state.certificate?.full_name || state.participant?.full_name || 'Đồng chí dự thi',
-                organizationName: state.certificate?.organization_name || state.participant?.organization_name || 'Công an tỉnh Phú Thọ',
-                score: state.percentage,
-                correctCount: state.correct,
-                totalQuestions: 30,
-                certificateCode: state.certificate?.code || '',
-                issuedAt: state.certificate?.issued_at || state.submitted_at || new Date().toISOString()
-              }}
+              certificate={certificateAvailable ? state.certificate : null}
               onClose={() => setShowCertModal(false)}
             />
           </div>

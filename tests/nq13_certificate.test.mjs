@@ -4,6 +4,9 @@ import {
   validateParticipantInfo,
   formatCertificateDate,
   sanitizeCertificateFileName,
+  isValidNqCertificateRecord,
+  canViewNqCertificate,
+  mapNqCertificateRecord,
   PASS_SCORE_PERCENT,
   PASS_MIN_CORRECT,
   TOTAL_QUESTIONS,
@@ -62,6 +65,37 @@ test('sanitizeCertificateFileName: strips Vietnamese diacritics and invalid file
 
   const empty = sanitizeCertificateFileName('');
   assert.equal(empty, 'Chung-nhan-NQ13.png');
+});
+
+test('certificate viewer requires PASS and a complete backend certificate record', () => {
+  const certificate = {
+    code: 'NQ13-4E6FBD0421A64629',
+    full_name: 'Nguyễn Thị Phương Thảo',
+    organization_name: 'Chi đoàn Phòng An ninh đối ngoại - Công an tỉnh Phú Thọ',
+    issued_at: '2026-10-08T10:30:00.000Z',
+    score: 80,
+    correct_count: 24,
+    total_questions: 30
+  };
+
+  assert.equal(canViewNqCertificate(true, certificate), true);
+  assert.equal(canViewNqCertificate(true, null), false);
+  assert.equal(canViewNqCertificate(true, { code: 'NQ13-4E6FBD0421A64629' }), false);
+  assert.equal(canViewNqCertificate(false, certificate), false);
+  assert.equal(isValidNqCertificateRecord({ ...certificate, issued_at: null }), false);
+  assert.equal(isValidNqCertificateRecord({ ...certificate, issued_at: 1791455400000 }), false);
+  assert.equal(isValidNqCertificateRecord({ ...certificate, code: '' }), false);
+  assert.equal(isValidNqCertificateRecord({ ...certificate, code: ` ${certificate.code}` }), false);
+  assert.equal(isValidNqCertificateRecord({ ...certificate, score: '80' }), false);
+  assert.deepEqual(mapNqCertificateRecord(certificate), {
+    fullName: 'Nguyễn Thị Phương Thảo',
+    organizationName: 'Chi đoàn Phòng An ninh đối ngoại - Công an tỉnh Phú Thọ',
+    score: 80,
+    correctCount: 24,
+    totalQuestions: 30,
+    certificateCode: 'NQ13-4E6FBD0421A64629',
+    issuedAt: '2026-10-08T10:30:00.000Z'
+  });
 });
 
 test('Pass threshold contract: 24/30 is 80% (PASS) and 23/30 is 76.67% (FAIL)', () => {

@@ -1076,20 +1076,20 @@
 /* Certificate Viewer & Document */
 .nq-cert-modal-content {
   width: min(100%, 940px);
-  max-height: 92vh;
+  max-height: 94vh;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  border-radius: var(--radius-xl);
+  border-radius: 14px;
 }
 .nq-certificate-wrapper {
-  background: #101c30;
-  padding: 20px;
-  border-radius: var(--radius-xl);
+  background: #eef0f2;
+  padding: 12px;
+  border-radius: 14px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
 }
 .nq-certificate-toolbar {
   width: 100%;
@@ -1109,29 +1109,32 @@
   overflow-x: auto;
   display: flex;
   justify-content: center;
-  padding: 8px 0;
+  padding: 4px 0;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
 }
 .nq-certificate {
   width: 860px;
-  min-height: 608px;
-  background: #fff;
+  height: 608px;
+  flex: 0 0 860px;
+  background: #FFFEFB;
   position: relative;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
-  border-radius: 6px;
+  box-shadow: 0 4px 20px rgba(31, 41, 55, 0.13);
+  border-radius: 2px;
   box-sizing: border-box;
-  padding: 16px;
+  padding: 14px;
 }
 .nq-certificate-border-outer {
-  border: 4px solid #0D47A1;
+  border: 2px solid #123B66;
   height: 100%;
-  padding: 6px;
+  padding: 5px;
   box-sizing: border-box;
-  background: linear-gradient(135deg, #ffffff 0%, #f7faff 50%, #ffffff 100%);
+  background: #FFFEFB;
 }
 .nq-certificate-border-inner {
-  border: 2px solid #C49A45;
+  border: 1px solid #B9974F;
   height: 100%;
-  padding: 24px 32px 18px;
+  padding: 20px 28px 14px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -1141,14 +1144,14 @@
 }
 .nq-corner {
   position: absolute;
-  width: 16px;
-  height: 16px;
-  border: 2px solid #C49A45;
+  width: 12px;
+  height: 12px;
+  border: 1px solid #B9974F;
 }
-.nq-corner-tl { top: 4px; left: 4px; border-right: none; border-bottom: none; }
-.nq-corner-tr { top: 4px; right: 4px; border-left: none; border-bottom: none; }
-.nq-corner-bl { bottom: 4px; left: 4px; border-right: none; border-top: none; }
-.nq-corner-br { bottom: 4px; right: 4px; border-left: none; border-top: none; }
+.nq-corner-tl { top: 5px; left: 5px; border-right: none; border-bottom: none; }
+.nq-corner-tr { top: 5px; right: 5px; border-left: none; border-bottom: none; }
+.nq-corner-bl { bottom: 5px; left: 5px; border-right: none; border-top: none; }
+.nq-corner-br { bottom: 5px; right: 5px; border-left: none; border-top: none; }
 
 .nq-certificate-header {
   display: flex;
@@ -1157,29 +1160,38 @@
 }
 .nq-certificate-logo {
   width: auto;
-  height: 52px;
+  height: 46px;
   object-fit: contain;
-  margin-bottom: 6px;
+  margin-bottom: 5px;
+}
+.nq-certificate-eyebrow {
+  color: #667085;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  margin: 0;
 }
 .nq-certificate-title {
-  font-size: 24px;
-  font-weight: 800;
-  color: #073B8C;
-  letter-spacing: 0.05em;
-  margin-top: 4px;
+  color: #123B66;
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.15;
+  margin: 2px 0 0;
 }
 .nq-certificate-divider {
-  width: 140px;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, #C49A45, transparent);
-  margin: 6px 0;
+  width: 78px;
+  height: 1px;
+  background: #B9974F;
+  margin: 5px 0;
 }
 .nq-certificate-subtitle {
-  font-size: 11px;
-  color: #5E6F88;
+  color: #667085;
+  font-size: 9px;
   font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  line-height: 1.3;
+  margin: 0;
 }
 .nq-certificate-body {
   flex: 1;
@@ -1188,99 +1200,157 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  margin: 10px 0;
+  margin: 7px 0 3px;
+  min-height: 0;
+}
+.nq-certificate-recipient {
+  width: 100%;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.nq-certificate-recipient-label {
+  color: #667085;
+  font-size: 11px;
+  margin: 0 0 2px;
 }
 .nq-certificate-name {
-  font-size: 22px;
-  color: #073B8C;
+  display: block;
+  max-width: 100%;
+  color: #123B66;
+  font-size: 25px;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  line-height: 1.16;
+  letter-spacing: 0.01em;
   text-transform: uppercase;
+  overflow-wrap: anywhere;
 }
 .nq-certificate-org {
-  font-size: 13px;
-  color: #334155;
-  font-weight: 600;
-  margin-top: 2px;
+  max-width: 100%;
+  color: #1F2937;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.35;
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
 }
 .nq-certificate-verdict-intro {
-  font-size: 12px;
-  color: #64748B;
-  font-style: italic;
-  margin: 6px 0 2px;
+  color: #1F2937;
+  font-size: 11px;
+  margin: 8px 0 2px;
 }
 .nq-certificate-activity-title {
-  font-size: 14px;
-  font-weight: 800;
-  color: #0D47A1;
-  letter-spacing: 0.04em;
-}
-.nq-certificate-activity-subtitle {
+  color: #123B66;
   font-size: 13px;
   font-weight: 700;
-  color: #C49A45;
+  letter-spacing: 0.05em;
+  margin: 5px 0 1px;
+}
+.nq-certificate-activity-subtitle {
+  max-width: 100%;
+  color: #1F2937;
+  font-size: 11px;
+  font-weight: 600;
   letter-spacing: 0.02em;
+  line-height: 1.3;
+  margin: 0;
+  overflow-wrap: anywhere;
 }
 .nq-certificate-badge {
-  margin: 8px 0;
-  padding: 5px 14px;
-  background: #EDF4FF;
-  border: 1px solid #C5DBFA;
-  border-radius: 999px;
-  font-size: 12px;
-  color: #0D47A1;
+  max-width: 100%;
+  margin: 7px 0 3px;
+  padding: 6px 14px;
+  background: #FBF9F2;
+  border: 1px solid #B9974F;
+  color: #123B66;
+  font-size: 11px;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.nq-certificate-badge strong {
+  font-weight: 700;
 }
 .nq-certificate-meta {
   display: flex;
-  gap: 24px;
-  font-size: 11px;
-  color: #64748B;
-  margin-top: 4px;
+  justify-content: center;
+  flex-wrap: wrap;
+  column-gap: 28px;
+  row-gap: 3px;
+  margin-top: 3px;
+  color: #667085;
+  font-size: 10px;
+}
+.nq-certificate-meta p {
+  display: flex;
+  gap: 5px;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.nq-certificate-meta strong {
+  color: #1F2937;
+  font-weight: 600;
 }
 .nq-certificate-footer {
   width: 100%;
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  padding: 0 12px;
-  margin-top: 6px;
+  padding: 0 10px;
+  margin-top: 3px;
+  min-height: 84px;
 }
 .nq-certificate-qr-section {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 3px;
 }
 .nq-certificate-qr {
-  background: #fff;
-  padding: 3px;
-  border: 1px solid #E2E8F0;
-  border-radius: 4px;
+  background: #FFFFFF;
+  padding: 0;
+  border: 1px solid #B9974F;
+  line-height: 0;
 }
 .nq-certificate-qr svg {
   display: block;
-  width: 72px;
-  height: 72px;
+  width: 112px;
+  height: 112px;
 }
 .nq-certificate-qr-section small {
+  color: #667085;
   font-size: 9px;
-  color: #64748B;
 }
 .nq-certificate-signoff {
   text-align: right;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  color: #073B8C;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
+  gap: 3px;
+  color: #123B66;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
 }
 .nq-certificate-disclaimer {
-  margin-top: 8px;
+  margin-top: 5px;
+  max-width: 100%;
   font-size: 9px;
-  color: #94A3B8;
-  font-style: italic;
+  color: #667085;
+  line-height: 1.3;
+}
+.nq-certificate-pending {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 14px;
+  margin: 12px 0;
+  padding: 12px 14px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--surface-soft);
+  color: var(--text-primary);
+}
+.nq-certificate-pending p {
+  margin: 0;
 }
 
 /* Verification Page Styling */
@@ -1505,44 +1575,62 @@
 
 /* Print Media Queries */
 @media print {
-  body {
-    background: #fff !important;
-    color: #000 !important;
+  @page { size: A4 landscape; margin: 0; }
+  html,
+  body,
+  #root {
+    width: 297mm !important;
+    height: 210mm !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    background: #FFFEFB !important;
   }
-  .no-print,
-  .app-shell-header,
-  .sidebar,
-  .mobile-topbar,
-  .bottom-nav,
-  .fab,
-  .nq-certificate-toolbar,
-  .page-header,
-  .nq-modal-backdrop,
-  nav,
-  header:not(.nq-certificate-header),
-  footer:not(.nq-certificate-footer) {
-    display: none !important;
+  body * { visibility: hidden !important; }
+  .nq-certificate,
+  .nq-certificate * { visibility: visible !important; }
+  .nq-certificate {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 297mm !important;
+    height: 210mm !important;
+    flex: none !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    padding: 4mm !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    break-after: avoid-page !important;
+    break-inside: avoid-page !important;
+    page-break-after: avoid !important;
+    page-break-inside: avoid !important;
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+  }
+  .nq-certificate-border-outer,
+  .nq-certificate-border-inner {
+    height: 100% !important;
   }
   .nq-cert-modal-backdrop,
+  .nq-cert-modal-content,
   .nq-certificate-wrapper,
   .nq-certificate-scrollable {
     position: static !important;
+    display: block !important;
+    width: auto !important;
+    max-width: none !important;
+    height: auto !important;
+    max-height: none !important;
     background: transparent !important;
     padding: 0 !important;
     margin: 0 !important;
-    box-shadow: none !important;
     overflow: visible !important;
-  }
-  .nq-certificate {
-    width: 100% !important;
-    max-width: 100% !important;
     box-shadow: none !important;
-    border-radius: 0 !important;
-    page-break-inside: avoid !important;
-    padding: 0 !important;
   }
-  @page {
-    size: A4 landscape;
-    margin: 10mm;
-  }
+  .nq-certificate-toolbar { display: none !important; }
+  .nq-certificate-logo { height: 24mm !important; }
+  .nq-certificate-qr svg { width: 31mm !important; height: 31mm !important; }
+  .nq-certificate-footer { min-height: 34mm !important; }
 }

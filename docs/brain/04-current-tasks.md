@@ -10,13 +10,14 @@
 ### NQ13 Learning Assessment + Digital Certificate (2026-10-07) — nhánh `codex/nq13-learning-certificate`
 - Chuyển đổi NQ_300 thành hoạt động chính thức "Kiểm tra học tập Nghị quyết Đại hội Đoàn toàn quốc lần thứ XIII".
 - Trang chủ: Campaign hero card nổi bật, copy chuẩn, CTA Bắt đầu thi + Tra cứu 300 câu, huy hiệu Đoàn chính thống.
-- Thu thập người thi: Họ tên (2–120 ký tự), Đơn vị (2–180 ký tự), xác nhận cam kết; snapshot bất biến vào `nq_attempt_participants`.
+- Thu thập người thi: Họ tên (2–120 ký tự), Đơn vị (2–180 ký tự), thông báo công khai Họ tên/Đơn vị/kết quả qua mã hoặc QR; snapshot bất biến vào `nq_attempt_participants`.
 - Chấm điểm: Chuẩn hóa server pass score 80% (>= 24 câu ĐẠT, <= 23 câu CHƯA ĐẠT).
-- Kết quả: Phân tách rõ ĐẠT (xem chứng nhận) và CHƯA ĐẠT (thi lại, tính số câu thiếu, tuyệt đối không cấp chứng nhận).
-- Chứng nhận điện tử: Chuẩn A4 landscape, tiêu đề "CHỨNG NHẬN HOÀN THÀNH", footer "BAN THANH NIÊN / CÔNG AN TỈNH PHÚ THỌ" (không chữ ký/con dấu giả), mã `NQ13-[A-Z0-9]{8,32}` unique, QR code nội bộ zero-dependency thuần JS, tải PNG chất lượng cao, in PDF.
+- Kết quả: PASS chỉ mở chứng nhận khi có certificate record hoàn chỉnh từ backend; PASS chưa có record hiển thị hướng dẫn tải lại, FAIL không có CTA/chứng nhận.
+- Chứng nhận điện tử: Chuẩn A4 landscape, palette navy/charcoal/muted gray với gold tiết chế, footer "BAN THANH NIÊN / CÔNG AN TỈNH PHÚ THỌ" (không chữ ký/con dấu giả), mã `NQ13-[A-Z0-9]{8,32}` unique, QR dùng `qrcode` với quiet zone 4 modules, kiểm tra decode độc lập bằng `jsqr`, tải PNG và in PDF.
 - Khóa ngoại `attempt_id ON DELETE SET NULL` bảo toàn chứng nhận ngay cả khi tài khoản guest 30 ngày bị cron xóa.
 - Route xác minh: `/xac-minh-chung-nhan/:code` qua RPC `verify_nq_certificate` bảo mật không rò rỉ dữ liệu nhạy cảm.
-- Kiểm thử implementation: 241/241 npm tests PASS; pgTAP khai báo `plan(16)` (không phải 22); lint 0 errors với 3 Fast Refresh warnings có sẵn; build PASS. PR #67 đang chờ nghiệm thu browser end-to-end: runtime rehearsal và hai biên 23/30, 24/30 đã PASS, nhưng browser bridge timeout sau hộp thoại xác nhận nộp bài nên chưa xác minh màn kết quả/chứng nhận, QR, PNG, print, desktop, lookup và regression user đăng nhập. Verdict hiện tại: `NQ13_CERTIFICATE_ACCEPTANCE_BLOCKED`. Evidence: `docs/quiz-300/NQ13_CERTIFICATE_ACCEPTANCE.md`.
+- Server enforcement: migration `20261008120000_nq13_certificate_submit_requires_participant.sql` chặn submit trước hạn nếu thiếu participant snapshot; legacy expiry thiếu snapshot không phát certificate.
+- Kiểm tra local/rehearsal hiện tại: `npm test` 251/251, lint 0 lỗi (3 Fast Refresh warnings), build PASS (cảnh báo chunk lớn), pgTAP 18/18, rehearsal runtime `NQ_RUNTIME_ASSERTIONS_PASS`. Chưa có kết quả acceptance trên exact final Preview head của phần sửa này; browser/mobile/desktop/download/print, CI và Vercel vẫn là gate bắt buộc. Verdict hiện tại: `NQ13_CERTIFICATE_ACCEPTANCE_BLOCKED`. Evidence: `docs/quiz-300/NQ13_CERTIFICATE_ACCEPTANCE.md`.
 
 ### Document mobile reader (2026-10-07)
 - Owner yêu cầu sửa chi tiết văn bản mobile, có chỗ mở/đọc bản gốc và điền metadata từ tài liệu.

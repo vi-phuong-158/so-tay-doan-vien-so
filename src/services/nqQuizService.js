@@ -4,6 +4,48 @@ export const NQ_QUIZ_ID = '7c620b81-6dc6-4a57-9908-3a1f68652a00';
 export const PASS_SCORE_PERCENT = 80;
 export const PASS_MIN_CORRECT = 24;
 export const TOTAL_QUESTIONS = 30;
+const CERTIFICATE_CODE_PATTERN = /^NQ13-[A-Z0-9]{8,32}$/;
+
+export function isValidNqCertificateRecord(certificate) {
+  if (!certificate || typeof certificate !== 'object') return false;
+  const issuedAt = typeof certificate.issued_at === 'string' ? Date.parse(certificate.issued_at) : NaN;
+  return typeof certificate.code === 'string'
+    && certificate.code === certificate.code.trim()
+    && CERTIFICATE_CODE_PATTERN.test(certificate.code)
+    && typeof certificate.full_name === 'string'
+    && certificate.full_name.trim().length >= 2
+    && typeof certificate.organization_name === 'string'
+    && certificate.organization_name.trim().length >= 2
+    && typeof certificate.issued_at === 'string'
+    && Number.isFinite(issuedAt)
+    && typeof certificate.score === 'number'
+    && Number.isFinite(certificate.score)
+    && certificate.score >= PASS_SCORE_PERCENT
+    && Number.isInteger(certificate.correct_count)
+    && certificate.correct_count >= PASS_MIN_CORRECT
+    && Number.isInteger(certificate.total_questions)
+    && certificate.total_questions === TOTAL_QUESTIONS;
+}
+
+export function canViewNqCertificate(passed, certificate) {
+  return passed === true && isValidNqCertificateRecord(certificate);
+}
+
+export function mapNqCertificateRecord(certificate) {
+  if (!isValidNqCertificateRecord(certificate)) {
+    throw new TypeError('A complete certificate record is required.');
+  }
+
+  return {
+    fullName: certificate.full_name.trim(),
+    organizationName: certificate.organization_name.trim(),
+    score: certificate.score,
+    correctCount: certificate.correct_count,
+    totalQuestions: certificate.total_questions,
+    certificateCode: certificate.code,
+    issuedAt: certificate.issued_at
+  };
+}
 
 export function validateParticipantInfo(fullName, organizationName) {
   const errors = {};

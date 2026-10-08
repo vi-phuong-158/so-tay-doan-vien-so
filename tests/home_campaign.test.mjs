@@ -45,7 +45,9 @@ test('NqCertificate.jsx: adheres to official formatting and contains no fake sig
   const content = fs.readFileSync(path.join(root, 'src', 'components', 'NqCertificate.jsx'), 'utf8');
 
   // Exact Title
-  assert.ok(content.includes('CHỨNG NHẬN HOÀN THÀNH'), 'Certificate title is CHỨNG NHẬN HOÀN THÀNH');
+  assert.ok(content.includes('CHỨNG NHẬN') && content.includes('HOÀN THÀNH'), 'Certificate title is CHỨNG NHẬN HOÀN THÀNH');
+  assert.ok(content.includes('isValidNqCertificateRecord'), 'Certificate requires a complete backend record');
+  assert.ok(content.includes('certificateCode'), 'Certificate QR and exports use the persisted certificate code');
 
   // Exact Activity
   assert.ok(content.includes('KIỂM TRA HỌC TẬP'), 'Activity title is KIỂM TRA HỌC TẬP');
@@ -74,8 +76,11 @@ test('NqQuiz.jsx: enforces pass/fail screens, participant gate, and certificate 
 
   // Participant gate
   assert.ok(content.includes('Thông tin người dự thi'), 'Participant registration modal exists');
-  assert.ok(content.includes('Tôi xác nhận thông tin trên là chính xác.'), 'Confirmation checkbox exists');
+  assert.ok(content.includes('đồng ý hiển thị các nội dung trên khi tra cứu chứng nhận bằng mã hoặc QR'), 'Confirmation explains public verification disclosure');
   assert.ok(content.includes('saveParticipant'), 'Calls saveParticipant service method');
+  assert.ok(content.includes('canViewNqCertificate'), 'Certificate view requires PASS and a complete certificate record');
+  assert.ok(content.includes('chứng nhận chưa được cấp'), 'Missing certificate shows a safe pending status');
+  assert.ok(content.includes('TẢI LẠI KẾT QUẢ'), 'Missing certificate can be reloaded from the server');
 
   // Pass screen
   assert.ok(content.includes('HOÀN THÀNH ĐẠT YÊU CẦU'), 'Pass screen displays HOÀN THÀNH ĐẠT YÊU CẦU');
