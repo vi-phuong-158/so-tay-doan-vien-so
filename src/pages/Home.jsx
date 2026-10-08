@@ -13,6 +13,7 @@ import { createMemberService } from '../services/memberService';
 import { createDocumentService } from '../services/documentService';
 import { createLearningService } from '../services/learningService';
 import { supabase } from '../services/supabaseClient';
+import { NQ_QUIZ_ID } from '../services/nqQuizService';
 import {
   formatReportDate,
   getEffectiveDueAt,
@@ -190,6 +191,49 @@ export function Home() {
             </>
           )}
         </div>
+
+        <section
+          className="home-campaign-nq13"
+          aria-label="Kiểm tra học tập Nghị quyết Đại hội Đoàn toàn quốc lần thứ XIII"
+        >
+          <div className="home-campaign-body">
+            <div className="home-campaign-badge-group">
+              <span className="home-campaign-kicker">KIỂM TRA HỌC TẬP</span>
+              <span className="home-campaign-meta">30 câu hỏi · 20 phút · Đạt từ 80%</span>
+            </div>
+            <h2 className="home-campaign-title">
+              Nghị quyết Đại hội Đoàn toàn quốc lần thứ XIII
+            </h2>
+            <p className="home-campaign-desc">
+              Hoàn thành đạt yêu cầu để nhận chứng nhận
+            </p>
+            <div className="home-campaign-actions">
+              <Link
+                to={`/tri-thuc/trac-nghiem/${NQ_QUIZ_ID}`}
+                className="button button-primary home-campaign-primary-btn"
+              >
+                <Icon name="school" size={18} />
+                <span>BẮT ĐẦU THI</span>
+              </Link>
+              <Link
+                to={`/tri-thuc/trac-nghiem/${NQ_QUIZ_ID}?view=lookup`}
+                className="button button-secondary home-campaign-secondary-btn"
+              >
+                <Icon name="search" size={17} />
+                <span>TRA CỨU 300 CÂU HỎI</span>
+              </Link>
+            </div>
+          </div>
+          <div className="home-campaign-visual" aria-hidden="true">
+            <img
+              src="/brand/logo-doan-badge.png"
+              alt=""
+              className="home-campaign-logo"
+              width="88"
+              height="88"
+            />
+          </div>
+        </section>
 
         {isGuest ? (
           <section className="home-public-card" aria-label={isGuest ? 'Khám phá kho tri thức công khai' : 'Trang chủ'}>

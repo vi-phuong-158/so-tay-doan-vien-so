@@ -1,6 +1,102 @@
 import { normalizeQuizError } from './quizService.js';
 
 export const NQ_QUIZ_ID = '7c620b81-6dc6-4a57-9908-3a1f68652a00';
+export const PASS_SCORE_PERCENT = 80;
+export const PASS_MIN_CORRECT = 24;
+export const TOTAL_QUESTIONS = 30;
+const CERTIFICATE_CODE_PATTERN = /^NQ13-[A-Z0-9]{8,32}$/;
+
+export function isValidNqCertificateRecord(certificate) {
+  if (!certificate || typeof certificate !== 'object') return false;
+  const issuedAt = typeof certificate.issued_at === 'string' ? Date.parse(certificate.issued_at) : NaN;
+  return typeof certificate.code === 'string'
+    && certificate.code === certificate.code.trim()
+    && CERTIFICATE_CODE_PATTERN.test(certificate.code)
+    && typeof certificate.full_name === 'string'
+    && certificate.full_name.trim().length >= 2
+    && typeof certificate.organization_name === 'string'
+    && certificate.organization_name.trim().length >= 2
+    && typeof certificate.issued_at === 'string'
+    && Number.isFinite(issuedAt)
+    && typeof certificate.score === 'number'
+    && Number.isFinite(certificate.score)
+    && certificate.score >= PASS_SCORE_PERCENT
+    && Number.isInteger(certificate.correct_count)
+    && certificate.correct_count >= PASS_MIN_CORRECT
+    && Number.isInteger(certificate.total_questions)
+    && certificate.total_questions === TOTAL_QUESTIONS;
+}
+
+export function canViewNqCertificate(passed, certificate) {
+  return passed === true && isValidNqCertificateRecord(certificate);
+}
+
+export function mapNqCertificateRecord(certificate) {
+  if (!isValidNqCertificateRecord(certificate)) {
+    throw new TypeError('A complete certificate record is required.');
+  }
+
+  return {
+    fullName: certificate.full_name.trim(),
+    organizationName: certificate.organization_name.trim(),
+    score: certificate.score,
+    correctCount: certificate.correct_count,
+    totalQuestions: certificate.total_questions,
+    certificateCode: certificate.code,
+    issuedAt: certificate.issued_at
+  };
+}
+
+export function validateParticipantInfo(fullName, organizationName) {
+  const errors = {};
+  const trimmedName = typeof fullName === 'string' ? fullName.trim() : '';
+  const trimmedOrg = typeof organizationName === 'string' ? organizationName.trim() : '';
+
+  if (!trimmedName) {
+    errors.fullName = 'Vui lòng nhập họ và tên.';
+  } else if (trimmedName.length < 2 || trimmedName.length > 120) {
+    errors.fullName = 'Họ và tên phải từ 2 đến 120 ký tự.';
+  }
+
+  if (!trimmedOrg) {
+    errors.organizationName = 'Vui lòng nhập đơn vị công tác.';
+  } else if (trimmedOrg.length < 2 || trimmedOrg.length > 180) {
+    errors.organizationName = 'Đơn vị phải từ 2 đến 180 ký tự.';
+  }
+
+  return {
+    valid: Object.keys(errors).length === 0,
+    errors,
+    data: {
+      fullName: trimmedName,
+      organizationName: trimmedOrg
+    }
+  };
+}
+
+export function formatCertificateDate(dateInput) {
+  if (!dateInput) return '';
+  const date = new Date(dateInput);
+  if (Number.isNaN(date.getTime())) return '';
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
+export function sanitizeCertificateFileName(fullName) {
+  const clean = typeof fullName === 'string' ? fullName.trim() : '';
+  if (!clean) return 'Chung-nhan-NQ13.png';
+  // Normalize accents to ASCII
+  const ascii = clean
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[đĐ]/g, (m) => (m === 'đ' ? 'd' : 'D'))
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return `Chung-nhan-NQ13-${ascii || 'NGUOI-DU-THI'}.png`;
+}
 
 export function createNqQuizService(client) {
   async function ensureActor() {
@@ -31,11 +127,29 @@ export function createNqQuizService(client) {
     if (error) throw normalizeQuizError(error);
     return data;
   }
+
   return {
     ensureActor,
     attempt(action, attemptId = null, questionId = null, optionId = null) {
-      return request('nq_attempt', { p_action: action, p_attempt_id: attemptId,
-        p_question_id: questionId, p_option_id: optionId });
+      return request('nq_attempt', {
+        p_action: action,
+        p_attempt_id: attemptId,
+        p_question_id: questionId,
+        p_option_id: optionId
+      });
+    },
+    saveParticipant(attemptId, fullName, organizationName) {
+      return request('nq_save_participant', {
+        p_attempt_id: attemptId,
+        p_full_name: fullName,
+        p_organization_name: organizationName
+      });
+    },
+    verifyCertificate(code) {
+      return client.rpc('verify_nq_certificate', { p_code: code }).then(({ data, error }) => {
+        if (error) throw normalizeQuizError(error);
+        return data;
+      });
     },
     lookup(search, offset = 0) {
       return request('lookup_nq_questions', { p_search: search, p_offset: offset });

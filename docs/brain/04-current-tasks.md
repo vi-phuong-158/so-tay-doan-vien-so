@@ -7,6 +7,18 @@
 
 ## Đang làm
 
+### NQ13 Learning Assessment + Digital Certificate (2026-10-07) — nhánh `codex/nq13-learning-certificate`
+- Chuyển đổi NQ_300 thành hoạt động chính thức "Kiểm tra học tập Nghị quyết Đại hội Đoàn toàn quốc lần thứ XIII".
+- Trang chủ: Campaign hero card nổi bật, copy chuẩn, CTA Bắt đầu thi + Tra cứu 300 câu, huy hiệu Đoàn chính thống.
+- Thu thập người thi: Họ tên (2–120 ký tự), Đơn vị (2–180 ký tự), thông báo công khai Họ tên/Đơn vị/kết quả qua mã hoặc QR; snapshot bất biến vào `nq_attempt_participants`.
+- Chấm điểm: Chuẩn hóa server pass score 80% (>= 24 câu ĐẠT, <= 23 câu CHƯA ĐẠT).
+- Kết quả: PASS chỉ mở chứng nhận khi có certificate record hoàn chỉnh từ backend; PASS chưa có record hiển thị hướng dẫn tải lại, FAIL không có CTA/chứng nhận.
+- Chứng nhận điện tử: Chuẩn A4 landscape, palette navy/charcoal/muted gray với gold tiết chế, footer "BAN THANH NIÊN / CÔNG AN TỈNH PHÚ THỌ" (không chữ ký/con dấu giả), mã `NQ13-[A-Z0-9]{8,32}` unique, QR dùng `qrcode` với quiet zone 4 modules, kiểm tra decode độc lập bằng `jsqr`, tải PNG và in PDF.
+- Khóa ngoại `attempt_id ON DELETE SET NULL` bảo toàn chứng nhận ngay cả khi tài khoản guest 30 ngày bị cron xóa.
+- Route xác minh: `/xac-minh-chung-nhan/:code` qua RPC `verify_nq_certificate` bảo mật không rò rỉ dữ liệu nhạy cảm.
+- Server enforcement: migration `20261008120000_nq13_certificate_submit_requires_participant.sql` chặn submit trước hạn nếu thiếu participant snapshot; legacy expiry thiếu snapshot không phát certificate.
+- Kiểm tra local/rehearsal: `npm test` 251/251, lint 0 lỗi (3 Fast Refresh warnings), build PASS (cảnh báo chunk lớn), pgTAP 18/18, runtime `NQ_RUNTIME_ASSERTIONS_PASS`. Preview `bddb3c6` đã xác nhận mobile/desktop, PASS 24/30, PNG browser download, QR decode độc lập, public VALID và invalid-code. Browser FAIL chưa hiện kết quả vì confirmation dialog bị bridge tự đóng; Preview print PDF trả về trang trắng. Verdict vẫn `NQ13_CERTIFICATE_ACCEPTANCE_BLOCKED`; cần exact-final-head CI/Vercel/browser retest và Preview print retest. Evidence: `docs/quiz-300/NQ13_CERTIFICATE_ACCEPTANCE.md`.
+
 ### Document mobile reader (2026-10-07)
 - Owner yêu cầu sửa chi tiết văn bản mobile, có chỗ mở/đọc bản gốc và điền metadata từ tài liệu.
 - Nhánh `codex/document-mobile-reader` từ production `c03f2d5`; source fix/test đã có, owner cho phép PR/deploy.

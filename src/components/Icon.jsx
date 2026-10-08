@@ -19,6 +19,7 @@ import {
   LockKeyhole,
   LogOut,
   Plus,
+  Printer,
   Search,
   Send,
   Settings,
@@ -74,7 +75,10 @@ const ICONS = {
   alert: TriangleAlert,
   lock: LockKeyhole,
   unlock: UnlockKeyhole,
-  close: X
+  close: X,
+  x: X,
+  print: Printer,
+  printer: Printer
 };
 
 export function Icon({ name, size = 21, className = '' }) {
