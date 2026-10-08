@@ -7,13 +7,6 @@
 
 ## Đang làm
 
-### NQ13 tỷ lệ đạt thay điểm trung bình (2026-10-08)
-
-- Owner yêu cầu đổi chỉ số công khai sang tỷ lệ đạt. Nhánh `codex/nq13-pass-rate-summary` từ
-  master `beec96e`; sửa summary, bảng/cards và detail bằng `pass_rate` đã có từ server.
-- Quản trị vẫn có điểm trung bình bổ sung/CSV; giữ suppression<3, không schema/RPC/data mutation.
-- Chưa commit/push/PR/deploy cho thay đổi này; kiểm tra local và trạng thái bàn giao ở working log.
-
 ### NQ13 final closure — pilot statistics (2026-10-08)
 
 - #67 MERGED after final12bb681 exact-head CI/Preview23FAIL24PASS/PNG/QR/verify/A4PDF/cleanup gates.
@@ -674,6 +667,12 @@ Audit lại đúng 5 câu hỏi checklist mục 18 tài liệu kiến trúc:
 - **Report:** `docs/phase-4/07-runtime-readiness-closure.md`.
 
 ## Đã hoàn thành gần đây
+
+### NQ13 tỷ lệ đạt thay điểm trung bình công khai (merged)
+- PR #69 merge commit `1844b615922f657229c34c7dd06b58b9d3e65357`; CI `37752244217` PASS.
+- Production Vercel deployment `dpl_EZtXcG74bf4pPuNXJgyB2eAG3wWa` READY từ đúng merge SHA.
+- Summary/bảng/cards/detail dùng tỷ lệ đạt; bỏ ghi chú đầu bảng; chi tiết local và kiểm tra ghi trong
+  `docs/brain/06-ai-working-log.md` và `docs/quiz-300/NQ13_UNIT_COMPETITION.md`.
 
 ### P4-06 — Phase 4 Integrated Final Acceptance (merged)
 - **Base:** fresh `origin/master@3761dcc1be4fd6aebc1e91e78426076feead5e31`, merge of P4-05 PR #27.
