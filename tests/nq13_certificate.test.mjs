@@ -1,5 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   validateParticipantInfo,
   formatCertificateDate,
@@ -12,6 +15,29 @@ import {
   TOTAL_QUESTIONS,
   createNqQuizService
 } from '../src/services/nqQuizService.js';
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+
+test('certificate V2 keeps the owner signature and official badge in the HTML viewer', () => {
+  const asset = path.join(root, 'public', 'brand', 'chu-ky.png');
+  const component = fs.readFileSync(path.join(root, 'src', 'components', 'NqCertificate.jsx'), 'utf8');
+  const styles = fs.readFileSync(path.join(root, 'src', 'index.css'), 'utf8');
+
+  assert.equal(fs.existsSync(asset), true);
+  assert.ok(fs.statSync(asset).size > 0);
+  assert.match(component, /src="\/brand\/chu-ky\.png"/);
+  assert.match(component, /src="\/brand\/logo-doan-badge\.png"/);
+  assert.match(component, /className="nq-certificate-watermark"/);
+  for (const text of ['TM. BAN THANH NIÊN', 'TRƯỞNG BAN', 'Hoàng Tuấn Việt']) {
+    assert.ok(component.includes(text), `Certificate signer hierarchy must include ${text}`);
+  }
+  assert.match(component, /disabled=\{downloading \|\| !assetsReady\}/);
+  assert.match(component, /onError=\{markAssetFailed\}/);
+  assert.match(styles, /\.nq-certificate-watermark\s*\{[^}]*height:\s*46%;[^}]*opacity:\s*0\.045/s);
+  assert.match(styles, /\.nq-certificate\s*\{[^}]*width:\s*860px;[^}]*height:\s*608px;[^}]*flex:\s*0 0 860px/s);
+  assert.match(styles, /@page\s*\{\s*size:\s*A4 landscape;/);
+  assert.match(styles, /\.nq-certificate-scrollable\s*\{[^}]*overflow-x:\s*auto;/s);
+});
 
 test('validateParticipantInfo: accepts valid Vietnamese names and organization names', () => {
   const result = validateParticipantInfo('Nguyễn Thị Thu Hà', 'Chi đoàn An ninh mạng - CAT Phú Thọ');

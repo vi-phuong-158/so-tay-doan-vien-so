@@ -1,5 +1,21 @@
 # 06 — AI Working Log
 
+## [2026-10-08] NQ13 Certificate V2 — Youth Union blue and owner signature
+- **Agent:** Codex
+- **Thay đổi:** Đổi đồng bộ chứng nhận HTML, PNG canvas và A4 print sang palette xanh Đoàn; thêm
+  watermark huy hiệu chính thức 4.5%, dùng nguyên ảnh con dấu/chữ ký owner cung cấp và crop alpha
+  chỉ ở render layer. Khóa tải PNG/in nếu ảnh HTML chưa tải; Canvas từ chối export khi thiếu asset.
+- **File đã sửa:** `src/components/NqCertificate.jsx`, `src/lib/certificateCanvas.js`, `src/index.css`,
+  `public/brand/chu-ky.png`, `tests/certificate_canvas.test.mjs`, `tests/nq13_certificate.test.mjs`,
+  `docs/quiz-300/NQ13_CERTIFICATE_ACCEPTANCE.md`,
+  `docs/brain/{01-architecture,03-decisions,04-current-tasks,06-ai-working-log}.md`.
+- **Lý do:** Hoàn thiện certificate theo nhận diện xanh Đoàn và thứ bậc ký do owner yêu cầu, giữ
+  nguyên scoring, issuance, QR contract, public verification và dữ liệu lịch sử.
+- **Kiểm tra:** `npm test` 261/261 PASS (0 fail/skip); `npm run lint` 0 lỗi/3 cảnh báo Fast Refresh
+  đã có; `npm run build` PASS (cảnh báo chunk >500 kB đã có); `git diff --check` PASS. Rehearsal và
+  Vercel Preview exact-head flow (23/30, 24/30, PNG, QR, PDF, verification, responsive) đang chờ
+  triển khai và phải được ghi nhận trong PR receipt trước khi merge. Không đổi Production DB.
+
 ## [2026-10-08] Khôi phục đọc văn bản PUBLIC sau phiên Quiz anonymous
 - **Agent:** Codex
 - **Thay đổi:** Thêm forward migration để `can_access_document()` kiểm tra trạng thái công bố rồi

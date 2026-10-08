@@ -12,6 +12,8 @@ import {
 export function NqCertificate({ certificate, onClose }) {
   const [downloading, setDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState('');
+  const [assetError, setAssetError] = useState('');
+  const [loadedAssets, setLoadedAssets] = useState({ watermark: false, logo: false, signature: false });
   const qrContainerId = useId();
 
   if (!isValidNqCertificateRecord(certificate)) return null;
@@ -22,6 +24,15 @@ export function NqCertificate({ certificate, onClose }) {
   const verifyUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/xac-minh-chung-nhan/${certificateCode}`;
   const qrMatrix = generateQrMatrix(verifyUrl);
   const formattedDate = formatCertificateDate(issuedAt);
+  const assetsReady = Object.values(loadedAssets).every(Boolean) && !assetError;
+
+  const markAssetLoaded = (asset) => {
+    setLoadedAssets((current) => ({ ...current, [asset]: true }));
+  };
+
+  const markAssetFailed = () => {
+    setAssetError('Không thể tải logo hoặc chữ ký chính thức. Vui lòng tải lại trang trước khi tải ảnh hoặc in chứng nhận.');
+  };
 
   const handleDownload = async () => {
     try {
@@ -46,7 +57,7 @@ export function NqCertificate({ certificate, onClose }) {
           <Button
             variant="primary"
             onClick={handleDownload}
-            disabled={downloading}
+            disabled={downloading || !assetsReady}
             aria-label="Tải chứng nhận dạng ảnh PNG"
           >
             <Icon name="download" size={16} />
@@ -55,6 +66,7 @@ export function NqCertificate({ certificate, onClose }) {
           <Button
             variant="secondary"
             onClick={handlePrint}
+            disabled={!assetsReady}
             aria-label="In hoặc lưu chứng nhận dạng PDF"
           >
             <Icon name="printer" size={16} />
@@ -71,9 +83,9 @@ export function NqCertificate({ certificate, onClose }) {
             </Button>
           )}
         </div>
-        {downloadError && (
+        {(assetError || downloadError) && (
           <div className="form-error" role="alert">
-            {downloadError}
+            {assetError || downloadError}
           </div>
         )}
       </div>
@@ -88,6 +100,15 @@ export function NqCertificate({ certificate, onClose }) {
               <div className="nq-corner nq-corner-bl" aria-hidden="true" />
               <div className="nq-corner nq-corner-br" aria-hidden="true" />
 
+              <img
+                src="/brand/logo-doan-badge.png"
+                alt=""
+                aria-hidden="true"
+                className="nq-certificate-watermark"
+                onLoad={() => markAssetLoaded('watermark')}
+                onError={markAssetFailed}
+              />
+
               <header className="nq-certificate-header">
                 <img
                   src="/brand/logo-doan-badge.png"
@@ -95,11 +116,13 @@ export function NqCertificate({ certificate, onClose }) {
                   className="nq-certificate-logo"
                   width="120"
                   height="64"
+                  onLoad={() => markAssetLoaded('logo')}
+                  onError={markAssetFailed}
                 />
-                <p className="nq-certificate-eyebrow">CHỨNG NHẬN</p>
-                <h1 className="nq-certificate-title">HOÀN THÀNH</h1>
+                <p className="nq-certificate-eyebrow">BAN THANH NIÊN</p>
+                <p className="nq-certificate-subtitle">CÔNG AN TỈNH PHÚ THỌ</p>
                 <div className="nq-certificate-divider" aria-hidden="true" />
-                <p className="nq-certificate-subtitle">BAN THANH NIÊN · CÔNG AN TỈNH PHÚ THỌ</p>
+                <h1 className="nq-certificate-title">CHỨNG NHẬN HOÀN THÀNH</h1>
               </header>
 
               <main className="nq-certificate-body">
@@ -118,14 +141,9 @@ export function NqCertificate({ certificate, onClose }) {
                   </h3>
                 </div>
 
-                <div className="nq-certificate-badge">
-                  <span>Kết quả: <strong>{correctCount}/{totalQuestions} câu đúng · {score}% · ĐẠT YÊU CẦU</strong></span>
-                </div>
-
-                <div className="nq-certificate-meta">
-                  <p><span>Ngày hoàn thành</span><strong>{formattedDate}</strong></p>
-                  <p><span>Mã chứng nhận</span><strong>{certificateCode}</strong></p>
-                </div>
+                <p className="nq-certificate-result">
+                  Kết quả: <strong>{correctCount}/{totalQuestions} câu đúng · {score}% · ĐẠT YÊU CẦU</strong>
+                </p>
               </main>
 
               <footer className="nq-certificate-footer">
@@ -161,11 +179,21 @@ export function NqCertificate({ certificate, onClose }) {
                     </svg>
                   </div>
                   <small>Quét để xác minh</small>
+                  <strong className="nq-certificate-code">{certificateCode}</strong>
+                  <span className="nq-certificate-date">Hoàn thành ngày {formattedDate}</span>
                 </div>
 
                 <div className="nq-certificate-signoff">
-                  <strong>BAN THANH NIÊN</strong>
-                  <strong>CÔNG AN TỈNH PHÚ THỌ</strong>
+                  <strong className="nq-certificate-signer-role">TM. BAN THANH NIÊN</strong>
+                  <strong className="nq-certificate-signer-title">TRƯỞNG BAN</strong>
+                  <img
+                    src="/brand/chu-ky.png"
+                    alt="Con dấu và chữ ký chính thức"
+                    className="nq-certificate-signature"
+                    onLoad={() => markAssetLoaded('signature')}
+                    onError={markAssetFailed}
+                  />
+                  <strong className="nq-certificate-signer-name">Hoàng Tuấn Việt</strong>
                 </div>
               </footer>
 

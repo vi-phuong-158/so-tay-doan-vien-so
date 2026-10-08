@@ -50,6 +50,11 @@
 - **Participant-Gated Issuance:** RPC `nq_attempt` từ chối submit trước hạn khi thiếu participant snapshot (`PARTICIPANT_REQUIRED`). Legacy attempt tự hết hạn vẫn được chấm theo câu trả lời đã lưu, nhưng chỉ phát hành certificate nếu participant snapshot tồn tại. Certificate UI/export chỉ chấp nhận record PASS hoàn chỉnh do backend trả về.
 - **Asset & Visual Governance:** Tuân thủ chặt chẽ design tokens và asset chính thống `public/brand/logo-doan-badge.png`. Footer chứng nhận trang trọng "BAN THANH NIÊN / CÔNG AN TỈNH PHÚ THỌ", không tạo chữ ký hay con dấu giả.
 
+## [2026-10-08] NQ13 Certificate V2 — Youth Union blue and owner signature
+- Keep the existing NQ13 score threshold, issuance RPC, immutable certificate records, QR payload and public verification response unchanged; this phase changes presentation only.
+- Use existing Youth Union blue tokens (`brand-900`, `brand-800`, `brand-700`, `brand-100`, `brand-050`) across HTML, PNG and print. Render the official badge as a centered 4.5% opacity watermark.
+- Use the owner-supplied `public/brand/chu-ky.png` exactly as supplied. Keep stamp and signature together; crop only transparent padding in the rendering layer and preserve the source and aspect ratio. PNG/print must fail closed when the signature asset is unavailable.
+
 ## [2026-10-03] NQ guest ownership policy boundary and schema reconciliation
 
 - Legacy owner-only policies do not require ACTIVE accounts, so an INVITED profile is insufficient

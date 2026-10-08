@@ -7,6 +7,12 @@
 
 ## Đang làm
 
+### NQ13 Certificate V2 — Youth Union blue + owner signature (2026-10-08)
+- PR #71 final public-document anonymous-session fix merged at `427524bd94c718bc2faf71ba8dc5a6d66fb21ffc`; certificate V2 is isolated on `feat/nq13-certificate-blue-signature-v2` from that exact master.
+- Presentation-only scope: official badge watermark, Youth Union blue palette, HTML/PNG/A4 print signature block; no score, issuance, RPC or verification-contract changes.
+- Owner asset `public/brand/chu-ky.png` is present and copied byte-for-byte into the isolated worktree. Keep the source image unchanged and preserve the joint stamp/signature.
+- Automated source gates currently pass: 261 frontend tests, lint 0 errors/3 existing warnings, production build with the existing large-chunk warning, and clean diff check. Exact-head rehearsal/Preview runtime acceptance remains required before the new PR may merge; never test this guest flow on Production.
+
 ### NQ13 final closure — pilot statistics (2026-10-08)
 
 - #67 MERGED after final12bb681 exact-head CI/Preview23FAIL24PASS/PNG/QR/verify/A4PDF/cleanup gates.

@@ -7,16 +7,20 @@ import {
 } from '../services/nqQuizService.js';
 
 export const CERTIFICATE_PALETTE = Object.freeze({
-  navy: '#123B66',
+  navy: '#073B8C',
+  blue: '#1257C4',
+  paleBlue: '#DCEBFF',
+  softBlue: '#F2F7FF',
   charcoal: '#1F2937',
   muted: '#667085',
-  gold: '#B9974F',
-  paper: '#FFFEFB',
+  paper: '#FFFFFF',
   white: '#FFFFFF',
   qr: '#111827'
 });
 
 const FONT_FAMILY = '"Be Vietnam Pro", sans-serif';
+const BRAND_BADGE_SRC = '/brand/logo-doan-badge.png';
+const SIGNATURE_SRC = '/brand/chu-ky.png';
 
 export function fitCanvasFontSize(ctx, text, {
   baseSize,
@@ -120,34 +124,120 @@ function drawWrappedCenterText(ctx, text, y, {
   return { size: fittedSize, lines };
 }
 
-async function drawLogo(ctx, logoSrc, width) {
-  if (!logoSrc || typeof Image === 'undefined') return;
+function loadImage(src, label) {
+  if (typeof Image === 'undefined') {
+    return Promise.reject(new Error(`Không thể tải ${label} để tạo chứng nhận.`));
+  }
+
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.crossOrigin = 'anonymous';
+    image.onload = () => {
+      if ((image.naturalWidth || image.width) > 0 && (image.naturalHeight || image.height) > 0) {
+        resolve(image);
+      } else {
+        reject(new Error(`Ảnh ${label} không hợp lệ.`));
+      }
+    };
+    image.onerror = () => reject(new Error(`Không thể tải ${label}. Vui lòng thử lại.`));
+    image.src = src;
+  });
+}
+
+function drawLogo(ctx, logo, width) {
+  const logoHeight = 76;
+  const logoWidth = (logo.naturalWidth / logo.naturalHeight) * logoHeight;
+  ctx.drawImage(logo, (width - logoWidth) / 2, 64, logoWidth, logoHeight);
+}
+
+function drawWatermark(ctx, logo, width, height) {
+  const watermarkHeight = height * 0.46;
+  const watermarkWidth = (logo.naturalWidth / logo.naturalHeight) * watermarkHeight;
+  const previousAlpha = ctx.globalAlpha;
+  ctx.globalAlpha = 0.045;
+  ctx.drawImage(logo, (width - watermarkWidth) / 2, (height - watermarkHeight) / 2, watermarkWidth, watermarkHeight);
+  ctx.globalAlpha = previousAlpha;
+}
+
+function findVisibleImageBounds(image) {
+  if (typeof document === 'undefined') {
+    throw new Error('Không thể kiểm tra vùng hiển thị của chữ ký.');
+  }
+
+  const sourceWidth = image.naturalWidth || image.width;
+  const sourceHeight = image.naturalHeight || image.height;
+  const sampleScale = Math.min(1, 512 / Math.max(sourceWidth, sourceHeight));
+  const sampleWidth = Math.max(1, Math.ceil(sourceWidth * sampleScale));
+  const sampleHeight = Math.max(1, Math.ceil(sourceHeight * sampleScale));
+  const sampleCanvas = document.createElement('canvas');
+  sampleCanvas.width = sampleWidth;
+  sampleCanvas.height = sampleHeight;
+  const sampleContext = sampleCanvas.getContext('2d', { willReadFrequently: true });
+  if (!sampleContext) throw new Error('Không thể đọc vùng trong suốt của chữ ký.');
+
   try {
-    const logo = new Image();
-    logo.crossOrigin = 'anonymous';
-    await new Promise((resolve) => {
-      logo.onload = resolve;
-      logo.onerror = resolve;
-      logo.src = logoSrc;
-    });
-    if (logo.width > 0 && logo.height > 0) {
-      const logoHeight = 92;
-      const logoWidth = (logo.width / logo.height) * logoHeight;
-      ctx.drawImage(logo, (width - logoWidth) / 2, 64, logoWidth, logoHeight);
+    sampleContext.drawImage(image, 0, 0, sampleWidth, sampleHeight);
+    const { data } = sampleContext.getImageData(0, 0, sampleWidth, sampleHeight);
+    let minX = sampleWidth;
+    let minY = sampleHeight;
+    let maxX = -1;
+    let maxY = -1;
+
+    for (let y = 0; y < sampleHeight; y += 1) {
+      for (let x = 0; x < sampleWidth; x += 1) {
+        if (data[(y * sampleWidth + x) * 4 + 3] === 0) continue;
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x);
+        maxY = Math.max(maxY, y);
+      }
     }
+
+    if (maxX < minX || maxY < minY) throw new Error('Ảnh chữ ký không có nội dung hiển thị.');
+
+    const paddingX = Math.max(1, Math.round((maxX - minX + 1) * 0.015));
+    const paddingY = Math.max(1, Math.round((maxY - minY + 1) * 0.025));
+    const left = Math.max(0, minX - paddingX);
+    const top = Math.max(0, minY - paddingY);
+    const right = Math.min(sampleWidth, maxX + 1 + paddingX);
+    const bottom = Math.min(sampleHeight, maxY + 1 + paddingY);
+    return {
+      x: Math.floor((left / sampleWidth) * sourceWidth),
+      y: Math.floor((top / sampleHeight) * sourceHeight),
+      width: Math.ceil(((right - left) / sampleWidth) * sourceWidth),
+      height: Math.ceil(((bottom - top) / sampleHeight) * sourceHeight)
+    };
   } catch {
-    // Keep the certificate readable if the official logo asset cannot load.
+    throw new Error('Không thể đọc vùng trong suốt của chữ ký; không tạo ảnh chứng nhận thiếu chữ ký.');
   }
 }
 
+function drawSignature(ctx, signature, centerX, centerY, maxWidth, maxHeight) {
+  const bounds = findVisibleImageBounds(signature);
+  const scale = Math.min(maxWidth / bounds.width, maxHeight / bounds.height);
+  const width = bounds.width * scale;
+  const height = bounds.height * scale;
+  ctx.drawImage(
+    signature,
+    bounds.x,
+    bounds.y,
+    bounds.width,
+    bounds.height,
+    centerX - width / 2,
+    centerY - height / 2,
+    width,
+    height
+  );
+}
+
 function drawCertificateBorder(ctx, width, height) {
-  const { navy, gold, paper } = CERTIFICATE_PALETTE;
+  const { navy, blue, paleBlue, paper } = CERTIFICATE_PALETTE;
   ctx.fillStyle = paper;
   ctx.fillRect(0, 0, width, height);
   ctx.strokeStyle = navy;
   ctx.lineWidth = 3;
   ctx.strokeRect(38, 38, width - 76, height - 76);
-  ctx.strokeStyle = gold;
+  ctx.strokeStyle = paleBlue;
   ctx.lineWidth = 1.5;
   ctx.strokeRect(52, 52, width - 104, height - 104);
 
@@ -157,7 +247,7 @@ function drawCertificateBorder(ctx, width, height) {
     [62, height - 62, 1, -1],
     [width - 62, height - 62, -1, -1]
   ];
-  ctx.strokeStyle = gold;
+  ctx.strokeStyle = blue;
   ctx.lineWidth = 2;
   corners.forEach(([x, y, dx, dy]) => {
     ctx.beginPath();
@@ -205,76 +295,76 @@ export async function renderCertificateToCanvas(canvas, certificate, options = {
   if (!ctx) throw new Error('Canvas 2D rendering is unavailable.');
   drawCertificateBorder(ctx, width, height);
 
-  if (options.logoSrc !== null) {
-    await drawLogo(ctx, options.logoSrc ?? '/brand/logo-doan-badge.png', width);
-  }
+  const logo = await loadImage(options.logoSrc ?? BRAND_BADGE_SRC, 'huy hiệu Đoàn');
+  const signature = await loadImage(options.signatureSrc ?? SIGNATURE_SRC, 'chữ ký và con dấu');
+  drawWatermark(ctx, logo, width, height);
+  drawLogo(ctx, logo, width);
 
-  const { navy, charcoal, muted, gold } = CERTIFICATE_PALETTE;
-  drawCenteredText(ctx, 'CHỨNG NHẬN', 174, {
-    width, maxWidth: 1500, size: 20, minSize: 16, weight: '700', color: muted
+  const { navy, blue, charcoal, muted, paleBlue } = CERTIFICATE_PALETTE;
+  drawCenteredText(ctx, 'BAN THANH NIÊN', 168, {
+    width, maxWidth: 1500, size: 20, minSize: 17, weight: '700', color: navy
   });
-  drawCenteredText(ctx, 'HOÀN THÀNH', 210, {
-    width, maxWidth: 1500, size: 42, minSize: 34, weight: '700', color: navy
+  drawCenteredText(ctx, 'CÔNG AN TỈNH PHÚ THỌ', 198, {
+    width, maxWidth: 1500, size: 17, minSize: 15, weight: '600', color: muted
   });
-  ctx.strokeStyle = gold;
+  ctx.strokeStyle = paleBlue;
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(width / 2 - 80, 243);
-  ctx.lineTo(width / 2 + 80, 243);
+  ctx.moveTo(width / 2 - 110, 222);
+  ctx.lineTo(width / 2 + 110, 222);
   ctx.stroke();
-  drawCenteredText(ctx, 'BAN THANH NIÊN · CÔNG AN TỈNH PHÚ THỌ', 272, {
-    width, maxWidth: 1460, size: 19, minSize: 16, weight: '600', color: muted
+  drawCenteredText(ctx, 'CHỨNG NHẬN HOÀN THÀNH', 267, {
+    width, maxWidth: 1500, size: 39, minSize: 31, weight: '700', color: navy
   });
 
-  drawCenteredText(ctx, 'Đồng chí', 320, {
+  drawCenteredText(ctx, 'Đồng chí', 324, {
     width, maxWidth: 1400, size: 21, minSize: 19, color: muted
   });
-  drawWrappedCenterText(ctx, fullName.toLocaleUpperCase('vi-VN'), 372, {
-    width, maxWidth: 1500, size: 46, minSize: 32, weight: '700', color: navy, maxLines: 2, lineHeight: 44
+  drawWrappedCenterText(ctx, fullName.toLocaleUpperCase('vi-VN'), 380, {
+    width, maxWidth: 1500, size: 44, minSize: 30, weight: '700', color: navy, maxLines: 2, lineHeight: 46
   });
-  drawWrappedCenterText(ctx, organizationName, 423, {
-    width, maxWidth: 1450, size: 24, minSize: 18, weight: '500', color: charcoal, maxLines: 2, lineHeight: 30
+  drawWrappedCenterText(ctx, organizationName, 434, {
+    width, maxWidth: 1450, size: 23, minSize: 17, weight: '500', color: charcoal, maxLines: 2, lineHeight: 29
   });
-  drawCenteredText(ctx, 'đã hoàn thành đạt yêu cầu', 474, {
+  drawCenteredText(ctx, 'đã hoàn thành và đạt yêu cầu', 485, {
     width, maxWidth: 1400, size: 22, minSize: 18, color: charcoal
   });
-  drawCenteredText(ctx, 'KIỂM TRA HỌC TẬP', 526, {
-    width, maxWidth: 1450, size: 31, minSize: 24, weight: '700', color: navy
+  drawCenteredText(ctx, 'KIỂM TRA HỌC TẬP', 533, {
+    width, maxWidth: 1450, size: 30, minSize: 24, weight: '700', color: blue
   });
-  drawCenteredText(ctx, 'NGHỊ QUYẾT ĐẠI HỘI ĐOÀN TOÀN QUỐC LẦN THỨ XIII', 568, {
+  drawCenteredText(ctx, 'NGHỊ QUYẾT ĐẠI HỘI ĐOÀN TOÀN QUỐC LẦN THỨ XIII', 571, {
     width, maxWidth: 1500, size: 27, minSize: 20, weight: '600', color: charcoal
   });
-
-  const resultWidth = 1030;
-  const resultX = (width - resultWidth) / 2;
-  ctx.fillStyle = '#FBF9F2';
-  ctx.strokeStyle = gold;
-  ctx.lineWidth = 1.5;
-  ctx.fillRect(resultX, 606, resultWidth, 64);
-  ctx.strokeRect(resultX, 606, resultWidth, 64);
-  drawCenteredText(ctx, `Kết quả: ${correctCount}/${totalQuestions} câu đúng · ${score}% · ĐẠT YÊU CẦU`, 638, {
-    width, maxWidth: resultWidth - 38, size: 24, minSize: 18, weight: '600', color: navy
+  drawCenteredText(ctx, `Kết quả: ${correctCount}/${totalQuestions} câu đúng · ${score}% · ĐẠT YÊU CẦU`, 624, {
+    width, maxWidth: 1500, size: 23, minSize: 18, weight: '600', color: navy
   });
-
-  drawCenteredText(ctx, `Ngày hoàn thành: ${formatCertificateDate(issuedAt)}`, 718, {
-    width, maxWidth: 1400, size: 20, minSize: 18, color: muted
-  });
-  drawCenteredText(ctx, `Mã chứng nhận: ${certificateCode}`, 756, {
-    width, maxWidth: 1400, size: 19, minSize: 16, weight: '600', color: charcoal
+  drawCenteredText(ctx, `Ngày hoàn thành: ${formatCertificateDate(issuedAt)}`, 684, {
+    width, maxWidth: 1400, size: 19, minSize: 17, color: muted
   });
 
   const verifyUrl = `${origin}/xac-minh-chung-nhan/${certificateCode}`;
-  const qrSize = 248;
-  drawQr(ctx, verifyUrl, 128, 826, qrSize);
-  drawCenteredText(ctx, 'Quét để xác minh', 1094, {
-    width, centerX: 128 + qrSize / 2, maxWidth: qrSize + 10, size: 15, minSize: 13, color: muted
+  const qrSize = 226;
+  drawQr(ctx, verifyUrl, 118, 850, qrSize);
+  drawCenteredText(ctx, 'Quét để xác minh', 1098, {
+    width, centerX: 118 + qrSize / 2, maxWidth: qrSize + 10, size: 15, minSize: 13, color: muted
+  });
+  drawCenteredText(ctx, certificateCode, 1124, {
+    width, centerX: 118 + qrSize / 2, maxWidth: qrSize + 24, size: 17, minSize: 14, weight: '700', color: navy
+  });
+  drawCenteredText(ctx, formatCertificateDate(issuedAt), 1150, {
+    width, centerX: 118 + qrSize / 2, maxWidth: qrSize + 24, size: 16, minSize: 14, color: muted
   });
 
-  drawCenteredText(ctx, 'BAN THANH NIÊN', height - 270, {
-    width: width - 142, maxWidth: 620, size: 27, minSize: 22, weight: '700', color: navy, align: 'right'
+  const signoffCenter = width - 402;
+  drawCenteredText(ctx, 'TM. BAN THANH NIÊN', 850, {
+    width, centerX: signoffCenter, maxWidth: 640, size: 24, minSize: 20, weight: '700', color: navy
   });
-  drawCenteredText(ctx, 'CÔNG AN TỈNH PHÚ THỌ', height - 226, {
-    width: width - 142, maxWidth: 700, size: 28, minSize: 22, weight: '700', color: navy, align: 'right'
+  drawCenteredText(ctx, 'TRƯỞNG BAN', 885, {
+    width, centerX: signoffCenter, maxWidth: 640, size: 22, minSize: 19, weight: '700', color: navy
+  });
+  drawSignature(ctx, signature, signoffCenter, 988, 420, 168);
+  drawCenteredText(ctx, 'Hoàng Tuấn Việt', 1101, {
+    width, centerX: signoffCenter, maxWidth: 520, size: 26, minSize: 22, weight: '700', color: navy
   });
   drawCenteredText(ctx, 'Chứng nhận điện tử ghi nhận kết quả hoàn thành bài kiểm tra trên hệ thống.', height - 70, {
     width, maxWidth: 1470, size: 15, minSize: 12, color: muted

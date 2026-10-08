@@ -1,5 +1,27 @@
 # NQ13 Learning Assessment & Digital Certificate Acceptance
 
+## Certificate V2 — Youth Union blue + owner-supplied signature (2026-10-08)
+
+### Implementation status
+
+- Starting master: `427524bd94c718bc2faf71ba8dc5a6d66fb21ffc`; branch:
+  `feat/nq13-certificate-blue-signature-v2`.
+- Presentation-only change across HTML, PNG canvas and A4 landscape print. Uses the existing
+  Youth Union blue tokens, the official badge as a centered 4.5% watermark, and the owner asset
+  `public/brand/chu-ky.png` (SHA-256
+  `BFB2B8445D7B1FC22372880331ED013D08427212B0DDD1E9C1569F0E91881F28`, 1,756,022 bytes).
+  The source image is unchanged; transparent padding is cropped only while rendering, with the
+  seal and signature kept together and the aspect ratio preserved.
+- Sign-off hierarchy is `TM. BAN THANH NIÊN` → `TRƯỞNG BAN` → official signature/seal image →
+  `Hoàng Tuấn Việt`. The QR, dynamic participant/result/date/code, certificate guard, score
+  threshold, issuance RPC and public verification response are unchanged.
+- Automated source checks: `npm test` 261/261 pass, 0 fail/skip; `npm run lint` 0 errors and
+  3 existing Fast Refresh warnings; `npm run build` passed with the existing >500 kB bundle
+  warning; `git diff --check` clean.
+- **Hosted runtime acceptance is pending** the exact final Vercel Preview head. Do not merge until
+  the real rehearsal 23/30 and 24/30 flows, PNG/QR, A4 PDF, public verification, privacy and
+  responsive checks are recorded for that head. Production database mutation: none.
+
 ## Final closure receipt — 2026-10-08
 
 `NQ13_CERTIFICATE_END_TO_END_ACCEPTANCE_PASS`
@@ -106,13 +128,14 @@ dành cho toàn thể đoàn viên, thanh niên và quần chúng nhân dân thu
 
 ### 2.5. Chứng nhận điện tử & Đồ họa
 - **Tiêu đề**: `CHỨNG NHẬN HOÀN THÀNH` (không dùng "bằng" hoặc "văn bằng").
-- **Đơn vị xác nhận footer**: Text trang trọng `BAN THANH NIÊN / CÔNG AN TỈNH PHÚ THỌ` (tuyệt đối không tạo con dấu giả, chữ ký giả).
+- **Đơn vị xác nhận**: `BAN THANH NIÊN / CÔNG AN TỈNH PHÚ THỌ`; không tạo con dấu hoặc chữ ký giả. Certificate V2 hiển thị đúng hierarchy ký `TM. BAN THANH NIÊN` → `TRƯỞNG BAN` → asset thật owner cung cấp → `Hoàng Tuấn Việt`.
 - **Huy hiệu Đoàn**: Sử dụng trực tiếp `public/brand/logo-doan-badge.png`.
+- **Asset ký V2**: `public/brand/chu-ky.png` là ảnh gốc owner cung cấp gồm con dấu đỏ và chữ ký xanh đang chồng lên nhau. Giữ nguyên file và tương quan; chỉ crop alpha padding tại render layer, không tách, đổi màu hoặc vẽ lại.
 - **Mã chứng nhận**: Định dạng `NQ13-[A-Z0-9]{8,32}`, entropy cao, tính idempotent (mỗi lượt thi đạt chỉ cấp đúng 1 chứng nhận).
 - **Tồn tại vĩnh viễn (Retention resilience)**: Khóa ngoại `nq_certificates.attempt_id REFERENCES quiz_attempts(id) ON DELETE SET NULL` giúp chứng nhận tồn tại ngay cả khi tài khoản guest anonymous bị xóa sau 30 ngày.
-- **Thiết kế**: Navy `#123B66`, charcoal `#1F2937`, muted gray `#667085`, gold `#B9974F` chỉ làm viền/divider; nền ivory nhẹ; giữ logo Đoàn màu gốc. Không dùng màu xanh lá cho kết quả, chữ ký giả hoặc con dấu giả.
-- **Tải ảnh PNG**: Render trực tiếp canvas A4 ngang 1754×1240 (`src/lib/certificateCanvas.js`), fit chữ tên và wrap đơn vị; tên file chuẩn hóa: `Chung-nhan-NQ13-[TEN-NGUOI-DUNG].png`.
-- **In / Lưu PDF**: `@media print` ẩn app chrome/layout, đặt trang A4 landscape và ẩn nội dung ngoài chứng nhận.
+- **Thiết kế V2**: dùng token xanh Đoàn `brand-900/800/700/100/050`, nền trắng/xanh rất nhạt; huy hiệu chính thức làm watermark giữa trang ở opacity 4.5%. Không dùng viền hoặc palette đỏ-vàng cho certificate.
+- **Tải ảnh PNG**: Render trực tiếp canvas A4 ngang 1754×1240 (`src/lib/certificateCanvas.js`), fit chữ tên và wrap đơn vị; watermark, QR, dữ liệu và signature block đồng bộ HTML; tên file chuẩn hóa: `Chung-nhan-NQ13-[TEN-NGUOI-DUNG].png`. Thiếu asset chữ ký/con dấu thì export từ chối.
+- **In / Lưu PDF**: `@media print` ẩn app chrome/layout, đặt trang A4 landscape, giữ watermark nhạt và asset chữ ký, ẩn nội dung ngoài chứng nhận.
 
 ### 2.6. QR generation và decoder test độc lập
 - `src/lib/qrCode.js` dùng thư viện `qrcode` cho QR Model 2 / Error Correction Level M, bao gồm Version Information và mask selection do thư viện xử lý.
