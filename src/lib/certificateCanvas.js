@@ -287,16 +287,26 @@ export async function generateCertificatePngDataUrl(certificate, options = {}) {
   return canvas.toDataURL('image/png');
 }
 
+export async function generateCertificatePngBlob(certificate, options = {}) {
+  const canvas = document.createElement('canvas');
+  await renderCertificateToCanvas(canvas, certificate, options);
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+  if (!blob) throw new Error('Could not encode certificate PNG.');
+  return blob;
+}
+
 export async function downloadCertificatePng(certificate) {
   if (!isValidNqCertificateRecord(certificate)) {
     throw new TypeError('A complete certificate record is required to download a certificate.');
   }
-  const dataUrl = await generateCertificatePngDataUrl(certificate);
+  const blob = await generateCertificatePngBlob(certificate);
   const { fullName } = mapNqCertificateRecord(certificate);
+  const objectUrl = URL.createObjectURL(blob);
   const anchor = document.createElement('a');
-  anchor.href = dataUrl;
+  anchor.href = objectUrl;
   anchor.download = sanitizeCertificateFileName(fullName);
   document.body.appendChild(anchor);
   anchor.click();
   document.body.removeChild(anchor);
+  setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
 }

@@ -1336,6 +1336,93 @@
   color: #667085;
   line-height: 1.3;
 }
+
+@media (max-width: 640px) {
+  .nq-cert-modal-backdrop {
+    padding: 8px;
+  }
+  .nq-cert-modal-content {
+    width: 100%;
+    max-height: calc(100dvh - 16px);
+  }
+  .nq-certificate-wrapper {
+    padding: 8px;
+  }
+  .nq-certificate-scrollable {
+    overflow: visible;
+    justify-content: stretch;
+    padding: 0;
+  }
+  .nq-certificate {
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    flex: 0 1 auto;
+    padding: 7px;
+  }
+  .nq-certificate-border-outer,
+  .nq-certificate-border-inner {
+    height: auto;
+  }
+  .nq-certificate-border-inner {
+    padding: 18px 14px 12px;
+  }
+  .nq-certificate-logo {
+    height: 42px;
+    margin-bottom: 4px;
+  }
+  .nq-certificate-eyebrow {
+    font-size: 9px;
+  }
+  .nq-certificate-title {
+    font-size: 20px;
+  }
+  .nq-certificate-subtitle {
+    font-size: 8px;
+    letter-spacing: 0.06em;
+  }
+  .nq-certificate-body {
+    flex: none;
+    margin: 12px 0 8px;
+    min-height: 0;
+  }
+  .nq-certificate-name {
+    font-size: 21px;
+    line-height: 1.2;
+  }
+  .nq-certificate-org {
+    font-size: 12px;
+  }
+  .nq-certificate-activity-subtitle {
+    font-size: 11px;
+  }
+  .nq-certificate-meta {
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    margin-top: 8px;
+  }
+  .nq-certificate-footer {
+    min-height: 0;
+    align-items: center;
+    gap: 12px;
+    padding: 0;
+    margin-top: 8px;
+  }
+  .nq-certificate-qr svg {
+    width: 96px;
+    height: 96px;
+  }
+  .nq-certificate-signoff {
+    font-size: 9px;
+    letter-spacing: 0.03em;
+  }
+  .nq-certificate-disclaimer {
+    margin-top: 12px;
+    text-align: center;
+  }
+}
+
 .nq-certificate-pending {
   display: flex;
   flex-wrap: wrap;
