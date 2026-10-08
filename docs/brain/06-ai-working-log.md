@@ -1,5 +1,23 @@
 # 06 — AI Working Log
 
+## [2026-10-08] Khôi phục đọc văn bản PUBLIC sau phiên Quiz anonymous
+- **Agent:** Codex
+- **Thay đổi:** Thêm forward migration để `can_access_document()` kiểm tra trạng thái công bố rồi
+  cho phép `PUBLIC` trước active-user gate; bổ sung pgTAP chạy RPC `ensure_nq_quiz_guest()` và
+  kiểm tra `SELECT` thật qua RLS cho anon, guest `INVITED`, ACTIVE, ba visibility nội bộ và hai
+  trạng thái chưa công khai. Giữ nguyên RLS, grant ghi, guest role và gate Storage.
+- **File đã sửa:** `supabase/migrations/20261008140000_public_documents_anonymous_session_access.sql`,
+  `supabase/tests/public_documents_anonymous_session.sql`, `supabase/tests/documents_foundation.sql`,
+  `docs/brain/01-architecture.md`, `docs/brain/03-decisions.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Supabase anonymous session dùng role `authenticated` và profile `INVITED`; policy anon
+  không áp dụng, còn helper cũ từ chối trước khi nhận diện visibility PUBLIC.
+- **Kiểm tra:** `npm test` 258/258; lint 0 lỗi/3 cảnh báo Fast Refresh cũ; build PASS (cảnh báo
+  bundle lớn đã có). Rehearsal `znexculhbdjiflkczpyu`: 5 `PUBLISHED + PUBLIC` trước/sau;
+  migration apply thành công; pgTAP mới 20/20 và NQ guest boundary hiện có 12/12 (`finish(true)`);
+  guest/auth/document fixture được rollback, RLS vẫn bật, grant ghi authenticated = 0, không có
+  security-advisor finding mới. Preview/CI exact-head sẽ được ghi trong PR description. Không đổi
+  Production.
+
 ## [2026-10-08] Bàn giao phát hành tỷ lệ đạt NQ13
 - **Agent:** Codex
 - **Thay đổi:** Chuyển follow-up tỷ lệ đạt từ đang làm sang hoàn thành; ghi chính xác PR, CI và

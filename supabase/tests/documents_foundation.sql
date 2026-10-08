@@ -231,8 +231,8 @@ select is(
 );
 select is(
   (select count(*)::integer from public.documents where id = 'd0000007-0000-0000-0000-000000000007'),
-  0,
-  'J: SUSPENDED account cannot read even a PUBLIC document (is_active_user gate)'
+  1,
+  'J: PUBLISHED + PUBLIC remains readable because it is public regardless of account status'
 );
 
 -- =====================================================================================

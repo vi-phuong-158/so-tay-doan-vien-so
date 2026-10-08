@@ -340,12 +340,15 @@ policy đọc Storage). P4-01 **không dựng lại** model — chỉ đóng gap
 Đọc:  `/tri-thuc/van-ban` → `Documents.jsx` → `documentService.listDocuments()`
       → select `documents` dưới RLS `can_access_document(id)` — filter/search/paginate đều
         server-side, order `(issued_date desc, id desc)` để keyset ổn định
+      → helper kiểm tra `PUBLISHED` trước; `PUBLIC` cho phép cả `anon` và authenticated anonymous
+        NQ_300 (`INVITED`) trước `is_active_user()`; các visibility còn lại giữ gate ACTIVE và
+        authorization hiện hành
       `/tri-thuc/van-ban/:id` → `DocumentDetail.jsx` → `getDocument` + `getDocumentRelations`
       → relations chỉ hiện khi **cả hai** đầu quan hệ đọc được (policy mới; trước P4-01 bảng
         `document_relations` bật RLS nhưng KHÔNG có policy nào → deny-all)
 Tải:  người dùng bấm → `getDocumentDownloadUrl` → signed URL 60s trên `documents-private`
       → Storage policy suy lại document id từ segment đầu của path bằng `uuid_or_null`
-        (fail closed, không raise) rồi gọi lại `can_access_document` — biết `storage_path`
+        (fail closed, không raise), yêu cầu `is_active_user()`, rồi gọi lại `can_access_document` — biết `storage_path`
         KHÔNG đồng nghĩa tải được. Không prefetch signed URL, không log/ghi DB signed URL.
 Ghi:  chỉ qua RPC SECURITY DEFINER (`create_document_draft`, `update_document_metadata`,
       `publish_document`, `withdraw_document`, `attach_document_source_file`) — validate
