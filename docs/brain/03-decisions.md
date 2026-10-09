@@ -50,6 +50,13 @@
 - **Participant-Gated Issuance:** RPC `nq_attempt` từ chối submit trước hạn khi thiếu participant snapshot (`PARTICIPANT_REQUIRED`). Legacy attempt tự hết hạn vẫn được chấm theo câu trả lời đã lưu, nhưng chỉ phát hành certificate nếu participant snapshot tồn tại. Certificate UI/export chỉ chấp nhận record PASS hoàn chỉnh do backend trả về.
 - **Asset & Visual Governance:** Tuân thủ chặt chẽ design tokens và asset chính thống `public/brand/logo-doan-badge.png`. Footer chứng nhận trang trọng "BAN THANH NIÊN / CÔNG AN TỈNH PHÚ THỌ", không tạo chữ ký hay con dấu giả.
 
+## [2026-10-08] NQ13 Certificate V2 — Youth Union blue and owner signature
+- Keep the existing NQ13 score threshold, issuance RPC, immutable certificate records, QR payload and public verification response unchanged; this phase changes presentation only.
+- Use existing Youth Union blue tokens (`brand-900`, `brand-800`, `brand-700`, `brand-100`, `brand-050`) across HTML, PNG and print. Render the official badge as a centered 4.5% opacity watermark.
+- Hardening: the raw owner image is NOT served. It stays at `design-source/nq13-certificate/chu-ky-owner-source.png` (SHA-256 pinned by test); the browser bundle only contains the deterministic derivative `src/assets/certificate/chu-ky-certificate.png` (cropped transparent padding, uniform downscale, seal+signature kept as one image, SHA-256 pinned). HTML/canvas/print share it with contain-fit; no `object-fit: cover`. PNG/print fail closed when logo or signature is unavailable (button lock, canvas rejection, print hidden).
+- Polish (2026-10-09): watermark final opacity is 3% (`CERTIFICATE_WATERMARK_OPACITY`) and the verdict sentence "đã hoàn thành và đạt yêu cầu" is `CERTIFICATE_VERDICT_TEXT`, both defined once in `src/lib/certificateCanvas.js` and shared by HTML, PNG and print. `NqCertificate` is `role="group"`; the `NqQuiz` modal backdrop is the single dialog owner. The raw owner source remains in a PUBLIC repo's PR branch/history → `SECURITY_GOVERNANCE_REVIEW_REQUIRED`; no history rewrite without an owner decision.
+- Responsive: the HTML certificate keeps its 860×608 design and is scaled as one block to the available width (no horizontal scroll); print uses the same layout scaled to A4 landscape.
+
 ## [2026-10-03] NQ guest ownership policy boundary and schema reconciliation
 
 - Legacy owner-only policies do not require ACTIVE accounts, so an INVITED profile is insufficient

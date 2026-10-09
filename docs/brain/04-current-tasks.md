@@ -7,6 +7,12 @@
 
 ## Đang làm
 
+### NQ13 Certificate V2 — Youth Union blue + owner signature (2026-10-08)
+- PR #71 final public-document anonymous-session fix merged at `427524bd94c718bc2faf71ba8dc5a6d66fb21ffc`; certificate V2 is isolated on `feat/nq13-certificate-blue-signature-v2` from that exact master.
+- Presentation-only scope: official badge watermark, Youth Union blue palette, HTML/PNG/A4 print signature block; no score, issuance, RPC or verification-contract changes.
+- Owner asset kept outside `public/` at `design-source/nq13-certificate/`; browser uses a derivative in `src/assets/certificate/` (see acceptance doc for hashes). Hardening (contain-fit, responsive scaling, print = scaled screen layout) done; hosted Preview/rehearsal acceptance still BLOCKED/not run.
+- Automated source gates pass: 267 frontend tests, lint 0 errors/3 existing warnings, build, clean diff check. Exact-head rehearsal/Preview runtime acceptance remains required before the PR may merge; never test this guest flow on Production.
+
 ### NQ13 final closure — pilot statistics (2026-10-08)
 
 - #67 MERGED after final12bb681 exact-head CI/Preview23FAIL24PASS/PNG/QR/verify/A4PDF/cleanup gates.

@@ -1,5 +1,50 @@
 # 06 — AI Working Log
 
+## [2026-10-09] NQ13 Certificate V2 — UI/A11Y polish (PR #72 owner review)
+- **Agent:** Claude Code
+- **Thay đổi:** Chuẩn hóa câu "đã hoàn thành và đạt yêu cầu" cho HTML/PNG/print bằng một constant; giảm watermark
+  4.5% → 3% (một nguồn cho HTML/canvas/print); bỏ `role="dialog"` lồng nhau (NqCertificate → `role="group"`, modal NqQuiz
+  là dialog duy nhất); audit asset gốc (repo PUBLIC → `SECURITY_GOVERNANCE_REVIEW_REQUIRED`, không rewrite history).
+  Không đổi scoring/RPC/QR/verification/schema.
+- **File đã sửa:** `src/components/NqCertificate.jsx`, `src/lib/certificateCanvas.js`, `src/index.css`,
+  `tests/certificate_canvas.test.mjs`, `tests/nq13_certificate.test.mjs`, `docs/quiz-300/NQ13_CERTIFICATE_ACCEPTANCE.md`,
+  `docs/brain/{01-architecture,03-decisions,06-ai-working-log}.md`.
+- **Lý do:** Finding review độc lập: copy lệch giữa PNG và HTML, watermark hơi rõ, dialog lồng nhau.
+- **Kiểm tra:** `npm test` 267→269 PASS (2 test mới fail trên head cũ); lint/build/diff-check xem PR; render local
+  (Vite harness, dữ liệu giả): desktop, 360/390/430 không cuộn ngang, PNG 1754×1240, `[role=dialog]` = 1. Runtime NQ13
+  23/30 + 24/30 + issuance + QR + PDF + verification trên Preview/Rehearsal CHƯA chạy.
+
+## [2026-10-08] NQ13 Certificate V2 hardening (PR #72 review fixes)
+- **Agent:** Claude Code
+- **Thay đổi:** Chuyển ảnh gốc con dấu/chữ ký ra khỏi `public/` (không còn URL công khai), tạo derivative
+  crop+thu nhỏ dùng chung cho HTML/canvas/print; sửa `object-fit: cover` cắt mất dấu/chữ ký sang `contain`;
+  certificate HTML scale theo bề rộng thay vì cuộn ngang; print dùng cùng layout 860×608 phóng lên A4;
+  khóa in khi asset lỗi; thêm 6 test. Không đổi scoring/RPC/QR/verification.
+- **File đã sửa:** `src/components/NqCertificate.jsx`, `src/lib/certificateCanvas.js`, `src/index.css`,
+  `design-source/nq13-certificate/chu-ky-owner-source.png` (moved), `src/assets/certificate/chu-ky-certificate.png`,
+  `scripts/build-certificate-signature.py`, `tests/certificate_canvas.test.mjs`, `tests/nq13_certificate.test.mjs`,
+  `docs/quiz-300/NQ13_CERTIFICATE_ACCEPTANCE.md`, `docs/brain/{01-architecture,03-decisions,04-current-tasks,06-ai-working-log}.md`.
+- **Lý do:** Review độc lập PR #72 phát hiện lộ ảnh gốc, crop sai, fixed-width không responsive.
+- **Kiểm tra:** `npm test` 261→267 PASS (0 fail/skip); lint 0 lỗi/3 cảnh báo cũ; build PASS, `dist/` không chứa
+  ảnh gốc; local Chromium: 360–1440 px không cuộn ngang, PNG 1754×1240, QR decode jsQR, PDF 1 trang A4, các tình huống
+  asset 404/lỗi/chậm/cache. Hosted Preview + Supabase rehearsal chưa chạy (mạng phiên bị chặn) — xem acceptance doc.
+
+## [2026-10-08] NQ13 Certificate V2 — Youth Union blue and owner signature
+- **Agent:** Codex
+- **Thay đổi:** Đổi đồng bộ chứng nhận HTML, PNG canvas và A4 print sang palette xanh Đoàn; thêm
+  watermark huy hiệu chính thức 4.5%, dùng nguyên ảnh con dấu/chữ ký owner cung cấp và crop alpha
+  chỉ ở render layer. Khóa tải PNG/in nếu ảnh HTML chưa tải; Canvas từ chối export khi thiếu asset.
+- **File đã sửa:** `src/components/NqCertificate.jsx`, `src/lib/certificateCanvas.js`, `src/index.css`,
+  `public/brand/chu-ky.png`, `tests/certificate_canvas.test.mjs`, `tests/nq13_certificate.test.mjs`,
+  `docs/quiz-300/NQ13_CERTIFICATE_ACCEPTANCE.md`,
+  `docs/brain/{01-architecture,03-decisions,04-current-tasks,06-ai-working-log}.md`.
+- **Lý do:** Hoàn thiện certificate theo nhận diện xanh Đoàn và thứ bậc ký do owner yêu cầu, giữ
+  nguyên scoring, issuance, QR contract, public verification và dữ liệu lịch sử.
+- **Kiểm tra:** `npm test` 261/261 PASS (0 fail/skip); `npm run lint` 0 lỗi/3 cảnh báo Fast Refresh
+  đã có; `npm run build` PASS (cảnh báo chunk >500 kB đã có); `git diff --check` PASS. Rehearsal và
+  Vercel Preview exact-head flow (23/30, 24/30, PNG, QR, PDF, verification, responsive) đang chờ
+  triển khai và phải được ghi nhận trong PR receipt trước khi merge. Không đổi Production DB.
+
 ## [2026-10-08] Khôi phục đọc văn bản PUBLIC sau phiên Quiz anonymous
 - **Agent:** Codex
 - **Thay đổi:** Thêm forward migration để `can_access_document()` kiểm tra trạng thái công bố rồi
