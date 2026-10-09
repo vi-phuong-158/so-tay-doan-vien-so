@@ -4,6 +4,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
+  CERTIFICATE_VERDICT_TEXT,
+  CERTIFICATE_WATERMARK_OPACITY
+} from '../src/lib/certificateCanvas.js';
+import {
   validateParticipantInfo,
   formatCertificateDate,
   sanitizeCertificateFileName,
@@ -41,8 +45,37 @@ test('certificate V2 HTML viewer keeps the signer hierarchy, official badge and 
   assert.deepEqual(order, [...order].sort((x, y) => x - y), 'signer hierarchy order must be role, title, seal, name');
   assert.match(component, /disabled=\{downloading \|\| !assetsReady\}/);
   assert.match(component, /onError=\{markAssetFailed\}/);
-  assert.match(cssRule(styles, '.nq-certificate-watermark'), /height:\s*46%;[\s\S]*opacity:\s*0\.045/);
+  const watermarkRule = cssRule(styles, '.nq-certificate-watermark');
+  assert.match(watermarkRule, /height:\s*46%;/);
+  assert.equal(/(^|[\s;])opacity\s*:/.test(watermarkRule), false, 'watermark opacity has a single source: CERTIFICATE_WATERMARK_OPACITY');
+  assert.match(component, /className="nq-certificate-watermark"\s+style=\{\{ opacity: CERTIFICATE_WATERMARK_OPACITY \}\}/);
   assert.match(styles, /@page\s*\{\s*size:\s*A4 landscape;\s*margin:\s*0;/);
+});
+
+test('certificate verdict copy and watermark strength are shared by HTML, PNG and print', () => {
+  const component = fs.readFileSync(path.join(root, 'src', 'components', 'NqCertificate.jsx'), 'utf8');
+  const canvas = fs.readFileSync(path.join(root, 'src', 'lib', 'certificateCanvas.js'), 'utf8');
+
+  assert.equal(CERTIFICATE_VERDICT_TEXT, 'đã hoàn thành và đạt yêu cầu');
+  assert.match(component, /nq-certificate-verdict-intro">\{CERTIFICATE_VERDICT_TEXT\}</);
+  assert.match(canvas, /drawCenteredText\(ctx, CERTIFICATE_VERDICT_TEXT,/);
+  assert.match(canvas, /ctx\.globalAlpha = CERTIFICATE_WATERMARK_OPACITY;/);
+  // The sentence is defined once; no component or CSS re-types an older variant.
+  assert.equal(component.includes('đã hoàn thành đạt yêu cầu'), false);
+  assert.equal(canvas.includes('đã hoàn thành đạt yêu cầu'), false);
+  assert.equal(canvas.split('đã hoàn thành và đạt yêu cầu').length - 1, 1);
+  assert.ok(CERTIFICATE_WATERMARK_OPACITY >= 0.025 && CERTIFICATE_WATERMARK_OPACITY <= 0.03);
+});
+
+test('certificate viewer is a group inside the NQ13 modal, which is the only dialog', () => {
+  const component = fs.readFileSync(path.join(root, 'src', 'components', 'NqCertificate.jsx'), 'utf8');
+  const quiz = fs.readFileSync(path.join(root, 'src', 'pages', 'NqQuiz.jsx'), 'utf8');
+
+  assert.equal(/role="dialog"|aria-modal/.test(component), false, 'NqCertificate must not declare a nested dialog');
+  assert.match(component, /role="group" aria-label="Chứng nhận hoàn thành"/);
+  const modal = quiz.slice(quiz.indexOf('Certificate Viewer Modal'));
+  assert.match(modal, /className="nq-cert-modal-backdrop"\s+role="dialog"\s+aria-modal="true"\s+aria-label="Chứng nhận hoàn thành bài kiểm tra"/);
+  assert.equal(modal.match(/role="dialog"/g).length, 1);
 });
 
 test('certificate signature is shown whole (contain, auto width) and never cropped with cover', () => {

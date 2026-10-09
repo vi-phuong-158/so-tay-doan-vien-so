@@ -1224,7 +1224,7 @@
   max-width: 78%;
   object-fit: contain;
   transform: translate(-50%, -50%);
-  opacity: 0.045;
+  /* opacity comes from CERTIFICATE_WATERMARK_OPACITY (inline) so HTML, PNG and print stay identical. */
   pointer-events: none;
 }
 .nq-certificate-header,

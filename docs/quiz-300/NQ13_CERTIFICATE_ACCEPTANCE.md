@@ -1,5 +1,32 @@
 # NQ13 Learning Assessment & Digital Certificate Acceptance
 
+## Certificate V2 UI/A11Y polish round (2026-10-09)
+
+Status: **source gates PASS · local render checks PASS · hosted runtime acceptance still NOT RUN**.
+Scope: presentation/a11y only. No change to the 30 questions, 24/30 threshold, scoring, issuance RPC, certificate record,
+code, participant snapshot, QR payload, verification route, privacy contract, schema or migrations.
+
+| Finding | Fix |
+|---------|-----|
+| PNG read "đã hoàn thành và đạt yêu cầu", HTML/print read "đã hoàn thành đạt yêu cầu" | One constant `CERTIFICATE_VERDICT_TEXT` (`src/lib/certificateCanvas.js`) used by HTML (and therefore print) and the PNG canvas |
+| Watermark 4.5% still visible behind the name line | Final value **0.03** (`CERTIFICATE_WATERMARK_OPACITY`). HTML applies it as an inline style, canvas as `globalAlpha`, print inherits the HTML element, so all three are identical. Rendered check: badge (pentagon, star, banner) still recognisable, name unaffected; centre pixels stay within ~8/255 of white. 2.5% was not needed |
+| Nested `role="dialog"` (NqQuiz modal + NqCertificate) | `NqQuiz` backdrop is the only dialog (`role="dialog" aria-modal aria-label="Chứng nhận hoàn thành bài kiểm tra"`). `NqCertificate` is now `role="group" aria-label="Chứng nhận hoàn thành"`; focus behaviour and CSS unchanged. Live DOM check: `querySelectorAll('[role=dialog]').length === 1` |
+| Mobile regression | 360/390/430 px: `scrollWidth == clientWidth`, certificate 1.4145 aspect, QR aspect 1.000, seal+signature 1000×452 (rendered 2.21:1), no crop. Same single layout as desktop (no mobile-specific certificate) |
+
+Regression tests: copy/watermark single-source test, nested-dialog test, canvas test now asserts `globalAlpha === 0.03` and the shared sentence is drawn (all three fail on the previous head).
+
+### Asset audit — raw owner stamp/signature source
+
+- Repository `vi-phuong-158/so-tay-doan-vien-so` is **PUBLIC**.
+- Browser code references only the derivative `src/assets/certificate/chu-ky-certificate.png`; `design-source/` is referenced only by `scripts/build-certificate-signature.py`, comments and a test (never imported by `src`).
+- Vite `publicDir` is `public/`; `design-source/` is outside it and outside the module graph. After `npm run build`, `dist/` has no `design-source/` path, no `chu-ky.png`, and no file whose SHA-256 equals the raw source
+  (`BFB2B844…1F28`); the only certificate image is `assets/chu-ky-certificate-<hash>.png`, SHA-256 `BA5978FE…9249` (the pinned derivative).
+  Vercel `outputDirectory` is `dist`, so the raw file is not in the deployment output.
+- Vercel Preview URL probe: the branch Preview returns HTTP 302 (Vercel deployment protection) for every path, so the raw-URL probe is **inconclusive from here**; the build-output evidence above is the proof. Earlier head `b33ce249` did serve `/brand/chu-ky.png`; any Preview deployment built from that SHA must be treated as having exposed it until deleted/protected.
+- **The raw source is still downloadable from the PUBLIC GitHub repository**: HTTP 200 at `raw.githubusercontent.com/.../d5405faa…/design-source/nq13-certificate/chu-ky-owner-source.png`, at the PR branch ref, and at commit `b33ce249…/public/brand/chu-ky.png`. It is not on `master` (404).
+
+`SECURITY_GOVERNANCE_REVIEW_REQUIRED` — the owner must decide (e.g. whether the stamp/signature source may stay public, history rewrite / key rotation of the seal, making the repo private, or accepting the risk). No history rewrite, force-push, or branch deletion was done in this round.
+
 ## Certificate V2 hardening — asset security, one visual source, responsive (2026-10-08)
 
 Status: **source gates PASS · local browser checks PASS · hosted runtime acceptance NOT RUN (BLOCKED)**.
@@ -172,7 +199,7 @@ dành cho toàn thể đoàn viên, thanh niên và quần chúng nhân dân thu
 - **Asset ký V2**: ảnh gốc owner cung cấp (con dấu đỏ + chữ ký xanh chồng nhau) nằm ở `design-source/nq13-certificate/` và KHÔNG được publish. Trình duyệt chỉ dùng bản derivative `src/assets/certificate/chu-ky-certificate.png` (crop padding trong suốt, thu nhỏ đồng đều, giữ aspect; không tách, đổi màu hoặc vẽ lại). HTML (`object-fit: contain`), canvas và print dùng chung đúng một derivative.
 - **Mã chứng nhận**: Định dạng `NQ13-[A-Z0-9]{8,32}`, entropy cao, tính idempotent (mỗi lượt thi đạt chỉ cấp đúng 1 chứng nhận).
 - **Tồn tại vĩnh viễn (Retention resilience)**: Khóa ngoại `nq_certificates.attempt_id REFERENCES quiz_attempts(id) ON DELETE SET NULL` giúp chứng nhận tồn tại ngay cả khi tài khoản guest anonymous bị xóa sau 30 ngày.
-- **Thiết kế V2**: dùng token xanh Đoàn `brand-900/800/700/100/050`, nền trắng/xanh rất nhạt; huy hiệu chính thức làm watermark giữa trang ở opacity 4.5%. Không dùng viền hoặc palette đỏ-vàng cho certificate.
+- **Thiết kế V2**: dùng token xanh Đoàn `brand-900/800/700/100/050`, nền trắng/xanh rất nhạt; huy hiệu chính thức làm watermark giữa trang ở opacity 3% (`CERTIFICATE_WATERMARK_OPACITY`, một nguồn cho HTML, PNG và print). Không dùng viền hoặc palette đỏ-vàng cho certificate.
 - **Tải ảnh PNG**: Render trực tiếp canvas A4 ngang 1754×1240 (`src/lib/certificateCanvas.js`), fit chữ tên và wrap đơn vị; watermark, QR, dữ liệu và signature block đồng bộ HTML; tên file chuẩn hóa: `Chung-nhan-NQ13-[TEN-NGUOI-DUNG].png`. Thiếu asset chữ ký/con dấu thì export từ chối.
 - **In / Lưu PDF**: `@media print` ẩn app chrome/layout, đặt trang A4 landscape, in đúng layout 860×608 phóng ×1.3053 lên 297×210 mm, giữ watermark nhạt và chữ ký, ẩn nội dung ngoài chứng nhận; không in nếu asset chưa tải xong.
 

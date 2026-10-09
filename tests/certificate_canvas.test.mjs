@@ -9,6 +9,8 @@ import {
   CERTIFICATE_PALETTE,
   CERTIFICATE_SIGNATURE_SIZE,
   CERTIFICATE_SIGNATURE_SRC,
+  CERTIFICATE_VERDICT_TEXT,
+  CERTIFICATE_WATERMARK_OPACITY,
   fitCanvasFontSize,
   renderCertificateToCanvas,
   wrapCanvasText
@@ -266,7 +268,10 @@ for (const [name, organization] of [
       const watermark = context.images.find((image) => image.src === '/brand/logo-doan-badge.png');
       const signature = context.images.find((image) => image.src === CERTIFICATE_SIGNATURE_SRC);
       assert.ok(watermark);
-      assert.equal(watermark.alpha, 0.045);
+      assert.equal(watermark.alpha, CERTIFICATE_WATERMARK_OPACITY);
+      assert.equal(watermark.alpha, 0.03);
+      assert.ok(context.draws.some((draw) => draw.text === CERTIFICATE_VERDICT_TEXT));
+      assert.equal(CERTIFICATE_VERDICT_TEXT, 'đã hoàn thành và đạt yêu cầu');
       assert.ok(signature);
       // Whole derivative, uniformly scaled: 4 args (dx, dy, dw, dh), never a source-crop rectangle.
       assert.equal(signature.args.length, 4);

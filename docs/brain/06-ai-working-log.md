@@ -1,5 +1,19 @@
 # 06 — AI Working Log
 
+## [2026-10-09] NQ13 Certificate V2 — UI/A11Y polish (PR #72 owner review)
+- **Agent:** Claude Code
+- **Thay đổi:** Chuẩn hóa câu "đã hoàn thành và đạt yêu cầu" cho HTML/PNG/print bằng một constant; giảm watermark
+  4.5% → 3% (một nguồn cho HTML/canvas/print); bỏ `role="dialog"` lồng nhau (NqCertificate → `role="group"`, modal NqQuiz
+  là dialog duy nhất); audit asset gốc (repo PUBLIC → `SECURITY_GOVERNANCE_REVIEW_REQUIRED`, không rewrite history).
+  Không đổi scoring/RPC/QR/verification/schema.
+- **File đã sửa:** `src/components/NqCertificate.jsx`, `src/lib/certificateCanvas.js`, `src/index.css`,
+  `tests/certificate_canvas.test.mjs`, `tests/nq13_certificate.test.mjs`, `docs/quiz-300/NQ13_CERTIFICATE_ACCEPTANCE.md`,
+  `docs/brain/{01-architecture,03-decisions,06-ai-working-log}.md`.
+- **Lý do:** Finding review độc lập: copy lệch giữa PNG và HTML, watermark hơi rõ, dialog lồng nhau.
+- **Kiểm tra:** `npm test` 267→269 PASS (2 test mới fail trên head cũ); lint/build/diff-check xem PR; render local
+  (Vite harness, dữ liệu giả): desktop, 360/390/430 không cuộn ngang, PNG 1754×1240, `[role=dialog]` = 1. Runtime NQ13
+  23/30 + 24/30 + issuance + QR + PDF + verification trên Preview/Rehearsal CHƯA chạy.
+
 ## [2026-10-08] NQ13 Certificate V2 hardening (PR #72 review fixes)
 - **Agent:** Claude Code
 - **Thay đổi:** Chuyển ảnh gốc con dấu/chữ ký ra khỏi `public/` (không còn URL công khai), tạo derivative

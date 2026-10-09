@@ -5,6 +5,8 @@ import { generateQrMatrix } from '../lib/qrCode';
 import {
   CERTIFICATE_SIGNATURE_SIZE,
   CERTIFICATE_SIGNATURE_SRC,
+  CERTIFICATE_VERDICT_TEXT,
+  CERTIFICATE_WATERMARK_OPACITY,
   downloadCertificatePng
 } from '../lib/certificateCanvas';
 import {
@@ -87,7 +89,7 @@ export function NqCertificate({ certificate, onClose }) {
     <div
       className="nq-certificate-wrapper"
       data-assets-ready={assetsReady ? 'true' : 'false'}
-      role="dialog" aria-modal="true" aria-label="Chứng nhận hoàn thành">
+      role="group" aria-label="Chứng nhận hoàn thành">
       <div className="nq-certificate-toolbar no-print">
         <div className="nq-certificate-toolbar-actions">
           <Button
@@ -149,6 +151,7 @@ export function NqCertificate({ certificate, onClose }) {
                 alt=""
                 aria-hidden="true"
                 className="nq-certificate-watermark"
+                style={{ opacity: CERTIFICATE_WATERMARK_OPACITY }}
                 ref={trackAsset('watermark')}
                 onLoad={() => markAssetLoaded('watermark')}
                 onError={markAssetFailed}
@@ -178,7 +181,7 @@ export function NqCertificate({ certificate, onClose }) {
                   <p className="nq-certificate-org">{organizationName}</p>
                 </div>
 
-                <p className="nq-certificate-verdict-intro">đã hoàn thành đạt yêu cầu</p>
+                <p className="nq-certificate-verdict-intro">{CERTIFICATE_VERDICT_TEXT}</p>
 
                 <div className="nq-certificate-activity">
                   <h2 className="nq-certificate-activity-title">KIỂM TRA HỌC TẬP</h2>

@@ -18,6 +18,10 @@ export const CERTIFICATE_PALETTE = Object.freeze({
   qr: '#111827'
 });
 
+// Shared by the HTML viewer, PNG export and print so every output reads and looks the same.
+export const CERTIFICATE_VERDICT_TEXT = 'đã hoàn thành và đạt yêu cầu';
+export const CERTIFICATE_WATERMARK_OPACITY = 0.03;
+
 const FONT_FAMILY = '"Be Vietnam Pro", sans-serif';
 const BRAND_BADGE_SRC = '/brand/logo-doan-badge.png';
 // Browser-facing seal + signature derivative (cropped, downscaled, aspect preserved). The raw
@@ -157,7 +161,7 @@ function drawWatermark(ctx, logo, width, height) {
   const watermarkHeight = height * 0.46;
   const watermarkWidth = (logo.naturalWidth / logo.naturalHeight) * watermarkHeight;
   const previousAlpha = ctx.globalAlpha;
-  ctx.globalAlpha = 0.045;
+  ctx.globalAlpha = CERTIFICATE_WATERMARK_OPACITY;
   ctx.drawImage(logo, (width - watermarkWidth) / 2, (height - watermarkHeight) / 2, watermarkWidth, watermarkHeight);
   ctx.globalAlpha = previousAlpha;
 }
@@ -271,7 +275,7 @@ export async function renderCertificateToCanvas(canvas, certificate, options = {
   drawWrappedCenterText(ctx, organizationName, 434, {
     width, maxWidth: 1450, size: 23, minSize: 17, weight: '500', color: charcoal, maxLines: 2, lineHeight: 29
   });
-  drawCenteredText(ctx, 'đã hoàn thành và đạt yêu cầu', 485, {
+  drawCenteredText(ctx, CERTIFICATE_VERDICT_TEXT, 485, {
     width, maxWidth: 1400, size: 22, minSize: 18, color: charcoal
   });
   drawCenteredText(ctx, 'KIỂM TRA HỌC TẬP', 533, {
