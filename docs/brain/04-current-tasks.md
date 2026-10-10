@@ -7,6 +7,19 @@
 
 ## Đang làm
 
+### V2 — Drive làm kho tệp + Cập nhật số liệu (2026-10-10) — ĐẶC TẢ, CHƯA THI CÔNG
+
+- **Trạng thái:** đặc tả `docs/v2-data-reporting/00-technical-spec.md` **v0.2** (đã sửa theo review Codex REJECT,
+  13 finding); owner đã trả lời Q1/Q2/Q3/Q5 và giao quy ước mã (V2-D7). Còn chờ: 34 chi đoàn CQ trong
+  `02-danh-muc-don-vi-du-thao.csv`, danh sách tài khoản Google được chia sẻ, Codex review lại v0.2; đề xuất chỉ tiêu
+  `docs/v2-data-reporting/01-de-xuat-chi-tieu-bao-cao-thang.md` chờ Ban Thanh niên. Quyết định V2-D1…D6 đã ghi.
+- **Nhánh:** `docs/v2-drive-data-reporting` (chỉ tài liệu).
+- **Thứ tự phase:** V2-S0 spike Drive → V2-1 backup/restore + danh mục 182 đơn vị + import tài khoản → V2-2 Drive
+  cho báo cáo ∥ V2-3 metric/form →
+  V2-4 đợt số liệu → V2-5 dashboard/Excel → V2-6 nghiệm thu. Mỗi phase một nhánh/PR.
+- **Chặn:** không viết migration V2 trước khi owner duyệt đặc tả; V2-2 chờ S0 PASS; V2-3 chờ chỉ tiêu được chốt.
+- **Ngoài phạm vi V2 MVP:** form builder kéo-thả, repeater, Văn bản đến/đi & điều hành, lineage đơn vị.
+
 ### NQ13 Certificate V2 — Youth Union blue + owner signature (2026-10-08)
 - PR #71 final public-document anonymous-session fix merged at `427524bd94c718bc2faf71ba8dc5a6d66fb21ffc`; certificate V2 is isolated on `feat/nq13-certificate-blue-signature-v2` from that exact master.
 - Presentation-only scope: official badge watermark, Youth Union blue palette, HTML/PNG/A4 print signature block; no score, issuance, RPC or verification-contract changes.

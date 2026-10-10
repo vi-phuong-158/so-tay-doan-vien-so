@@ -62,7 +62,8 @@ Code trước. Sau đó tối đa 3 dòng: bỏ gì, khi nào nên thêm. Không
   `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY`. Không dùng `VITE_*` cho secret.
 - Không tin client: mọi kiểm quyền tại RLS hoặc Edge Function; ẩn nút UI không phải bảo mật.
 - Người dùng không được tự đổi `organization_id` hoặc `role`.
-- Tệp nghiệp vụ private; mở qua **signed URL ngắn hạn**. Backend kiểm lại `mime_type`/kích thước,
+- Tệp nghiệp vụ private; mở qua **signed URL ngắn hạn** (Supabase Storage) hoặc qua Edge Function kiểm quyền /
+  chia sẻ Drive đích danh cho admin toàn cục (tệp trên Google Drive — V2-D1…D3). Backend kiểm lại `mime_type`/kích thước,
   chuẩn hóa tên tệp (`normalizeSafeFileName`), chặn phần mở rộng nguy hiểm.
 - Không commit `.env`/credential. Không log secret/mật khẩu/token/toàn bộ nội dung nhạy cảm.
 - RPC `security definer` phải đặt `search_path` an toàn và tự kiểm quyền.
@@ -71,7 +72,8 @@ Code trước. Sau đó tối đa 3 dòng: bỏ gì, khi nào nên thêm. Không
 
 ## Không làm
 
-- Không tái đưa Google Apps Script, Google Sheets/Drive, Pinecone hoặc API `/api/gas` làm hạ tầng.
+- Không tái đưa Google Apps Script, Google Sheets, Pinecone hoặc API `/api/gas` làm hạ tầng. Google Drive chỉ là
+  kho tệp sau `StorageProvider`; frontend không giữ credential Google (V2-D1/D2).
 - Không tự đổi stack / thêm framework UI lớn khi chưa ghi lý do vào `03-decisions.md`.
 - Không tự mở rộng phạm vi nghiệp vụ (xem "Ngoài scope" ở `00-project-overview.md`).
 - Không dùng dữ liệu `src/data/mock.js` như dữ liệu production.

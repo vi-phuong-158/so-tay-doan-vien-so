@@ -684,6 +684,10 @@ GEMINI_GENERATION_TIMEOUT_MS # 30000-45000 ms; default 35000; no browser exposur
 - **Báo cáo versioned:** nộp lại tạo phiên bản mới, không ghi đè; phiên bản cũ chỉ đọc.
 - **Quiz:** không trả `is_correct` cho frontend trước khi chấm.
 - **AI:** chỉ truy hồi chunk `APPROVED`, luôn trả nguồn; lọc dữ liệu nhạy cảm trước khi gửi Gemini.
+- **[KẾ HOẠCH V2 — chưa có trong code]** Tệp nghiệp vụ mới sẽ lưu Google Drive (upload thẳng từ trình duyệt
+  qua resumable session, xác minh bằng `upload_intents`) và có phân hệ Cập nhật số liệu (`metric_catalog`,
+  `form_versions`, `data_*`, `metric_facts`). Code Graph ở trên **chưa** phản ánh V2; khi thi công phải cập nhật.
+  Xem `docs/v2-data-reporting/00-technical-spec.md` và quyết định V2-D1…D6.
 - **GoTrue nhạy cảm với seed:** `supabase/seed.sql` phải điền đủ cột `auth.users`/`auth.identities`
   đúng cách (nhiều commit lịch sử sửa lỗi này) — cẩn thận khi đổi seed.
 

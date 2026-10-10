@@ -68,7 +68,8 @@ schema database · RPC · luồng xử lý chính —
 3. **Không thêm tính năng ngoài scope task** và không tự mở rộng phạm vi nghiệp vụ.
 4. **Không hardcode secret/API key** vào source. Frontend chỉ `VITE_SUPABASE_URL/ANON_KEY`;
    service role/Gemini/email key chỉ ở Edge Functions. Không dùng `VITE_*` cho secret.
-5. **Không tái đưa** Google Apps Script, Sheets/Drive, Pinecone hoặc `/api/gas` làm hạ tầng chính.
+5. **Không tái đưa** Google Apps Script, Sheets, Pinecone hoặc `/api/gas` làm hạ tầng chính. Google Drive chỉ
+   được dùng làm **kho tệp** sau `StorageProvider`, gọi từ Edge Function (quyết định V2-D1, 2026-10-10).
 6. **RLS phải viết và test cùng migration**; mọi dữ liệu private mở qua signed URL ngắn hạn.
 7. **Không bỏ kiểm thử cũ** để làm build/lint pass. Không ghi đè phiên bản báo cáo đã nộp.
 8. Giao diện dùng token trong `src/index.css`, font Be Vietnam Pro, line icon, mobile-first.
