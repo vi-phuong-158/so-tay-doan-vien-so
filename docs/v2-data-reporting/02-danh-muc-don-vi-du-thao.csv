@@ -1,0 +1,183 @@
+﻿code,name,short_name,group_code,unit_type,nq_code,is_reporting_unit,ghi_chu
+XP001,Chi đoàn Công an xã Hy Cương,Hy Cương,XA_PHUONG,xa,PT-NQ-001,true,
+XP002,Chi đoàn Công an xã Lâm Thao,Lâm Thao,XA_PHUONG,xa,PT-NQ-002,true,
+XP003,Chi đoàn Công an xã Xuân Lũng,Xuân Lũng,XA_PHUONG,xa,PT-NQ-003,true,
+XP004,Chi đoàn Công an xã Phùng Nguyên,Phùng Nguyên,XA_PHUONG,xa,PT-NQ-004,true,
+XP005,Chi đoàn Công an xã Bản Nguyên,Bản Nguyên,XA_PHUONG,xa,PT-NQ-005,true,
+XP006,Chi đoàn Công an xã Phù Ninh,Phù Ninh,XA_PHUONG,xa,PT-NQ-006,true,
+XP007,Chi đoàn Công an xã Dân Chủ,Dân Chủ,XA_PHUONG,xa,PT-NQ-007,true,
+XP008,Chi đoàn Công an xã Phú Mỹ,Phú Mỹ,XA_PHUONG,xa,PT-NQ-008,true,
+XP009,Chi đoàn Công an xã Trạm Thản,Trạm Thản,XA_PHUONG,xa,PT-NQ-009,true,
+XP010,Chi đoàn Công an xã Bình Phú,Bình Phú,XA_PHUONG,xa,PT-NQ-010,true,
+XP011,Chi đoàn Công an xã Thanh Ba,Thanh Ba,XA_PHUONG,xa,PT-NQ-011,true,
+XP012,Chi đoàn Công an xã Quảng Yên,Quảng Yên,XA_PHUONG,xa,PT-NQ-012,true,
+XP013,Chi đoàn Công an xã Hoàng Cương,Hoàng Cương,XA_PHUONG,xa,PT-NQ-013,true,
+XP014,Chi đoàn Công an xã Đông Thành,Đông Thành,XA_PHUONG,xa,PT-NQ-014,true,
+XP015,Chi đoàn Công an xã Chí Tiên,Chí Tiên,XA_PHUONG,xa,PT-NQ-015,true,
+XP016,Chi đoàn Công an xã Liên Minh,Liên Minh,XA_PHUONG,xa,PT-NQ-016,true,
+XP017,Chi đoàn Công an xã Đoan Hùng,Đoan Hùng,XA_PHUONG,xa,PT-NQ-017,true,
+XP018,Chi đoàn Công an xã Tây Cốc,Tây Cốc,XA_PHUONG,xa,PT-NQ-018,true,
+XP019,Chi đoàn Công an xã Chân Mộng,Chân Mộng,XA_PHUONG,xa,PT-NQ-019,true,
+XP020,Chi đoàn Công an xã Chí Đám,Chí Đám,XA_PHUONG,xa,PT-NQ-020,true,
+XP021,Chi đoàn Công an xã Bằng Luân,Bằng Luân,XA_PHUONG,xa,PT-NQ-021,true,
+XP022,Chi đoàn Công an xã Hạ Hòa,Hạ Hòa,XA_PHUONG,xa,PT-NQ-022,true,
+XP023,Chi đoàn Công an xã Đan Thượng,Đan Thượng,XA_PHUONG,xa,PT-NQ-023,true,
+XP024,Chi đoàn Công an xã Yên Kỳ,Yên Kỳ,XA_PHUONG,xa,PT-NQ-024,true,
+XP025,Chi đoàn Công an xã Vĩnh Chân,Vĩnh Chân,XA_PHUONG,xa,PT-NQ-025,true,
+XP026,Chi đoàn Công an xã Văn Lang,Văn Lang,XA_PHUONG,xa,PT-NQ-026,true,
+XP027,Chi đoàn Công an xã Hiền Lương,Hiền Lương,XA_PHUONG,xa,PT-NQ-027,true,
+XP028,Chi đoàn Công an xã Cẩm Khê,Cẩm Khê,XA_PHUONG,xa,PT-NQ-028,true,
+XP029,Chi đoàn Công an xã Phú Khê,Phú Khê,XA_PHUONG,xa,PT-NQ-029,true,
+XP030,Chi đoàn Công an xã Hùng Việt,Hùng Việt,XA_PHUONG,xa,PT-NQ-030,true,
+XP031,Chi đoàn Công an xã Đồng Lương,Đồng Lương,XA_PHUONG,xa,PT-NQ-031,true,
+XP032,Chi đoàn Công an xã Tiên Lương,Tiên Lương,XA_PHUONG,xa,PT-NQ-032,true,
+XP033,Chi đoàn Công an xã Vân Bán,Vân Bán,XA_PHUONG,xa,PT-NQ-033,true,
+XP034,Chi đoàn Công an xã Tam Nông,Tam Nông,XA_PHUONG,xa,PT-NQ-034,true,
+XP035,Chi đoàn Công an xã Thọ Văn,Thọ Văn,XA_PHUONG,xa,PT-NQ-035,true,
+XP036,Chi đoàn Công an xã Vạn Xuân,Vạn Xuân,XA_PHUONG,xa,PT-NQ-036,true,
+XP037,Chi đoàn Công an xã Hiền Quan,Hiền Quan,XA_PHUONG,xa,PT-NQ-037,true,
+XP038,Chi đoàn Công an xã Thanh Thủy,Thanh Thủy,XA_PHUONG,xa,PT-NQ-038,true,
+XP039,Chi đoàn Công an xã Đào Xá,Đào Xá,XA_PHUONG,xa,PT-NQ-039,true,
+XP040,Chi đoàn Công an xã Tu Vũ,Tu Vũ,XA_PHUONG,xa,PT-NQ-040,true,
+XP041,Chi đoàn Công an xã Thanh Sơn,Thanh Sơn,XA_PHUONG,xa,PT-NQ-041,true,
+XP042,Chi đoàn Công an xã Võ Miếu,Võ Miếu,XA_PHUONG,xa,PT-NQ-042,true,
+XP043,Chi đoàn Công an xã Văn Miếu,Văn Miếu,XA_PHUONG,xa,PT-NQ-043,true,
+XP044,Chi đoàn Công an xã Cự Đồng,Cự Đồng,XA_PHUONG,xa,PT-NQ-044,true,
+XP045,Chi đoàn Công an xã Hương Cần,Hương Cần,XA_PHUONG,xa,PT-NQ-045,true,
+XP046,Chi đoàn Công an xã Yên Sơn,Yên Sơn,XA_PHUONG,xa,PT-NQ-046,true,
+XP047,Chi đoàn Công an xã Khả Cửu,Khả Cửu,XA_PHUONG,xa,PT-NQ-047,true,
+XP048,Chi đoàn Công an xã Tân Sơn,Tân Sơn,XA_PHUONG,xa,PT-NQ-048,true,
+XP049,Chi đoàn Công an xã Minh Đài,Minh Đài,XA_PHUONG,xa,PT-NQ-049,true,
+XP050,Chi đoàn Công an xã Lai Đồng,Lai Đồng,XA_PHUONG,xa,PT-NQ-050,true,
+XP051,Chi đoàn Công an xã Xuân Đài,Xuân Đài,XA_PHUONG,xa,PT-NQ-051,true,
+XP052,Chi đoàn Công an xã Long Cốc,Long Cốc,XA_PHUONG,xa,PT-NQ-052,true,
+XP053,Chi đoàn Công an xã Yên Lập,Yên Lập,XA_PHUONG,xa,PT-NQ-053,true,
+XP054,Chi đoàn Công an xã Thượng Long,Thượng Long,XA_PHUONG,xa,PT-NQ-054,true,
+XP055,Chi đoàn Công an xã Sơn Lương,Sơn Lương,XA_PHUONG,xa,PT-NQ-055,true,
+XP056,Chi đoàn Công an xã Xuân Viên,Xuân Viên,XA_PHUONG,xa,PT-NQ-056,true,
+XP057,Chi đoàn Công an xã Minh Hòa,Minh Hòa,XA_PHUONG,xa,PT-NQ-057,true,
+XP058,Chi đoàn Công an xã Tam Sơn,Tam Sơn,XA_PHUONG,xa,PT-NQ-058,true,
+XP059,Chi đoàn Công an xã Sông Lô,Sông Lô,XA_PHUONG,xa,PT-NQ-059,true,
+XP060,Chi đoàn Công an xã Hải Lựu,Hải Lựu,XA_PHUONG,xa,PT-NQ-060,true,
+XP061,Chi đoàn Công an xã Yên Lãng,Yên Lãng,XA_PHUONG,xa,PT-NQ-061,true,
+XP062,Chi đoàn Công an xã Lập Thạch,Lập Thạch,XA_PHUONG,xa,PT-NQ-062,true,
+XP063,Chi đoàn Công an xã Tiên Lữ,Tiên Lữ,XA_PHUONG,xa,PT-NQ-063,true,
+XP064,Chi đoàn Công an xã Thái Hòa,Thái Hòa,XA_PHUONG,xa,PT-NQ-064,true,
+XP065,Chi đoàn Công an xã Liên Hòa,Liên Hòa,XA_PHUONG,xa,PT-NQ-065,true,
+XP066,Chi đoàn Công an xã Hợp Lý,Hợp Lý,XA_PHUONG,xa,PT-NQ-066,true,
+XP067,Chi đoàn Công an xã Sơn Đông,Sơn Đông,XA_PHUONG,xa,PT-NQ-067,true,
+XP068,Chi đoàn Công an xã Tam Đảo,Tam Đảo,XA_PHUONG,xa,PT-NQ-068,true,
+XP069,Chi đoàn Công an xã Đại Đình,Đại Đình,XA_PHUONG,xa,PT-NQ-069,true,
+XP070,Chi đoàn Công an xã Đạo Trù,Đạo Trù,XA_PHUONG,xa,PT-NQ-070,true,
+XP071,Chi đoàn Công an xã Tam Dương,Tam Dương,XA_PHUONG,xa,PT-NQ-071,true,
+XP072,Chi đoàn Công an xã Hội Thịnh,Hội Thịnh,XA_PHUONG,xa,PT-NQ-072,true,
+XP073,Chi đoàn Công an xã Hoàng An,Hoàng An,XA_PHUONG,xa,PT-NQ-073,true,
+XP074,Chi đoàn Công an xã Tam Dương Bắc,Tam Dương Bắc,XA_PHUONG,xa,PT-NQ-074,true,
+XP075,Chi đoàn Công an xã Vĩnh Tường,Vĩnh Tường,XA_PHUONG,xa,PT-NQ-075,true,
+XP076,Chi đoàn Công an xã Thổ Tang,Thổ Tang,XA_PHUONG,xa,PT-NQ-076,true,
+XP077,Chi đoàn Công an xã Vĩnh Hưng,Vĩnh Hưng,XA_PHUONG,xa,PT-NQ-077,true,
+XP078,Chi đoàn Công an xã Vĩnh An,Vĩnh An,XA_PHUONG,xa,PT-NQ-078,true,
+XP079,Chi đoàn Công an xã Vĩnh Phú,Vĩnh Phú,XA_PHUONG,xa,PT-NQ-079,true,
+XP080,Chi đoàn Công an xã Vĩnh Thành,Vĩnh Thành,XA_PHUONG,xa,PT-NQ-080,true,
+XP081,Chi đoàn Công an xã Yên Lạc,Yên Lạc,XA_PHUONG,xa,PT-NQ-081,true,
+XP082,Chi đoàn Công an xã Tề Lỗ,Tề Lỗ,XA_PHUONG,xa,PT-NQ-082,true,
+XP083,Chi đoàn Công an xã Liên Châu,Liên Châu,XA_PHUONG,xa,PT-NQ-083,true,
+XP084,Chi đoàn Công an xã Tam Hồng,Tam Hồng,XA_PHUONG,xa,PT-NQ-084,true,
+XP085,Chi đoàn Công an xã Nguyệt Đức,Nguyệt Đức,XA_PHUONG,xa,PT-NQ-085,true,
+XP086,Chi đoàn Công an xã Bình Nguyên,Bình Nguyên,XA_PHUONG,xa,PT-NQ-086,true,
+XP087,Chi đoàn Công an xã Xuân Lãng,Xuân Lãng,XA_PHUONG,xa,PT-NQ-087,true,
+XP088,Chi đoàn Công an xã Bình Xuyên,Bình Xuyên,XA_PHUONG,xa,PT-NQ-088,true,
+XP089,Chi đoàn Công an xã Bình Tuyền,Bình Tuyền,XA_PHUONG,xa,PT-NQ-089,true,
+XP090,Chi đoàn Công an xã Thịnh Minh,Thịnh Minh,XA_PHUONG,xa,PT-NQ-090,true,
+XP091,Chi đoàn Công an xã Cao Phong,Cao Phong,XA_PHUONG,xa,PT-NQ-091,true,
+XP092,Chi đoàn Công an xã Mường Thàng,Mường Thàng,XA_PHUONG,xa,PT-NQ-092,true,
+XP093,Chi đoàn Công an xã Thung Nai,Thung Nai,XA_PHUONG,xa,PT-NQ-093,true,
+XP094,Chi đoàn Công an xã Đà Bắc,Đà Bắc,XA_PHUONG,xa,PT-NQ-094,true,
+XP095,Chi đoàn Công an xã Cao Sơn,Cao Sơn,XA_PHUONG,xa,PT-NQ-095,true,
+XP096,Chi đoàn Công an xã Đức Nhàn,Đức Nhàn,XA_PHUONG,xa,PT-NQ-096,true,
+XP097,Chi đoàn Công an xã Quy Đức,Quy Đức,XA_PHUONG,xa,PT-NQ-097,true,
+XP098,Chi đoàn Công an xã Tân Pheo,Tân Pheo,XA_PHUONG,xa,PT-NQ-098,true,
+XP099,Chi đoàn Công an xã Tiền Phong,Tiền Phong,XA_PHUONG,xa,PT-NQ-099,true,
+XP100,Chi đoàn Công an xã Kim Bôi,Kim Bôi,XA_PHUONG,xa,PT-NQ-100,true,
+XP101,Chi đoàn Công an xã Mường Động,Mường Động,XA_PHUONG,xa,PT-NQ-101,true,
+XP102,Chi đoàn Công an xã Dũng Tiến,Dũng Tiến,XA_PHUONG,xa,PT-NQ-102,true,
+XP103,Chi đoàn Công an xã Hợp Kim,Hợp Kim,XA_PHUONG,xa,PT-NQ-103,true,
+XP104,Chi đoàn Công an xã Nật Sơn,Nật Sơn,XA_PHUONG,xa,PT-NQ-104,true,
+XP105,Chi đoàn Công an xã Lạc Sơn,Lạc Sơn,XA_PHUONG,xa,PT-NQ-105,true,
+XP106,Chi đoàn Công an xã Mường Vang,Mường Vang,XA_PHUONG,xa,PT-NQ-106,true,
+XP107,Chi đoàn Công an xã Đại Đồng,Đại Đồng,XA_PHUONG,xa,PT-NQ-107,true,
+XP108,Chi đoàn Công an xã Ngọc Sơn,Ngọc Sơn,XA_PHUONG,xa,PT-NQ-108,true,
+XP109,Chi đoàn Công an xã Nhân Nghĩa,Nhân Nghĩa,XA_PHUONG,xa,PT-NQ-109,true,
+XP110,Chi đoàn Công an xã Quyết Thắng,Quyết Thắng,XA_PHUONG,xa,PT-NQ-110,true,
+XP111,Chi đoàn Công an xã Thượng Cốc,Thượng Cốc,XA_PHUONG,xa,PT-NQ-111,true,
+XP112,Chi đoàn Công an xã Yên Phú,Yên Phú,XA_PHUONG,xa,PT-NQ-112,true,
+XP113,Chi đoàn Công an xã Lạc Thủy,Lạc Thủy,XA_PHUONG,xa,PT-NQ-113,true,
+XP114,Chi đoàn Công an xã An Bình,An Bình,XA_PHUONG,xa,PT-NQ-114,true,
+XP115,Chi đoàn Công an xã An Nghĩa,An Nghĩa,XA_PHUONG,xa,PT-NQ-115,true,
+XP116,Chi đoàn Công an xã Lương Sơn,Lương Sơn,XA_PHUONG,xa,PT-NQ-116,true,
+XP117,Chi đoàn Công an xã Cao Dương,Cao Dương,XA_PHUONG,xa,PT-NQ-117,true,
+XP118,Chi đoàn Công an xã Liên Sơn,Liên Sơn,XA_PHUONG,xa,PT-NQ-118,true,
+XP119,Chi đoàn Công an xã Mai Châu,Mai Châu,XA_PHUONG,xa,PT-NQ-119,true,
+XP120,Chi đoàn Công an xã Bao La,Bao La,XA_PHUONG,xa,PT-NQ-120,true,
+XP121,Chi đoàn Công an xã Mai Hạ,Mai Hạ,XA_PHUONG,xa,PT-NQ-121,true,
+XP122,Chi đoàn Công an xã Pà Cò,Pà Cò,XA_PHUONG,xa,PT-NQ-122,true,
+XP123,Chi đoàn Công an xã Tân Mai,Tân Mai,XA_PHUONG,xa,PT-NQ-123,true,
+XP124,Chi đoàn Công an xã Tân Lạc,Tân Lạc,XA_PHUONG,xa,PT-NQ-124,true,
+XP125,Chi đoàn Công an xã Mường Bi,Mường Bi,XA_PHUONG,xa,PT-NQ-125,true,
+XP126,Chi đoàn Công an xã Mường Hoa,Mường Hoa,XA_PHUONG,xa,PT-NQ-126,true,
+XP127,Chi đoàn Công an xã Toàn Thắng,Toàn Thắng,XA_PHUONG,xa,PT-NQ-127,true,
+XP128,Chi đoàn Công an xã Vân Sơn,Vân Sơn,XA_PHUONG,xa,PT-NQ-128,true,
+XP129,Chi đoàn Công an xã Yên Thủy,Yên Thủy,XA_PHUONG,xa,PT-NQ-129,true,
+XP130,Chi đoàn Công an xã Lạc Lương,Lạc Lương,XA_PHUONG,xa,PT-NQ-130,true,
+XP131,Chi đoàn Công an xã Yên Trị,Yên Trị,XA_PHUONG,xa,PT-NQ-131,true,
+XP132,Chi đoàn Công an phường Việt Trì,Việt Trì,XA_PHUONG,phuong,PT-NQ-132,true,
+XP133,Chi đoàn Công an phường Nông Trang,Nông Trang,XA_PHUONG,phuong,PT-NQ-133,true,
+XP134,Chi đoàn Công an phường Thanh Miếu,Thanh Miếu,XA_PHUONG,phuong,PT-NQ-134,true,
+XP135,Chi đoàn Công an phường Vân Phú,Vân Phú,XA_PHUONG,phuong,PT-NQ-135,true,
+XP136,Chi đoàn Công an phường Phú Thọ,Phú Thọ,XA_PHUONG,phuong,PT-NQ-136,true,
+XP137,Chi đoàn Công an phường Phong Châu,Phong Châu,XA_PHUONG,phuong,PT-NQ-137,true,
+XP138,Chi đoàn Công an phường Âu Cơ,Âu Cơ,XA_PHUONG,phuong,PT-NQ-138,true,
+XP139,Chi đoàn Công an phường Vĩnh Phúc,Vĩnh Phúc,XA_PHUONG,phuong,PT-NQ-139,true,
+XP140,Chi đoàn Công an phường Vĩnh Yên,Vĩnh Yên,XA_PHUONG,phuong,PT-NQ-140,true,
+XP141,Chi đoàn Công an phường Phúc Yên,Phúc Yên,XA_PHUONG,phuong,PT-NQ-141,true,
+XP142,Chi đoàn Công an phường Xuân Hòa,Xuân Hòa,XA_PHUONG,phuong,PT-NQ-142,true,
+XP143,Chi đoàn Công an phường Hòa Bình,Hòa Bình,XA_PHUONG,phuong,PT-NQ-143,true,
+XP144,Chi đoàn Công an phường Kỳ Sơn,Kỳ Sơn,XA_PHUONG,phuong,PT-NQ-144,true,
+XP145,Chi đoàn Công an phường Tân Hòa,Tân Hòa,XA_PHUONG,phuong,PT-NQ-145,true,
+XP146,Chi đoàn Công an phường Thống Nhất,Thống Nhất,XA_PHUONG,phuong,PT-NQ-146,true,
+XP147,Chi đoàn Công an xã Thu Cúc,Thu Cúc,XA_PHUONG,xa,PT-NQ-147,true,
+XP148,Chi đoàn Công an xã Trung Sơn,Trung Sơn,XA_PHUONG,xa,PT-NQ-148,true,
+CQ001,,,KHOI_CO_QUAN,co_quan,,true,Owner điền tên chi đoàn
+CQ002,,,KHOI_CO_QUAN,co_quan,,true,Owner điền tên chi đoàn
+CQ003,,,KHOI_CO_QUAN,co_quan,,true,Owner điền tên chi đoàn
+CQ004,,,KHOI_CO_QUAN,co_quan,,true,Owner điền tên chi đoàn
+CQ005,,,KHOI_CO_QUAN,co_quan,,true,Owner điền tên chi đoàn
+CQ006,,,KHOI_CO_QUAN,co_quan,,true,Owner điền tên chi đoàn
+CQ007,,,KHOI_CO_QUAN,co_quan,,true,Owner điền tên chi đoàn
+CQ008,,,KHOI_CO_QUAN,co_quan,,true,Owner điền tên chi đoàn
+CQ009,,,KHOI_CO_QUAN,co_quan,,true,Owner điền tên chi đoàn
+CQ010,,,KHOI_CO_QUAN,co_quan,,true,Owner điền tên chi đoàn
+CQ011,,,KHOI_CO_QUAN,co_quan,,true,Owner điền tên chi đoàn
+CQ012,,,KHOI_CO_QUAN,co_quan,,true,Owner điền tên chi đoàn
+CQ013,,,KHOI_CO_QUAN,co_quan,,true,Owner điền tên chi đoàn
+CQ014,,,KHOI_CO_QUAN,co_quan,,true,Owner điền tên chi đoàn
+CQ015,,,KHOI_CO_QUAN,co_quan,,true,Owner điền tên chi đoàn
+CQ016,,,KHOI_CO_QUAN,co_quan,,true,Owner điền tên chi đoàn
+CQ017,,,KHOI_CO_QUAN,co_quan,,true,Owner điền tên chi đoàn
+CQ018,,,KHOI_CO_QUAN,co_quan,,true,Owner điền tên chi đoàn
+CQ019,,,KHOI_CO_QUAN,co_quan,,true,Owner điền tên chi đoàn
+CQ020,,,KHOI_CO_QUAN,co_quan,,true,Owner điền tên chi đoàn
+CQ021,,,KHOI_CO_QUAN,co_quan,,true,Owner điền tên chi đoàn
+CQ022,,,KHOI_CO_QUAN,co_quan,,true,Owner điền tên chi đoàn
+CQ023,,,KHOI_CO_QUAN,co_quan,,true,Owner điền tên chi đoàn
+CQ024,,,KHOI_CO_QUAN,co_quan,,true,Owner điền tên chi đoàn
+CQ025,,,KHOI_CO_QUAN,co_quan,,true,Owner điền tên chi đoàn
+CQ026,,,KHOI_CO_QUAN,co_quan,,true,Owner điền tên chi đoàn
+CQ027,,,KHOI_CO_QUAN,co_quan,,true,Owner điền tên chi đoàn
+CQ028,,,KHOI_CO_QUAN,co_quan,,true,Owner điền tên chi đoàn
+CQ029,,,KHOI_CO_QUAN,co_quan,,true,Owner điền tên chi đoàn
+CQ030,,,KHOI_CO_QUAN,co_quan,,true,Owner điền tên chi đoàn
+CQ031,,,KHOI_CO_QUAN,co_quan,,true,Owner điền tên chi đoàn
+CQ032,,,KHOI_CO_QUAN,co_quan,,true,Owner điền tên chi đoàn
+CQ033,,,KHOI_CO_QUAN,co_quan,,true,Owner điền tên chi đoàn
+CQ034,,,KHOI_CO_QUAN,co_quan,,true,Owner điền tên chi đoàn

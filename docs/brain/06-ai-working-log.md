@@ -2762,3 +2762,57 @@
 - **File đã sửa:** `src/lib/qrCode.js`, `src/lib/certificateCanvas.js`, `src/components/NqCertificate.jsx`, `src/pages/NqQuiz.jsx`, `src/services/nqQuizService.js`, `src/services/quizService.js`, `src/index.css`, `supabase/migrations/20261008120000_nq13_certificate_submit_requires_participant.sql`, `supabase/tests/nq13_certificate_assessment.sql`, `scripts/nq-runtime-check.sql`, `tests/`, `package.json`, `package-lock.json`, `docs/brain/01-architecture.md`, `docs/brain/03-decisions.md`, `docs/brain/04-current-tasks.md`, `docs/quiz-300/NQ13_CERTIFICATE_ACCEPTANCE.md`.
 - **Lý do:** Khắc phục review findings về QR scan chưa được chứng minh, chứng nhận không có record, participant enforcement chỉ ở frontend, privacy notice chưa rõ và thiết kế chưa đủ trang trọng.
 - **Kiểm tra:** `npm test` 251/251; `npm run lint` 0 lỗi / 3 cảnh báo Fast Refresh hiện có; `npm run build` thành công; `git diff --check` sạch; rehearsal pgTAP 18/18 và `scripts/nq-runtime-check.sql` báo `NQ_RUNTIME_ASSERTIONS_PASS`. Trên Preview `a195d3e`, mobile viewer bị cắt và Chrome chưa phát download event nên hai điểm đã sửa; cần nghiệm thu lại PNG/print trên Preview của head mới.
+
+## [2026-10-10] Review kiến trúc V2 và đặc tả Drive + Cập nhật số liệu
+- **Agent:** Claude Code
+- **Thay đổi:** Review đề xuất kiến trúc V2 của owner đối chiếu schema/code thật; ghi quyết định V2-D1…D6 (Drive
+  làm kho tệp chính do gói Supabase Free, upload thẳng trình duyệt→Google, tài khoản Drive hiện có, tách báo
+  cáo/số liệu, metric catalog STOCK/FLOW, 182 chi đoàn ngang hàng); viết đặc tả kỹ thuật và đề xuất chỉ tiêu
+  tháng cho Ban Thanh niên; nới quy tắc cứng về Drive trong CLAUDE.md/AGENTS.md cho đúng quyết định mới.
+- **File đã sửa:** `docs/v2-data-reporting/00-technical-spec.md` (mới),
+  `docs/v2-data-reporting/01-de-xuat-chi-tieu-bao-cao-thang.md` (mới), `docs/brain/00-project-overview.md`,
+  `docs/brain/01-architecture.md`, `docs/brain/03-decisions.md`, `docs/brain/04-current-tasks.md`,
+  `docs/brain/06-ai-working-log.md`, `CLAUDE.md`, `AGENTS.md`.
+- **Lý do:** Owner chốt dùng Drive (Supabase Free, Drive còn ~3,4 TB, được phép lưu trên Google), 182 chi đoàn
+  ngang hàng chưa có tài khoản, số đoàn viên do đơn vị tự khai, dùng tài khoản Google hiện tại.
+- **Kiểm tra:** Chỉ tài liệu, không đổi code/migration. Số liệu hiện trạng đo bằng truy vấn chỉ đọc trên
+  production (DB 41 MB, Storage 0 object, 20 organizations). Chưa chạy test vì không có thay đổi mã.
+
+## [2026-10-10] Sửa đặc tả V2 theo review Codex (v0.2)
+- **Agent:** Claude Code
+- **Thay đổi:** Xác minh lại 13 finding của review Codex (REJECT) với code — tất cả đúng. Viết lại đặc tả v0.2:
+  bỏ trash khỏi luồng request, client không gửi `drive_file_id`, state machine/idempotency cho `upload_intents`,
+  `_INCOMING/` ngoài cây chia sẻ, chỉ admin toàn cục được chia sẻ Drive, ACL fail-closed, tạo thư mục bằng đặt
+  chỗ + `appProperties`, MVP chỉ kỳ tháng và một đợt/tháng, fact khóa theo assignment, khóa metric từ lần
+  publish đầu + snapshot, contract validation khép kín, RLS predicate cụ thể, runbook token, backup/restore đưa
+  lên V2-1, test tranh chấp. Đồng bộ V2-D1/D2/D3/D5/D6, `02-coding-rules.md`, đề xuất chỉ tiêu.
+- **File đã sửa:** `docs/v2-data-reporting/00-technical-spec.md`, `docs/v2-data-reporting/01-de-xuat-chi-tieu-bao-cao-thang.md`,
+  `docs/brain/02-coding-rules.md`, `docs/brain/03-decisions.md`, `docs/brain/04-current-tasks.md`,
+  `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Review độc lập phát hiện đường xóa tệp trái quyền, chia sẻ Drive vượt scope, sai nghĩa
+  `metric_facts` và các khoảng trống RLS/backup.
+- **Kiểm tra:** Đối chiếu từng finding với `googleDriveStorageProvider.ts`, `_shared/auth.ts`, `reportService.js`,
+  `vercel.json`, `admin-users/index.ts`, `organizationDirectory.js`, migration `202608110001`. Chỉ tài liệu; chưa
+  chạy test vì không đổi mã.
+
+## [2026-10-10] Ghi trả lời owner và quy ước mã đơn vị V2 (V2-D7)
+- **Agent:** Claude Code
+- **Thay đổi:** Ghi trả lời owner (Q1 chia sẻ cho Ban Thanh niên + owner; Q2 tính số mới nhất đã nộp; Q3 hoàn
+  thành khi đã gửi; Q5 chấp nhận mục tiêu backup) vào đặc tả. Đề xuất quy ước mã `XP001–XP148` (khớp
+  `PT-NQ-001–148`) và `CQ001–CQ034`, mã đợt; dựng bản nháp danh mục 182 đơn vị từ `nq_competition_units`.
+- **File đã sửa:** `docs/v2-data-reporting/00-technical-spec.md`, `docs/v2-data-reporting/02-danh-muc-don-vi-du-thao.csv` (mới),
+  `docs/brain/03-decisions.md`, `docs/brain/04-current-tasks.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Owner trả lời mục 12 đặc tả v0.2 và giao Claude đề xuất quy ước mã.
+- **Kiểm tra:** Hai truy vấn SELECT chỉ đọc trên production (`organizations`, `nq_competition_units`): 148 đơn vị
+  NQ13 (133 xã, 15 phường), phát hiện 3 đơn vị demo và 16 đơn vị rehearsal `P5R-*` trong `organizations`. CSV 183
+  dòng (1 header + 148 XP + 34 CQ). Chỉ tài liệu, không đổi mã.
+
+## [2026-10-10] Bỏ bước duyệt số liệu V2 theo owner
+- **Agent:** Claude Code
+- **Thay đổi:** Owner chốt không cần bước "yêu cầu bổ sung": bỏ `review_status`/RPC duyệt khỏi `data_submissions`,
+  trạng thái data assignment thành tập con không có `ACCEPTED/NEEDS_SUPPLEMENT`, hoàn thành = đã có bản nộp hoặc
+  `EXEMPTED`. Các mục còn mở (34 chi đoàn CQ, tài khoản Google, chỉ tiêu) owner bổ sung sau.
+- **File đã sửa:** `docs/v2-data-reporting/00-technical-spec.md`, `docs/v2-data-reporting/01-de-xuat-chi-tieu-bao-cao-thang.md`,
+  `docs/brain/03-decisions.md`, `docs/brain/06-ai-working-log.md`.
+- **Lý do:** Trả lời của owner ngày 2026-10-10.
+- **Kiểm tra:** Chỉ tài liệu; rà lại đặc tả không còn tham chiếu `admin_review_data_submission`/`review_status` cho số liệu.

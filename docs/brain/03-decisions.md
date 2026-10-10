@@ -1152,3 +1152,49 @@ trước khi xét PUBLIC, trong khi provisioning cố ý tạo profile `INVITED`
 - **Phát hành:** Owner cho phép commit/push/PR/deploy. PR #56 đã đóng và nhánh cũ thiếu tính năng
   production mới; tạo `codex/document-mobile-reader` từ `c03f2d5`. Cache PWA v4 → v5 để người dùng
   hiện hữu nhận shell mới, không đổi policy cache API/nguồn bên ngoài.
+
+## [2026-10-10] V2 — Google Drive làm kho tệp chính + phân hệ Cập nhật số liệu (V2-D1…V2-D6)
+
+> Đặc tả: `docs/v2-data-reporting/00-technical-spec.md`. Trạng thái: **đã chốt hướng, chưa thi công**.
+
+- **V2-D1 — Drive là kho tệp nghiệp vụ chính (thay một phần quyết định 2026-07-30).** Tệp mới (báo cáo,
+  template đợt, văn bản) lưu trên Google Drive, luôn đứng sau `StorageProvider`; Supabase vẫn là nguồn sự thật
+  cho trạng thái, quyền, số liệu và metadata tệp. Phần còn lại của quyết định 2026-07-30 **giữ nguyên**: không Apps
+  Script, không Google Sheets làm DB, không Pinecone, không `/api/gas`. Frontend **không** giữ credential Google
+  và không gọi Drive API; ngoại lệ duy nhất là PUT byte vào resumable session URL do Edge Function cấp (V2-D2).
+  - **Lý do:** dự án chạy Supabase **Free** (Storage 1 GB, egress 5 GB/tháng, không backup tải về được) trong khi
+    nhu cầu ước 10–90 GB/năm; Drive của owner còn ~3,4 TB. Đo 2026-10-09: Storage 0 object → không phải di chuyển.
+  - **Đánh đổi:** mất RLS của Storage cho tệp mới → thay bằng intent/biên nhận do service role xác minh; ghi Drive
+    và DB không chung transaction → cần dọn dẹp/đối soát; quyền xem của admin nằm ở hai nơi (app + chia sẻ Drive).
+  - **Người quyết định:** owner (2026-10-10).
+- **V2-D2 — Byte không đi qua Supabase.** Edge Function kiểm quyền (RPC `create_upload_intent`) rồi cấp resumable
+  session vào thư mục `_INCOMING/` không chia sẻ; trình duyệt PUT thẳng lên Google. Client **không** gửi
+  `drive_file_id`: server tìm tệp theo `appProperties.upload_id`, kiểm size/mime/tiền tố định dạng/checksum/ACL
+  (fail-closed), đặt intent `VERIFIED`; RPC chỉ nhận intent `VERIFIED` của chính caller, idempotent khi gọi lại.
+  **Không trash/xóa tệp trong luồng request**; chỉ job dọn dẹp trash tệp của intent `EXPIRED/REJECTED` chưa được
+  tham chiếu. Phụ thuộc **Spike S0** (CORS); fallback proxy chunk 5 MiB. Đường Supabase Storage cũ và test giữ
+  nguyên. *(Sửa 2026-10-10 theo review Codex, finding 1/9/10.)*
+- **V2-D3 — Tài khoản Drive:** dùng **tài khoản Google hiện có của owner** (owner chấp nhận rủi ro), OAuth scope
+  `drive.file`, app ở trạng thái In production, refresh token chỉ ở Supabase Secrets, bắt buộc 2FA. Thư mục gốc do
+  app tạo. Không bao giờ chia sẻ "Anyone with the link"; chỉ **admin toàn cục** được chia sẻ đích danh thư mục
+  `BAO_CAO/` (chỉ chứa tệp đã nộp); admin có scope và đơn vị tải qua Edge Function có kiểm quyền. Runbook token
+  tách "thay secret thường" (không gỡ app ở My Account) khỏi "token bị lộ" (thu hồi grant trước).
+- **V2-D4 — Tách Nộp báo cáo và Cập nhật số liệu.** Hai bộ bảng độc lập (`report_*` giữ nguyên, thêm `data_*`),
+  liên kết tùy chọn `data_campaigns.report_campaign_id`; "hoàn thành" tính bằng view, không tạo bảng task đa hình.
+- **V2-D5 — Mô hình số liệu:** `metric_catalog` (mã bất biến, có `temporal_kind` STOCK/FLOW) → `form_versions`
+  (schema JSON bất biến khi publish) → `data_submissions` (JSONB bất biến, có version) → `metric_facts` sinh trong
+  cùng transaction, một fact current mỗi (đơn vị, metric, loại kỳ, đầu kỳ). Validation là JSON có cấu trúc, không
+  eval; server quyết định, frontend chạy cùng quy tắc để báo sớm. MVP không form builder, không repeater.
+  **MVP chỉ kỳ tháng, mỗi tháng tối đa một đợt** (unique index) để `is_current` chỉ có một nghĩa; fact khóa theo
+  assignment; metric bị khóa ngữ nghĩa từ lần đầu được form publish; form version lưu snapshot thuộc tính metric.
+  *(Sửa theo review Codex finding 3/4/6/8.)*
+- **V2-D6 — Đơn vị:** 182 chi đoàn **ngang hàng** cùng một cha; `organizations` là danh mục duy nhất (gộp
+  `nq_competition_units` qua FK — `member-api` vốn đã đọc `organizations`); thêm `group_code`,
+  `is_reporting_unit`, `effective_from/to`. Số đoàn viên do **đơn vị tự khai**.
+- **V2-D7 — Quy ước mã đơn vị và trả lời owner (2026-10-10).** Mã `XP001…XP148` cho chi đoàn Công an xã/phường
+  (số thứ tự trùng `PT-NQ-001…148` của NQ13) và `CQ001…CQ034` cho chi đoàn khối cơ quan; ASCII in hoa, không mang
+  tên đơn vị, không tái sử dụng; đơn vị gốc `TĐ` giữ nguyên. Mã đợt `BC-YYYY-MM`, `BC-YYYY-DXnn`, `SL-YYYY-MM`.
+  Owner chốt: Ban Thanh niên và owner là admin toàn cục được chia sẻ `BAO_CAO/`; dashboard tính số mới nhất đã
+  nộp; "hoàn thành" khi đơn vị đã gửi, số liệu **không có bước duyệt/yêu cầu bổ sung** (Ban tự liên hệ, đơn
+  vị tự gửi lại); mục tiêu backup DB
+  24h / tệp 7 ngày / khôi phục 1 ngày. Đơn vị demo `CĐA/B/C` và 16 rehearsal `P5R-*` sẽ được vô hiệu hóa, không xóa.

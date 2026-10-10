@@ -50,6 +50,8 @@ Công an tỉnh Phú Thọ*.
 Không chỉ là thư viện tài liệu mà là nền tảng gắn **thông tin → nhiệm vụ → đổi mới** trong một
 luồng. Kế thừa có chọn lọc frontend từ dự án `baovenentang` nhưng **loại bỏ hoàn toàn** Google
 Apps Script, Google Sheets/Drive làm hạ tầng chính và Pinecone — thay bằng Supabase + pgvector.
+**[2026-10-10]** Ngoại lệ có chủ đích: Google Drive trở lại làm **kho tệp** (không phải hạ tầng dữ liệu) sau
+`StorageProvider` vì gói Supabase Free — xem `03-decisions.md` V2-D1 và `docs/v2-data-reporting/`.
 
 ## Trạng thái dự án (2026-08-09)
 

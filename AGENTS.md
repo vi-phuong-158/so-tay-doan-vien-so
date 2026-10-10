@@ -62,7 +62,8 @@ schema database · RPC · luồng xử lý chính —
 
 1. Đọc `docs/01-product-spec.md` và `docs/02-design-system.md` trước khi sửa nghiệp vụ/giao diện.
 2. Không sửa production/`master` trực tiếp; mỗi phase dùng branch riêng, tạo PR.
-3. Không tái đưa Apps Script, Sheets, Drive hoặc Pinecone thành hạ tầng chính (bỏ cả `/api/gas`).
+3. Không tái đưa Apps Script, Sheets hoặc Pinecone thành hạ tầng chính (bỏ cả `/api/gas`). Google Drive chỉ làm
+   kho tệp sau `StorageProvider`, gọi từ Edge Function (quyết định V2-D1, 2026-10-10).
 4. RLS phải được viết và test cùng migration.
 5. Không dùng service role key, Gemini key hoặc email secret ở frontend; không dùng `VITE_*` cho secret.
 6. Không bỏ kiểm thử cũ để làm build/lint pass.
